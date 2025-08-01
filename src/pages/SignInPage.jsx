@@ -64,7 +64,7 @@ export function SignInPage() {
         {error && <div className="text-red-600 text-sm">{error}</div>}
         {message && <div className="text-green-600 text-sm">{message}</div>}
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Sending..." : "Send Magic Link"}
+          {loading ? "Sending..." : "Sign In with Email"}
         </Button>
       </form>
 

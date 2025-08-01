@@ -17,7 +17,7 @@ const getBaseUrl = () => {
     return `https://${process.env.VERCEL_URL}`;
   }
   // Local development
-  return process.env.NEXTAUTH_URL || "http://localhost:5174";
+  return process.env.NEXTAUTH_URL || "http://localhost:5173";
 };
 
 const authOptions = {

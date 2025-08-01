@@ -1,7 +1,0 @@
-{
-  "scripts": {
-    "dev:local": "vite",
-    "dev:vercel": "vercel dev",
-    "test:auth": "echo 'Testing authentication...' && vercel dev --listen 3000"
-  }
-}
