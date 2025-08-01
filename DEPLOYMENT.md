@@ -13,7 +13,7 @@ In your Vercel dashboard, add these environment variables:
 ### Required Environment Variables:
 
 - `NEXTAUTH_SECRET` - Your NextAuth secret (can use the one from .env.local)
-- `NEXTAUTH_URL` - Your production URL (e.g., https://your-app.vercel.app)
+- `NEXTAUTH_URL` - Set to `https://www.nomadlaunch.space`
 - `MONGODB_URI` - Your MongoDB connection string
 - `RESEND_API_KEY` - Your Resend API key for magic links
 - `GOOGLE_CLIENT_ID` - Your Google OAuth client ID
@@ -26,19 +26,19 @@ In your Vercel dashboard, add these environment variables:
 ### Google OAuth:
 
 1. Go to Google Cloud Console
-2. Add your Vercel domain to authorized origins
-3. Add `https://your-app.vercel.app/api/auth/callback/google` to authorized redirect URIs
+2. Add `https://www.nomadlaunch.space` to authorized origins
+3. Add `https://www.nomadlaunch.space/api/auth/callback/google` to authorized redirect URIs
 
 ### GitHub OAuth:
 
 1. Go to GitHub Developer Settings
 2. Update your OAuth app
-3. Set Authorization callback URL to: `https://your-app.vercel.app/api/auth/callback/github`
+3. Set Authorization callback URL to: `https://www.nomadlaunch.space/api/auth/callback/github`
 
 ### Resend (Magic Links):
 
-1. Verify your domain in Resend dashboard
-2. Update the `from` field in `/api/auth/[...nextauth].js` to use your verified domain
+1. Verify `nomadlaunch.space` domain in Resend dashboard
+2. The `from` field is already set to use `noreply@nomadlaunch.space`
 
 ## Deployment Steps
 

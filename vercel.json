@@ -15,7 +15,7 @@
     }
   ],
   "env": {
-    "NEXTAUTH_URL": "https://your-domain.vercel.app",
+    "NEXTAUTH_URL": "https://www.nomadlaunch.space",
     "NEXTAUTH_SECRET": "@nextauth_secret",
     "MONGODB_URI": "@mongodb_uri",
     "RESEND_API_KEY": "@resend_api_key",

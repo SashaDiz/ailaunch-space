@@ -8,12 +8,24 @@ import { MongoClient } from "mongodb";
 const client = new MongoClient(process.env.MONGODB_URI);
 const clientPromise = client.connect();
 
+// Determine the base URL based on environment
+const getBaseUrl = () => {
+  if (process.env.VERCEL_ENV === "production") {
+    return "https://www.nomadlaunch.space";
+  }
+  if (process.env.VERCEL_ENV === "preview") {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  // Local development
+  return process.env.NEXTAUTH_URL || "http://localhost:5174";
+};
+
 const authOptions = {
   adapter: MongoDBAdapter(clientPromise),
   providers: [
     Resend({
       apiKey: process.env.RESEND_API_KEY,
-      from: "noreply@yourdomain.com", // Replace with your verified domain
+      from: "noreply@nomadlaunch.space", // Update with your verified domain
     }),
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -40,6 +52,8 @@ const authOptions = {
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
+  // Dynamic URL configuration for different environments
+  url: getBaseUrl(),
 };
 
 const handler = NextAuth(authOptions);

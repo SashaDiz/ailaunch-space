@@ -35,9 +35,9 @@ export function SessionProvider({ children }) {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             email: options.email,
-            callbackUrl: window.location.origin 
+            callbackUrl: window.location.origin,
           }),
         });
 
@@ -50,12 +50,14 @@ export function SessionProvider({ children }) {
           const errorData = await response.json();
           return {
             success: false,
-            error: errorData.error || "Failed to send magic link"
+            error: errorData.error || "Failed to send magic link",
           };
         }
       } else {
         // Redirect to OAuth provider
-        window.location.href = `/api/auth/signin/${provider}?callbackUrl=${encodeURIComponent(window.location.origin)}`;
+        window.location.href = `/api/auth/signin/${provider}?callbackUrl=${encodeURIComponent(
+          window.location.origin
+        )}`;
         return { success: true };
       }
     } catch (error) {
