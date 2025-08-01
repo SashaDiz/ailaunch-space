@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "api/auth/[...nextauth].js": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "rewrites": [
     {
       "source": "/api/auth/(.*)",
