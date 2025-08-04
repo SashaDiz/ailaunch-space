@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useSession } from "@/contexts/SessionContext";
+import { useSession } from "@/hooks/useSession";
 
 export function SignInPage() {
   const [email, setEmail] = useState("");

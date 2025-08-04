@@ -11,7 +11,6 @@ import { FAQPage } from "./pages/FAQPage";
 import { ContactPage } from "./pages/ContactPage";
 import { TermsPage } from "./pages/TermsPage";
 import { SignInPage } from "./pages/SignInPage";
-import { SignUpPage } from "./pages/SignUpPage";
 import { VerifyRequestPage } from "./pages/VerifyRequestPage";
 import PricingPage from "./pages/PricingPage";
 import "./App.css";
@@ -26,9 +25,9 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/app/:id" element={<AppDetailPage />} />
             <Route path="/submit" element={<SubmitAppPage />} />
+            <Route path="/submit/payment-success" element={<SubmitAppPage />} />
             <Route path="/past-launches" element={<PastLaunchesPage />} />
             <Route path="/signin" element={<SignInPage />} />
-            <Route path="/signup" element={<SignUpPage />} />
             <Route path="/verify-request" element={<VerifyRequestPage />} />
             <Route path="/faq" element={<FAQPage />} />
             <Route path="/pricing" element={<PricingPage />} />{" "}

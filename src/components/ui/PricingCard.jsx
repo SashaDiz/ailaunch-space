@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 // Import SVGs
 import homeIcon from "../../assets/home.svg";
@@ -21,6 +22,13 @@ const icons = [
 ];
 
 function PricingCard({ plan }) {
+  const navigate = useNavigate();
+
+  const handlePlanSelection = () => {
+    const planType =
+      plan.planId || plan.title.toLowerCase().replace(" launch", "_launch");
+    navigate(`/submit?plan=${planType}`);
+  };
   return (
     <div
       className={`flex-1 border rounded-lg p-6 flex flex-col items-start ${
@@ -48,6 +56,7 @@ function PricingCard({ plan }) {
       <Button
         className="w-full mt-auto"
         variant={plan.highlight ? "primary" : "default"}
+        onClick={handlePlanSelection}
       >
         {plan.button}
       </Button>

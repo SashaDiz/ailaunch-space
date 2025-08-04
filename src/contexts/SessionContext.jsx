@@ -1,22 +1,37 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-
-const SessionContext = createContext();
+import React, { useState, useEffect } from "react";
+import { SessionContext } from "./SessionContextDefinition";
 
 export function SessionProvider({ children }) {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch session from NextAuth
+    // In development mode, just set session to null since we don't have API routes
+    if (import.meta.env.DEV) {
+      console.warn("Running in development mode - no session API available");
+      setSession(null);
+      setLoading(false);
+      return;
+    }
+
+    // Fetch session from NextAuth (only in production)
     const fetchSession = async () => {
       try {
         const response = await fetch("/api/auth/session");
         if (response.ok) {
-          const sessionData = await response.json();
-          setSession(sessionData.user ? sessionData : null);
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const sessionData = await response.json();
+            setSession(sessionData.user ? sessionData : null);
+          } else {
+            setSession(null);
+          }
+        } else {
+          setSession(null);
         }
       } catch (error) {
         console.error("Error fetching session:", error);
+        setSession(null);
       } finally {
         setLoading(false);
       }
@@ -26,6 +41,11 @@ export function SessionProvider({ children }) {
   }, []);
 
   const signIn = async (provider, options = {}) => {
+    if (import.meta.env.DEV) {
+      console.warn("Sign in not available in development mode");
+      return { success: false, error: "Development mode - no authentication" };
+    }
+
     setLoading(true);
     try {
       if (provider === "email") {
@@ -69,6 +89,12 @@ export function SessionProvider({ children }) {
   };
 
   const signOut = async () => {
+    if (import.meta.env.DEV) {
+      console.warn("Sign out not available in development mode");
+      setSession(null);
+      return;
+    }
+
     setLoading(true);
     try {
       await fetch("/api/auth/signout", { method: "POST" });
@@ -93,12 +119,4 @@ export function SessionProvider({ children }) {
       {children}
     </SessionContext.Provider>
   );
-}
-
-export function useSession() {
-  const context = useContext(SessionContext);
-  if (!context) {
-    throw new Error("useSession must be used within a SessionProvider");
-  }
-  return context;
 }
