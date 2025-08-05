@@ -204,7 +204,7 @@ export function PastLaunchesPage() {
       <div className="left-side w-full md:flex-1 px-4 md:px-0">
         {/* Header */}
         <section className="text-center pt-4 md:pt-8 pb-4 md:pb-8 max-w-2xl mr-auto">
-          <h2 className="text-2xl md:text-4xl font-medium text-gray-900 mb-2 md:mb-4 text-left">
+          <h2 className="text-5xl font-medium text-gray-900 mb-2 md:mb-3 text-left">
             Past Launches
           </h2>
           <p className="text-lg md:text-xl font-normal text-gray-900 text-left mb-4 max-w-xl">
@@ -247,7 +247,7 @@ export function PastLaunchesPage() {
 
         {/* Apps List */}
         <div className="space-y-4 mb-8">
-          {filteredApps.map((app, index) => (
+          {filteredApps.map((app) => (
             <Link
               key={`${app.id}-${app.week_start || "all"}`}
               to={`/app/${app.id}`}
@@ -274,16 +274,6 @@ export function PastLaunchesPage() {
                 {/* Left: Position, Logo, Name, Description */}
                 <div className="flex items-start sm:items-center flex-1 min-w-0 gap-3 md:gap-4 w-full">
                   <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
-                    {selectedWeek !== "all" && (
-                      <span className="text-lg md:text-xl font-bold text-gray-400 w-4 md:w-6 text-center">
-                        #{app.position}
-                      </span>
-                    )}
-                    {selectedWeek === "all" && (
-                      <span className="text-lg md:text-xl font-bold text-gray-400 w-4 md:w-6 text-center">
-                        #{index + 1}
-                      </span>
-                    )}
                     <img
                       src={app.logo_url}
                       alt={app.name}

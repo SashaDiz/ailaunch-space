@@ -11,10 +11,10 @@ const plans = [
     price: "Free",
     icon: Gift,
     features: [
-      "List on homepage for a week",
+      "Live on homepage for a month",
       "Entry in weekly limited availability",
-      "Regular, not top ranking position",
-      "Nofollow links (Top 3 get dofollow)",
+      "Badge for top 3 ranking products",
+      "High authority lifetime backlink (only for Top 3 rankings)",
       "Standard launch queue",
       "Max 15 spots per week",
     ],
@@ -29,10 +29,10 @@ const plans = [
     price: "Requires backlink",
     icon: Star,
     features: [
-      "List on homepage for a week",
+      "Live on homepage for a month",
       "Entry in weekly limited availability",
-      "Regular, top 3 ranking position",
-      "Immediate dofollow links",
+      "Badge for top 3 ranking products",
+      "Guaranteed high authority lifetime backlink (requires backlink from your site)",
       "Standard launch queue",
       "Social media promotion",
       "Backlink badge required",
@@ -49,10 +49,10 @@ const plans = [
     periodLabel: "/ launch",
     icon: Crown,
     features: [
-      "List on homepage for a week",
+      "Live on homepage for a month",
       "Top position (more visibility)",
-      "Regular, top 3 weekly position",
-      "Guaranteed dofollow links",
+      "Badge for top 3 ranking products",
+      "3+ Guaranteed high authority lifetime backlinks",
       "Social media promotion",
       "Skip the queue",
       "Premium badge",
@@ -88,10 +88,10 @@ function PlanSelectionStep({ onPlanSelect, selectedPlan }) {
 
       <div className="text-center">
         <p className="text-sm text-gray-600 mb-4">
-          Need more information about our plans?
+          Need more information about our launches?
         </p>
-        <Link to="/pricing" className="text-blue-600 hover:underline">
-          View detailed pricing comparison
+        <Link to="/faq" className="text-blue-600 hover:underline">
+          View detailed information
         </Link>
       </div>
     </div>

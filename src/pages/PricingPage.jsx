@@ -8,10 +8,10 @@ const plans = [
     title: "Standard Launch",
     price: "Free",
     features: [
-      "List on homepage for a week",
+      "Live on homepage for a month",
       "Entry in weekly limited availability",
-      "Regular, not top ranking position",
-      "Nofollow links (Top 3 get dofollow)",
+      "Badge for top 3 ranking products",
+      "High authority lifetime backlink (only for Top 3 rankings)",
       "Standard launch queue",
     ],
     button: "Get Started",
@@ -22,10 +22,10 @@ const plans = [
     title: "Support Launch",
     price: "Requires backlink",
     features: [
-      "List on homepage for a week",
+      "Live on homepage for a month",
       "Entry in weekly limited availability",
-      "Regular, top 3 ranking position",
-      "Immediate dofollow links",
+      "Badge for top 3 ranking products",
+      "Guaranteed high authority lifetime backlink (requires backlink from your site)",
       "Standard launch queue",
       "Social media promotion",
     ],
@@ -38,10 +38,10 @@ const plans = [
     price: "$15",
     periodLabel: "/ launch", // Only here!
     features: [
-      "List on homepage for a week",
+      "Live on homepage for a month",
       "Top position (more visibility)",
-      "Regular, top 3 weekly position",
-      "Guaranteed dofollow links",
+      "Badge for top 3 ranking products",
+      "3+ Guaranteed high authority lifetime backlinks",
       "Social media promotion",
       "Skip the queue",
       "Premium badge",
@@ -91,7 +91,7 @@ function PricingPage() {
           />
           Launch your directory
         </span>
-        <h1 className="text-5xl font-medium mb-3">Choose Your Launch Plan</h1>
+        <h2 className="text-5xl font-medium mb-3">Choose Your Launch Plan</h2>
         <p className="text-gray-900 text-center text-md mb-8">
           Choose the right launch type to unlock your project’s full potential.
           <br />
