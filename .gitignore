@@ -14,3 +14,4 @@ node_modules
 # Local configuration
 *.local
 .vercel
+dist
