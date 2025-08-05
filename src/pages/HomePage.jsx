@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Clock, Star, ExternalLink, TrendingUp, ThumbsUp } from "lucide-react";
+import { Clock, ExternalLink, ThumbsUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { CategoryPricingBadge } from "@/components/ui/CategoryPricingBadge";
@@ -377,7 +377,7 @@ export function HomePage() {
                   <p className="text-gray-800 text-sm">
                     Top 3 weekly products win badges and get dofollow backlinks.{" "}
                     <Link
-                      to="/details"
+                      to="/faq"
                       className="font-semibold underline underline-offset-4"
                     >
                       More details.
@@ -432,7 +432,7 @@ export function HomePage() {
                     Top 3 monthly products win badges and get dofollow
                     backlinks.{" "}
                     <Link
-                      to="/details"
+                      to="/faq"
                       className="font-semibold underline underline-offset-4"
                     >
                       More details.
