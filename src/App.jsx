@@ -72,7 +72,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          
+
           {/* Development/Testing Routes */}
           <Route
             path="/webhook-test"
