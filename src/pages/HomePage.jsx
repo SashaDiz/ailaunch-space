@@ -32,8 +32,7 @@ export function HomePage() {
     seconds: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [votedAppsWeekly, setVotedAppsWeekly] = useState(new Set());
-  const [votedAppsMonthly, setVotedAppsMonthly] = useState(new Set());
+  const [votedApps, setVotedApps] = useState(new Set()); // Single voted apps set for both weekly and monthly
   const [votingLoading, setVotingLoading] = useState(new Set());
 
   // Mock data for development
@@ -41,24 +40,24 @@ export function HomePage() {
     // Simulate API call
     setTimeout(() => {
       setApps([
+        // Week 1 projects (2024-W01)
         {
           id: 1,
           name: "TravelMate Navigator",
           short_description:
             "AI-powered travel planning with real-time updates and local insights",
           logo_url: aiFaviIcon,
-          weekly_vote_count: 42,
-          monthly_vote_count: 156,
+          vote_count: 88,
           is_paid: false,
-          is_weekly_winner: false,
-          is_monthly_winner: false,
+          is_weekly_winner: true, // Won week 1
+          is_monthly_winner: true, // Also winning monthly
           is_active: true,
           website_url: "https://example.com",
           categories: ["AI & LLM", "Developer Tools & Platforms"],
           pricing: "Freemium",
-          launch_date: "2024-01-15", // Date when submitted to weekly launch
-          launch_week: "2024-W03", // Week identifier
-          launch_month: "2024-01", // Month identifier
+          launch_date: "2024-01-01",
+          launch_week: "2024-W01",
+          launch_month: "2024-01",
         },
         {
           id: 2,
@@ -66,17 +65,16 @@ export function HomePage() {
           short_description:
             "Find and book unique accommodations worldwide with instant confirmation",
           logo_url: aiFaviIcon,
-          weekly_vote_count: 38,
-          monthly_vote_count: 142,
+          vote_count: 64,
           is_paid: true,
-          is_weekly_winner: false,
+          is_weekly_winner: true, // Won week 1 (2nd place)
           is_monthly_winner: false,
           is_active: true,
           website_url: "https://example.com",
           categories: ["APIs & Integrations"],
           pricing: "Paid",
-          launch_date: "2024-01-12",
-          launch_week: "2024-W02",
+          launch_date: "2024-01-02",
+          launch_week: "2024-W01",
           launch_month: "2024-01",
         },
         {
@@ -85,35 +83,35 @@ export function HomePage() {
           short_description:
             "Discover authentic local restaurants and hidden culinary gems",
           logo_url: aiFaviIcon,
-          weekly_vote_count: 35,
-          monthly_vote_count: 128,
+          vote_count: 58,
           is_paid: false,
-          is_weekly_winner: false,
+          is_weekly_winner: true, // Won week 1 (3rd place)
           is_monthly_winner: false,
           is_active: true,
           website_url: "https://example.com",
           categories: ["Directory of Directories", "APIs & Integrations"],
           pricing: "Free",
-          launch_date: "2024-01-08",
-          launch_week: "2024-W02",
+          launch_date: "2024-01-03",
+          launch_week: "2024-W01",
           launch_month: "2024-01",
         },
+
+        // Week 2 projects (2024-W02) - new launches but in same month
         {
           id: 4,
           name: "TripBudget Manager",
           short_description:
             "Comprehensive travel expense tracking and budgeting",
           logo_url: aiFaviIcon,
-          weekly_vote_count: 28,
-          monthly_vote_count: 89,
+          vote_count: 72, // Higher votes, could win monthly
           is_paid: false,
-          is_weekly_winner: false,
-          is_monthly_winner: false,
+          is_weekly_winner: false, // Launched in week 2
+          is_monthly_winner: true, // Winning monthly 2nd place
           is_active: true,
           website_url: "https://example.com",
           categories: ["Developer Tools & Platforms"],
           pricing: "Freemium",
-          launch_date: "2024-01-10",
+          launch_date: "2024-01-08",
           launch_week: "2024-W02",
           launch_month: "2024-01",
         },
@@ -123,36 +121,36 @@ export function HomePage() {
           short_description:
             "Weather-based travel planning and packing suggestions",
           logo_url: aiFaviIcon,
-          weekly_vote_count: 19,
-          monthly_vote_count: 67,
+          vote_count: 65, // Could win monthly 3rd
           is_paid: false,
           is_weekly_winner: false,
-          is_monthly_winner: false,
+          is_monthly_winner: true, // Winning monthly 3rd place
           is_active: true,
           website_url: "https://example.com",
           categories: ["AI & LLM"],
           pricing: "Free",
-          launch_date: "2024-01-14",
-          launch_week: "2024-W03",
+          launch_date: "2024-01-09",
+          launch_week: "2024-W02",
           launch_month: "2024-01",
         },
+
+        // Week 3 projects (2024-W03) - current week
         {
           id: 6,
           name: "PackSmart",
           short_description:
             "Smart packing lists based on destination and weather",
           logo_url: aiFaviIcon,
-          weekly_vote_count: 64,
-          monthly_vote_count: 198,
+          vote_count: 42, // Active current week
           is_paid: false,
-          is_weekly_winner: false,
+          is_weekly_winner: false, // Current week, could still win
           is_monthly_winner: false,
           is_active: true,
           website_url: "https://example.com",
           categories: ["UI/UX", "Design"],
           pricing: "Paid",
-          launch_date: "2024-01-01",
-          launch_week: "2024-W01",
+          launch_date: "2024-01-15",
+          launch_week: "2024-W03", // Current week
           launch_month: "2024-01",
         },
         {
@@ -161,8 +159,7 @@ export function HomePage() {
           short_description:
             "AI-powered city exploration and local recommendations",
           logo_url: aiFaviIcon,
-          weekly_vote_count: 7,
-          monthly_vote_count: 45,
+          vote_count: 19,
           is_paid: false,
           is_weekly_winner: false,
           is_monthly_winner: false,
@@ -180,8 +177,7 @@ export function HomePage() {
           short_description:
             "Premium hotel booking with exclusive member rates",
           logo_url: aiFaviIcon,
-          weekly_vote_count: 3,
-          monthly_vote_count: 23,
+          vote_count: 7,
           is_paid: false,
           is_weekly_winner: false,
           is_monthly_winner: false,
@@ -243,7 +239,7 @@ export function HomePage() {
     return () => clearInterval(timer);
   }, []);
 
-  // Handle voting (toggle) - separate for weekly and monthly
+  // Handle voting (toggle) - single vote count for both weekly and monthly
   const handleVote = async (appId) => {
     if (!isAuthenticated) {
       window.location.href = "/signin";
@@ -252,22 +248,13 @@ export function HomePage() {
 
     setVotingLoading((prev) => new Set([...prev, appId]));
 
-    const isWeekly = activeTab === "weekly";
-    const votedApps = isWeekly ? votedAppsWeekly : votedAppsMonthly;
-    const setVotedApps = isWeekly ? setVotedAppsWeekly : setVotedAppsMonthly;
-    const voteCountField = isWeekly
-      ? "weekly_vote_count"
-      : "monthly_vote_count";
-
     setApps((prevApps) => {
       return prevApps.map((app) => {
         if (app.id === appId) {
           const hasVoted = votedApps.has(appId);
           return {
             ...app,
-            [voteCountField]: hasVoted
-              ? app[voteCountField] - 1
-              : app[voteCountField] + 1,
+            vote_count: hasVoted ? app.vote_count - 1 : app.vote_count + 1,
           };
         }
         return app;
@@ -291,18 +278,39 @@ export function HomePage() {
     });
   };
 
-  // Sort apps by vote_count descending based on active tab
+  // Sort apps by vote_count descending - filter based on active tab
   const getSortedApps = () => {
-    const isWeekly = activeTab === "weekly";
-    const voteCountField = isWeekly
-      ? "weekly_vote_count"
-      : "monthly_vote_count";
-    return [...apps].sort((a, b) => b[voteCountField] - a[voteCountField]);
+    // For this demo, we'll simulate current week as 2024-W03
+    const currentWeek = "2024-W03";
+    const currentMonth = "2024-01";
+
+    // Filter apps based on active tab
+    const filteredApps = apps.filter((app) => {
+      if (activeTab === "weekly") {
+        // Weekly tab shows only current week's launches
+        return app.launch_week === currentWeek;
+      } else {
+        // Monthly tab shows all apps from current month
+        return app.launch_month === currentMonth;
+      }
+    });
+
+    return [...filteredApps].sort((a, b) => {
+      // If both apps have the same vote count (including 0), prioritize paid launches
+      if (a.vote_count === b.vote_count) {
+        if (a.is_paid && !b.is_paid) return -1;
+        if (!a.is_paid && b.is_paid) return 1;
+        return 0; // Both same paid status and same vote count
+      }
+
+      // Otherwise, sort by vote count (higher votes first)
+      return b.vote_count - a.vote_count;
+    });
   };
 
-  // Get current voted apps based on active tab
+  // Get current voted apps - same for both weekly and monthly
   const getCurrentVotedApps = () => {
-    return activeTab === "weekly" ? votedAppsWeekly : votedAppsMonthly;
+    return votedApps;
   };
 
   // Get current time remaining based on active tab
@@ -310,20 +318,28 @@ export function HomePage() {
     return activeTab === "weekly" ? weeklyTimeRemaining : monthlyTimeRemaining;
   };
 
-  // Get current vote count for an app based on active tab
+  // Get current vote count for an app - same for both weekly and monthly
   const getCurrentVoteCount = (app) => {
-    return activeTab === "weekly"
-      ? app.weekly_vote_count
-      : app.monthly_vote_count;
+    return app.vote_count;
   };
 
-  // Check if app is winner based on active tab
-  const getWinnerStatus = (app, index) => {
-    if (activeTab === "weekly") {
-      return app.is_weekly_winner || index < 3;
-    } else {
-      return app.is_monthly_winner || index < 3;
+  // Calculate ranking with ties (shared positions) - same for both weekly and monthly
+  const getAppRanking = (sortedApps) => {
+    const rankings = [];
+    let currentRank = 1;
+
+    for (let i = 0; i < sortedApps.length; i++) {
+      if (i > 0 && sortedApps[i].vote_count !== sortedApps[i - 1].vote_count) {
+        currentRank = i + 1;
+      }
+      rankings.push({
+        ...sortedApps[i],
+        displayRank: currentRank,
+        isTopThree: currentRank <= 3,
+      });
     }
+
+    return rankings;
   };
 
   function pad(num) {
@@ -351,8 +367,8 @@ export function HomePage() {
             </h2>
             <Badge variant="secondary" className="text-base">
               {activeTab === "weekly"
-                ? `${apps.length} / 15 Apps`
-                : `${apps.length} Apps`}
+                ? `${getSortedApps().length} / 15 Apps`
+                : `${getSortedApps().length} Apps`}
             </Badge>
           </div>
 
@@ -488,7 +504,7 @@ export function HomePage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {getSortedApps().map((app, index) => (
+              {getAppRanking(getSortedApps()).map((app) => (
                 <Link
                   key={app.id}
                   to={`/app/${app.id}`}
@@ -496,9 +512,9 @@ export function HomePage() {
                 >
                   <div
                     className={`w-full bg-white rounded-xl border flex flex-row items-center p-4 group cursor-pointer transition duration-300 ease-in-out hover:border-gray-900 hover:shadow-[0_6px_0_rgba(0,0,0,1)] hover:-translate-y-1.5 
-                      ${index === 0 ? "border-gray-900" : ""}
-                            ${index === 1 ? "border-gray-600" : ""}
-                            ${index === 2 ? "border-gray-400" : ""}`}
+                      ${app.displayRank === 1 ? "border-gray-900" : ""}
+                      ${app.displayRank === 2 ? "border-gray-600" : ""}
+                      ${app.displayRank === 3 ? "border-gray-400" : ""}`}
                   >
                     {/* Left: Logo, Name, Description */}
                     <div className="flex items-center flex-1 min-w-0 gap-4">
@@ -512,21 +528,33 @@ export function HomePage() {
                           <h3 className="font-medium text-gray-900 truncate text-lg">
                             {app.name}
                           </h3>
-                          {index < 3 && (
+                          {app.displayRank <= 3 && (
                             <span
                               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-xs font-normal
-                            ${index === 0 ? "bg-gray-900 text-white" : ""}
-                            ${index === 1 ? "bg-gray-300 text-gray-900" : ""}
-                            ${index === 2 ? "bg-gray-200 text-gray-900" : ""}
+                            ${
+                              app.displayRank === 1
+                                ? "bg-gray-900 text-white"
+                                : ""
+                            }
+                            ${
+                              app.displayRank === 2
+                                ? "bg-gray-300 text-gray-900"
+                                : ""
+                            }
+                            ${
+                              app.displayRank === 3
+                                ? "bg-gray-200 text-gray-900"
+                                : ""
+                            }
                           `}
                             >
                               <img
                                 src={crownIcon}
                                 alt="Badge"
                                 className={`w-4 mr-0.5
-                              ${index === 0 ? "inline" : ""}
-                              ${index === 1 ? "hidden" : ""}
-                              ${index === 2 ? "hidden" : ""}
+                              ${app.displayRank === 1 ? "inline" : ""}
+                              ${app.displayRank === 2 ? "hidden" : ""}
+                              ${app.displayRank === 3 ? "hidden" : ""}
                             `}
                               />
 
@@ -534,15 +562,30 @@ export function HomePage() {
                                 src={crownBlackIcon}
                                 alt="Badge"
                                 className={`w-4 mr-0.5
-                              ${index === 0 ? "hidden" : ""}
-                              ${index === 1 ? "inline" : ""}
-                              ${index === 2 ? "inline" : ""}
+                              ${app.displayRank === 1 ? "hidden" : ""}
+                              ${app.displayRank === 2 ? "inline" : ""}
+                              ${app.displayRank === 3 ? "inline" : ""}
                             `}
                               />
 
-                              {index === 0 && "1st"}
-                              {index === 1 && "2nd"}
-                              {index === 2 && "3rd"}
+                              {app.displayRank === 1 && "1st"}
+                              {app.displayRank === 2 && "2nd"}
+                              {app.displayRank === 3 && "3rd"}
+                            </span>
+                          )}
+                          {app.is_paid && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                              Premium
+                            </span>
+                          )}
+                          {app.is_weekly_winner && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                              Weekly Winner
+                            </span>
+                          )}
+                          {app.is_monthly_winner && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                              Monthly Winner
                             </span>
                           )}
                         </div>
@@ -575,7 +618,12 @@ export function HomePage() {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          const isWinner = getWinnerStatus(app, index);
+                          // Dofollow if: Top 3 in current rankings OR weekly winner OR monthly winner OR paid
+                          const isCurrentTopThree = app.displayRank <= 3;
+                          const isWinner =
+                            isCurrentTopThree ||
+                            app.is_weekly_winner ||
+                            app.is_monthly_winner;
                           const rel =
                             isWinner || app.is_paid ? "dofollow" : "nofollow";
                           window.open(

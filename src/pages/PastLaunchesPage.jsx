@@ -41,6 +41,7 @@ export function PastLaunchesPage() {
                 "https://via.placeholder.com/60x60/EF4444/FFFFFF?text=FT",
               vote_count: 89,
               is_winner: true,
+              is_paid: false,
               position: 1,
               website_url: "https://example.com",
               categories: ["AI & LLM", "APIs & Integrations"],
@@ -55,6 +56,7 @@ export function PastLaunchesPage() {
                 "https://via.placeholder.com/60x60/10B981/FFFFFF?text=HF",
               vote_count: 76,
               is_winner: true,
+              is_paid: true,
               position: 2,
               website_url: "https://example.com",
               categories: ["APIs & Integrations"],
@@ -69,6 +71,7 @@ export function PastLaunchesPage() {
                 "https://via.placeholder.com/60x60/F59E0B/FFFFFF?text=CG",
               vote_count: 64,
               is_winner: true,
+              is_paid: false,
               position: 3,
               website_url: "https://example.com",
               categories: ["AI & LLM", "Directory of Directories"],
@@ -83,6 +86,7 @@ export function PastLaunchesPage() {
                 "https://via.placeholder.com/60x60/8B5CF6/FFFFFF?text=PS",
               vote_count: 52,
               is_winner: false,
+              is_paid: false,
               position: 4,
               website_url: "https://example.com",
               categories: ["UI/UX", "Design"],
@@ -103,6 +107,7 @@ export function PastLaunchesPage() {
                 "https://via.placeholder.com/60x60/06B6D4/FFFFFF?text=TB",
               vote_count: 94,
               is_winner: true,
+              is_paid: true,
               position: 1,
               website_url: "https://example.com",
               categories: ["Developer Tools & Platforms"],
@@ -117,6 +122,7 @@ export function PastLaunchesPage() {
                 "https://via.placeholder.com/60x60/F97316/FFFFFF?text=LE",
               vote_count: 81,
               is_winner: true,
+              is_paid: false,
               position: 2,
               website_url: "https://example.com",
               categories: ["Directory of Directories", "APIs & Integrations"],
@@ -131,6 +137,7 @@ export function PastLaunchesPage() {
                 "https://via.placeholder.com/60x60/84CC16/FFFFFF?text=WW",
               vote_count: 69,
               is_winner: true,
+              is_paid: false,
               position: 3,
               website_url: "https://example.com",
               categories: ["AI & LLM"],
@@ -154,7 +161,19 @@ export function PastLaunchesPage() {
           week_end: launch.week_end,
         }))
       );
-      setFilteredApps(allApps.sort((a, b) => b.vote_count - a.vote_count));
+      setFilteredApps(
+        allApps.sort((a, b) => {
+          // If both apps have the same vote count (including 0), prioritize paid launches
+          if (a.vote_count === b.vote_count) {
+            if (a.is_paid && !b.is_paid) return -1;
+            if (!a.is_paid && b.is_paid) return 1;
+            return 0; // Both same paid status and same vote count
+          }
+
+          // Otherwise, sort by vote count (higher votes first)
+          return b.vote_count - a.vote_count;
+        })
+      );
     } else {
       // Show apps from selected week only
       const selectedLaunch = pastLaunches.find(
@@ -172,6 +191,25 @@ export function PastLaunchesPage() {
 
   const handleWeekChange = (value) => {
     setSelectedWeek(value);
+  };
+
+  // Calculate ranking with ties for "all" view (shared positions)
+  const getAppRanking = (apps) => {
+    const rankings = [];
+    let currentRank = 1;
+
+    for (let i = 0; i < apps.length; i++) {
+      if (i > 0 && apps[i].vote_count !== apps[i - 1].vote_count) {
+        currentRank = i + 1;
+      }
+      rankings.push({
+        ...apps[i],
+        displayRank: currentRank,
+        isTopThree: currentRank <= 3,
+      });
+    }
+
+    return rankings;
   };
 
   if (loading) {
@@ -247,140 +285,132 @@ export function PastLaunchesPage() {
 
         {/* Apps List */}
         <div className="space-y-4 mb-8">
-          {filteredApps.map((app) => (
-            <Link
-              key={`${app.id}-${app.week_start || "all"}`}
-              to={`/app/${app.id}`}
-              className="block group"
-            >
-              <div
-                className={`w-full bg-white rounded-xl border flex flex-col sm:flex-row items-start sm:items-center p-3 md:p-4 group cursor-pointer transition duration-300 ease-in-out hover:border-gray-900 hover:shadow-[0_6px_0_rgba(0,0,0,1)] hover:-translate-y-1.5 
-                  ${
-                    selectedWeek !== "all" && app.position === 1
-                      ? "border-gray-900"
-                      : ""
-                  }
-                  ${
-                    selectedWeek !== "all" && app.position === 2
-                      ? "border-gray-600"
-                      : ""
-                  }
-                  ${
-                    selectedWeek !== "all" && app.position === 3
-                      ? "border-gray-400"
-                      : ""
-                  }`}
+          {(selectedWeek === "all"
+            ? getAppRanking(filteredApps)
+            : filteredApps
+          ).map((app) => {
+            // For individual weeks, use position; for "all" view, use displayRank
+            const rank =
+              selectedWeek === "all" ? app.displayRank : app.position;
+            const isTopThree = rank <= 3;
+
+            return (
+              <Link
+                key={`${app.id}-${app.week_start || "all"}`}
+                to={`/app/${app.id}`}
+                className="block group"
               >
-                {/* Left: Position, Logo, Name, Description */}
-                <div className="flex items-start sm:items-center flex-1 min-w-0 gap-3 md:gap-4 w-full">
-                  <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
-                    <img
-                      src={app.logo_url}
-                      alt={app.name}
-                      className="w-14 h-14 md:w-20 md:h-20 rounded-lg object-cover flex-shrink-0"
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
-                      <h3 className="font-medium text-gray-900 truncate text-base md:text-lg">
-                        {app.name}
-                      </h3>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {app.position <= 3 && (
-                          <span
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-xs font-normal
-                              ${
-                                app.position === 1
-                                  ? "bg-gray-900 text-white"
-                                  : ""
-                              }
-                              ${
-                                app.position === 2
-                                  ? "bg-gray-300 text-gray-900"
-                                  : ""
-                              }
-                              ${
-                                app.position === 3
-                                  ? "bg-gray-200 text-gray-900"
-                                  : ""
-                              }
-                            `}
-                          >
-                            <img
-                              src={crownIcon}
-                              alt="Badge"
-                              className={`w-3 md:w-4 mr-0.5
-                                ${app.position === 1 ? "inline" : ""}
-                                ${app.position === 2 ? "hidden" : ""}
-                                ${app.position === 3 ? "hidden" : ""}
-                              `}
-                            />
-
-                            <img
-                              src={crownBlackIcon}
-                              alt="Badge"
-                              className={`w-3 md:w-4 mr-0.5
-                                ${app.position === 1 ? "hidden" : ""}
-                                ${app.position === 2 ? "inline" : ""}
-                                ${app.position === 3 ? "inline" : ""}
-                              `}
-                            />
-
-                            {app.position === 1 && "1st"}
-                            {app.position === 2 && "2nd"}
-                            {app.position === 3 && "3rd"}
-                          </span>
-                        )}
-                      </div>
+                <div
+                  className={`w-full bg-white rounded-xl border flex flex-col sm:flex-row items-start sm:items-center p-3 md:p-4 group cursor-pointer transition duration-300 ease-in-out hover:border-gray-900 hover:shadow-[0_6px_0_rgba(0,0,0,1)] hover:-translate-y-1.5 
+                    ${rank === 1 ? "border-gray-900" : ""}
+                    ${rank === 2 ? "border-gray-600" : ""}
+                    ${rank === 3 ? "border-gray-400" : ""}`}
+                >
+                  {/* Left: Position, Logo, Name, Description */}
+                  <div className="flex items-start sm:items-center flex-1 min-w-0 gap-3 md:gap-4 w-full">
+                    <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+                      <img
+                        src={app.logo_url}
+                        alt={app.name}
+                        className="w-14 h-14 md:w-20 md:h-20 rounded-lg object-cover flex-shrink-0"
+                      />
                     </div>
-                    <p className="text-sm text-gray-800 line-clamp-2 mt-1 mb-2">
-                      {app.short_description}
-                    </p>
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-1 mt-2 mb-3 sm:mb-0">
-                      {app.categories.map((category) => (
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+                        <h3 className="font-medium text-gray-900 truncate text-base md:text-lg">
+                          {app.name}
+                        </h3>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {isTopThree && (
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-xs font-normal
+                                ${rank === 1 ? "bg-gray-900 text-white" : ""}
+                                ${rank === 2 ? "bg-gray-300 text-gray-900" : ""}
+                                ${rank === 3 ? "bg-gray-200 text-gray-900" : ""}
+                              `}
+                            >
+                              <img
+                                src={crownIcon}
+                                alt="Badge"
+                                className={`w-3 md:w-4 mr-0.5
+                                  ${rank === 1 ? "inline" : ""}
+                                  ${rank === 2 ? "hidden" : ""}
+                                  ${rank === 3 ? "hidden" : ""}
+                                `}
+                              />
+
+                              <img
+                                src={crownBlackIcon}
+                                alt="Badge"
+                                className={`w-3 md:w-4 mr-0.5
+                                  ${rank === 1 ? "hidden" : ""}
+                                  ${rank === 2 ? "inline" : ""}
+                                  ${rank === 3 ? "inline" : ""}
+                                `}
+                              />
+
+                              {rank === 1 && "1st"}
+                              {rank === 2 && "2nd"}
+                              {rank === 3 && "3rd"}
+                            </span>
+                          )}
+                          {app.is_paid && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                              Premium
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-800 line-clamp-2 mt-1 mb-2">
+                        {app.short_description}
+                      </p>
+                      {/* Tags */}
+                      <div className="flex flex-wrap gap-1 mt-2 mb-3 sm:mb-0">
+                        {app.categories.map((category) => (
+                          <CategoryPricingBadge
+                            key={category}
+                            variant="category"
+                            className="px-2 py-0.5 rounded-sm text-xs font-medium"
+                          >
+                            {category}
+                          </CategoryPricingBadge>
+                        ))}
                         <CategoryPricingBadge
-                          key={category}
-                          variant="category"
+                          variant="pricing"
                           className="px-2 py-0.5 rounded-sm text-xs font-medium"
                         >
-                          {category}
+                          {app.pricing}
                         </CategoryPricingBadge>
-                      ))}
-                      <CategoryPricingBadge
-                        variant="pricing"
-                        className="px-2 py-0.5 rounded-sm text-xs font-medium"
-                      >
-                        {app.pricing}
-                      </CategoryPricingBadge>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Right: Buttons */}
+                  <div className="flex flex-row items-center gap-3 md:gap-4 ml-0 sm:ml-4 self-end sm:self-center mt-2 sm:mt-0">
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const rel =
+                          isTopThree || app.is_paid ? "dofollow" : "nofollow";
+                        window.open(
+                          app.website_url,
+                          "_blank",
+                          rel === "dofollow" ? "" : "nofollow"
+                        );
+                      }}
+                      className="cursor-pointer inline-flex items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-2 py-2 text-gray-600 hover:bg-gray-100 transition flex-shrink-0"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </button>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 md:px-3.5 py-2 md:py-2.5 rounded-lg min-w-16 md:min-w-20 text-sm md:text-md font-semibold bg-gray-100 text-gray-700 border border-gray-200 flex-shrink-0">
+                      <ThumbsUp className="h-3.5 w-3.5 md:h-4.5 md:w-4.5" />
+                      <span>{app.vote_count}</span>
                     </div>
                   </div>
                 </div>
-                {/* Right: Buttons */}
-                <div className="flex flex-row items-center gap-3 md:gap-4 ml-0 sm:ml-4 self-end sm:self-center mt-2 sm:mt-0">
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      const rel = app.is_winner ? "dofollow" : "nofollow";
-                      window.open(
-                        app.website_url,
-                        "_blank",
-                        rel === "dofollow" ? "" : "nofollow"
-                      );
-                    }}
-                    className="cursor-pointer inline-flex items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-2 py-2 text-gray-600 hover:bg-gray-100 transition flex-shrink-0"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                  </button>
-                  <div className="inline-flex items-center gap-1.5 px-2.5 md:px-3.5 py-2 md:py-2.5 rounded-lg min-w-16 md:min-w-20 text-sm md:text-md font-semibold bg-gray-100 text-gray-700 border border-gray-200 flex-shrink-0">
-                    <ThumbsUp className="h-3.5 w-3.5 md:h-4.5 md:w-4.5" />
-                    <span>{app.vote_count}</span>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
 
         {/* Call to Action */}

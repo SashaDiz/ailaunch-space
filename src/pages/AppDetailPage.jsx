@@ -298,8 +298,8 @@ export function AppDetailPage() {
                   {app.name}
                 </h2>
                 {app.is_paid && (
-                  <Badge className="bg-purple-100 text-purple-800">
-                    Featured
+                  <Badge className="bg-amber-100 text-amber-800 border border-amber-200">
+                    Premium
                   </Badge>
                 )}
                 {app.ranking && (
