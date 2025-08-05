@@ -37,13 +37,11 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { useSession } from "@/hooks/useSession";
 import PlanSelectionStep from "@/components/ui/PlanSelectionStep";
 import BacklinkBadge from "@/components/ui/BacklinkBadge";
 import RichTextEditor from "@/components/ui/RichTextEditor";
 
 export function SubmitAppPage() {
-  const { session } = useSession() || {};
   const [searchParams] = useSearchParams();
   const initialPlan = searchParams.get("plan") || null;
 
@@ -191,7 +189,7 @@ export function SubmitAppPage() {
     screenshot_files: [null, null, null, null, null], // For file uploads
     video_url: "",
     launch_week: "",
-    contact_email: session?.user?.email || "",
+    contact_email: "",
     backlink_url: "", // For support launch
     categories: [], // Array of selected categories (max 3)
     pricing: "", // Single pricing option
@@ -447,8 +445,7 @@ export function SubmitAppPage() {
   // Step navigation functions
   const validateStep2 = () => {
     const requiredFields = ["name", "website_url", "short_description"];
-    if (!session && !formData.contact_email)
-      requiredFields.push("contact_email");
+    if (!formData.contact_email) requiredFields.push("contact_email");
 
     // Check regular required fields
     const missingFields = requiredFields.filter(
@@ -811,7 +808,7 @@ export function SubmitAppPage() {
                   screenshot_files: [null, null, null, null, null],
                   video_url: "",
                   launch_week: "",
-                  contact_email: session?.user?.email || "",
+                  contact_email: "",
                   backlink_url: "",
                   categories: [],
                   pricing: "",
@@ -871,30 +868,13 @@ export function SubmitAppPage() {
             </div>
           </div>
 
-          {!session && (
-            <Alert className="mb-6 border-blue-200 bg-blue-50">
-              <Info className="h-4 w-4 text-blue-600" />
-              <AlertDescription className="text-blue-800">
-                You can submit your directory without an account. However,
-                creating an account will help you track your submission status
-                and receive updates.{" "}
-                <Link
-                  to="/signin"
-                  className="text-blue-600 hover:underline font-medium"
-                >
-                  Sign in
-                </Link>{" "}
-                or{" "}
-                <Link
-                  to="/signup"
-                  className="text-blue-600 hover:underline font-medium"
-                >
-                  create an account
-                </Link>{" "}
-                for the best experience.
-              </AlertDescription>
-            </Alert>
-          )}
+          <Alert className="mb-6 border-blue-200 bg-blue-50">
+            <Info className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-800">
+              Please provide your contact email to receive updates about your
+              submission status.
+            </AlertDescription>
+          </Alert>
 
           <div className="space-y-6 md:space-y-8">
             {/* Basic Information */}
@@ -941,31 +921,29 @@ export function SubmitAppPage() {
                 </div>
               </div>
 
-              {!session && (
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="contact_email"
-                    className="text-sm font-medium text-gray-900"
-                  >
-                    Contact Email *
-                  </Label>
-                  <Input
-                    id="contact_email"
-                    type="email"
-                    value={formData.contact_email}
-                    onChange={(e) =>
-                      handleInputChange("contact_email", e.target.value)
-                    }
-                    placeholder="your-email@example.com"
-                    className="h-10 border-gray-200 focus:border-gray-900 focus:ring-gray-900"
-                    required
-                  />
-                  <p className="text-sm text-gray-500">
-                    We'll use this email to contact you about your submission
-                    status
-                  </p>
-                </div>
-              )}
+              <div className="space-y-2">
+                <Label
+                  htmlFor="contact_email"
+                  className="text-sm font-medium text-gray-900"
+                >
+                  Contact Email *
+                </Label>
+                <Input
+                  id="contact_email"
+                  type="email"
+                  value={formData.contact_email}
+                  onChange={(e) =>
+                    handleInputChange("contact_email", e.target.value)
+                  }
+                  placeholder="your-email@example.com"
+                  className="h-10 border-gray-200 focus:border-gray-900 focus:ring-gray-900"
+                  required
+                />
+                <p className="text-sm text-gray-500">
+                  We'll use this email to contact you about your submission
+                  status
+                </p>
+              </div>
 
               <div className="space-y-2">
                 <Label
@@ -1826,8 +1804,8 @@ export function SubmitAppPage() {
                 </div>
               </div>
 
-              {/* Contact Email (if no session) */}
-              {!session && formData.contact_email && (
+              {/* Contact Email */}
+              {formData.contact_email && (
                 <div>
                   <Label className="text-sm font-medium text-gray-700">
                     Contact Email

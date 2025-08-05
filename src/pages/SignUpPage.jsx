@@ -1,25 +1,19 @@
-import { SignIn } from "@clerk/clerk-react";
-import { useLocation } from "react-router-dom";
+import { SignUp } from "@clerk/clerk-react";
 
-export function SignInPage() {
-  const location = useLocation();
-
-  // Get the redirect URL from location state or default to home
-  const redirectUrl = location.state?.from?.pathname || "/";
-
+export function SignUpPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            Sign in to your account
+            Create your account
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Welcome back to Directory Hunt
+            Join Directory Hunt today
           </p>
         </div>
         <div className="flex justify-center">
-          <SignIn afterSignInUrl={redirectUrl} signUpUrl="/sign-up" />
+          <SignUp afterSignUpUrl="/" signInUrl="/sign-in" />
         </div>
       </div>
     </div>

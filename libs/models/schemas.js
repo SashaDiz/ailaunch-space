@@ -1,23 +1,30 @@
 import { z } from "zod";
 
-// User Schema (mostly handled by NextAuth, but for additional fields)
+// User Schema (synced with Clerk via webhooks)
 export const UserSchema = z.object({
   _id: z.string().optional(),
+  clerkId: z.string(), // Clerk user ID
   email: z.string().email(),
-  name: z.string().optional(),
-  image: z.string().url().optional(),
-  emailVerified: z.date().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  fullName: z.string().optional(),
+  imageUrl: z.string().url().optional(),
+  emailVerified: z.boolean().default(false),
   createdAt: z.date().default(() => new Date()),
   updatedAt: z.date().default(() => new Date()),
-  // Additional custom fields
+  // Additional custom fields from Clerk public metadata
   bio: z.string().max(500).optional(),
   website: z.string().url().optional(),
   twitter: z.string().optional(),
+  github: z.string().optional(),
   linkedin: z.string().optional(),
-  company: z.string().optional(),
+  location: z.string().optional(),
+  // App-specific fields
   totalSubmissions: z.number().default(0),
   subscription: z.enum(["free", "premium", "lifetime"]).default("free"),
   subscriptionExpiry: z.date().optional(),
+  isActive: z.boolean().default(true),
+  deletedAt: z.date().optional(),
 });
 
 // App/Product Schema

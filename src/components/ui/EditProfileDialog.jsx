@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,21 +13,36 @@ import {
 } from "@/components/ui/dialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Camera, Save, X } from "lucide-react";
-import { useSession } from "@/hooks/useSession";
+import { useUser } from "@clerk/clerk-react";
 
 export function EditProfileDialog({ children, onProfileUpdate }) {
-  const { session } = useSession();
+  const { user } = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setSaving] = useState(false);
   const [formData, setFormData] = useState({
-    name: session?.user?.name || "",
-    bio: session?.user?.bio || "",
-    location: session?.user?.location || "",
-    website: session?.user?.website || "",
-    twitter: session?.user?.twitter || "",
-    github: session?.user?.github || "",
-    linkedin: session?.user?.linkedin || "",
+    name: user?.fullName || "",
+    bio: user?.publicMetadata?.bio || "",
+    location: user?.publicMetadata?.location || "",
+    website: user?.publicMetadata?.website || "",
+    twitter: user?.publicMetadata?.twitter || "",
+    github: user?.publicMetadata?.github || "",
+    linkedin: user?.publicMetadata?.linkedin || "",
   });
+
+  // Update form data when user data changes
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.fullName || "",
+        bio: user.publicMetadata?.bio || "",
+        location: user.publicMetadata?.location || "",
+        website: user.publicMetadata?.website || "",
+        twitter: user.publicMetadata?.twitter || "",
+        github: user.publicMetadata?.github || "",
+        linkedin: user.publicMetadata?.linkedin || "",
+      });
+    }
+  }, [user]);
 
   const getInitials = (name) => {
     return (
@@ -44,36 +59,39 @@ export function EditProfileDialog({ children, onProfileUpdate }) {
     setSaving(true);
 
     try {
-      if (import.meta.env.DEV) {
-        // In development mode, just simulate the update
-        setTimeout(() => {
-          console.log("Profile would be updated with:", formData);
-          setSaving(false);
-          setIsOpen(false);
-          if (onProfileUpdate) {
-            onProfileUpdate({ ...session.user, ...formData });
-          }
-        }, 1000);
-        return;
-      }
-
-      // In production, make API call
-      const response = await fetch(`/api/users/${session.user.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        const updatedUser = await response.json();
-        setIsOpen(false);
-        if (onProfileUpdate) {
-          onProfileUpdate(updatedUser);
+      if (user) {
+        // Update user's full name
+        if (formData.name !== user.fullName) {
+          await user.update({
+            firstName: formData.name.split(" ")[0] || "",
+            lastName: formData.name.split(" ").slice(1).join(" ") || "",
+          });
         }
-      } else {
-        console.error("Failed to update profile");
+
+        // Update user's public metadata with social links and bio
+        await user.update({
+          publicMetadata: {
+            bio: formData.bio,
+            location: formData.location,
+            website: formData.website,
+            twitter: formData.twitter,
+            github: formData.github,
+            linkedin: formData.linkedin,
+          },
+        });
+
+        console.log("Profile updated successfully");
+        setIsOpen(false);
+
+        if (onProfileUpdate) {
+          onProfileUpdate({
+            id: user.id,
+            name: formData.name,
+            email: user.primaryEmailAddress?.emailAddress,
+            image: user.imageUrl,
+            ...formData,
+          });
+        }
       }
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -90,16 +108,16 @@ export function EditProfileDialog({ children, onProfileUpdate }) {
   };
 
   const handleOpenChange = (open) => {
-    if (!open) {
+    if (!open && user) {
       // Reset form data when closing
       setFormData({
-        name: session?.user?.name || "",
-        bio: session?.user?.bio || "",
-        location: session?.user?.location || "",
-        website: session?.user?.website || "",
-        twitter: session?.user?.twitter || "",
-        github: session?.user?.github || "",
-        linkedin: session?.user?.linkedin || "",
+        name: user.fullName || "",
+        bio: user.publicMetadata?.bio || "",
+        location: user.publicMetadata?.location || "",
+        website: user.publicMetadata?.website || "",
+        twitter: user.publicMetadata?.twitter || "",
+        github: user.publicMetadata?.github || "",
+        linkedin: user.publicMetadata?.linkedin || "",
       });
     }
     setIsOpen(open);
@@ -122,11 +140,11 @@ export function EditProfileDialog({ children, onProfileUpdate }) {
           <div className="flex items-center space-x-4">
             <Avatar className="w-20 h-20">
               <AvatarImage
-                src={session?.user?.image}
-                alt={session?.user?.name}
+                src={user?.imageUrl}
+                alt={user?.fullName || "User"}
               />
               <AvatarFallback className="text-lg">
-                {getInitials(session?.user?.name)}
+                {getInitials(user?.fullName || "User")}
               </AvatarFallback>
             </Avatar>
             <div>

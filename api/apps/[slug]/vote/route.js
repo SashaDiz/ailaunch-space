@@ -1,11 +1,12 @@
 import { AppService } from "../../../../../libs/models/services.js";
-import { auth } from "../../../../../auth.mjs";
+import { verifySupabaseToken } from "../../../middleware/auth.js";
 
 export async function POST(request, { params }) {
   try {
-    const session = await auth();
+    // Verify Supabase authentication
+    const user = await verifySupabaseToken(request);
 
-    if (!session?.user) {
+    if (!user) {
       return new Response(
         JSON.stringify({ error: "Authentication required" }),
         {
@@ -40,7 +41,7 @@ export async function POST(request, { params }) {
     }
 
     const result = await AppService.voteForApp(
-      session.user.id,
+      user.id, // Use Supabase user ID
       appResult.app._id.toString(),
       vote_type
     );

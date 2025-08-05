@@ -20,4 +20,8 @@ export default defineConfig({
   build: {
     outDir: "dist",
   },
+  assetsInclude: ["**/*.html"],
+  server: {
+    port: process.env.PORT || 5173,
+  },
 });

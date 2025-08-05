@@ -2,13 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useSupabaseSession } from "../hooks/useSupabaseSession";
 
-// Example component showing how to integrate with the database
+// Example component showing how to integrate Supabase Auth with MongoDB data
 export function ExampleAppList() {
   const [apps, setApps] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { session } = useSupabaseSession();
 
   useEffect(() => {
     fetchData();
@@ -18,21 +19,15 @@ export function ExampleAppList() {
     try {
       setLoading(true);
 
-      // Fetch apps and categories in parallel
-      const [appsResponse, categoriesResponse] = await Promise.all([
-        fetch("/api/apps?limit=10"),
-        fetch("/api/categories"),
-      ]);
+      // Fetch apps from MongoDB API
+      const appsResponse = await fetch("/api/apps?limit=10");
 
-      if (!appsResponse.ok || !categoriesResponse.ok) {
+      if (!appsResponse.ok) {
         throw new Error("Failed to fetch data");
       }
 
       const appsData = await appsResponse.json();
-      const categoriesData = await categoriesResponse.json();
-
       setApps(appsData.apps || []);
-      setCategories(categoriesData.categories || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -41,13 +36,24 @@ export function ExampleAppList() {
   };
 
   const handleVote = async (appSlug, voteType) => {
+    // Check if user is authenticated via Supabase
+    if (!session?.user) {
+      alert("Please sign in to vote");
+      return;
+    }
+
     try {
       const response = await fetch(`/api/apps/${appSlug}/vote`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          // Pass Supabase user ID to your MongoDB API
+          Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ vote_type: voteType }),
+        body: JSON.stringify({
+          vote_type: voteType,
+          user_id: session.user.id, // Supabase user ID
+        }),
       });
 
       if (!response.ok) {
