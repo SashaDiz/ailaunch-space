@@ -8,10 +8,11 @@ import { AppDetailPage } from "./pages/AppDetailPage";
 import { SubmitAppPage } from "./pages/SubmitAppPage";
 import { PastLaunchesPage } from "./pages/PastLaunchesPage";
 import { FAQPage } from "./pages/FAQPage";
-import { ContactPage } from "./pages/ContactPage";
 import { TermsPage } from "./pages/TermsPage";
 import { SignInPage } from "./pages/SignInPage";
 import { VerifyRequestPage } from "./pages/VerifyRequestPage";
+import { ProfilePage } from "./pages/ProfilePage";
+import { DashboardPage } from "./pages/DashboardPage";
 import PricingPage from "./pages/PricingPage";
 import "./App.css";
 
@@ -31,8 +32,9 @@ function App() {
             <Route path="/verify-request" element={<VerifyRequestPage />} />
             <Route path="/faq" element={<FAQPage />} />
             <Route path="/pricing" element={<PricingPage />} />{" "}
-            <Route path="/contact" element={<ContactPage />} />
             <Route path="/terms" element={<TermsPage />} />
+            <Route path="/profile/:userId?" element={<ProfilePage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
           </Routes>
         </main>
         <Footer />

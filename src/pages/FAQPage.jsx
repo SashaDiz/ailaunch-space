@@ -302,22 +302,6 @@ export function FAQPage() {
           </div>
         ))}
       </div>
-
-      {/* Contact CTA */}
-      {/* <div className="bg-blue-50 border-blue-200">
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">
-          Still have questions?
-        </h3>
-        <p className="text-gray-600 mb-4">
-          Can't find what you're looking for? We're here to help!
-        </p>
-        <a
-          href="/contact"
-          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Contact Support
-        </a>
-      </div> */}
     </div>
   );
 }

@@ -13,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -24,7 +23,6 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Popover,
   PopoverContent,
@@ -85,22 +83,51 @@ export function SubmitAppPage() {
 
   const PRICING_OPTIONS = ["Free", "Freemium", "Paid"];
 
-  // Multi-step form state - now 4 steps
+  // Multi-step form state - now up to 5 steps (4 for standard/premium, 5 for support)
   const [currentStep, setCurrentStep] = useState(initialPlan ? 2 : 1);
   const [selectedPlan, setSelectedPlan] = useState(initialPlan);
   const [paymentCompleted, setPaymentCompleted] = useState(false);
 
-  // Step definitions
-  const steps = [
-    { id: 1, title: "Choose Plan", description: "Select your launch plan" },
-    {
-      id: 2,
-      title: "Launch Details",
-      description: "Fill in directory information",
-    },
-    { id: 3, title: "Choose Week", description: "Select launch week" },
-    { id: 4, title: "Confirm", description: "Review and confirm submission" },
-  ];
+  // Step definitions - dynamic based on selected plan
+  const getSteps = () => {
+    const baseSteps = [
+      { id: 1, title: "Choose Plan", description: "Select your launch plan" },
+      {
+        id: 2,
+        title: "Launch Details",
+        description: "Fill in directory information",
+      },
+    ];
+
+    if (selectedPlan === "support_launch") {
+      return [
+        ...baseSteps,
+        {
+          id: 3,
+          title: "Install Badge",
+          description: "Add DirectoryHunt badge",
+        },
+        { id: 4, title: "Choose Week", description: "Select launch week" },
+        {
+          id: 5,
+          title: "Confirm",
+          description: "Review and confirm submission",
+        },
+      ];
+    } else {
+      return [
+        ...baseSteps,
+        { id: 3, title: "Choose Week", description: "Select launch week" },
+        {
+          id: 4,
+          title: "Confirm",
+          description: "Review and confirm submission",
+        },
+      ];
+    }
+  };
+
+  const steps = getSteps();
 
   // Progress Bar Component
   const ProgressBar = () => (
@@ -175,6 +202,7 @@ export function SubmitAppPage() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+  const [badgeInstalled, setBadgeInstalled] = useState(false); // For support launch badge step
 
   // Mock available weeks - in real app, fetch from API
   useEffect(() => {
@@ -421,8 +449,6 @@ export function SubmitAppPage() {
     const requiredFields = ["name", "website_url", "short_description"];
     if (!session && !formData.contact_email)
       requiredFields.push("contact_email");
-    if (selectedPlan === "support_launch" && !formData.backlink_url)
-      requiredFields.push("backlink_url");
 
     // Check regular required fields
     const missingFields = requiredFields.filter(
@@ -460,6 +486,33 @@ export function SubmitAppPage() {
   };
 
   const validateStep3 = () => {
+    // For support launch, step 3 is badge installation
+    if (selectedPlan === "support_launch") {
+      if (!badgeInstalled) {
+        alert(
+          "Please confirm that you have installed the DirectoryHunt badge on your homepage."
+        );
+        return false;
+      }
+      if (!formData.backlink_url) {
+        alert(
+          "Please provide your homepage URL where you installed the badge."
+        );
+        return false;
+      }
+      return true;
+    } else {
+      // For other plans, step 3 is launch week selection
+      if (!formData.launch_week) {
+        alert("Please select a launch week.");
+        return false;
+      }
+      return true;
+    }
+  };
+
+  const validateStep4 = () => {
+    // This is only for support launch (launch week selection)
     if (!formData.launch_week) {
       alert("Please select a launch week.");
       return false;
@@ -470,7 +523,15 @@ export function SubmitAppPage() {
   const nextStep = () => {
     if (currentStep === 2 && !validateStep2()) return;
     if (currentStep === 3 && !validateStep3()) return;
-    setCurrentStep((prev) => Math.min(prev + 1, 4));
+    if (
+      currentStep === 4 &&
+      selectedPlan === "support_launch" &&
+      !validateStep4()
+    )
+      return;
+
+    const maxStep = selectedPlan === "support_launch" ? 5 : 4;
+    setCurrentStep((prev) => Math.min(prev + 1, maxStep));
   };
 
   const prevStep = () => {
@@ -679,9 +740,9 @@ export function SubmitAppPage() {
               <Alert className="text-left border-blue-200 bg-blue-50">
                 <Info className="h-4 w-4 text-blue-600" />
                 <AlertDescription className="text-blue-800">
-                  <strong>Next Steps:</strong> We'll verify that the backlink
-                  badge is installed on your website. Once verified, your
-                  directory will get dofollow links immediately.
+                  <strong>Next Steps:</strong> We'll verify that the
+                  DirectoryHunt badge is installed on your homepage. Once
+                  verified, your directory will get dofollow links immediately.
                 </AlertDescription>
               </Alert>
             )}
@@ -738,6 +799,7 @@ export function SubmitAppPage() {
                 setCurrentStep(1);
                 setSelectedPlan(null);
                 setPaymentCompleted(false);
+                setBadgeInstalled(false);
                 setFormData({
                   name: "",
                   short_description: "",
@@ -834,9 +896,6 @@ export function SubmitAppPage() {
             </Alert>
           )}
 
-          {/* Backlink Badge Component for Support Launch */}
-          {selectedPlan === "support_launch" && <BacklinkBadge />}
-
           <div className="space-y-6 md:space-y-8">
             {/* Basic Information */}
             <div className="border border-gray-200 rounded-lg p-6 space-y-6">
@@ -904,31 +963,6 @@ export function SubmitAppPage() {
                   <p className="text-sm text-gray-500">
                     We'll use this email to contact you about your submission
                     status
-                  </p>
-                </div>
-              )}
-
-              {selectedPlan === "support_launch" && (
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="backlink_url"
-                    className="text-sm font-medium text-gray-900"
-                  >
-                    Backlink Page URL *
-                  </Label>
-                  <Input
-                    id="backlink_url"
-                    type="url"
-                    value={formData.backlink_url}
-                    onChange={(e) =>
-                      handleInputChange("backlink_url", e.target.value)
-                    }
-                    placeholder="https://your-directory.com/about (page where you added the badge)"
-                    className="h-10 border-gray-200 focus:border-gray-900 focus:ring-gray-900"
-                    required
-                  />
-                  <p className="text-sm text-gray-500">
-                    URL of the page where you installed the DirectoryHunt badge
                   </p>
                 </div>
               )}
@@ -1094,7 +1128,7 @@ export function SubmitAppPage() {
                       key={pricing}
                       type="button"
                       onClick={() => handlePricingChange(pricing)}
-                      className={`px-6 py-3 text-sm font-medium rounded-lg border transition-all duration-200 ${
+                      className={`cursor-pointer px-6 py-3 text-sm font-medium rounded-lg border transition-all duration-200 ${
                         formData.pricing === pricing
                           ? "bg-gray-900 text-white border-gray-900 shadow-sm"
                           : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
@@ -1346,8 +1380,133 @@ export function SubmitAppPage() {
     );
   }
 
-  // Step 3: Choose Launch Week
-  if (currentStep === 3) {
+  // Step 3: Badge Installation (Support Launch Only)
+  if (currentStep === 3 && selectedPlan === "support_launch") {
+    return (
+      <div className="bg-white min-h-screen">
+        <div className="max-w-4xl mx-auto px-4 md:px-0 py-6 md:py-8">
+          <ProgressBar />
+
+          {/* Header */}
+          <div className="text-center mb-8 md:mb-12">
+            <h2 className="text-2xl md:text-3xl font-medium text-gray-900 mb-2">
+              Install DirectoryHunt Badge
+            </h2>
+            <div className="flex items-center justify-center gap-2 text-sm">
+              <span className="text-gray-600">Plan:</span>
+              <Badge variant="secondary" className="font-medium">
+                {getPlanDisplayName(selectedPlan)}
+              </Badge>
+            </div>
+            <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
+              To qualify for immediate dofollow links, please install the
+              DirectoryHunt badge on your website's homepage. This shows your
+              support for the directory community and helps other users discover
+              DirectoryHunt.
+            </p>
+          </div>
+
+          {/* Badge Installation Instructions */}
+          <div className="space-y-6">
+            <BacklinkBadge />
+
+            {/* Confirmation Form */}
+            <div className="border border-gray-200 rounded-lg p-6 space-y-6">
+              <CardTitle className="text-lg font-medium text-gray-900">
+                Confirm Badge Installation
+              </CardTitle>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="backlink_url"
+                    className="text-sm font-medium text-gray-900"
+                  >
+                    Homepage URL *
+                  </Label>
+                  <Input
+                    id="backlink_url"
+                    type="url"
+                    value={formData.backlink_url}
+                    onChange={(e) =>
+                      handleInputChange("backlink_url", e.target.value)
+                    }
+                    placeholder="https://your-directory.com (your homepage URL)"
+                    className="h-10 border-gray-200 focus:border-gray-900 focus:ring-gray-900"
+                    required
+                  />
+                  <p className="text-sm text-gray-500">
+                    URL of your homepage where you installed the DirectoryHunt
+                    badge
+                  </p>
+                </div>
+
+                <div className="flex items-start space-x-3">
+                  <Checkbox
+                    id="badge-confirmation"
+                    checked={badgeInstalled}
+                    onCheckedChange={setBadgeInstalled}
+                    className="mt-1"
+                  />
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="badge-confirmation"
+                      className="text-sm font-medium text-gray-900 cursor-pointer"
+                    >
+                      I confirm that I have installed the DirectoryHunt badge on
+                      my website's homepage
+                    </Label>
+                    <p className="text-sm text-gray-500">
+                      We will verify the badge installation on your homepage
+                      before activating your dofollow links.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <Alert className="border-blue-200 bg-blue-50">
+                <Info className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-blue-800">
+                  <strong>Important:</strong> The badge must remain on your
+                  homepage to maintain dofollow link status. Removing the badge
+                  from your homepage will result in links being changed to
+                  nofollow.
+                </AlertDescription>
+              </Alert>
+            </div>
+
+            {/* Navigation */}
+            <div className="flex flex-col justify-between sm:flex-row gap-4 pt-2">
+              <Button
+                variant="outline"
+                onClick={prevStep}
+                className="inline-flex items-center text-gray-900 border-0 group"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                <span className="transition duration-300 group-hover:-translate-x-1">
+                  Back to Details
+                </span>
+              </Button>
+              <Button
+                onClick={nextStep}
+                disabled={!badgeInstalled || !formData.backlink_url?.trim()}
+                className="px-8 py-3 h-12 flex items-center justify-center font-medium disabled:opacity-50"
+              >
+                Continue to Launch Week
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Step 3/4: Choose Launch Week
+  if (
+    (currentStep === 3 && selectedPlan !== "support_launch") ||
+    (currentStep === 4 && selectedPlan === "support_launch")
+  ) {
     const groupedWeeks = groupWeeksByMonth(availableWeeks);
     const currentYear = new Date().getFullYear();
     const yearOptions = [currentYear, currentYear + 1];
@@ -1553,7 +1712,9 @@ export function SubmitAppPage() {
                   {selectedPlan === "support_launch" && (
                     <>
                       <div>• Free submission with immediate dofollow links</div>
-                      <div>• Requires backlink badge installation</div>
+                      <div>
+                        • Requires DirectoryHunt badge installation on homepage
+                      </div>
                       <div>• Shares 15 weekly slots with Standard plans</div>
                       <div>• Social media promotion included</div>
                     </>
@@ -1599,8 +1760,11 @@ export function SubmitAppPage() {
     );
   }
 
-  // Step 4: Confirm & Submit
-  if (currentStep === 4) {
+  // Step 4/5: Confirm & Submit
+  if (
+    (currentStep === 4 && selectedPlan !== "support_launch") ||
+    (currentStep === 5 && selectedPlan === "support_launch")
+  ) {
     return (
       <div className="bg-white min-h-screen">
         <div className="max-w-4xl mx-auto px-4 md:px-0 py-6 md:py-8">
