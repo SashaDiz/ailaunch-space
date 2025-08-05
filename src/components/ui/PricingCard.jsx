@@ -21,19 +21,30 @@ const icons = [
   badgeIcon,
 ];
 
-function PricingCard({ plan }) {
+function PricingCard({ plan, onPlanSelect, isSelected }) {
   const navigate = useNavigate();
 
   const handlePlanSelection = () => {
-    const planType =
-      plan.planId || plan.title.toLowerCase().replace(" launch", "_launch");
-    navigate(`/submit?plan=${planType}`);
+    if (onPlanSelect) {
+      // If onPlanSelect is provided, use it (for step-by-step forms)
+      onPlanSelect(plan.planId || plan.id);
+    } else {
+      // Otherwise, navigate directly (for standalone pricing pages)
+      const planType =
+        plan.planId || plan.title.toLowerCase().replace(" launch", "_launch");
+      navigate(`/submit?plan=${planType}`);
+    }
   };
   return (
     <div
-      className={`flex-1 border rounded-lg p-6 flex flex-col items-start ${
-        plan.highlight ? "border-black border-2" : "border-gray-200"
+      className={`flex-1 border rounded-lg p-6 flex flex-col items-start cursor-pointer transition-all ${
+        plan.highlight
+          ? "border-black border-2"
+          : isSelected
+          ? "border-gray-400 border-2"
+          : "border-gray-200 hover:border-gray-300"
       }`}
+      onClick={handlePlanSelection}
     >
       <h2 className="font-medium text-lg mb-2">{plan.title}</h2>
       <div className="text-3xl font-semibold mb-4">
@@ -58,7 +69,7 @@ function PricingCard({ plan }) {
         variant={plan.highlight ? "primary" : "default"}
         onClick={handlePlanSelection}
       >
-        {plan.button}
+        {onPlanSelect && isSelected ? "✓ Selected" : plan.button}
       </Button>
     </div>
   );

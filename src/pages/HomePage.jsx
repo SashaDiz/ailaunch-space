@@ -337,7 +337,7 @@ export function HomePage() {
           <h1 className="text-6xl font-medium text-gray-900 mb-6 text-left">
             Launch Your Directory &amp;&nbsp;Get a&nbsp;DR22 Backlink
           </h1>
-          <p className="text-xl font-normal text-gray-900 text-left mb-8 max-w-xl">
+          <p className="text-xl font-normal text-gray-900 text-left mb-6 max-w-xl">
             Submit your project and get a&nbsp;DR22&nbsp;backlink, early
             exposure, and reach other builders launching curated directories.
           </p>
@@ -345,7 +345,7 @@ export function HomePage() {
 
         {/* Current Launch Apps */}
         <section>
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-4">
             <h2 className="text-3xl font-medium text-gray-900 capitalize">
               Best {activeTab} products
             </h2>
@@ -367,7 +367,7 @@ export function HomePage() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="weekly" className="mt-6">
+            <TabsContent value="weekly" className="mt-4">
               {/* Weekly Countdown Timer */}
               <div className="bg-gray-100 rounded-lg p-6 flex flex-col md:flex-row items-center justify-between">
                 <div className="flex-1 text-left">
@@ -421,7 +421,7 @@ export function HomePage() {
               </div>
             </TabsContent>
 
-            <TabsContent value="monthly" className="mt-6">
+            <TabsContent value="monthly" className="mt-4">
               {/* Monthly Countdown Timer */}
               <div className="bg-gray-100 rounded-lg p-6 flex flex-col md:flex-row items-center justify-between">
                 <div className="flex-1 text-left">
