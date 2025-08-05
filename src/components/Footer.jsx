@@ -14,9 +14,17 @@ export function Footer() {
               <img src={logoWhite} alt="Directory Hunt Logo" className="h-10" />
             </Link>
             <p className="text-gray-400 mb-4">
-              The premier platform for showcasing travel-related apps, services,
-              and tools. Join our weekly launches and connect with the travel
-              tech community.
+              Directory Hunt is a platform to discover and submit directories
+              for developers and tech enthusiasts. Made by{" "}
+              <a
+                href="https://x.com/johnrushx"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white underline underline-offset-4"
+              >
+                John Rush
+              </a>
+              .
             </p>
             <div className="flex space-x-4">
               <a

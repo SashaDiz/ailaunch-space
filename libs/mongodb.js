@@ -3,14 +3,14 @@ import dotenv from "dotenv";
 
 // Load environment variables if not already loaded
 if (!process.env.MONGODB_URI) {
-  dotenv.config({ path: ".env.local" });
+  dotenv.config({ path: ".env" });
 }
 
 let client;
 let clientPromise;
 
 if (!process.env.MONGODB_URI) {
-  throw new Error("Please add your MongoDB URI to .env.local");
+  throw new Error("Please add your MongoDB URI to .env");
 }
 
 if (process.env.NODE_ENV === "development") {
