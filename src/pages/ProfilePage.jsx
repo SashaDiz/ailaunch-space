@@ -59,13 +59,12 @@ export function ProfilePage() {
         if (viewingOwnProfile && user) {
           // Fetch own profile data from database
           console.log("Fetching profile for user:", user.id);
-          const token = await user.getToken();
-          profileResponse = await fetch("/api/profile", {
+
+          // Simple approach - pass user ID as query parameter instead of using auth headers
+          profileResponse = await fetch(`/api/profile?userId=${user.id}`, {
             method: "GET",
             headers: {
-              Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
-              "x-user-id": user.id,
             },
           });
           console.log("Profile response status:", profileResponse.status);

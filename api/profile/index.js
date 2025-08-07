@@ -5,29 +5,17 @@ import {
 
 export default async function handler(req, res) {
   console.log("Profile API called:", req.method);
-  console.log("Headers:", req.headers);
+  console.log("Query params:", req.query);
 
   try {
-    // Get the authorization header
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      console.log("No auth header found");
-      return res
-        .status(401)
-        .json({ error: "Unauthorized - No token provided" });
-    }
-
-    // For now, we'll get the user ID from the request body or headers
-    // You'll need to pass the user ID from the frontend
-    const userId = req.headers["x-user-id"] || req.body.userId;
-    console.log("User ID from headers/body:", userId);
+    // Get user ID from query parameters, headers, or body
+    const userId =
+      req.query.userId || req.headers["x-user-id"] || req.body.userId;
+    console.log("User ID:", userId);
 
     if (!userId) {
       console.log("No user ID provided");
-      return res
-        .status(401)
-        .json({ error: "Unauthorized - No user ID provided" });
+      return res.status(400).json({ error: "No user ID provided" });
     }
 
     if (req.method === "GET") {

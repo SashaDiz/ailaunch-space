@@ -53,13 +53,10 @@ export function EditProfileDialog({ children, onProfileUpdate, profileData }) {
 
     setLoading(true);
     try {
-      const token = await user.getToken();
-      const response = await fetch("/api/profile", {
+      const response = await fetch(`/api/profile?userId=${user.id}`, {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
-          "x-user-id": user.id,
         },
         body: JSON.stringify(formData),
       });
