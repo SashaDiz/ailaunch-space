@@ -4,11 +4,15 @@ import {
 } from "../../libs/models/users.js";
 
 export default async function handler(req, res) {
+  console.log("Profile API called:", req.method);
+  console.log("Headers:", req.headers);
+
   try {
     // Get the authorization header
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.log("No auth header found");
       return res
         .status(401)
         .json({ error: "Unauthorized - No token provided" });
@@ -17,8 +21,10 @@ export default async function handler(req, res) {
     // For now, we'll get the user ID from the request body or headers
     // You'll need to pass the user ID from the frontend
     const userId = req.headers["x-user-id"] || req.body.userId;
+    console.log("User ID from headers/body:", userId);
 
     if (!userId) {
+      console.log("No user ID provided");
       return res
         .status(401)
         .json({ error: "Unauthorized - No user ID provided" });
@@ -26,9 +32,12 @@ export default async function handler(req, res) {
 
     if (req.method === "GET") {
       // Get user profile
+      console.log("Looking for user with clerkId:", userId);
       const user = await getUserByClerkId(userId);
+      console.log("User found:", user ? "YES" : "NO");
 
       if (!user) {
+        console.log("User not found in database");
         return res.status(404).json({ error: "User not found" });
       }
 

@@ -58,6 +58,7 @@ export function ProfilePage() {
 
         if (viewingOwnProfile && user) {
           // Fetch own profile data from database
+          console.log("Fetching profile for user:", user.id);
           const token = await user.getToken();
           profileResponse = await fetch("/api/profile", {
             method: "GET",
@@ -67,11 +68,14 @@ export function ProfilePage() {
               "x-user-id": user.id,
             },
           });
+          console.log("Profile response status:", profileResponse.status);
         } else if (userId && userId !== user?.id) {
           // Fetch other user's profile
+          console.log("Fetching profile for other user:", userId);
           profileResponse = await fetch(`/api/profile/${userId}`);
         } else {
           // No user signed in and no specific userId
+          console.log("No user or userId available");
           setProfileData(null);
           setUserProjects([]);
           setProfileLoading(false);
