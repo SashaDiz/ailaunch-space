@@ -43,163 +43,151 @@ export function ProfilePage() {
   useEffect(() => {
     if (!isLoaded) {
       setProfileLoading(true);
-      return; // Wait for Clerk to load
-    }
-
-    // Check if viewing own profile or another user's profile
-    const viewingOwnProfile = !userId || userId === user?.id;
-    setIsOwnProfile(viewingOwnProfile);
-
-    if (viewingOwnProfile && user) {
-      // Use actual Clerk user data for own profile
-      const clerkProfile = {
-        id: user.id,
-        name: user.fullName || "User",
-        email: user.primaryEmailAddress?.emailAddress || "",
-        image: user.imageUrl,
-        bio: user.publicMetadata?.bio || "",
-        location: user.publicMetadata?.location || "",
-        website: user.publicMetadata?.website || "",
-        twitter: user.publicMetadata?.twitter || "",
-        github: user.publicMetadata?.github || "",
-        linkedin: user.publicMetadata?.linkedin || "",
-        joinedAt: user.createdAt
-          ? new Date(user.createdAt).toISOString().split("T")[0]
-          : new Date().toISOString().split("T")[0],
-        stats: {
-          projectsLaunched: 5, // This would come from your database
-          totalViews: 15420, // This would come from your database
-          followers: 234, // This would come from your database
-        },
-      };
-      setProfileData(clerkProfile);
-    } else if (userId && userId !== user?.id) {
-      // For other users' profiles, you would fetch from your database
-      // For now, use mock data
-      const mockProfile = {
-        id: userId,
-        name: "John Doe",
-        email: "john@example.com",
-        image:
-          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-        bio: "Another developer building amazing tools.",
-        location: "New York, NY",
-        website: "https://johndoe.com",
-        twitter: "johndoe",
-        github: "johndoe",
-        linkedin: "johndoe",
-        joinedAt: "2024-02-10",
-        stats: {
-          projectsLaunched: 3,
-          totalViews: 8900,
-          followers: 156,
-        },
-      };
-      setProfileData(mockProfile);
-    } else if (!user) {
-      // No user is signed in and no specific userId provided
-      setProfileData(null);
-      setUserProjects([]);
-      setProfileLoading(false);
       return;
     }
 
-    const mockProjects = [
-      {
-        id: "1",
-        name: "TaskFlow Pro",
-        description: "A modern project management tool for small teams",
-        category: "Productivity",
-        categories: ["Productivity", "Developer Tools"],
-        pricing: "Freemium",
-        launchDate: "2024-06-15",
-        status: "past", // live, upcoming, past, current
-        views: 5240,
-        upvotes: 89,
-        vote_count: 89,
-        position: 1,
-        is_winner: true,
-        website: "https://taskflowpro.com",
-        website_url: "https://taskflowpro.com",
-        image:
-          "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=300&h=200&fit=crop",
-        logo_url:
-          "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=60&h=60&fit=crop",
-        short_description: "A modern project management tool for small teams",
-      },
-      {
-        id: "2",
-        name: "CodeSnippet Manager",
-        description: "Organize and share your code snippets with your team",
-        category: "Developer Tools",
-        categories: ["Developer Tools", "APIs & Integrations"],
-        pricing: "Paid",
-        launchDate: "2025-08-04", // Current launch (today-ish)
-        status: "current",
-        views: 3280,
-        upvotes: 67,
-        vote_count: 67,
-        position: null,
-        is_winner: false,
-        website: "https://codesnippets.dev",
-        website_url: "https://codesnippets.dev",
-        image:
-          "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=300&h=200&fit=crop",
-        logo_url:
-          "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=60&h=60&fit=crop",
-        short_description:
-          "Organize and share your code snippets with your team",
-      },
-      {
-        id: "3",
-        name: "Design System Builder",
-        description: "Create consistent design systems for your web projects",
-        category: "Design",
-        categories: ["Design", "UI/UX"],
-        pricing: "Free",
-        launchDate: "2024-04-10",
-        status: "past",
-        views: 6900,
-        upvotes: 124,
-        vote_count: 124,
-        position: 3,
-        is_winner: true,
-        website: "https://designsystem.build",
-        website_url: "https://designsystem.build",
-        image:
-          "https://images.unsplash.com/photo-1558655146-d09347e92766?w=300&h=200&fit=crop",
-        logo_url:
-          "https://images.unsplash.com/photo-1558655146-d09347e92766?w=60&h=60&fit=crop",
-        short_description:
-          "Create consistent design systems for your web projects",
-      },
-      {
-        id: "4",
-        name: "AI Content Generator",
-        description: "Generate high-quality content using advanced AI models",
-        category: "AI & LLM",
-        categories: ["AI & LLM", "Content"],
-        pricing: "Freemium",
-        launchDate: "2025-08-15", // Upcoming launch
-        status: "upcoming",
-        views: 0,
-        upvotes: 0,
-        vote_count: 0,
-        position: null,
-        is_winner: false,
-        website: "https://aicontentgen.com",
-        website_url: "https://aicontentgen.com",
-        image:
-          "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=300&h=200&fit=crop",
-        logo_url:
-          "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=60&h=60&fit=crop",
-        short_description:
-          "Generate high-quality content using advanced AI models",
-      },
-    ];
+    const fetchProfileData = async () => {
+      try {
+        setProfileLoading(true);
 
-    setUserProjects(mockProjects);
-    setProfileLoading(false);
+        // Check if viewing own profile or another user's profile
+        const viewingOwnProfile = !userId || userId === user?.id;
+        setIsOwnProfile(viewingOwnProfile);
+
+        let profileResponse;
+
+        if (viewingOwnProfile && user) {
+          // Fetch own profile data from database
+          profileResponse = await fetch("/api/profile");
+        } else if (userId && userId !== user?.id) {
+          // Fetch other user's profile
+          profileResponse = await fetch(`/api/profile/${userId}`);
+        } else {
+          // No user signed in and no specific userId
+          setProfileData(null);
+          setUserProjects([]);
+          setProfileLoading(false);
+          return;
+        }
+
+        if (profileResponse.ok) {
+          const profile = await profileResponse.json();
+          setProfileData(profile);
+        } else if (profileResponse.status === 404) {
+          setProfileData(null);
+        } else {
+          console.error("Failed to fetch profile");
+          setProfileData(null);
+        }
+
+        // Mock projects data - replace with actual API call later
+        const mockProjects = [
+          {
+            id: "1",
+            name: "TaskFlow Pro",
+            description: "A modern project management tool for small teams",
+            category: "Productivity",
+            categories: ["Productivity", "Developer Tools"],
+            pricing: "Freemium",
+            launchDate: "2024-06-15",
+            status: "past", // live, upcoming, past, current
+            views: 5240,
+            upvotes: 89,
+            vote_count: 89,
+            position: 1,
+            is_winner: true,
+            website: "https://taskflowpro.com",
+            website_url: "https://taskflowpro.com",
+            image:
+              "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=300&h=200&fit=crop",
+            logo_url:
+              "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=60&h=60&fit=crop",
+            short_description:
+              "A modern project management tool for small teams",
+          },
+          {
+            id: "2",
+            name: "CodeSnippet Manager",
+            description: "Organize and share your code snippets with your team",
+            category: "Developer Tools",
+            categories: ["Developer Tools", "APIs & Integrations"],
+            pricing: "Paid",
+            launchDate: "2025-08-04", // Current launch (today-ish)
+            status: "current",
+            views: 3280,
+            upvotes: 67,
+            vote_count: 67,
+            position: null,
+            is_winner: false,
+            website: "https://codesnippets.dev",
+            website_url: "https://codesnippets.dev",
+            image:
+              "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=300&h=200&fit=crop",
+            logo_url:
+              "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=60&h=60&fit=crop",
+            short_description:
+              "Organize and share your code snippets with your team",
+          },
+          {
+            id: "3",
+            name: "Design System Builder",
+            description:
+              "Create consistent design systems for your web projects",
+            category: "Design",
+            categories: ["Design", "UI/UX"],
+            pricing: "Free",
+            launchDate: "2024-04-10",
+            status: "past",
+            views: 6900,
+            upvotes: 124,
+            vote_count: 124,
+            position: 3,
+            is_winner: true,
+            website: "https://designsystem.build",
+            website_url: "https://designsystem.build",
+            image:
+              "https://images.unsplash.com/photo-1558655146-d09347e92766?w=300&h=200&fit=crop",
+            logo_url:
+              "https://images.unsplash.com/photo-1558655146-d09347e92766?w=60&h=60&fit=crop",
+            short_description:
+              "Create consistent design systems for your web projects",
+          },
+          {
+            id: "4",
+            name: "AI Content Generator",
+            description:
+              "Generate high-quality content using advanced AI models",
+            category: "AI & LLM",
+            categories: ["AI & LLM", "Content"],
+            pricing: "Freemium",
+            launchDate: "2025-08-15", // Upcoming launch
+            status: "upcoming",
+            views: 0,
+            upvotes: 0,
+            vote_count: 0,
+            position: null,
+            is_winner: false,
+            website: "https://aicontentgen.com",
+            website_url: "https://aicontentgen.com",
+            image:
+              "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=300&h=200&fit=crop",
+            logo_url:
+              "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=60&h=60&fit=crop",
+            short_description:
+              "Generate high-quality content using advanced AI models",
+          },
+        ];
+
+        setUserProjects(mockProjects);
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        setProfileData(null);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    fetchProfileData();
   }, [userId, user, isLoaded]);
 
   const formatDate = (dateString) => {
@@ -329,12 +317,14 @@ export function ProfilePage() {
 
               <div className="flex items-center justify-center text-gray-600 mb-4">
                 <Calendar className="w-4 h-4 mr-1" />
-                Joined{" "}
-                {formatDate(profileData.joinedAt || profileData.createdAt)}
+                Joined {formatDate(profileData.joinedAt)}
               </div>
 
               {isOwnProfile && (
-                <EditProfileDialog onProfileUpdate={handleProfileUpdate}>
+                <EditProfileDialog
+                  onProfileUpdate={handleProfileUpdate}
+                  profileData={profileData}
+                >
                   <Button
                     variant="outline"
                     className="flex items-center justify-center w-full mb-4 border-1 border-gray-300"

@@ -35,6 +35,13 @@ export async function updateUserProfile(clerkId, profileData) {
     updatedAt: new Date(),
   };
 
+  // Remove null/undefined values
+  Object.keys(updateData).forEach((key) => {
+    if (updateData[key] === null || updateData[key] === undefined) {
+      delete updateData[key];
+    }
+  });
+
   return await users.updateOne(
     { clerkId, isActive: true },
     { $set: updateData }

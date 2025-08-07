@@ -1,283 +1,178 @@
 import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Camera, Save, X } from "lucide-react";
-import { useUser } from "@clerk/clerk-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 
-export function EditProfileDialog({ children, onProfileUpdate }) {
-  const { user } = useUser();
-  const [isOpen, setIsOpen] = useState(false);
-  const [loading, setSaving] = useState(false);
+export function EditProfileDialog({ children, onProfileUpdate, profileData }) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: user?.fullName || "",
-    bio: user?.publicMetadata?.bio || "",
-    location: user?.publicMetadata?.location || "",
-    website: user?.publicMetadata?.website || "",
-    twitter: user?.publicMetadata?.twitter || "",
-    github: user?.publicMetadata?.github || "",
-    linkedin: user?.publicMetadata?.linkedin || "",
+    bio: profileData?.bio || "",
+    location: profileData?.location || "",
+    website: profileData?.website || "",
+    twitter: profileData?.twitter || "",
+    github: profileData?.github || "",
+    linkedin: profileData?.linkedin || "",
   });
 
-  // Update form data when user data changes
+  // Update form data when profileData prop changes
   useEffect(() => {
-    if (user) {
+    if (profileData) {
       setFormData({
-        name: user.fullName || "",
-        bio: user.publicMetadata?.bio || "",
-        location: user.publicMetadata?.location || "",
-        website: user.publicMetadata?.website || "",
-        twitter: user.publicMetadata?.twitter || "",
-        github: user.publicMetadata?.github || "",
-        linkedin: user.publicMetadata?.linkedin || "",
+        bio: profileData.bio || "",
+        location: profileData.location || "",
+        website: profileData.website || "",
+        twitter: profileData.twitter || "",
+        github: profileData.github || "",
+        linkedin: profileData.linkedin || "",
       });
     }
-  }, [user]);
+  }, [profileData]);
 
-  const getInitials = (name) => {
-    return (
-      name
-        ?.split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase() || "?"
-    );
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSaving(true);
-
-    try {
-      if (user) {
-        // Update user's full name
-        if (formData.name !== user.fullName) {
-          await user.update({
-            firstName: formData.name.split(" ")[0] || "",
-            lastName: formData.name.split(" ").slice(1).join(" ") || "",
-          });
-        }
-
-        // Update user's public metadata with social links and bio
-        await user.update({
-          publicMetadata: {
-            bio: formData.bio,
-            location: formData.location,
-            website: formData.website,
-            twitter: formData.twitter,
-            github: formData.github,
-            linkedin: formData.linkedin,
-          },
-        });
-
-        console.log("Profile updated successfully");
-        setIsOpen(false);
-
-        if (onProfileUpdate) {
-          onProfileUpdate({
-            id: user.id,
-            name: formData.name,
-            email: user.primaryEmailAddress?.emailAddress,
-            image: user.imageUrl,
-            ...formData,
-          });
-        }
-      }
-    } catch (error) {
-      console.error("Error updating profile:", error);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleChange = (field, value) => {
+  const handleInputChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
 
-  const handleOpenChange = (open) => {
-    if (!open && user) {
-      // Reset form data when closing
-      setFormData({
-        name: user.fullName || "",
-        bio: user.publicMetadata?.bio || "",
-        location: user.publicMetadata?.location || "",
-        website: user.publicMetadata?.website || "",
-        twitter: user.publicMetadata?.twitter || "",
-        github: user.publicMetadata?.github || "",
-        linkedin: user.publicMetadata?.linkedin || "",
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
       });
+
+      if (!response.ok) {
+        throw new Error("Failed to update profile");
+      }
+
+      const updatedProfile = await response.json();
+      onProfileUpdate(updatedProfile);
+      setOpen(false);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("Failed to update profile. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    setIsOpen(open);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Edit Profile</DialogTitle>
-          <DialogDescription>
-            Update your profile information. Changes will be saved to your
-            account.
-          </DialogDescription>
         </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Profile Picture Section */}
-          <div className="flex items-center space-x-4">
-            <Avatar className="w-20 h-20">
-              <AvatarImage
-                src={user?.imageUrl}
-                alt={user?.fullName || "User"}
-              />
-              <AvatarFallback className="text-lg">
-                {getInitials(user?.fullName || "User")}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <Button type="button" variant="outline" size="sm" disabled>
-                <Camera className="w-4 h-4 mr-2" />
-                Change Photo
-              </Button>
-              <p className="text-xs text-gray-500 mt-1">
-                Photo changes coming soon
-              </p>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="bio">Bio</Label>
+            <Textarea
+              id="bio"
+              placeholder="Tell us about yourself..."
+              value={formData.bio}
+              onChange={(e) => handleInputChange("bio", e.target.value)}
+              rows={3}
+              maxLength={500}
+            />
+            <div className="text-xs text-gray-500 text-right">
+              {formData.bio.length}/500
             </div>
           </div>
 
-          {/* Basic Information */}
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="name">Display Name</Label>
+          <div className="grid gap-2">
+            <Label htmlFor="location">Location</Label>
+            <Input
+              id="location"
+              placeholder="City, Country"
+              value={formData.location}
+              onChange={(e) => handleInputChange("location", e.target.value)}
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="website">Website</Label>
+            <Input
+              id="website"
+              type="url"
+              placeholder="https://yourwebsite.com"
+              value={formData.website}
+              onChange={(e) => handleInputChange("website", e.target.value)}
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="twitter">Twitter</Label>
+            <div className="flex items-center">
+              <span className="text-gray-500 mr-1">@</span>
               <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => handleChange("name", e.target.value)}
-                placeholder="Enter your display name"
-                required
+                id="twitter"
+                placeholder="username"
+                value={formData.twitter}
+                onChange={(e) =>
+                  handleInputChange("twitter", e.target.value.replace("@", ""))
+                }
               />
             </div>
+          </div>
 
-            <div>
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea
-                id="bio"
-                value={formData.bio}
-                onChange={(e) => handleChange("bio", e.target.value)}
-                placeholder="Tell us about yourself..."
-                rows={3}
-                className="resize-none"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                {formData.bio.length}/500 characters
-              </p>
-            </div>
-
-            <div>
-              <Label htmlFor="location">Location</Label>
+          <div className="grid gap-2">
+            <Label htmlFor="github">GitHub</Label>
+            <div className="flex items-center">
+              <span className="text-gray-500 mr-1">@</span>
               <Input
-                id="location"
-                value={formData.location}
-                onChange={(e) => handleChange("location", e.target.value)}
-                placeholder="e.g. San Francisco, CA"
+                id="github"
+                placeholder="username"
+                value={formData.github}
+                onChange={(e) =>
+                  handleInputChange("github", e.target.value.replace("@", ""))
+                }
               />
             </div>
           </div>
 
-          {/* Social Links */}
-          <div className="space-y-4">
-            <h4 className="font-medium text-gray-900">Social Links</h4>
-
-            <div>
-              <Label htmlFor="website">Website</Label>
+          <div className="grid gap-2">
+            <Label htmlFor="linkedin">LinkedIn</Label>
+            <div className="flex items-center">
+              <span className="text-gray-500 mr-1">linkedin.com/in/</span>
               <Input
-                id="website"
-                type="url"
-                value={formData.website}
-                onChange={(e) => handleChange("website", e.target.value)}
-                placeholder="https://yourwebsite.com"
+                id="linkedin"
+                placeholder="username"
+                value={formData.linkedin}
+                onChange={(e) => handleInputChange("linkedin", e.target.value)}
               />
             </div>
-
-            <div>
-              <Label htmlFor="twitter">Twitter Username</Label>
-              <div className="flex">
-                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
-                  @
-                </span>
-                <Input
-                  id="twitter"
-                  value={formData.twitter}
-                  onChange={(e) => handleChange("twitter", e.target.value)}
-                  placeholder="username"
-                  className="rounded-l-none"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="github">GitHub Username</Label>
-              <div className="flex">
-                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
-                  github.com/
-                </span>
-                <Input
-                  id="github"
-                  value={formData.github}
-                  onChange={(e) => handleChange("github", e.target.value)}
-                  placeholder="username"
-                  className="rounded-l-none"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="linkedin">LinkedIn</Label>
-              <div className="flex">
-                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
-                  linkedin.com/in/
-                </span>
-                <Input
-                  id="linkedin"
-                  value={formData.linkedin}
-                  onChange={(e) => handleChange("linkedin", e.target.value)}
-                  placeholder="username"
-                  className="rounded-l-none"
-                />
-              </div>
-            </div>
           </div>
-
-          {/* Action Buttons */}
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsOpen(false)}
-              disabled={loading}
-            >
-              <X className="w-4 h-4 mr-2" />
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading}>
-              <Save className="w-4 h-4 mr-2" />
-              {loading ? "Saving..." : "Save Changes"}
-            </Button>
-          </div>
-        </form>
+        </div>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setOpen(false)}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={loading}>
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Changes
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
