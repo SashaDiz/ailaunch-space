@@ -99,20 +99,22 @@ export async function createUserIndexes() {
 }
 
 /**
- * Create or update user (upsert)
+ * Create or update user (upsert) - enhanced version
  */
 export async function upsertUser(userData) {
   const client = await clientPromise;
   const db = client.db("directoryhunt");
   const users = db.collection("users");
 
-  const { clerkId, email, firstName, lastName } = userData;
+  const { clerkId, email, firstName, lastName, imageUrl } = userData;
 
   const upsertData = {
     clerkId,
     email,
     firstName: firstName || "",
     lastName: lastName || "",
+    fullName: `${firstName || ""} ${lastName || ""}`.trim(),
+    imageUrl: imageUrl || "",
     isActive: true,
     updatedAt: new Date(),
   };
@@ -122,7 +124,16 @@ export async function upsertUser(userData) {
     { clerkId },
     {
       $set: upsertData,
-      $setOnInsert: { createdAt: new Date(), totalSubmissions: 0 },
+      $setOnInsert: {
+        createdAt: new Date(),
+        totalSubmissions: 0,
+        bio: "",
+        location: "",
+        website: "",
+        twitter: "",
+        github: "",
+        linkedin: "",
+      },
     },
     { upsert: true }
   );

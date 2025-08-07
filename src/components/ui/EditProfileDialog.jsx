@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useUser } from "@clerk/clerk-react";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 
 export function EditProfileDialog({ children, onProfileUpdate, profileData }) {
+  const { user } = useUser();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -47,18 +49,24 @@ export function EditProfileDialog({ children, onProfileUpdate, profileData }) {
   };
 
   const handleSave = async () => {
+    if (!user) return;
+
     setLoading(true);
     try {
+      const token = await user.getToken();
       const response = await fetch("/api/profile", {
         method: "PUT",
         headers: {
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
+          "x-user-id": user.id,
         },
         body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update profile");
+        const errorText = await response.text();
+        throw new Error(`Failed to update profile: ${errorText}`);
       }
 
       const updatedProfile = await response.json();

@@ -1,4 +1,3 @@
-import { getAuth } from "@clerk/nextjs/server";
 import {
   getUserByClerkId,
   updateUserProfile,
@@ -6,10 +5,23 @@ import {
 
 export default async function handler(req, res) {
   try {
-    const { userId } = getAuth(req);
+    // Get the authorization header
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ error: "Unauthorized - No token provided" });
+    }
+
+    // For now, we'll get the user ID from the request body or headers
+    // You'll need to pass the user ID from the frontend
+    const userId = req.headers["x-user-id"] || req.body.userId;
 
     if (!userId) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return res
+        .status(401)
+        .json({ error: "Unauthorized - No user ID provided" });
     }
 
     if (req.method === "GET") {
@@ -38,8 +50,8 @@ export default async function handler(req, res) {
         joinedAt: user.createdAt,
         stats: {
           projectsLaunched: user.totalSubmissions || 0,
-          totalViews: 0, // This would come from your analytics
-          followers: 0, // This would come from a followers system
+          totalViews: 0,
+          followers: 0,
         },
       };
 

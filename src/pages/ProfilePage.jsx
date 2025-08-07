@@ -58,7 +58,15 @@ export function ProfilePage() {
 
         if (viewingOwnProfile && user) {
           // Fetch own profile data from database
-          profileResponse = await fetch("/api/profile");
+          const token = await user.getToken();
+          profileResponse = await fetch("/api/profile", {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+              "x-user-id": user.id,
+            },
+          });
         } else if (userId && userId !== user?.id) {
           // Fetch other user's profile
           profileResponse = await fetch(`/api/profile/${userId}`);
@@ -74,9 +82,13 @@ export function ProfilePage() {
           const profile = await profileResponse.json();
           setProfileData(profile);
         } else if (profileResponse.status === 404) {
+          console.log("Profile not found");
           setProfileData(null);
         } else {
-          console.error("Failed to fetch profile");
+          console.error(
+            "Failed to fetch profile:",
+            await profileResponse.text()
+          );
           setProfileData(null);
         }
 
@@ -258,34 +270,31 @@ export function ProfilePage() {
     }
   };
 
+  // Show loading state
   if (profileLoading) {
     return (
       <div className="max-w-6xl mx-auto py-8">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-1">
-              <div className="h-96 bg-gray-200 rounded-lg"></div>
-            </div>
-            <div className="lg:col-span-2">
-              <div className="h-64 bg-gray-200 rounded-lg"></div>
-            </div>
-          </div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading profile...</p>
         </div>
       </div>
     );
   }
 
+  // Show not found if no profile data
   if (!profileData) {
     return (
-      <div className="max-w-6xl mx-auto py-8 text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">
-          Profile not found
-        </h2>
-        <p className="text-gray-600 mb-6">
-          The user profile you're looking for doesn't exist.
-        </p>
-        <Button onClick={() => navigate("/")}>Go Home</Button>
+      <div className="max-w-6xl mx-auto py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Profile Not Found
+          </h1>
+          <p className="text-gray-600 mb-8">
+            The profile you're looking for doesn't exist.
+          </p>
+          <Button onClick={() => navigate("/")}>Go Home</Button>
+        </div>
       </div>
     );
   }
