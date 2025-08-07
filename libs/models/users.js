@@ -90,3 +90,56 @@ export async function createUserIndexes() {
 
   console.log("User indexes created");
 }
+
+/**
+ * Create or update user (upsert)
+ */
+export async function upsertUser(userData) {
+  const client = await clientPromise;
+  const db = client.db("directoryhunt");
+  const users = db.collection("users");
+
+  const { clerkId, email, firstName, lastName } = userData;
+
+  const upsertData = {
+    clerkId,
+    email,
+    firstName: firstName || "",
+    lastName: lastName || "",
+    isActive: true,
+    updatedAt: new Date(),
+  };
+
+  // Add createdAt only if it's a new document
+  const result = await users.updateOne(
+    { clerkId },
+    {
+      $set: upsertData,
+      $setOnInsert: { createdAt: new Date(), totalSubmissions: 0 },
+    },
+    { upsert: true }
+  );
+
+  return result;
+}
+
+/**
+ * Delete user by Clerk ID
+ */
+export async function deleteUserByClerkId(clerkId) {
+  const client = await clientPromise;
+  const db = client.db("directoryhunt");
+  const users = db.collection("users");
+
+  // Soft delete by setting isActive to false
+  return await users.updateOne(
+    { clerkId },
+    {
+      $set: {
+        isActive: false,
+        deletedAt: new Date(),
+        updatedAt: new Date(),
+      },
+    }
+  );
+}
