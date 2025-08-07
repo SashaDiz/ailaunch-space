@@ -88,12 +88,12 @@ export function Header() {
             <div className="hidden md:flex items-center space-x-2">
               <SignedOut>
                 <Link to="/sign-in">
-                  <Button variant="outline" size="sm" className="py-3.5">
+                  <Button variant="outline" size="sm" className="mt-0">
                     Sign In
                   </Button>
                 </Link>
                 <Link to="/sign-up">
-                  <Button size="sm" className="py-3.5">
+                  <Button size="sm" className="mt-0">
                     Sign Up
                   </Button>
                 </Link>
@@ -122,13 +122,6 @@ export function Header() {
           <div className="md:hidden py-4 border-t border-gray-200">
             <nav className="flex flex-col space-y-4">
               <Link
-                to="/"
-                className="text-gray-700 hover:text-blue-600 transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Home
-              </Link>
-              <Link
                 to="/past-launches"
                 className="text-gray-700 hover:text-blue-600 transition-colors"
                 onClick={() => setIsMenuOpen(false)}
@@ -140,7 +133,7 @@ export function Header() {
                 className="text-gray-700 hover:text-blue-600 transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                FAQ
+                How It Works
               </Link>
               <Link
                 to="/pricing"
@@ -159,7 +152,7 @@ export function Header() {
               <div className="pt-2 mt-2 border-t border-gray-200 space-y-2">
                 <Link to="/submit" onClick={() => setIsMenuOpen(false)}>
                   <Button className="bg-blue-600 hover:bg-blue-700 w-full">
-                    Submit App
+                    Submit Directory
                   </Button>
                 </Link>
                 <SignedOut>
