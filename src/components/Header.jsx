@@ -88,12 +88,14 @@ export function Header() {
             <div className="hidden md:flex items-center space-x-2">
               <SignedOut>
                 <Link to="/sign-in">
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="py-3.5">
                     Sign In
                   </Button>
                 </Link>
                 <Link to="/sign-up">
-                  <Button size="sm">Sign Up</Button>
+                  <Button size="sm" className="py-3.5">
+                    Sign Up
+                  </Button>
                 </Link>
               </SignedOut>
               <SignedIn>
