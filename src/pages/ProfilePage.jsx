@@ -25,12 +25,12 @@ import {
 } from "lucide-react";
 import crownIcon from "@/assets/crown.svg";
 import crownBlackIcon from "@/assets/crown-black.svg";
-import { useUser, SignInButton } from "@clerk/clerk-react";
+import { useUser } from "@clerk/clerk-react";
 
 export function ProfilePage() {
   const { userId } = useParams();
   const navigate = useNavigate();
-  const { user, isLoaded, isSignedIn } = useUser();
+  const { user, isLoaded } = useUser();
   const [profileData, setProfileData] = useState(null);
   const [userProjects, setUserProjects] = useState([]);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
@@ -44,12 +44,6 @@ export function ProfilePage() {
     if (!isLoaded) {
       setProfileLoading(true);
       return; // Wait for Clerk to load
-    }
-
-    // Check if user is authenticated
-    if (!isSignedIn) {
-      setProfileLoading(false);
-      return;
     }
 
     // Check if viewing own profile or another user's profile
@@ -102,6 +96,12 @@ export function ProfilePage() {
         },
       };
       setProfileData(mockProfile);
+    } else if (!user) {
+      // No user is signed in and no specific userId provided
+      setProfileData(null);
+      setUserProjects([]);
+      setProfileLoading(false);
+      return;
     }
 
     const mockProjects = [
@@ -200,10 +200,77 @@ export function ProfilePage() {
 
     setUserProjects(mockProjects);
     setProfileLoading(false);
-  }, [userId, user, isLoaded, isSignedIn]);
+  }, [userId, user, isLoaded]);
 
-  // Show loading state while Clerk is loading
-  if (!isLoaded || profileLoading) {
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+    });
+  };
+
+  const getInitials = (name) => {
+    return (
+      name
+        ?.split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase() || "?"
+    );
+  };
+
+  const getProjectStatusInfo = (project) => {
+    const launchDate = new Date(project.launchDate);
+    const today = new Date();
+    const timeDiff = launchDate - today;
+    const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
+    switch (project.status) {
+      case "upcoming":
+        if (daysDiff > 0) {
+          return {
+            label: `Launches in ${daysDiff} day${daysDiff === 1 ? "" : "s"}`,
+            badgeText: "Upcoming",
+            badgeVariant: "outline",
+          };
+        } else {
+          return {
+            label: `Launches ${formatDate(project.launchDate)}`,
+            badgeText: "Upcoming",
+            badgeVariant: "outline",
+          };
+        }
+      case "current":
+        return {
+          label: "Launching now",
+          badgeText: "Live",
+          badgeVariant: "default",
+        };
+      case "past":
+        return {
+          label: `Launched ${formatDate(project.launchDate)}`,
+          badgeText:
+            project.position <= 3
+              ? `${project.position}${
+                  project.position === 1
+                    ? "st"
+                    : project.position === 2
+                    ? "nd"
+                    : "rd"
+                } Place`
+              : "Past",
+          badgeVariant: "secondary",
+        };
+      default:
+        return {
+          label: `Launched ${formatDate(project.launchDate)}`,
+          badgeText: "Live",
+          badgeVariant: "default",
+        };
+    }
+  };
+
+  if (profileLoading) {
     return (
       <div className="max-w-6xl mx-auto py-8">
         <div className="animate-pulse">
@@ -215,42 +282,6 @@ export function ProfilePage() {
             <div className="lg:col-span-2">
               <div className="h-64 bg-gray-200 rounded-lg"></div>
             </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show authentication required message if user is not signed in
-  if (!isSignedIn) {
-    return (
-      <div className="max-w-4xl mx-auto py-16 text-center">
-        <div className="bg-white rounded-lg border border-gray-200 p-8 shadow-sm">
-          <div className="mb-6">
-            <Users className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Sign in to view profiles
-            </h2>
-            <p className="text-gray-600 mb-6 max-w-md mx-auto">
-              You need to be signed in to view user profiles and discover
-              amazing projects from our community.
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <SignInButton mode="modal">
-              <Button size="lg" className="min-w-32">
-                Sign In
-              </Button>
-            </SignInButton>
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => navigate("/")}
-              className="min-w-32"
-            >
-              Go Home
-            </Button>
           </div>
         </div>
       </div>
