@@ -148,9 +148,11 @@ export function apiMiddleware() {
             return;
           }
 
-          if (apiPath === "/placeholder" && req.method === "GET") {
-            const width = queryParams.get("width") || "400";
-            const height = queryParams.get("height") || "300";
+          if (apiPath.startsWith("/placeholder") && req.method === "GET") {
+            // Extract dimensions from path like /placeholder/80/80
+            const pathParts = apiPath.split("/");
+            const width = pathParts[2] || queryParams.get("width") || "400";
+            const height = pathParts[3] || queryParams.get("height") || "300";
             const text = queryParams.get("text") || "Image";
 
             res.setHeader("Content-Type", "image/svg+xml");

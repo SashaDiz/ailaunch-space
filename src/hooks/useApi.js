@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@clerk/clerk-react";
 
 /**
@@ -9,6 +9,13 @@ export function useApi(endpoint, options = {}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { getToken, userId } = useAuth();
+
+  // Use ref to store latest options without causing re-renders
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+
+  // Create stable reference for options
+  const optionsKey = JSON.stringify(options);
 
   const apiCall = useCallback(
     async (url, fetchOptions = {}) => {
@@ -50,25 +57,78 @@ export function useApi(endpoint, options = {}) {
 
     async function fetchData() {
       try {
-        const result = await apiCall(endpoint, options);
+        setLoading(true);
+        setError(null);
+
+        const token = await getToken();
+
+        const response = await fetch(`/api${endpoint}`, {
+          ...optionsRef.current,
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+            ...(userId && { "x-clerk-user-id": userId }),
+            ...optionsRef.current.headers,
+          },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `HTTP ${response.status}`);
+        }
+
+        const result = await response.json();
         setData(result);
       } catch (err) {
+        console.error(`API Error (${endpoint}):`, err);
         setError(err.message);
+      } finally {
+        setLoading(false);
       }
     }
 
     fetchData();
-  }, [endpoint, apiCall, options]);
+  }, [endpoint, optionsKey, getToken, userId]); // Use optionsKey for dependency
 
   return {
     data,
     loading,
     error,
-    refetch: useCallback(() => {
-      if (endpoint) {
-        return apiCall(endpoint, options).then(setData).catch(setError);
+    refetch: useCallback(async () => {
+      if (!endpoint) return;
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const token = await getToken();
+
+        const response = await fetch(`/api${endpoint}`, {
+          ...optionsRef.current,
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+            ...(userId && { "x-clerk-user-id": userId }),
+            ...optionsRef.current.headers,
+          },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `HTTP ${response.status}`);
+        }
+
+        const result = await response.json();
+        setData(result);
+        return result;
+      } catch (err) {
+        console.error(`API Error (${endpoint}):`, err);
+        setError(err.message);
+        throw err;
+      } finally {
+        setLoading(false);
       }
-    }, [endpoint, apiCall, options]),
+    }, [endpoint, getToken, userId]),
     apiCall,
   };
 }
@@ -126,18 +186,33 @@ export function useApiMutation() {
 export function useVoting() {
   const [votingLoading, setVotingLoading] = useState(new Set());
   const [votedApps, setVotedApps] = useState(new Set());
-  const { apiCall } = useApi();
+  const { getToken, userId } = useAuth();
 
   const vote = useCallback(
     async (appSlug, appId) => {
-      if (votingLoading.has(appId)) return;
-
-      setVotingLoading((prev) => new Set(prev).add(appId));
+      setVotingLoading((prev) => {
+        if (prev.has(appId)) return prev; // Already voting, don't proceed
+        return new Set(prev).add(appId);
+      });
 
       try {
-        const result = await apiCall(`/apps?slug=${appSlug}&action=vote`, {
+        const token = await getToken();
+
+        const response = await fetch(`/api/apps?slug=${appSlug}&action=vote`, {
           method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+            ...(userId && { "x-clerk-user-id": userId }),
+          },
         });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `HTTP ${response.status}`);
+        }
+
+        const result = await response.json();
 
         if (result.success) {
           setVotedApps((prev) => new Set(prev).add(appId));
@@ -156,7 +231,7 @@ export function useVoting() {
         });
       }
     },
-    [apiCall, votingLoading]
+    [getToken, userId] // Stable dependencies only
   );
 
   return {

@@ -20,6 +20,7 @@ import { useAuth } from "@clerk/clerk-react";
 import crownIcon from "@/assets/crown.svg";
 import crownBlackIcon from "@/assets/crown-black.svg";
 import johnIcon from "@/assets/john.svg";
+import backlinksListLogo from "@/assets/backlinkslist-logo.svg";
 
 // Self-contained timer component that manages its own state and doesn't affect parent
 const CountdownTimer = memo(({ type, className }) => {
@@ -553,7 +554,7 @@ export function HomePage() {
             <div className="flex flex-col gap-4 w-full">
               <SponsorCard
                 sponsor={{
-                  logo: "/src/assets/backlinkslist-logo.png",
+                  logo: backlinksListLogo,
                   name: "Backlinks List",
                   description:
                     "One platform for Stripe payments, auth, CRM, email + help desk. Perfect for SaaS + memberships. Try free.",

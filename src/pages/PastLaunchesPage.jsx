@@ -18,6 +18,7 @@ import { useApi } from "@/hooks/useApi";
 import johnIcon from "@/assets/john.svg";
 import crownIcon from "@/assets/crown.svg";
 import crownBlackIcon from "@/assets/crown-black.svg";
+import backlinksListLogo from "@/assets/backlinkslist-logo.svg";
 
 export function PastLaunchesPage() {
   const [pastLaunches, setPastLaunches] = useState([]);
@@ -416,7 +417,7 @@ export function PastLaunchesPage() {
             <div className="flex flex-col gap-3 md:gap-4 w-full">
               <SponsorCard
                 sponsor={{
-                  logo: "/src/assets/backlinkslist-logo.png",
+                  logo: backlinksListLogo,
                   name: "Backlinks List",
                   description:
                     "One platform for Stripe payments, auth, CRM, email + help desk. Perfect for SaaS + memberships. Try free.",
