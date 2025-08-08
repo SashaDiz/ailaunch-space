@@ -172,6 +172,66 @@ export function apiMiddleware() {
             return;
           }
 
+          if (apiPath === "/submit-directory" && req.method === "POST") {
+            // Handle both FormData and JSON for development
+            const contentType = req.headers["content-type"];
+
+            if (contentType && contentType.includes("multipart/form-data")) {
+              // For development, we'll just mock the response for FormData
+              // In production, this would be handled by the proper API with file upload support
+              const mockResponse = {
+                success: true,
+                message: "Directory submitted successfully!",
+                data: {
+                  id: "mock_" + Date.now(),
+                  name: "Mock Directory",
+                  status: "pending_review",
+                  submitted_at: new Date().toISOString(),
+                },
+              };
+
+              res.statusCode = 201;
+              res.end(JSON.stringify(mockResponse));
+              return;
+            }
+
+            // Parse JSON request body for JSON requests
+            let body = "";
+            req.on("data", (chunk) => {
+              body += chunk.toString();
+            });
+
+            req.on("end", () => {
+              try {
+                const data = JSON.parse(body);
+
+                // Mock successful submission response
+                const mockResponse = {
+                  success: true,
+                  message: "Directory submitted successfully!",
+                  data: {
+                    id: "mock_" + Date.now(),
+                    name: data.name || "Unnamed Directory",
+                    status: "pending_review",
+                    submitted_at: new Date().toISOString(),
+                  },
+                };
+
+                res.statusCode = 201;
+                res.end(JSON.stringify(mockResponse));
+              } catch (error) {
+                res.statusCode = 400;
+                res.end(
+                  JSON.stringify({
+                    success: false,
+                    error: "Invalid JSON in request body",
+                  })
+                );
+              }
+            });
+            return;
+          }
+
           // Default response for unknown endpoints
           res.statusCode = 404;
           res.end(

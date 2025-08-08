@@ -668,47 +668,68 @@ export function SubmitAppPage() {
     setLoading(true);
 
     try {
-      // Prepare form data for file upload
-      const submissionFormData = new FormData();
+      // Helper function to convert file to base64
+      const fileToBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = (error) => reject(error);
+        });
+      };
 
-      // Add basic form fields
-      Object.keys(formData).forEach((key) => {
-        if (
-          key !== "logo_file" &&
-          key !== "screenshot_files" &&
-          key !== "screenshots"
-        ) {
-          if (Array.isArray(formData[key])) {
-            submissionFormData.append(key, JSON.stringify(formData[key]));
-          } else {
-            submissionFormData.append(key, formData[key]);
-          }
-        }
-      });
+      // Prepare submission data as JSON instead of FormData
+      const submissionData = { ...formData };
 
-      // Add logo file
+      // Remove file objects and URLs that shouldn't be sent
+      delete submissionData.logo_file;
+      delete submissionData.screenshot_files;
+      delete submissionData.logo_url;
+      delete submissionData.screenshots;
+
+      // Convert logo file to base64 if present
       if (formData.logo_file) {
-        submissionFormData.append("logo_file", formData.logo_file);
+        try {
+          submissionData.logo_base64 = await fileToBase64(formData.logo_file);
+          submissionData.logo_filename = formData.logo_file.name;
+          submissionData.logo_type = formData.logo_file.type;
+        } catch (error) {
+          console.error("Error converting logo to base64:", error);
+          alert("Error processing logo file. Please try again.");
+          setLoading(false);
+          return;
+        }
       }
 
-      // Add screenshot files
-      formData.screenshot_files.forEach((file, index) => {
+      // Convert screenshot files to base64 if present
+      const screenshotData = [];
+      for (let i = 0; i < formData.screenshot_files.length; i++) {
+        const file = formData.screenshot_files[i];
         if (file) {
-          submissionFormData.append(`screenshot_${index}`, file);
+          try {
+            const base64 = await fileToBase64(file);
+            screenshotData.push({
+              base64: base64,
+              filename: file.name,
+              type: file.type,
+              index: i,
+            });
+          } catch (error) {
+            console.error(`Error converting screenshot ${i} to base64:`, error);
+            alert(`Error processing screenshot ${i + 1}. Please try again.`);
+            setLoading(false);
+            return;
+          }
         }
-      });
+      }
+      submissionData.screenshots_base64 = screenshotData;
 
       // Add additional metadata
-      submissionFormData.append("plan", selectedPlan);
-      submissionFormData.append("payment_completed", paymentCompleted);
-      submissionFormData.append(
-        "link_type",
-        selectedPlan === "standard_launch" ? "nofollow" : "dofollow"
-      );
-      submissionFormData.append(
-        "requires_backlink",
-        selectedPlan === "support_launch"
-      );
+      submissionData.plan = selectedPlan;
+      submissionData.payment_completed = paymentCompleted;
+      submissionData.link_type =
+        selectedPlan === "standard_launch" ? "nofollow" : "dofollow";
+      submissionData.requires_backlink = selectedPlan === "support_launch";
 
       // Make API call to submit/update the directory
       const apiUrl = isEditing
@@ -719,9 +740,10 @@ export function SubmitAppPage() {
       const response = await fetch(apiUrl, {
         method: method,
         headers: {
+          "Content-Type": "application/json",
           "x-clerk-user-id": user.id,
         },
-        body: submissionFormData,
+        body: JSON.stringify(submissionData),
       });
 
       const result = await response.json();
@@ -734,10 +756,7 @@ export function SubmitAppPage() {
       }
 
       // Success
-      console.log(
-        `Directory ${isEditing ? "updated" : "submitted"} successfully:`,
-        result
-      );
+      // Directory submitted successfully
       setLoading(false);
       setSubmitted(true);
 

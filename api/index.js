@@ -73,8 +73,59 @@ export default async function handler(req, res) {
       if (!userId) {
         return res.status(401).json({ error: "Authentication required" });
       }
-      const result = await AppService.submitApp(req.body, userId);
-      return res.status(result.success ? 201 : 400).json(result);
+
+      try {
+        let appData;
+        const contentType = req.headers["content-type"];
+
+        if (contentType && contentType.includes("application/json")) {
+          // Handle JSON requests with base64 file data
+          appData = req.body;
+
+          // Process base64 files if present
+          if (appData.logo_base64) {
+            // For now, we'll store the base64 data directly
+            // In a production app, you'd want to decode and save to file storage
+            appData.logo_url = appData.logo_base64;
+            delete appData.logo_base64;
+            delete appData.logo_filename;
+            delete appData.logo_type;
+          }
+
+          if (
+            appData.screenshots_base64 &&
+            Array.isArray(appData.screenshots_base64)
+          ) {
+            // Process screenshot base64 data
+            appData.screenshots = appData.screenshots_base64.map(
+              (screenshot) => ({
+                url: screenshot.base64,
+                filename: screenshot.filename,
+              })
+            );
+            delete appData.screenshots_base64;
+          }
+        } else if (contentType && contentType.includes("multipart/form-data")) {
+          // Handle FormData (legacy support)
+          return res.status(400).json({
+            success: false,
+            error:
+              "FormData uploads not supported. Please use JSON with base64 encoded files.",
+          });
+        } else {
+          // Handle other content types
+          appData = req.body;
+        }
+
+        const result = await AppService.submitApp(appData, userId);
+        return res.status(result.success ? 201 : 400).json(result);
+      } catch (error) {
+        console.error("Submit directory error:", error);
+        return res.status(500).json({
+          success: false,
+          error: "Internal server error",
+        });
+      }
     }
 
     // Default 404
