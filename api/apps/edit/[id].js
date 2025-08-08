@@ -1,4 +1,4 @@
-import { AppService } from "../../libs/models/services.js";
+import { AppService } from "../../../libs/models/services.js";
 import formidable from "formidable";
 
 export default async function handler(req, res) {
@@ -70,7 +70,7 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: "Method not allowed" });
     }
   } catch (error) {
-    console.error("Error in /api/apps/[id]:", error);
+    console.error("Error in /api/apps/edit/[id]:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
 }

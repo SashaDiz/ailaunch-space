@@ -343,6 +343,24 @@ NODE_OPTIONS="--max-old-space-size=4096" npm run build
 
 ### Vercel Deployment Issues
 
+**Error**: `Two or more files have conflicting paths or names`
+
+**Example**: `The path "api/apps/[slug]/vote/route.js" has conflicts with "api/apps/[id].js"`
+
+**Solution**:
+
+This occurs when Vercel cannot distinguish between dynamic route segments. The fix is to reorganize API routes to avoid conflicts:
+
+```bash
+# Instead of:
+api/apps/[id].js          # Conflicts with [slug]
+api/apps/[slug]/route.js
+
+# Use:
+api/apps/edit/[id].js     # Clearly separated editing routes
+api/apps/[slug]/route.js  # Public viewing routes
+```
+
 **Error**: `Function execution timed out`
 
 **Solutions**:

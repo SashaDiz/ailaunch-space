@@ -282,7 +282,7 @@ export function SubmitAppPage() {
 
     const loadAppData = async () => {
       try {
-        const response = await fetch(`/api/apps/${editAppId}`, {
+        const response = await fetch(`/api/apps/edit/${editAppId}`, {
           headers: {
             "x-clerk-user-id": user.id,
           },
@@ -712,7 +712,7 @@ export function SubmitAppPage() {
 
       // Make API call to submit/update the directory
       const apiUrl = isEditing
-        ? `/api/apps/${editAppId}`
+        ? `/api/apps/edit/${editAppId}`
         : "/api/submit-directory";
       const method = isEditing ? "PUT" : "POST";
 

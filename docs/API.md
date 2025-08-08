@@ -77,9 +77,9 @@ List all approved applications with pagination and filtering.
 }
 ```
 
-#### GET /api/apps/[id]
+#### GET /api/apps/edit/[id]
 
-Get detailed information about a specific application.
+Get detailed information about a specific application for editing (requires authentication).
 
 **Response:**
 
@@ -117,9 +117,9 @@ Get detailed information about a specific application.
 }
 ```
 
-#### POST /api/apps/[id]/vote
+#### POST /api/apps/[slug]/vote
 
-Vote on an application (requires authentication).
+Vote on an application using its slug (requires authentication).
 
 **Request Body:**
 

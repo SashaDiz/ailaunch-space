@@ -234,9 +234,12 @@ All protected endpoints require Clerk authentication. The user ID is passed via 
 #### Apps
 
 - `GET /api/apps` - List all approved apps
-- `GET /api/apps/[id]` - Get specific app details
+- `GET /api/apps/[slug]` - Get specific app details by slug
+- `GET /api/apps/edit/[id]` - Get specific app details for editing
+- `PUT /api/apps/edit/[id]` - Update an app
+- `DELETE /api/apps/edit/[id]` - Delete an app
 - `POST /api/submit-directory` - Submit new app
-- `POST /api/apps/[id]/vote` - Vote on an app
+- `POST /api/apps/[slug]/vote` - Vote on an app
 
 #### User Management
 
@@ -280,9 +283,9 @@ Content-Type: multipart/form-data
 #### Vote on App
 
 ```javascript
-POST /api/apps/123/vote
+POST /api/apps/my-app-slug/vote
 {
-  "type": "upvote" // or "downvote"
+  "vote_type": "upvote" // or "downvote"
 }
 ```
 

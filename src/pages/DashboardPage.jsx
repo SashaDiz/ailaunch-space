@@ -161,7 +161,7 @@ export function DashboardPage() {
     if (!user?.id) return;
 
     try {
-      const response = await fetch(`/api/apps/${launchId}`, {
+      const response = await fetch(`/api/apps/edit/${launchId}`, {
         method: "DELETE",
         headers: {
           "x-clerk-user-id": user.id,
