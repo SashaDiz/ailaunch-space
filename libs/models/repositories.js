@@ -66,6 +66,10 @@ export class UserRepository {
       pendingApps: apps.filter((app) => app.status === "pending").length,
     };
   }
+
+  static async countUsers(filters = {}) {
+    return await db.count(this.collection, filters);
+  }
 }
 
 export class AppRepository {
@@ -147,6 +151,41 @@ export class AppRepository {
       limit: options.limit,
       skip: options.skip,
     });
+  }
+
+  static async countApps(filters = {}) {
+    const query = {};
+
+    // Status filter
+    if (filters.status) {
+      query.status = filters.status;
+    }
+
+    // Category filter
+    if (filters.category) {
+      query.categories = { $in: [filters.category] };
+    }
+
+    // Week filter
+    if (filters.week) {
+      query.launch_week = filters.week;
+    }
+
+    // Featured filter
+    if (filters.featured !== undefined) {
+      query.featured = filters.featured;
+    }
+
+    // Search filter
+    if (filters.search) {
+      query.$or = [
+        { name: { $regex: filters.search, $options: "i" } },
+        { short_description: { $regex: filters.search, $options: "i" } },
+        { categories: { $in: [new RegExp(filters.search, "i")] } },
+      ];
+    }
+
+    return await db.count(this.collection, query);
   }
 
   static async getAppsByUser(userId) {
@@ -312,6 +351,10 @@ export class VoteRepository {
 
   static async getVotesForApp(appId) {
     return await db.find(this.collection, { app_id: appId });
+  }
+
+  static async countVotes(filters = {}) {
+    return await db.count(this.collection, filters);
   }
 }
 

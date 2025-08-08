@@ -36,8 +36,8 @@ export class AppService {
       const skip = (page - 1) * limit;
       const apps = await AppRepository.getApps(filters, { limit, skip });
 
-      // Get total count for pagination
-      const total = await AppRepository.collection.countDocuments(filters);
+      // Get total count for pagination using the database manager's count method
+      const total = await AppRepository.countApps(filters);
 
       return {
         success: true,
@@ -428,13 +428,13 @@ export class StatsService {
     try {
       const [totalApps, totalUsers, thisWeekApps, totalVotes] =
         await Promise.all([
-          AppRepository.collection.countDocuments({ status: "approved" }),
-          UserRepository.collection.countDocuments({}),
-          AppRepository.collection.countDocuments({
+          AppRepository.countApps({ status: "approved" }),
+          UserRepository.countUsers({}),
+          AppRepository.countApps({
             launch_week: WeekService.getCurrentWeekId(),
             status: "approved",
           }),
-          VoteRepository.collection.countDocuments({}),
+          VoteRepository.countVotes({}),
         ]);
 
       return {
