@@ -2,12 +2,15 @@
 
 A modern web application for discovering and launching digital products, similar to Product Hunt. Built with React, Vite, and MongoDB, featuring user authentication, product submissions, voting, and launch scheduling.
 
+⚠️ **Important**: This project uses a consolidated serverless function architecture to stay within Vercel's Hobby plan limits (4/12 functions). See [docs/SERVERLESS_FUNCTIONS.md](./docs/SERVERLESS_FUNCTIONS.md) for guidelines.
+
 ## 📋 Table of Contents
 
 - [Overview](#overview)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Quick Start](#quick-start)
+- [Serverless Function Management](#serverless-function-management)
 - [Documentation](#documentation)
 - [Project Structure](#project-structure)
 - [Contributing](#contributing)
@@ -23,6 +26,22 @@ DirectoryHunt is a platform where users can:
 - Schedule launches for specific weeks
 - Manage their profile and submissions
 - Access premium features through subscriptions
+
+## ⚡ Serverless Function Management
+
+### Current Status: 4/12 Functions ✅
+
+```bash
+# Always check before making changes
+npm run check-functions
+```
+
+**Critical Guidelines:**
+
+- ❌ **Never create new .js files in `/api`** - consolidate into existing handlers
+- ✅ **Use query parameters** for routing instead of path parameters
+- ✅ **Group related functionality** in the same handler
+- 📖 **Read [SERVERLESS_FUNCTIONS.md](./docs/SERVERLESS_FUNCTIONS.md)** before adding API endpoints
 
 ## ✨ Features
 
@@ -133,12 +152,16 @@ Our comprehensive documentation is organized as follows:
 - **[Database Schema](docs/DATABASE.md)** - Database structure and operations
 - **[Deployment Guide](docs/DEPLOYMENT.md)** - Deploy to various platforms
 
+### ⚡ **Serverless Function Management**
+
+- **[Serverless Functions Guide](docs/SERVERLESS_FUNCTIONS.md)** - Critical guidelines for staying within Vercel limits
+- **[Architecture Decisions](docs/ARCHITECTURE.md)** - Technical decision records including function consolidation
+
 ### 🛠 **Practical Resources**
 
 - **[Code Examples](docs/EXAMPLES.md)** - Implementation patterns and snippets
 - **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
 - **[FAQ](docs/FAQ.md)** - Frequently asked questions
-- **[Architecture Decisions](docs/ARCHITECTURE.md)** - Technical decision records
 
 ### 🤝 **Contributing**
 

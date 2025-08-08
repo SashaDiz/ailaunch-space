@@ -4,9 +4,54 @@
   "functions": {
     "api/webhooks/clerk.js": {
       "maxDuration": 10
+    },
+    "api/index.js": {
+      "maxDuration": 10
+    },
+    "api/apps.js": {
+      "maxDuration": 10
+    },
+    "api/profile.js": {
+      "maxDuration": 10
     }
   },
   "rewrites": [
+    {
+      "source": "/api/dashboard",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/api/categories",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/api/weeks",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/api/user/me",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/api/submit-directory",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/api/apps/(.*)",
+      "destination": "/api/apps?slug=$1"
+    },
+    {
+      "source": "/api/apps",
+      "destination": "/api/apps"
+    },
+    {
+      "source": "/api/profile/(.*)",
+      "destination": "/api/profile?userId=$1"
+    },
+    {
+      "source": "/api/profile",
+      "destination": "/api/profile"
+    },
     {
       "source": "/api/(.*)",
       "destination": "/api/$1"

@@ -1,5 +1,5 @@
 {
-  "name": "travel-launchpad",
+  "name": "directories-launchpad",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,7 +11,9 @@
     "vercel-build": "vite build",
     "db:init": "node scripts/init-db.js",
     "db:seed": "node scripts/init-db.js",
-    "db:setup": "node scripts/init-database.js"
+    "db:setup": "node scripts/init-database.js",
+    "check-functions": "echo 'Serverless Functions:' && find api -name '*.js' -type f | wc -l && echo '/12 (Hobby limit)' && echo 'Current functions:' && find api -name '*.js' -type f",
+    "predeploy": "npm run check-functions"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.38.1",

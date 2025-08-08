@@ -2,7 +2,7 @@
 
 ## Overview
 
-DirectoryHunt provides a RESTful API for managing products, users, and platform interactions. All API endpoints are serverless functions deployed on Vercel.
+DirectoryHunt provides a RESTful API for managing products, users, and platform interactions. The API uses a **consolidated serverless function architecture** to stay within Vercel's Hobby plan limits (max 12 functions).
 
 ## Base URL
 
@@ -10,6 +10,24 @@ DirectoryHunt provides a RESTful API for managing products, users, and platform 
 Development: http://localhost:5173/api
 Production: https://your-domain.com/api
 ```
+
+## ⚠️ Serverless Function Limits
+
+**IMPORTANT**: Vercel Hobby plan allows maximum 12 serverless functions. This project uses a consolidated API structure:
+
+### Current Function Count: 4/12
+
+- `api/index.js` - Main endpoints (dashboard, categories, weeks, user/me, submit-directory)
+- `api/apps.js` - All app-related operations
+- `api/profile.js` - All profile-related operations
+- `api/webhooks/clerk.js` - Clerk webhook handler
+
+### Guidelines for Adding New Endpoints
+
+1. **DO NOT create new .js files in /api/** - Add routes to existing consolidated handlers
+2. **Use query parameters instead of path parameters** when possible
+3. **Group related functionality** in the same handler
+4. **Test function count** before deploying: `find api -name "*.js" -type f | wc -l`
 
 ## Authentication
 
@@ -34,7 +52,74 @@ Routes requiring authentication:
 
 ## Endpoints Reference
 
-### Applications
+### Core Endpoints (api/index.js)
+
+#### GET /api/dashboard
+
+Get user dashboard data (requires authentication).
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "totalApps": 5,
+    "totalVotes": 23,
+    "recentApps": [...],
+    "stats": {...}
+  }
+}
+```
+
+#### GET /api/categories
+
+Get all available categories.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "productivity",
+      "name": "Productivity",
+      "description": "Tools to boost productivity"
+    }
+  ]
+}
+```
+
+#### GET /api/weeks
+
+Get all launch weeks.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "2025-W32",
+      "startDate": "2025-08-04",
+      "endDate": "2025-08-10",
+      "isActive": true
+    }
+  ]
+}
+```
+
+#### GET /api/user/me
+
+Get current user profile (requires authentication).
+
+#### POST /api/submit-directory
+
+Submit a new application (requires authentication).
+
+### Apps Endpoints (api/apps.js)
 
 #### GET /api/apps
 
@@ -48,6 +133,40 @@ List all approved applications with pagination and filtering.
 - `week` (string): Filter by launch week (format: YYYY-WXX)
 - `featured` (boolean): Show only featured apps
 - `search` (string): Search in name and description
+
+#### GET /api/apps?slug={slug}
+
+Get detailed information about a specific application.
+
+#### POST /api/apps?slug={slug}&action=vote
+
+Vote for an application (requires authentication).
+
+#### PUT /api/apps?slug={slug}&action=edit
+
+Update an application (requires authentication & ownership).
+
+#### DELETE /api/apps?slug={slug}&action=edit
+
+Delete an application (requires authentication & ownership).
+
+### Profile Endpoints (api/profile.js)
+
+#### GET /api/profile
+
+Get current user's profile (requires authentication).
+
+#### GET /api/profile?userId={userId}
+
+Get any user's public profile.
+
+#### PUT /api/profile
+
+Update current user's profile (requires authentication).
+
+#### POST /api/profile?action=sync
+
+Sync user data with external services (requires authentication).
 
 **Response:**
 

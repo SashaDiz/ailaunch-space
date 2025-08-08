@@ -2,12 +2,59 @@
 
 This guide covers deploying DirectoryHunt to various platforms and environments.
 
+## ⚠️ CRITICAL: Serverless Function Limits
+
+**Before deploying**, ensure you're within Vercel's Hobby plan limits:
+
+```bash
+# Check function count (must be ≤ 12)
+npm run check-functions
+```
+
+**Current: 4/12 functions** ✅
+
+See [SERVERLESS_FUNCTIONS.md](./SERVERLESS_FUNCTIONS.md) for detailed guidelines.
+
+## Pre-Deployment Checklist
+
+### 1. Function Count Check ⚠️
+
+```bash
+npm run check-functions
+# Expected: 4/12 functions
+# ❌ If >12: Consolidate functions before deploying
+```
+
+### 2. Local Build Test
+
+```bash
+npm run build
+npm run preview
+```
+
+### 3. API Endpoint Testing
+
+Test all consolidated endpoints:
+
+```bash
+# Test core endpoints (api/index.js)
+curl http://localhost:5173/api/dashboard
+curl http://localhost:5173/api/categories
+
+# Test apps endpoints (api/apps.js)
+curl http://localhost:5173/api/apps
+curl "http://localhost:5173/api/apps?slug=example"
+
+# Test profile endpoints (api/profile.js)
+curl http://localhost:5173/api/profile
+```
+
 ## Overview
 
-DirectoryHunt is designed to be deployed as a full-stack application with:
+DirectoryHunt uses a **consolidated serverless function architecture**:
 
 - **Frontend**: Static React application (SPA)
-- **Backend**: Serverless API functions
+- **Backend**: 4 consolidated serverless API functions
 - **Database**: MongoDB (self-hosted or cloud)
 - **Authentication**: Clerk (SaaS)
 

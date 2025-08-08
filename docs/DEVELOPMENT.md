@@ -4,6 +4,19 @@
 
 This guide will help you set up and contribute to the DirectoryHunt project.
 
+⚠️ **IMPORTANT**: This project uses a consolidated serverless function architecture to stay within Vercel's Hobby plan limits. See [SERVERLESS_FUNCTIONS.md](./SERVERLESS_FUNCTIONS.md) for detailed guidelines.
+
+## Quick Function Limit Check
+
+Before making changes, always check the current function count:
+
+```bash
+# Must be ≤ 12 for Hobby plan
+find api -name "*.js" -type f | wc -l
+```
+
+Current: **4/12 functions** ✅
+
 ## Development Environment Setup
 
 ### 1. Prerequisites
@@ -47,6 +60,9 @@ code .env
 
 # Initialize database
 npm run db:init
+
+# Check serverless function count
+npm run check-functions
 
 # Start development server
 npm run dev

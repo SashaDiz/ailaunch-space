@@ -2,7 +2,41 @@
 
 This document records important architectural decisions made during the development of DirectoryHunt.
 
-## ADR-001: Choose React + Vite over Next.js
+## ADR-001: Consolidated Serverless Functions Architecture
+
+**Date**: 2025-08-08  
+**Status**: Accepted  
+**Deciders**: Development Team
+
+### Context
+
+Vercel's Hobby plan limits projects to 12 serverless functions maximum. The original API structure created one function per endpoint, resulting in 16+ functions and deployment failures.
+
+### Decision
+
+We consolidated the API into 4 main serverless functions:
+
+1. **api/index.js** - Core platform endpoints (dashboard, categories, weeks, etc.)
+2. **api/apps.js** - All app-related operations using query parameters
+3. **api/profile.js** - All profile/user operations
+4. **api/webhooks/clerk.js** - External webhook handling
+
+### Implementation
+
+- **Query-based routing** instead of file-based routing
+- **Single handler per domain** (apps, profiles, core)
+- **Vercel rewrites** to maintain clean URLs
+- **Consolidated logic** with internal routing
+
+### Consequences
+
+- **Positive**: Stays within Hobby plan limits (4/12 functions), maintains clean URLs, easier to manage
+- **Negative**: Slightly more complex routing logic, larger function sizes
+- **Mitigation**: Clear documentation, modular internal structure, monitoring guidelines
+
+---
+
+## ADR-002: Choose React + Vite over Next.js
 
 **Date**: 2024-01-01  
 **Status**: Accepted  
@@ -44,7 +78,7 @@ We chose React + Vite for the following reasons:
 
 ---
 
-## ADR-002: Use MongoDB over PostgreSQL
+## ADR-003: Use MongoDB over PostgreSQL
 
 **Date**: 2024-01-01  
 **Status**: Accepted  
