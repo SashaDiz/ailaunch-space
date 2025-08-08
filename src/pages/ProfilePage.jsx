@@ -60,6 +60,25 @@ export function ProfilePage() {
           // Fetch own profile data from database
           console.log("Fetching profile for user:", user.id);
 
+          // First, sync Clerk data to database to ensure we have latest image/name
+          try {
+            await fetch(`/api/profile/sync?userId=${user.id}`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                firstName: user.firstName,
+                lastName: user.lastName,
+                fullName: user.fullName,
+                imageUrl: user.imageUrl,
+                email: user.primaryEmailAddress?.emailAddress || user.email,
+              }),
+            });
+          } catch (syncError) {
+            console.log("Sync error (non-critical):", syncError);
+          }
+
           // Simple approach - pass user ID as query parameter instead of using auth headers
           profileResponse = await fetch(`/api/profile?userId=${user.id}`, {
             method: "GET",
@@ -83,117 +102,89 @@ export function ProfilePage() {
 
         if (profileResponse.ok) {
           const profile = await profileResponse.json();
+
+          // If it's own profile, get the image from Clerk user object
+          if (viewingOwnProfile && user) {
+            profile.image = user.imageUrl || profile.image;
+            profile.name =
+              profile.name ||
+              user.fullName ||
+              `${user.firstName} ${user.lastName}`.trim() ||
+              "User";
+          }
+
+          console.log("Profile data received:", profile);
           setProfileData(profile);
         } else if (profileResponse.status === 404) {
           console.log("Profile not found");
           setProfileData(null);
         } else {
+          const errorText = await profileResponse.text();
           console.error(
             "Failed to fetch profile:",
-            await profileResponse.text()
+            profileResponse.status,
+            errorText
           );
           setProfileData(null);
         }
 
-        // Mock projects data - replace with actual API call later
-        const mockProjects = [
-          {
-            id: "1",
-            name: "TaskFlow Pro",
-            description: "A modern project management tool for small teams",
-            category: "Productivity",
-            categories: ["Productivity", "Developer Tools"],
-            pricing: "Freemium",
-            launchDate: "2024-06-15",
-            status: "past", // live, upcoming, past, current
-            views: 5240,
-            upvotes: 89,
-            vote_count: 89,
-            position: 1,
-            is_winner: true,
-            website: "https://taskflowpro.com",
-            website_url: "https://taskflowpro.com",
-            image:
-              "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=300&h=200&fit=crop",
-            logo_url:
-              "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=60&h=60&fit=crop",
-            short_description:
-              "A modern project management tool for small teams",
-          },
-          {
-            id: "2",
-            name: "CodeSnippet Manager",
-            description: "Organize and share your code snippets with your team",
-            category: "Developer Tools",
-            categories: ["Developer Tools", "APIs & Integrations"],
-            pricing: "Paid",
-            launchDate: "2025-08-04", // Current launch (today-ish)
-            status: "current",
-            views: 3280,
-            upvotes: 67,
-            vote_count: 67,
-            position: null,
-            is_winner: false,
-            website: "https://codesnippets.dev",
-            website_url: "https://codesnippets.dev",
-            image:
-              "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=300&h=200&fit=crop",
-            logo_url:
-              "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=60&h=60&fit=crop",
-            short_description:
-              "Organize and share your code snippets with your team",
-          },
-          {
-            id: "3",
-            name: "Design System Builder",
-            description:
-              "Create consistent design systems for your web projects",
-            category: "Design",
-            categories: ["Design", "UI/UX"],
-            pricing: "Free",
-            launchDate: "2024-04-10",
-            status: "past",
-            views: 6900,
-            upvotes: 124,
-            vote_count: 124,
-            position: 3,
-            is_winner: true,
-            website: "https://designsystem.build",
-            website_url: "https://designsystem.build",
-            image:
-              "https://images.unsplash.com/photo-1558655146-d09347e92766?w=300&h=200&fit=crop",
-            logo_url:
-              "https://images.unsplash.com/photo-1558655146-d09347e92766?w=60&h=60&fit=crop",
-            short_description:
-              "Create consistent design systems for your web projects",
-          },
-          {
-            id: "4",
-            name: "AI Content Generator",
-            description:
-              "Generate high-quality content using advanced AI models",
-            category: "AI & LLM",
-            categories: ["AI & LLM", "Content"],
-            pricing: "Freemium",
-            launchDate: "2025-08-15", // Upcoming launch
-            status: "upcoming",
-            views: 0,
-            upvotes: 0,
-            vote_count: 0,
-            position: null,
-            is_winner: false,
-            website: "https://aicontentgen.com",
-            website_url: "https://aicontentgen.com",
-            image:
-              "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=300&h=200&fit=crop",
-            logo_url:
-              "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=60&h=60&fit=crop",
-            short_description:
-              "Generate high-quality content using advanced AI models",
-          },
-        ];
+        // Fetch user's submitted apps
+        if (viewingOwnProfile && user) {
+          // For own profile, use dashboard API to get user's apps
+          try {
+            const appsResponse = await fetch("/api/dashboard", {
+              headers: {
+                "x-clerk-user-id": user.id,
+              },
+            });
 
-        setUserProjects(mockProjects);
+            if (appsResponse.ok) {
+              const appsResult = await appsResponse.json();
+              if (appsResult.success && appsResult.data.apps) {
+                // Transform apps to match expected format
+                const transformedApps = appsResult.data.apps.map((app) => ({
+                  id: app._id,
+                  _id: app._id,
+                  name: app.name,
+                  description: app.description,
+                  category: app.categories?.[0] || "Other",
+                  categories: app.categories || [],
+                  pricing: app.pricing || "Free",
+                  launchDate: app.createdAt,
+                  status:
+                    app.status === "approved"
+                      ? "past"
+                      : app.status === "pending"
+                      ? "upcoming"
+                      : "past",
+                  views: app.views || 0,
+                  upvotes: app.upvotes || 0,
+                  vote_count: app.upvotes || 0,
+                  position: null,
+                  is_winner: false,
+                  website: app.website,
+                  website_url: app.website,
+                  image: app.logo || app.gallery?.[0] || "",
+                  logo_url: app.logo || "",
+                  short_description: app.tagline || app.description,
+                }));
+                setUserProjects(transformedApps);
+              } else {
+                setUserProjects([]);
+              }
+            } else {
+              console.error("Failed to fetch user apps");
+              setUserProjects([]);
+            }
+          } catch (error) {
+            console.error("Error fetching user apps:", error);
+            setUserProjects([]);
+          }
+        } else if (userId) {
+          // For other users' profiles, we'd need a separate API endpoint
+          // For now, show empty array
+          setUserProjects([]);
+        }
       } catch (error) {
         console.error("Error fetching profile:", error);
         setProfileData(null);

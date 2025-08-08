@@ -40,13 +40,13 @@ export const AppSchema = z.object({
   full_description: z
     .string()
     .min(50, "Full description must be at least 50 characters")
-    .max(2000),
+    .max(3000),
 
   // URLs and Media
   website_url: z.string().url("Invalid website URL"),
-  logo_url: z.string().url("Invalid logo URL"),
-  screenshots: z.array(z.string().url()).max(5),
-  video_url: z.string().url().optional(),
+  logo_url: z.string().url("Invalid logo URL").optional(),
+  screenshots: z.array(z.string().url()).max(5).default([]),
+  video_url: z.string().url().optional().or(z.literal("")),
 
   // Categorization
   categories: z

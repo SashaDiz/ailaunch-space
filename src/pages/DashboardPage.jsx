@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSession } from "@/hooks/useSession";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useUser } from "@clerk/clerk-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -42,7 +42,7 @@ import {
 
 export function DashboardPage() {
   const navigate = useNavigate();
-  const { session, loading } = useSession();
+  const { user, isLoaded } = useUser();
   const [launches, setLaunches] = useState([]);
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -54,111 +54,36 @@ export function DashboardPage() {
 
   useEffect(() => {
     // Redirect to sign-in if not authenticated
-    if (!loading && !session?.user) {
-      navigate("/signin");
+    if (!isLoaded) return; // Wait for Clerk to load
+
+    if (!user) {
+      navigate("/sign-in");
       return;
     }
 
-    // In development mode, use mock data
-    if (import.meta.env.DEV && session?.user) {
-      const mockLaunches = [
-        {
-          id: "1",
-          name: "TaskFlow Pro",
-          description: "A modern project management tool for small teams",
-          category: "Productivity",
-          status: "live", // live, scheduled, draft, under_review
-          launchDate: "2024-06-15",
-          submissionDate: "2024-06-10",
-          views: 5240,
-          upvotes: 89,
-          website: "https://taskflowpro.com",
-          image:
-            "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=300&h=200&fit=crop",
-          plan: "support_launch",
-          featured: true,
-        },
-        {
-          id: "2",
-          name: "CodeSnippet Manager",
-          description: "Organize and share your code snippets with your team",
-          category: "Developer Tools",
-          status: "scheduled",
-          launchDate: "2025-08-20",
-          submissionDate: "2025-08-05",
-          views: 0,
-          upvotes: 0,
-          website: "https://codesnippets.dev",
-          image:
-            "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=300&h=200&fit=crop",
-          plan: "basic_launch",
-          featured: false,
-        },
-        {
-          id: "3",
-          name: "Design System Builder",
-          description: "Create consistent design systems for your web projects",
-          category: "Design",
-          status: "draft",
-          launchDate: "2025-09-01",
-          submissionDate: null,
-          views: 0,
-          upvotes: 0,
-          website: "https://designsystem.build",
-          image:
-            "https://images.unsplash.com/photo-1558655146-d09347e92766?w=300&h=200&fit=crop",
-          plan: "premium_launch",
-          featured: false,
-        },
-        {
-          id: "4",
-          name: "AI Writing Assistant",
-          description: "Write better content with AI-powered suggestions",
-          category: "AI & LLM",
-          status: "under_review",
-          launchDate: "2025-08-10",
-          submissionDate: "2025-08-03",
-          views: 0,
-          upvotes: 0,
-          website: "https://aiwriter.io",
-          image:
-            "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=300&h=200&fit=crop",
-          plan: "support_launch",
-          featured: false,
-        },
-      ];
-
-      const mockStats = {
-        totalLaunches: 4,
-        upcomingLaunches: 2,
-        totalViews: 5240,
-        totalUpvotes: 89,
-      };
-
-      setLaunches(mockLaunches);
-      setStats(mockStats);
-      setDashboardLoading(false);
-      return;
-    }
-
-    // Fetch real data in production
     const fetchDashboardData = async () => {
-      if (!session?.user?.id) return;
+      if (!user?.id) return;
 
       try {
-        const [launchesRes, statsRes] = await Promise.all([
-          fetch(`/api/users/${session.user.id}/launches`),
-          fetch(`/api/users/${session.user.id}/stats`),
-        ]);
+        const response = await fetch("/api/dashboard", {
+          headers: {
+            "x-clerk-user-id": user.id,
+          },
+        });
 
-        if (launchesRes.ok) {
-          const launchesData = await launchesRes.json();
-          setLaunches(launchesData);
-        }
-
-        if (statsRes.ok) {
-          const statsData = await statsRes.json();
-          setStats(statsData);
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) {
+            setLaunches(result.data.apps || []);
+            setStats({
+              totalLaunches: result.data.stats.totalApps || 0,
+              upcomingLaunches:
+                result.data.apps?.filter((app) => app.status === "pending")
+                  .length || 0,
+              totalViews: result.data.stats.totalViews || 0,
+              totalUpvotes: result.data.stats.totalUpvotes || 0,
+            });
+          }
         }
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -167,10 +92,10 @@ export function DashboardPage() {
       }
     };
 
-    if (!loading && session?.user) {
+    if (isLoaded && user) {
       fetchDashboardData();
     }
-  }, [session, loading, navigate]);
+  }, [user, isLoaded, navigate]);
 
   const getStatusBadge = (status) => {
     const statusConfig = {
@@ -233,38 +158,36 @@ export function DashboardPage() {
   };
 
   const handleDelete = async (launchId) => {
-    if (import.meta.env.DEV) {
-      // In development, just remove from state
-      setLaunches((prev) => prev.filter((l) => l.id !== launchId));
-      setStats((prev) => ({
-        ...prev,
-        totalLaunches: prev.totalLaunches - 1,
-        upcomingLaunches: prev.upcomingLaunches - 1,
-      }));
-      return;
-    }
+    if (!user?.id) return;
 
     try {
-      const response = await fetch(`/api/launches/${launchId}`, {
+      const response = await fetch(`/api/apps/${launchId}`, {
         method: "DELETE",
+        headers: {
+          "x-clerk-user-id": user.id,
+        },
       });
 
       if (response.ok) {
-        setLaunches((prev) => prev.filter((l) => l.id !== launchId));
+        setLaunches((prev) => prev.filter((l) => l._id !== launchId));
         // Update stats
         setStats((prev) => ({
           ...prev,
           totalLaunches: prev.totalLaunches - 1,
-          upcomingLaunches: prev.upcomingLaunches - 1,
+          upcomingLaunches: Math.max(0, prev.upcomingLaunches - 1),
         }));
+      } else {
+        const result = await response.json();
+        alert(`Failed to delete app: ${result.error || "Unknown error"}`);
       }
     } catch (error) {
-      console.error("Error deleting launch:", error);
+      console.error("Error deleting app:", error);
+      alert("Failed to delete app. Please try again.");
     }
   };
 
   const handleDuplicate = (launch) => {
-    navigate(`/submit?duplicate=${launch.id}`);
+    navigate(`/submit?duplicate=${launch._id}`);
   };
 
   const upcomingLaunches = launches.filter(
@@ -275,7 +198,7 @@ export function DashboardPage() {
   );
   const pastLaunches = launches.filter((l) => l.status === "live");
 
-  if (loading || dashboardLoading) {
+  if (!isLoaded || dashboardLoading) {
     return (
       <div className="max-w-7xl mx-auto py-8">
         <div className="animate-pulse">
@@ -291,7 +214,7 @@ export function DashboardPage() {
     );
   }
 
-  if (!session?.user) {
+  if (!user) {
     return null; // Will redirect in useEffect
   }
 
@@ -421,7 +344,7 @@ export function DashboardPage() {
           ) : (
             <div className="space-y-4">
               {upcomingLaunches.map((launch) => (
-                <Card key={launch.id}>
+                <Card key={launch._id}>
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4 flex-1">
@@ -481,7 +404,7 @@ export function DashboardPage() {
                         <DropdownMenuContent align="end">
                           {canEdit(launch) && (
                             <DropdownMenuItem
-                              onClick={() => handleEdit(launch.id)}
+                              onClick={() => handleEdit(launch._id)}
                             >
                               <Edit3 className="mr-2 h-4 w-4" />
                               Edit
@@ -532,7 +455,7 @@ export function DashboardPage() {
                                         Cancel
                                       </AlertDialogCancel>
                                       <AlertDialogAction
-                                        onClick={() => handleDelete(launch.id)}
+                                        onClick={() => handleDelete(launch._id)}
                                         className="bg-red-600 hover:bg-red-700"
                                       >
                                         Delete

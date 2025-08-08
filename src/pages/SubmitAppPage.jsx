@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { useUser } from "@clerk/clerk-react";
 import {
   Upload,
   Calendar,
@@ -44,6 +45,12 @@ import RichTextEditor from "@/components/ui/RichTextEditor";
 export function SubmitAppPage() {
   const [searchParams] = useSearchParams();
   const initialPlan = searchParams.get("plan") || null;
+  const editAppId = searchParams.get("edit") || null;
+  const isEditing = !!editAppId;
+  const { user, isLoaded } = useUser();
+
+  // State for loading existing app data
+  const [loadingAppData, setLoadingAppData] = useState(isEditing);
 
   // Constants for tags
   const AVAILABLE_CATEGORIES = [
@@ -265,6 +272,68 @@ export function SubmitAppPage() {
       });
     };
   }, [formData.logo_url, formData.screenshots]);
+
+  // Load existing app data when in edit mode
+  useEffect(() => {
+    if (!isEditing || !editAppId || !user?.id) {
+      setLoadingAppData(false);
+      return;
+    }
+
+    const loadAppData = async () => {
+      try {
+        const response = await fetch(`/api/apps/${editAppId}`, {
+          headers: {
+            "x-clerk-user-id": user.id,
+          },
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            const app = result.data;
+
+            // Pre-populate form with existing app data
+            setFormData({
+              name: app.name || "",
+              short_description: app.short_description || "",
+              full_description: app.full_description || "",
+              website_url: app.website_url || "",
+              logo_url: app.logo_url || "",
+              logo_file: null,
+              screenshots: [
+                app.screenshots?.[0] || "",
+                app.screenshots?.[1] || "",
+                app.screenshots?.[2] || "",
+                app.screenshots?.[3] || "",
+                app.screenshots?.[4] || "",
+              ],
+              screenshot_files: [null, null, null, null, null],
+              video_url: app.video_url || "",
+              launch_week: app.launch_week || "",
+              contact_email: app.contact_email || "",
+              backlink_url: app.backlink_url || "",
+              categories: app.categories || [],
+              pricing: app.pricing || "",
+            });
+
+            // Skip plan selection for edit mode
+            setCurrentStep(2);
+          }
+        } else {
+          console.error("Failed to load app data for editing");
+          // Redirect back to dashboard if app not found
+          window.location.href = "/dashboard";
+        }
+      } catch (error) {
+        console.error("Error loading app data:", error);
+      } finally {
+        setLoadingAppData(false);
+      }
+    };
+
+    loadAppData();
+  }, [isEditing, editAppId, user?.id]);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -567,6 +636,17 @@ export function SubmitAppPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Check if user is authenticated
+    if (!isLoaded) {
+      alert("Please wait for authentication to load.");
+      return;
+    }
+
+    if (!user) {
+      alert("Please sign in to submit your directory.");
+      return;
+    }
+
     // Basic validation for tags
     if (formData.categories.length === 0) {
       alert("Please select at least one category.");
@@ -587,68 +667,91 @@ export function SubmitAppPage() {
 
     setLoading(true);
 
-    // Prepare form data for file upload
-    const submissionFormData = new FormData();
+    try {
+      // Prepare form data for file upload
+      const submissionFormData = new FormData();
 
-    // Add basic form fields
-    Object.keys(formData).forEach((key) => {
-      if (
-        key !== "logo_file" &&
-        key !== "screenshot_files" &&
-        key !== "screenshots"
-      ) {
-        if (Array.isArray(formData[key])) {
-          submissionFormData.append(key, JSON.stringify(formData[key]));
-        } else {
-          submissionFormData.append(key, formData[key]);
+      // Add basic form fields
+      Object.keys(formData).forEach((key) => {
+        if (
+          key !== "logo_file" &&
+          key !== "screenshot_files" &&
+          key !== "screenshots"
+        ) {
+          if (Array.isArray(formData[key])) {
+            submissionFormData.append(key, JSON.stringify(formData[key]));
+          } else {
+            submissionFormData.append(key, formData[key]);
+          }
         }
+      });
+
+      // Add logo file
+      if (formData.logo_file) {
+        submissionFormData.append("logo_file", formData.logo_file);
       }
-    });
 
-    // Add logo file
-    if (formData.logo_file) {
-      submissionFormData.append("logo_file", formData.logo_file);
-    }
+      // Add screenshot files
+      formData.screenshot_files.forEach((file, index) => {
+        if (file) {
+          submissionFormData.append(`screenshot_${index}`, file);
+        }
+      });
 
-    // Add screenshot files
-    formData.screenshot_files.forEach((file, index) => {
-      if (file) {
-        submissionFormData.append(`screenshot_${index}`, file);
+      // Add additional metadata
+      submissionFormData.append("plan", selectedPlan);
+      submissionFormData.append("payment_completed", paymentCompleted);
+      submissionFormData.append(
+        "link_type",
+        selectedPlan === "standard_launch" ? "nofollow" : "dofollow"
+      );
+      submissionFormData.append(
+        "requires_backlink",
+        selectedPlan === "support_launch"
+      );
+
+      // Make API call to submit/update the directory
+      const apiUrl = isEditing
+        ? `/api/apps/${editAppId}`
+        : "/api/submit-directory";
+      const method = isEditing ? "PUT" : "POST";
+
+      const response = await fetch(apiUrl, {
+        method: method,
+        headers: {
+          "x-clerk-user-id": user.id,
+        },
+        body: submissionFormData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.error ||
+            `Failed to ${isEditing ? "update" : "submit"} directory`
+        );
       }
-    });
 
-    // Add additional metadata
-    submissionFormData.append("plan", selectedPlan);
-    submissionFormData.append("payment_completed", paymentCompleted);
-    submissionFormData.append(
-      "link_type",
-      selectedPlan === "standard_launch" ? "nofollow" : "dofollow"
-    );
-    submissionFormData.append(
-      "requires_backlink",
-      selectedPlan === "support_launch"
-    );
-
-    // In a real application, you would send this to your API:
-    // const response = await fetch('/api/submit-directory', {
-    //   method: 'POST',
-    //   body: submissionFormData,
-    // });
-
-    // Simulate API call
-    console.log("Submitting form data with files:", submissionFormData);
-
-    // Log the files being submitted for debugging
-    console.log("Logo file:", formData.logo_file);
-    console.log(
-      "Screenshot files:",
-      formData.screenshot_files.filter((f) => f !== null)
-    );
-
-    setTimeout(() => {
+      // Success
+      console.log(
+        `Directory ${isEditing ? "updated" : "submitted"} successfully:`,
+        result
+      );
       setLoading(false);
       setSubmitted(true);
-    }, 2000);
+
+      // If editing, redirect to dashboard after success
+      if (isEditing) {
+        setTimeout(() => {
+          window.location.href = "/dashboard";
+        }, 2000);
+      }
+    } catch (error) {
+      console.error("Error submitting directory:", error);
+      setLoading(false);
+      alert(`Failed to submit directory: ${error.message}`);
+    }
   };
 
   const getPlanDisplayName = (planId) => {
@@ -712,6 +815,37 @@ export function SubmitAppPage() {
       return `${startMonth} ${startDay} - ${endMonth} ${endDay}`;
     }
   };
+
+  // Authentication checks after all hooks
+  // Show loading state while Clerk is initializing
+  if (!isLoaded) {
+    return (
+      <div className="bg-white min-h-screen flex items-center justify-center">
+        <div className="text-lg text-gray-600">Loading...</div>
+      </div>
+    );
+  }
+
+  // Redirect to sign-in if not authenticated
+  if (!user) {
+    return (
+      <div className="bg-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-medium text-gray-900 mb-4">
+            Authentication Required
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Please sign in to submit your directory.
+          </p>
+          <Link to="/sign-in">
+            <Button className="bg-gray-900 text-white hover:bg-gray-800">
+              Sign In
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   // Success page
   if (submitted) {
@@ -842,6 +976,15 @@ export function SubmitAppPage() {
 
   // Step 2: Launch Details Form
   if (currentStep === 2) {
+    // Show loading state when fetching app data for editing
+    if (isEditing && loadingAppData) {
+      return (
+        <div className="bg-white min-h-screen flex items-center justify-center">
+          <div className="text-lg text-gray-600">Loading app data...</div>
+        </div>
+      );
+    }
+
     return (
       <div className="bg-white min-h-screen">
         <div className="max-w-4xl mx-auto px-4 md:px-0 py-6 md:py-8">
@@ -850,22 +993,24 @@ export function SubmitAppPage() {
           {/* Header */}
           <div className="text-center mb-8 md:mb-12">
             <h2 className="text-2xl md:text-3xl font-medium text-gray-900 mb-2">
-              Launch Details
+              {isEditing ? "Edit Directory" : "Launch Details"}
             </h2>
-            <div className="flex items-center justify-center gap-2 text-sm">
-              <span className="text-gray-600">Plan:</span>
-              <Badge variant="secondary" className="font-medium">
-                {getPlanDisplayName(selectedPlan)}
-              </Badge>
-              {paymentCompleted && (
-                <Badge
-                  variant="default"
-                  className="bg-green-100 text-green-800 border-green-200"
-                >
-                  ✓ Payment Complete
+            {!isEditing && (
+              <div className="flex items-center justify-center gap-2 text-sm">
+                <span className="text-gray-600">Plan:</span>
+                <Badge variant="secondary" className="font-medium">
+                  {getPlanDisplayName(selectedPlan)}
                 </Badge>
-              )}
-            </div>
+                {paymentCompleted && (
+                  <Badge
+                    variant="default"
+                    className="bg-green-100 text-green-800 border-green-200"
+                  >
+                    ✓ Payment Complete
+                  </Badge>
+                )}
+              </div>
+            )}
           </div>
 
           <Alert className="mb-6 border-blue-200 bg-blue-50">
@@ -2004,7 +2149,11 @@ export function SubmitAppPage() {
                       className="px-8 py-3 h-12 flex items-center justify-center font-medium disabled:opacity-50"
                     >
                       {loading
-                        ? "Submitting..."
+                        ? isEditing
+                          ? "Updating..."
+                          : "Submitting..."
+                        : isEditing
+                        ? "Update Directory"
                         : selectedPlan === "premium_launch" && paymentCompleted
                         ? "Submit Directory (Paid)"
                         : selectedPlan === "support_launch"
@@ -2020,4 +2169,7 @@ export function SubmitAppPage() {
       </div>
     );
   }
+
+  // Default return (should not reach here)
+  return null;
 }

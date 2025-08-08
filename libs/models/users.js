@@ -49,6 +49,29 @@ export async function updateUserProfile(clerkId, profileData) {
 }
 
 /**
+ * Sync Clerk user data with database
+ */
+export async function syncClerkUserData(clerkId, clerkUserData) {
+  const client = await clientPromise;
+  const db = client.db("directoryhunt");
+  const users = db.collection("users");
+
+  const syncData = {
+    firstName: clerkUserData.firstName || "",
+    lastName: clerkUserData.lastName || "",
+    fullName:
+      clerkUserData.fullName ||
+      `${clerkUserData.firstName || ""} ${clerkUserData.lastName || ""}`.trim(),
+    imageUrl: clerkUserData.imageUrl || "",
+    email:
+      clerkUserData.primaryEmailAddress?.emailAddress || clerkUserData.email,
+    updatedAt: new Date(),
+  };
+
+  return await users.updateOne({ clerkId, isActive: true }, { $set: syncData });
+}
+
+/**
  * Increment user's submission count
  */
 export async function incrementUserSubmissions(clerkId) {

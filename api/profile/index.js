@@ -37,7 +37,7 @@ export default async function handler(req, res) {
           `${user.firstName} ${user.lastName}`.trim() ||
           "User",
         email: user.email,
-        image: user.imageUrl,
+        image: user.imageUrl || "", // This will be updated from Clerk on frontend
         bio: user.bio || "",
         location: user.location || "",
         website: user.website || "",
@@ -57,7 +57,8 @@ export default async function handler(req, res) {
 
     if (req.method === "PUT") {
       // Update user profile
-      const { bio, location, website, twitter, github, linkedin } = req.body;
+      const { name, bio, location, website, twitter, github, linkedin } =
+        req.body;
 
       const updateData = {
         bio,
@@ -67,6 +68,11 @@ export default async function handler(req, res) {
         github,
         linkedin,
       };
+
+      // Add name/fullName if provided
+      if (name) {
+        updateData.fullName = name;
+      }
 
       // Remove empty fields
       Object.keys(updateData).forEach((key) => {

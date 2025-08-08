@@ -19,6 +19,7 @@ export function EditProfileDialog({ children, onProfileUpdate, profileData }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
+    name: profileData?.name || "",
     bio: profileData?.bio || "",
     location: profileData?.location || "",
     website: profileData?.website || "",
@@ -31,6 +32,7 @@ export function EditProfileDialog({ children, onProfileUpdate, profileData }) {
   useEffect(() => {
     if (profileData) {
       setFormData({
+        name: profileData.name || "",
         bio: profileData.bio || "",
         location: profileData.location || "",
         website: profileData.website || "",
@@ -85,6 +87,16 @@ export function EditProfileDialog({ children, onProfileUpdate, profileData }) {
           <DialogTitle>Edit Profile</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="name">Display Name</Label>
+            <Input
+              id="name"
+              placeholder="Your display name"
+              value={formData.name}
+              onChange={(e) => handleInputChange("name", e.target.value)}
+            />
+          </div>
+
           <div className="grid gap-2">
             <Label htmlFor="bio">Bio</Label>
             <Textarea

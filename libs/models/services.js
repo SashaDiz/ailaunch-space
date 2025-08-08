@@ -224,6 +224,118 @@ export class AppService {
       return { success: false, error: error.message };
     }
   }
+
+  /**
+   * Get a single app owned by a user (for editing)
+   */
+  static async getUserApp(appId, userId) {
+    try {
+      const app = await AppRepository.getAppById(appId);
+      if (!app) {
+        return { success: false, error: "App not found" };
+      }
+
+      if (app.submitted_by !== userId) {
+        return {
+          success: false,
+          error: "Unauthorized: You can only view your own apps",
+        };
+      }
+
+      return {
+        success: true,
+        data: app,
+      };
+    } catch (error) {
+      console.error("Error getting user app:", error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Update user's own app
+   */
+  static async updateUserApp(appId, userId, updateData) {
+    try {
+      // First, verify that the app belongs to the user
+      const app = await AppRepository.getAppById(appId);
+      if (!app) {
+        return { success: false, error: "App not found" };
+      }
+
+      if (app.submitted_by !== userId) {
+        return {
+          success: false,
+          error: "Unauthorized: You can only edit your own apps",
+        };
+      }
+
+      // Don't allow changing certain fields
+      const allowedFields = [
+        "name",
+        "short_description",
+        "full_description",
+        "website_url",
+        "logo_url",
+        "screenshots",
+        "video_url",
+        "categories",
+        "pricing",
+        "contact_email",
+        "backlink_url",
+      ];
+
+      const filteredUpdateData = {};
+      Object.keys(updateData).forEach((key) => {
+        if (allowedFields.includes(key)) {
+          filteredUpdateData[key] = updateData[key];
+        }
+      });
+
+      // Add updated timestamp
+      filteredUpdateData.updatedAt = new Date();
+
+      await AppRepository.updateApp(appId, filteredUpdateData);
+      return { success: true };
+    } catch (error) {
+      console.error("Error updating user app:", error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Delete user's own app
+   */
+  static async deleteUserApp(appId, userId) {
+    try {
+      // First, verify that the app belongs to the user
+      const app = await AppRepository.getAppById(appId);
+      if (!app) {
+        return { success: false, error: "App not found" };
+      }
+
+      if (app.submitted_by !== userId) {
+        return {
+          success: false,
+          error: "Unauthorized: You can only delete your own apps",
+        };
+      }
+
+      // Only allow deletion if the app is still pending or rejected
+      if (app.status === "approved" || app.status === "live") {
+        return {
+          success: false,
+          error: "Cannot delete approved or live apps. Please contact support.",
+        };
+      }
+
+      await AppRepository.deleteApp(appId);
+      return { success: true };
+    } catch (error) {
+      console.error("Error deleting user app:", error);
+      return { success: false, error: error.message };
+    }
+  }
 }
 
 export class WeekService {
