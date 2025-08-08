@@ -188,6 +188,35 @@ export function useVoting() {
   const [votedApps, setVotedApps] = useState(new Set());
   const { getToken, userId } = useAuth();
 
+  // Fetch user's voted apps on mount
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchVotedApps = async () => {
+      try {
+        const token = await getToken();
+        const response = await fetch("/api/user/votes", {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+            ...(userId && { "x-clerk-user-id": userId }),
+          },
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.voted_apps) {
+            setVotedApps(new Set(result.voted_apps));
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching voted apps:", error);
+      }
+    };
+
+    fetchVotedApps();
+  }, [userId, getToken]);
+
   const vote = useCallback(
     async (appSlug, appId) => {
       setVotingLoading((prev) => {

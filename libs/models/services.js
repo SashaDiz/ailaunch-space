@@ -56,13 +56,19 @@ export class AppService {
   }
 
   /**
-   * Vote for an app
+   * Vote for an app by slug
    */
-  static async voteForApp(userId, appId, voteType) {
+  static async voteForApp(slug, userId, voteType = "upvote") {
     try {
+      // First get the app by slug
+      const app = await AppRepository.getAppBySlug(slug);
+      if (!app) {
+        return { success: false, error: "App not found" };
+      }
+
       const result = await VoteRepository.createVote({
         user_id: userId,
-        app_id: appId,
+        app_id: app._id.toString(),
         vote_type: voteType,
       });
 

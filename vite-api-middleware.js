@@ -5,6 +5,72 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// In-memory store for mock data
+let mockAppsData = [
+  {
+    _id: "1",
+    name: "Directory Hunt",
+    slug: "directory-hunt",
+    short_description: "Discover and launch your directory to the world",
+    full_description:
+      "Directory Hunt is the ultimate platform for launching your directory projects.",
+    website_url: "https://directoryhunt.com",
+    logo_url: "/api/placeholder/80/80?text=DH",
+    categories: ["Directory of Directories", "Developer Tools & Platforms"],
+    pricing: "Freemium",
+    upvotes: 42,
+    vote_count: 42,
+    views: 150,
+    launch_week: "2025-W32",
+    launch_date: new Date().toISOString(),
+    status: "live",
+    featured: true,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    _id: "2",
+    name: "TravelMate AI",
+    slug: "travelmate-ai",
+    short_description: "AI-powered travel planning with real-time insights",
+    full_description:
+      "Plan your perfect trip with AI assistance and local recommendations.",
+    website_url: "https://travelmate-ai.com",
+    logo_url: "/api/placeholder/80/80?text=TM",
+    categories: ["AI & LLM", "Travel & Lifestyle"],
+    pricing: "Free",
+    upvotes: 28,
+    vote_count: 28,
+    views: 89,
+    launch_week: "2025-W32",
+    launch_date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    status: "live",
+    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    _id: "3",
+    name: "DevTools Hub",
+    slug: "devtools-hub",
+    short_description: "Curated collection of developer tools and resources",
+    full_description:
+      "Everything a developer needs in one place - from code editors to deployment tools.",
+    website_url: "https://devtools-hub.com",
+    logo_url: "/api/placeholder/80/80?text=DT",
+    categories: ["Developer Tools & Platforms", "Directory of Directories"],
+    pricing: "Paid",
+    upvotes: 67,
+    vote_count: 67,
+    views: 234,
+    launch_week: "2025-W32",
+    launch_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    status: "live",
+    featured: true,
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
+// Track user votes to prevent duplicate voting
+let userVotes = new Map(); // userId -> Set of appIds they've voted for
+
 export function apiMiddleware() {
   return {
     name: "api-middleware",
@@ -37,88 +103,11 @@ export function apiMiddleware() {
           if (apiPath === "/apps" && req.method === "GET") {
             const mockApps = {
               success: true,
-              apps: [
-                {
-                  _id: "1",
-                  name: "Directory Hunt",
-                  slug: "directory-hunt",
-                  short_description:
-                    "Discover and launch your directory to the world",
-                  full_description:
-                    "Directory Hunt is the ultimate platform for launching your directory projects.",
-                  website_url: "https://directoryhunt.com",
-                  logo_url: "/api/placeholder/80/80?text=DH",
-                  categories: [
-                    "Directory of Directories",
-                    "Developer Tools & Platforms",
-                  ],
-                  pricing: "Freemium",
-                  upvotes: 42,
-                  vote_count: 42,
-                  views: 150,
-                  launch_week: "2025-W32",
-                  launch_date: new Date().toISOString(),
-                  status: "live",
-                  featured: true,
-                  createdAt: new Date().toISOString(),
-                },
-                {
-                  _id: "2",
-                  name: "TravelMate AI",
-                  slug: "travelmate-ai",
-                  short_description:
-                    "AI-powered travel planning with real-time insights",
-                  full_description:
-                    "Plan your perfect trip with AI assistance and local recommendations.",
-                  website_url: "https://travelmate-ai.com",
-                  logo_url: "/api/placeholder/80/80?text=TM",
-                  categories: ["AI & LLM", "Travel & Lifestyle"],
-                  pricing: "Free",
-                  upvotes: 28,
-                  vote_count: 28,
-                  views: 89,
-                  launch_week: "2025-W32",
-                  launch_date: new Date(
-                    Date.now() - 24 * 60 * 60 * 1000
-                  ).toISOString(),
-                  status: "live",
-                  createdAt: new Date(
-                    Date.now() - 24 * 60 * 60 * 1000
-                  ).toISOString(),
-                },
-                {
-                  _id: "3",
-                  name: "DevTools Hub",
-                  slug: "devtools-hub",
-                  short_description:
-                    "Curated collection of developer tools and resources",
-                  full_description:
-                    "Everything a developer needs in one place - from code editors to deployment tools.",
-                  website_url: "https://devtools-hub.com",
-                  logo_url: "/api/placeholder/80/80?text=DT",
-                  categories: [
-                    "Developer Tools & Platforms",
-                    "Directory of Directories",
-                  ],
-                  pricing: "Paid",
-                  upvotes: 67,
-                  vote_count: 67,
-                  views: 234,
-                  launch_week: "2025-W32",
-                  launch_date: new Date(
-                    Date.now() - 2 * 24 * 60 * 60 * 1000
-                  ).toISOString(),
-                  status: "live",
-                  featured: true,
-                  createdAt: new Date(
-                    Date.now() - 2 * 24 * 60 * 60 * 1000
-                  ).toISOString(),
-                },
-              ],
+              apps: mockAppsData,
               pagination: {
                 page: 1,
                 limit: 20,
-                total: 3,
+                total: mockAppsData.length,
                 pages: 1,
               },
             };
@@ -126,6 +115,104 @@ export function apiMiddleware() {
             res.statusCode = 200;
             res.end(JSON.stringify(mockApps));
             return;
+          }
+
+          // Handle getting user's votes
+          if (apiPath === "/user/votes" && req.method === "GET") {
+            const userId = req.headers["x-clerk-user-id"];
+
+            if (!userId) {
+              res.statusCode = 401;
+              res.end(
+                JSON.stringify({
+                  success: false,
+                  error: "Authentication required",
+                })
+              );
+              return;
+            }
+
+            const userVoteSet = userVotes.get(userId) || new Set();
+            const votedAppIds = Array.from(userVoteSet);
+
+            res.statusCode = 200;
+            res.end(
+              JSON.stringify({
+                success: true,
+                voted_apps: votedAppIds,
+              })
+            );
+            return;
+          }
+
+          // Handle voting on apps
+          if (apiPath === "/apps" && req.method === "POST") {
+            const slug = queryParams.get("slug");
+            const action = queryParams.get("action");
+
+            if (slug && action === "vote") {
+              const userId = req.headers["x-clerk-user-id"];
+
+              if (!userId) {
+                res.statusCode = 401;
+                res.end(
+                  JSON.stringify({
+                    success: false,
+                    error: "Authentication required",
+                  })
+                );
+                return;
+              }
+
+              // Find the app by slug
+              const app = mockAppsData.find((app) => app.slug === slug);
+              if (!app) {
+                res.statusCode = 404;
+                res.end(
+                  JSON.stringify({ success: false, error: "App not found" })
+                );
+                return;
+              }
+
+              // Check if user has already voted for this app
+              const userVoteSet = userVotes.get(userId) || new Set();
+              if (userVoteSet.has(app._id)) {
+                res.statusCode = 400;
+                res.end(
+                  JSON.stringify({
+                    success: false,
+                    error: "Already voted for this app",
+                  })
+                );
+                return;
+              }
+
+              // Record the vote
+              userVoteSet.add(app._id);
+              userVotes.set(userId, userVoteSet);
+
+              // Update the app's vote count
+              app.vote_count = (app.vote_count || 0) + 1;
+              app.upvotes = app.vote_count; // Keep both fields in sync
+
+              // Mock successful vote response
+              const mockVoteResponse = {
+                success: true,
+                message: "Vote recorded successfully",
+                vote: {
+                  app_slug: slug,
+                  app_id: app._id,
+                  user_id: userId,
+                  vote_type: "upvote",
+                  timestamp: new Date().toISOString(),
+                },
+                new_vote_count: app.vote_count,
+              };
+
+              res.statusCode = 200;
+              res.end(JSON.stringify(mockVoteResponse));
+              return;
+            }
           }
 
           if (apiPath === "/categories" && req.method === "GET") {
