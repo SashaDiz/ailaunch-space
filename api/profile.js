@@ -1,5 +1,5 @@
 // Consolidated profile API handler
-import { UserService } from "../../libs/models/users.js";
+import { UserService } from "../libs/models/users.js";
 
 export default async function handler(req, res) {
   const { method, query } = req;

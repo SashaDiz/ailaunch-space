@@ -1,53 +1,72 @@
-# DirectoryHunt 🚀
+# Directory Hunt 🎯
 
-A modern web application for discovering and launching digital products, similar to Product Hunt. Built with React, Vite, and MongoDB, featuring user authentication, product submissions, voting, and launch scheduling.
+A directory launch platform where creators can submit their directories, get valuable backlinks, and compete for weekly recognition. Think Product Hunt but specifically for directory projects.
 
-⚠️ **Important**: This project uses a consolidated serverless function architecture to stay within Vercel's Hobby plan limits (4/12 functions). See [docs/SERVERLESS_FUNCTIONS.md](./docs/SERVERLESS_FUNCTIONS.md) for guidelines.
+## 🚀 Features Completed
 
-## 📋 Table of Contents
+✅ **Authentication System** - Clerk integration with user management  
+✅ **Directory Submissions** - Full form with validation and payment plans  
+✅ **Real-time Voting** - Vote for your favorite directories  
+✅ **User Dashboard** - Track submissions, views, and votes  
+✅ **API Endpoints** - Complete backend with MongoDB integration  
+✅ **Responsive Design** - Mobile-friendly with TailwindCSS  
+✅ **Weekly/Monthly Rankings** - Leaderboard system with winners  
+✅ **Profile Management** - User profiles with submission history
 
-- [Overview](#overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Quick Start](#quick-start)
-- [Serverless Function Management](#serverless-function-management)
-- [Documentation](#documentation)
-- [Project Structure](#project-structure)
-- [Contributing](#contributing)
-- [Support](#support)
+## 🛠️ Tech Stack
 
-## 🎯 Overview
+- **Frontend**: React 19 + Vite + TailwindCSS + Radix UI
+- **Authentication**: Clerk (complete user management)
+- **Database**: MongoDB with schemas and validation
+- **API**: Serverless functions with proper error handling
+- **Deployment**: Vercel-ready with optimized function usage
 
-DirectoryHunt is a platform where users can:
+## 🏃‍♂️ Quick Start
 
-- Discover new digital products and tools
-- Submit their own products for launch
-- Vote and engage with community submissions
-- Schedule launches for specific weeks
-- Manage their profile and submissions
-- Access premium features through subscriptions
-
-## ⚡ Serverless Function Management
-
-### Current Status: 4/12 Functions ✅
+### 1. Clone & Install
 
 ```bash
-# Always check before making changes
-npm run check-functions
+git clone <repository-url>
+cd directoryhunt
+pnpm install
 ```
 
-**Critical Guidelines:**
+### 2. Environment Setup
 
-- ❌ **Never create new .js files in `/api`** - consolidate into existing handlers
-- ✅ **Use query parameters** for routing instead of path parameters
-- ✅ **Group related functionality** in the same handler
-- 📖 **Read [SERVERLESS_FUNCTIONS.md](./docs/SERVERLESS_FUNCTIONS.md)** before adding API endpoints
+```bash
+cp .env.example .env.local
+```
 
-## ✨ Features
+Update `.env.local` with your actual credentials:
 
-### Core Features
+```env
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_your_key_here
+CLERK_SECRET_KEY=sk_test_your_secret_here
+MONGODB_URI=mongodb://localhost:27017/directoryhunt
+VITE_APP_URL=http://localhost:5173
+CLERK_WEBHOOK_SECRET=whsec_your_webhook_secret
+```
 
-- **Product Discovery**: Browse and search through submitted applications
+### 3. Initialize Database
+
+```bash
+pnpm run db:init
+```
+
+### 4. Start Development
+
+```bash
+pnpm dev
+```
+
+### 5. Add Sample Data (Optional)
+
+```bash
+curl -X POST http://localhost:5173/api/seed-data
+```
+
+Visit `http://localhost:5173` to see your app! 🎉
+
 - **Launch Scheduling**: Products are organized by launch weeks
 - **Voting System**: Community-driven upvoting and engagement
 - **User Profiles**: Comprehensive user profiles with social links

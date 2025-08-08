@@ -1,4 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  memo,
+  useTransition,
+} from "react";
 import { Link } from "react-router-dom";
 import { Clock, ExternalLink, ThumbsUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,323 +15,226 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { CategoryPricingBadge } from "@/components/ui/CategoryPricingBadge";
 import GuidePromoCard from "@/components/ui/GuidePromoCard";
 import SponsorCard from "@/components/ui/SponsorCard";
-import aiFaviIcon from "@/assets/ai-favi.png";
+import { useApi, useVoting } from "@/hooks/useApi";
+import { useAuth } from "@clerk/clerk-react";
 import crownIcon from "@/assets/crown.svg";
 import crownBlackIcon from "@/assets/crown-black.svg";
 import johnIcon from "@/assets/john.svg";
 
-// Placeholder for authentication state
-const isAuthenticated = false; // Replace with real auth logic
+// Self-contained timer component that manages its own state and doesn't affect parent
+const CountdownTimer = memo(({ type, className }) => {
+  const [timeRemaining, setTimeRemaining] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
+  const [, startTransition] = useTransition();
+
+  useEffect(() => {
+    const updateTimer = () => {
+      const now = new Date();
+
+      let targetDate;
+      if (type === "weekly") {
+        // Next Monday
+        targetDate = new Date();
+        targetDate.setDate(now.getDate() + ((7 - now.getDay() + 1) % 7 || 7));
+        targetDate.setHours(0, 0, 0, 0);
+      } else {
+        // First day of next month
+        targetDate = new Date();
+        targetDate.setMonth(now.getMonth() + 1, 1);
+        targetDate.setHours(0, 0, 0, 0);
+      }
+
+      const diff = targetDate - now;
+
+      if (diff <= 0) {
+        startTransition(() => {
+          setTimeRemaining({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        });
+        return;
+      }
+
+      const newTime = {
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((diff % (1000 * 60)) / 1000),
+      };
+
+      startTransition(() => {
+        setTimeRemaining((prev) => {
+          // Only update if values actually changed
+          if (
+            prev.days !== newTime.days ||
+            prev.hours !== newTime.hours ||
+            prev.minutes !== newTime.minutes ||
+            prev.seconds !== newTime.seconds
+          ) {
+            return newTime;
+          }
+          return prev;
+        });
+      });
+    };
+
+    updateTimer(); // Initial call
+    const timer = setInterval(updateTimer, 1000);
+    return () => clearInterval(timer);
+  }, [type]);
+
+  const pad = (num) => num.toString().padStart(2, "0");
+
+  return (
+    <div
+      className={`flex mt-4 md:mt-0 ${className}`}
+      style={{ willChange: "auto" }}
+    >
+      <div className="text-center">
+        <div className=" text-gray-900 px-1">
+          <div className="text-xl font-medium transition-all duration-75 ease-out tabular-nums">
+            {pad(timeRemaining.days)} :
+          </div>
+          <div className="text-[8px] md:text-xs">days</div>
+        </div>
+      </div>
+      <div className="text-center">
+        <div className=" text-gray-900 px-1">
+          <div className="text-xl font-medium transition-all duration-75 ease-out tabular-nums">
+            {pad(timeRemaining.hours)} :
+          </div>
+          <div className="text-[8px] md:text-xs">hours</div>
+        </div>
+      </div>
+      <div className="text-center">
+        <div className=" text-gray-900 px-1">
+          <div className="text-xl font-medium transition-all duration-75 ease-out tabular-nums">
+            {pad(timeRemaining.minutes)} :
+          </div>
+          <div className="text-[8px] md:text-xs">mins</div>
+        </div>
+      </div>
+      <div className="text-center">
+        <div className=" text-gray-900 px-1">
+          <div className="text-xl font-medium transition-all duration-75 ease-out tabular-nums">
+            {pad(timeRemaining.seconds)}
+          </div>
+          <div className="text-[8px] md:text-xs">secs</div>
+        </div>
+      </div>
+    </div>
+  );
+});
 
 export function HomePage() {
   const [apps, setApps] = useState([]);
   const [activeTab, setActiveTab] = useState("weekly");
-  const [weeklyTimeRemaining, setWeeklyTimeRemaining] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-  });
-  const [monthlyTimeRemaining, setMonthlyTimeRemaining] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-  });
-  const [loading, setLoading] = useState(true);
-  const [votedApps, setVotedApps] = useState(new Set()); // Single voted apps set for both weekly and monthly
-  const [votingLoading, setVotingLoading] = useState(new Set());
 
-  // Mock data for development
+  const { isSignedIn } = useAuth();
+  const { vote, votingLoading, votedApps } = useVoting();
+
+  // Fetch apps data from API
+  const {
+    data: appsData,
+    loading: appsLoading,
+    error: appsError,
+  } = useApi("/apps");
+
+  // Update apps when data is loaded
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setApps([
-        // Week 1 projects (2024-W01)
-        {
-          id: 1,
-          name: "TravelMate Navigator",
-          short_description:
-            "AI-powered travel planning with real-time updates and local insights",
-          logo_url: aiFaviIcon,
-          vote_count: 88,
-          is_paid: false,
-          is_weekly_winner: true, // Won week 1
-          is_monthly_winner: true, // Also winning monthly
-          is_active: true,
-          website_url: "https://example.com",
-          categories: ["AI & LLM", "Developer Tools & Platforms"],
-          pricing: "Freemium",
-          launch_date: "2024-01-01",
-          launch_week: "2024-W01",
-          launch_month: "2024-01",
-        },
-        {
-          id: 2,
-          name: "StayFinder Pro",
-          short_description:
-            "Find and book unique accommodations worldwide with instant confirmation",
-          logo_url: aiFaviIcon,
-          vote_count: 64,
-          is_paid: true,
-          is_weekly_winner: true, // Won week 1 (2nd place)
-          is_monthly_winner: false,
-          is_active: true,
-          website_url: "https://example.com",
-          categories: ["APIs & Integrations"],
-          pricing: "Paid",
-          launch_date: "2024-01-02",
-          launch_week: "2024-W01",
-          launch_month: "2024-01",
-        },
-        {
-          id: 3,
-          name: "LocalEats Discovery",
-          short_description:
-            "Discover authentic local restaurants and hidden culinary gems",
-          logo_url: aiFaviIcon,
-          vote_count: 58,
-          is_paid: false,
-          is_weekly_winner: true, // Won week 1 (3rd place)
-          is_monthly_winner: false,
-          is_active: true,
-          website_url: "https://example.com",
-          categories: ["Directory of Directories", "APIs & Integrations"],
-          pricing: "Free",
-          launch_date: "2024-01-03",
-          launch_week: "2024-W01",
-          launch_month: "2024-01",
-        },
-
-        // Week 2 projects (2024-W02) - new launches but in same month
-        {
-          id: 4,
-          name: "TripBudget Manager",
-          short_description:
-            "Comprehensive travel expense tracking and budgeting",
-          logo_url: aiFaviIcon,
-          vote_count: 72, // Higher votes, could win monthly
-          is_paid: false,
-          is_weekly_winner: false, // Launched in week 2
-          is_monthly_winner: true, // Winning monthly 2nd place
-          is_active: true,
-          website_url: "https://example.com",
-          categories: ["Developer Tools & Platforms"],
-          pricing: "Freemium",
-          launch_date: "2024-01-08",
-          launch_week: "2024-W02",
-          launch_month: "2024-01",
-        },
-        {
-          id: 5,
-          name: "WeatherWise Travel",
-          short_description:
-            "Weather-based travel planning and packing suggestions",
-          logo_url: aiFaviIcon,
-          vote_count: 65, // Could win monthly 3rd
-          is_paid: false,
-          is_weekly_winner: false,
-          is_monthly_winner: true, // Winning monthly 3rd place
-          is_active: true,
-          website_url: "https://example.com",
-          categories: ["AI & LLM"],
-          pricing: "Free",
-          launch_date: "2024-01-09",
-          launch_week: "2024-W02",
-          launch_month: "2024-01",
-        },
-
-        // Week 3 projects (2024-W03) - current week
-        {
-          id: 6,
-          name: "PackSmart",
-          short_description:
-            "Smart packing lists based on destination and weather",
-          logo_url: aiFaviIcon,
-          vote_count: 42, // Active current week
-          is_paid: false,
-          is_weekly_winner: false, // Current week, could still win
-          is_monthly_winner: false,
-          is_active: true,
-          website_url: "https://example.com",
-          categories: ["UI/UX", "Design"],
-          pricing: "Paid",
-          launch_date: "2024-01-15",
-          launch_week: "2024-W03", // Current week
-          launch_month: "2024-01",
-        },
-        {
-          id: 7,
-          name: "CityGuide AI",
-          short_description:
-            "AI-powered city exploration and local recommendations",
-          logo_url: aiFaviIcon,
-          vote_count: 19,
-          is_paid: false,
-          is_weekly_winner: false,
-          is_monthly_winner: false,
-          is_active: true,
-          website_url: "https://example.com",
-          categories: ["AI & LLM", "Directory of Directories"],
-          pricing: "Freemium",
-          launch_date: "2024-01-16",
-          launch_week: "2024-W03",
-          launch_month: "2024-01",
-        },
-        {
-          id: 8,
-          name: "HotelFinder Elite",
-          short_description:
-            "Premium hotel booking with exclusive member rates",
-          logo_url: aiFaviIcon,
-          vote_count: 7,
-          is_paid: false,
-          is_weekly_winner: false,
-          is_monthly_winner: false,
-          is_active: true,
-          website_url: "https://example.com",
-          categories: ["APIs & Integrations"],
-          pricing: "Paid",
-          launch_date: "2024-01-17",
-          launch_week: "2024-W03",
-          launch_month: "2024-01",
-        },
-      ]);
-      setLoading(false);
-    }, 1000);
-  }, []);
-
-  // Countdown timers for both weekly and monthly
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const now = new Date();
-
-      // Weekly countdown - next Monday
-      const nextMonday = new Date();
-      nextMonday.setDate(now.getDate() + ((7 - now.getDay() + 1) % 7 || 7));
-      nextMonday.setHours(0, 0, 0, 0);
-
-      const weeklyDiff = nextMonday - now;
-
-      if (weeklyDiff > 0) {
-        setWeeklyTimeRemaining({
-          days: Math.floor(weeklyDiff / (1000 * 60 * 60 * 24)),
-          hours: Math.floor(
-            (weeklyDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-          ),
-          minutes: Math.floor((weeklyDiff % (1000 * 60 * 60)) / (1000 * 60)),
-          seconds: Math.floor((weeklyDiff % (1000 * 60)) / 1000),
-        });
-      }
-
-      // Monthly countdown - first day of next month
-      const nextMonth = new Date();
-      nextMonth.setMonth(now.getMonth() + 1, 1);
-      nextMonth.setHours(0, 0, 0, 0);
-
-      const monthlyDiff = nextMonth - now;
-
-      if (monthlyDiff > 0) {
-        setMonthlyTimeRemaining({
-          days: Math.floor(monthlyDiff / (1000 * 60 * 60 * 24)),
-          hours: Math.floor(
-            (monthlyDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-          ),
-          minutes: Math.floor((monthlyDiff % (1000 * 60 * 60)) / (1000 * 60)),
-          seconds: Math.floor((monthlyDiff % (1000 * 60)) / 1000),
-        });
-      }
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  // Handle voting (toggle) - single vote count for both weekly and monthly
-  const handleVote = async (appId) => {
-    if (!isAuthenticated) {
-      window.location.href = "/signin";
-      return;
+    if (appsData && appsData.success && appsData.apps) {
+      setApps(appsData.apps);
+    } else if (appsError) {
+      console.error("Failed to load apps:", appsError);
+      // Fallback to empty array on error
+      setApps([]);
     }
+  }, [appsData, appsError]);
 
-    setVotingLoading((prev) => new Set([...prev, appId]));
-
-    setApps((prevApps) => {
-      return prevApps.map((app) => {
-        if (app.id === appId) {
-          const hasVoted = votedApps.has(appId);
-          return {
-            ...app,
-            vote_count: hasVoted ? app.vote_count - 1 : app.vote_count + 1,
-          };
-        }
-        return app;
-      });
-    });
-
-    setVotedApps((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(appId)) {
-        newSet.delete(appId);
-      } else {
-        newSet.add(appId);
+  // Handle voting - wrapped in useCallback to prevent unnecessary re-renders
+  const handleVote = useCallback(
+    async (appId, appSlug) => {
+      if (!isSignedIn) {
+        window.location.href = "/sign-in";
+        return;
       }
-      return newSet;
-    });
 
-    setVotingLoading((prev) => {
-      const newSet = new Set(prev);
-      newSet.delete(appId);
-      return newSet;
-    });
-  };
+      try {
+        await vote(appSlug, appId);
+        // Update the app's vote count in the local state
+        setApps((prevApps) =>
+          prevApps.map((app) =>
+            app._id === appId || app.id === appId
+              ? { ...app, vote_count: (app.vote_count || app.upvotes || 0) + 1 }
+              : app
+          )
+        );
+      } catch (error) {
+        console.error("Voting failed:", error);
+        // You could show a toast notification here
+      }
+    },
+    [isSignedIn, vote]
+  );
 
-  // Sort apps by vote_count descending - filter based on active tab
-  const getSortedApps = () => {
-    // For this demo, we'll simulate current week as 2024-W03
-    const currentWeek = "2024-W03";
-    const currentMonth = "2024-01";
+  // Helper function to get week number (moved outside of sorting function for optimization)
+  const getWeekNumber = useCallback((date) => {
+    const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+    const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+    return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+  }, []);
+
+  // Separate apps logic from timer logic to prevent timer updates from affecting app rendering
+  const sortedApps = useMemo(() => {
+    if (!apps || apps.length === 0) return [];
+
+    // Get current week and month - use a static date calculation to avoid timer interference
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentWeek = getWeekNumber(now);
+    const currentMonth = now.toISOString().slice(0, 7); // YYYY-MM format
 
     // Filter apps based on active tab
     const filteredApps = apps.filter((app) => {
       if (activeTab === "weekly") {
         // Weekly tab shows only current week's launches
-        return app.launch_week === currentWeek;
+        const appWeek =
+          app.launch_week ||
+          `${currentYear}-W${currentWeek.toString().padStart(2, "0")}`;
+        return (
+          appWeek ===
+          `${currentYear}-W${currentWeek.toString().padStart(2, "0")}`
+        );
       } else {
         // Monthly tab shows all apps from current month
-        return app.launch_month === currentMonth;
+        const appMonth =
+          app.launch_month || app.createdAt?.slice(0, 7) || currentMonth;
+        return appMonth === currentMonth;
       }
     });
 
     return [...filteredApps].sort((a, b) => {
-      // If both apps have the same vote count (including 0), prioritize paid launches
-      if (a.vote_count === b.vote_count) {
-        if (a.is_paid && !b.is_paid) return -1;
-        if (!a.is_paid && b.is_paid) return 1;
-        return 0; // Both same paid status and same vote count
+      const aVotes = a.vote_count || a.upvotes || 0;
+      const bVotes = b.vote_count || b.upvotes || 0;
+
+      // If both apps have the same vote count, prioritize paid launches
+      if (aVotes === bVotes) {
+        const aPaid = a.is_paid || a.pricing === "Paid";
+        const bPaid = b.is_paid || b.pricing === "Paid";
+        if (aPaid && !bPaid) return -1;
+        if (!aPaid && bPaid) return 1;
+        return 0;
       }
 
       // Otherwise, sort by vote count (higher votes first)
-      return b.vote_count - a.vote_count;
+      return bVotes - aVotes;
     });
-  };
+  }, [apps, activeTab, getWeekNumber]); // Removed currentTime dependency
 
-  // Get current voted apps - same for both weekly and monthly
-  const getCurrentVotedApps = () => {
-    return votedApps;
-  };
-
-  // Get current time remaining based on active tab
-  const getCurrentTimeRemaining = () => {
-    return activeTab === "weekly" ? weeklyTimeRemaining : monthlyTimeRemaining;
-  };
-
-  // Get current vote count for an app - same for both weekly and monthly
-  const getCurrentVoteCount = (app) => {
-    return app.vote_count;
-  };
-
-  // Calculate ranking with ties (shared positions) - same for both weekly and monthly
-  const getAppRanking = (sortedApps) => {
+  // Memoized app ranking to prevent recalculation on every render
+  const rankedApps = useMemo(() => {
     const rankings = [];
     let currentRank = 1;
 
@@ -340,11 +250,8 @@ export function HomePage() {
     }
 
     return rankings;
-  };
+  }, [sortedApps]);
 
-  function pad(num) {
-    return num.toString().padStart(2, "0");
-  }
   return (
     <div className="flex flex-col items-start md:flex-row gap-10 space-y-0">
       <div className="left-side w-full md:flex-1">
@@ -367,8 +274,8 @@ export function HomePage() {
             </h2>
             <Badge variant="secondary" className="text-base">
               {activeTab === "weekly"
-                ? `${getSortedApps().length} / 15 Apps`
-                : `${getSortedApps().length} Apps`}
+                ? `${sortedApps.length} / 15 Apps`
+                : `${sortedApps.length} Apps`}
             </Badge>
           </div>
 
@@ -400,40 +307,7 @@ export function HomePage() {
                     </Link>
                   </p>
                 </div>
-                <div className="flex mt-4 md:mt-0">
-                  <div className="text-center">
-                    <div className=" text-gray-900 px-1">
-                      <div className="text-xl font-medium">
-                        {pad(getCurrentTimeRemaining().days)} :
-                      </div>
-                      <div className="text-[8px] md:text-xs">days</div>
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className=" text-gray-900 px-1">
-                      <div className="text-xl font-medium">
-                        {pad(getCurrentTimeRemaining().hours)} :
-                      </div>
-                      <div className="text-[8px] md:text-xs">hours</div>
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className=" text-gray-900 px-1">
-                      <div className="text-xl font-medium">
-                        {pad(getCurrentTimeRemaining().minutes)} :
-                      </div>
-                      <div className="text-[8px] md:text-xs">mins</div>
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className=" text-gray-900 px-1">
-                      <div className="text-xl font-medium">
-                        {pad(getCurrentTimeRemaining().seconds)}
-                      </div>
-                      <div className="text-[8px] md:text-xs">secs</div>
-                    </div>
-                  </div>
-                </div>
+                <CountdownTimer type="weekly" />
               </div>
             </TabsContent>
 
@@ -455,45 +329,12 @@ export function HomePage() {
                     </Link>
                   </p>
                 </div>
-                <div className="flex mt-4 md:mt-0">
-                  <div className="text-center">
-                    <div className=" text-gray-900 px-1">
-                      <div className="text-xl font-medium">
-                        {pad(getCurrentTimeRemaining().days)} :
-                      </div>
-                      <div className="text-[8px] md:text-xs">days</div>
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className=" text-gray-900 px-1">
-                      <div className="text-xl font-medium">
-                        {pad(getCurrentTimeRemaining().hours)} :
-                      </div>
-                      <div className="text-[8px] md:text-xs">hours</div>
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className=" text-gray-900 px-1">
-                      <div className="text-xl font-medium">
-                        {pad(getCurrentTimeRemaining().minutes)} :
-                      </div>
-                      <div className="text-[8px] md:text-xs">mins</div>
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className=" text-gray-900 px-1">
-                      <div className="text-xl font-medium">
-                        {pad(getCurrentTimeRemaining().seconds)}
-                      </div>
-                      <div className="text-[8px] md:text-xs">secs</div>
-                    </div>
-                  </div>
-                </div>
+                <CountdownTimer type="monthly" />
               </div>
             </TabsContent>
           </Tabs>
 
-          {loading ? (
+          {appsLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
                 <div
@@ -504,10 +345,10 @@ export function HomePage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {getAppRanking(getSortedApps()).map((app) => (
+              {rankedApps.map((app) => (
                 <Link
-                  key={app.id}
-                  to={`/app/${app.id}`}
+                  key={app._id || app.id}
+                  to={`/app/${app.slug || app._id || app.id}`}
                   className="block group"
                 >
                   <div
@@ -519,7 +360,9 @@ export function HomePage() {
                     {/* Left: Logo, Name, Description */}
                     <div className="flex items-center flex-1 min-w-0 gap-4">
                       <img
-                        src={app.logo_url}
+                        src={
+                          app.logo_url || app.logo || "/api/placeholder/80/80"
+                        }
                         alt={app.name}
                         className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
                       />
@@ -573,17 +416,18 @@ export function HomePage() {
                               {app.displayRank === 3 && "3rd"}
                             </span>
                           )}
-                          {app.is_paid && (
+                          {(app.is_paid || app.pricing === "Paid") && (
                             <span className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
                               Premium
                             </span>
                           )}
-                          {app.is_weekly_winner && (
+                          {(app.is_weekly_winner ||
+                            app.weekly_ranking <= 3) && (
                             <span className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
                               Weekly Winner
                             </span>
                           )}
-                          {app.is_monthly_winner && (
+                          {(app.is_monthly_winner || app.featured) && (
                             <span className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-green-100 text-green-800 border border-green-200">
                               Monthly Winner
                             </span>
@@ -619,18 +463,10 @@ export function HomePage() {
                           e.preventDefault();
                           e.stopPropagation();
                           // Dofollow if: Top 3 in current rankings OR weekly winner OR monthly winner OR paid
-                          const isCurrentTopThree = app.displayRank <= 3;
-                          const isWinner =
-                            isCurrentTopThree ||
-                            app.is_weekly_winner ||
-                            app.is_monthly_winner;
-                          const rel =
-                            isWinner || app.is_paid ? "dofollow" : "nofollow";
-                          window.open(
-                            app.website_url,
-                            "_blank",
-                            rel === "dofollow" ? "" : "nofollow"
-                          );
+                          const websiteUrl = app.website_url || app.website;
+                          if (websiteUrl) {
+                            window.open(websiteUrl, "_blank");
+                          }
                         }}
                         className="cursor-pointer inline-flex items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-2 py-2 text-gray-600 hover:bg-gray-100 transition"
                       >
@@ -640,27 +476,33 @@ export function HomePage() {
                         type="button"
                         onClick={(e) => {
                           e.preventDefault();
-                          handleVote(app.id);
+                          handleVote(
+                            app._id || app.id,
+                            app.slug ||
+                              app.name?.toLowerCase().replace(/\s+/g, "-")
+                          );
                         }}
-                        disabled={votingLoading.has(app.id)}
+                        disabled={votingLoading.has(app._id || app.id)}
                         className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg min-w-20 text-md font-semibold transition duration-300 ease-in-out -translate-y-0.5
                         ${
-                          getCurrentVotedApps().has(app.id)
+                          votedApps.has(app._id || app.id)
                             ? "bg-gray-900 text-white translate-0"
                             : "bg-white text-black shadow-[0_4px_0_rgba(0,0,0,1)] border-2 border-gray-900 hover:shadow-[0_2px_0_rgba(0,0,0,1)] hover:translate-y-0"
                         }
                         ${
-                          votingLoading.has(app.id)
+                          votingLoading.has(app._id || app.id)
                             ? "opacity-50 cursor-default"
                             : "cursor-pointer"
                         }`}
                       >
                         <ThumbsUp
                           className={`h-4.5 w-4.5 ${
-                            votingLoading.has(app.id) ? "animate-pulse" : ""
+                            votingLoading.has(app._id || app.id)
+                              ? "animate-pulse"
+                              : ""
                           }`}
                         />
-                        <span>{getCurrentVoteCount(app)}</span>
+                        <span>{app.vote_count || app.upvotes || 0}</span>
                       </button>
                     </div>
                   </div>
@@ -669,7 +511,7 @@ export function HomePage() {
             </div>
           )}
 
-          {!loading && apps.length === 0 && (
+          {!appsLoading && apps.length === 0 && (
             <Card className="text-center py-12">
               <CardContent>
                 <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />

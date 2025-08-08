@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import GuidePromoCard from "@/components/ui/GuidePromoCard";
 import SponsorCard from "@/components/ui/SponsorCard";
+import { useApi } from "@/hooks/useApi";
 import johnIcon from "@/assets/john.svg";
 import crownIcon from "@/assets/crown.svg";
 import crownBlackIcon from "@/assets/crown-black.svg";
@@ -24,131 +25,58 @@ export function PastLaunchesPage() {
   const [selectedWeek, setSelectedWeek] = useState("all");
   const [filteredApps, setFilteredApps] = useState([]);
 
-  // Mock data for development
+  // Fetch past launches from API
+  const { data: appsData, error: appsError } = useApi("/apps");
+
+  // Process API data into past launches format
   useEffect(() => {
-    setTimeout(() => {
-      setPastLaunches([
-        {
-          week_start: "2025-06-09T00:00:00Z",
-          week_end: "2025-06-15T23:59:59Z",
-          apps: [
-            {
-              id: 101,
-              name: "FlightTracker Pro",
-              short_description:
-                "Real-time flight tracking with predictive delay alerts",
-              logo_url:
-                "https://via.placeholder.com/60x60/EF4444/FFFFFF?text=FT",
-              vote_count: 89,
-              is_winner: true,
-              is_paid: false,
-              position: 1,
-              website_url: "https://example.com",
-              categories: ["AI & LLM", "APIs & Integrations"],
-              pricing: "Freemium",
-            },
-            {
-              id: 102,
-              name: "HotelFinder Elite",
-              short_description:
-                "Premium hotel booking with exclusive member rates",
-              logo_url:
-                "https://via.placeholder.com/60x60/10B981/FFFFFF?text=HF",
-              vote_count: 76,
-              is_winner: true,
-              is_paid: true,
-              position: 2,
-              website_url: "https://example.com",
-              categories: ["APIs & Integrations"],
-              pricing: "Paid",
-            },
-            {
-              id: 103,
-              name: "CityGuide AI",
-              short_description:
-                "AI-powered city exploration and local recommendations",
-              logo_url:
-                "https://via.placeholder.com/60x60/F59E0B/FFFFFF?text=CG",
-              vote_count: 64,
-              is_winner: true,
-              is_paid: false,
-              position: 3,
-              website_url: "https://example.com",
-              categories: ["AI & LLM", "Directory of Directories"],
-              pricing: "Free",
-            },
-            {
-              id: 104,
-              name: "PackSmart",
-              short_description:
-                "Smart packing lists based on destination and weather",
-              logo_url:
-                "https://via.placeholder.com/60x60/8B5CF6/FFFFFF?text=PS",
-              vote_count: 52,
-              is_winner: false,
-              is_paid: false,
-              position: 4,
-              website_url: "https://example.com",
-              categories: ["UI/UX", "Design"],
-              pricing: "Freemium",
-            },
-          ],
-        },
-        {
-          week_start: "2025-06-02T00:00:00Z",
-          week_end: "2025-06-08T23:59:59Z",
-          apps: [
-            {
-              id: 201,
-              name: "TripBudget Manager",
-              short_description:
-                "Comprehensive travel expense tracking and budgeting",
-              logo_url:
-                "https://via.placeholder.com/60x60/06B6D4/FFFFFF?text=TB",
-              vote_count: 94,
-              is_winner: true,
-              is_paid: true,
-              position: 1,
-              website_url: "https://example.com",
-              categories: ["Developer Tools & Platforms"],
-              pricing: "Freemium",
-            },
-            {
-              id: 202,
-              name: "LocalEats Finder",
-              short_description:
-                "Discover authentic local restaurants and street food",
-              logo_url:
-                "https://via.placeholder.com/60x60/F97316/FFFFFF?text=LE",
-              vote_count: 81,
-              is_winner: true,
-              is_paid: false,
-              position: 2,
-              website_url: "https://example.com",
-              categories: ["Directory of Directories", "APIs & Integrations"],
-              pricing: "Free",
-            },
-            {
-              id: 203,
-              name: "WeatherWise Travel",
-              short_description:
-                "Weather-based travel planning and packing suggestions",
-              logo_url:
-                "https://via.placeholder.com/60x60/84CC16/FFFFFF?text=WW",
-              vote_count: 69,
-              is_winner: true,
-              is_paid: false,
-              position: 3,
-              website_url: "https://example.com",
-              categories: ["AI & LLM"],
-              pricing: "Paid",
-            },
-          ],
-        },
-      ]);
+    if (appsData && appsData.success && appsData.apps) {
+      const apps = appsData.apps;
+
+      // Group apps by week
+      const groupedByWeek = apps.reduce((acc, app) => {
+        const week = app.launch_week || "unknown";
+        if (!acc[week]) {
+          acc[week] = [];
+        }
+        acc[week].push({
+          ...app,
+          id: app._id || app.id,
+          logo_url: app.logo_url || app.logo || "/api/placeholder/60/60",
+          vote_count: app.vote_count || app.upvotes || 0,
+          is_winner: app.weekly_ranking <= 3 || app.featured,
+          is_paid: app.is_paid || app.pricing === "Paid",
+          position: app.weekly_ranking || null,
+          website_url: app.website_url || app.website,
+          categories: app.categories || [],
+          pricing: app.pricing || "Free",
+        });
+        return acc;
+      }, {});
+
+      // Convert to array format with week info
+      const launchesArray = Object.entries(groupedByWeek)
+        .map(([week, weekApps]) => ({
+          week_key: week,
+          week_start: weekApps[0]?.launch_date || new Date().toISOString(),
+          week_end: new Date(
+            new Date(weekApps[0]?.launch_date || new Date()).getTime() +
+              6 * 24 * 60 * 60 * 1000
+          ).toISOString(),
+          apps: weekApps.sort(
+            (a, b) => (b.vote_count || 0) - (a.vote_count || 0)
+          ),
+        }))
+        .sort((a, b) => new Date(b.week_start) - new Date(a.week_start));
+
+      setPastLaunches(launchesArray);
       setLoading(false);
-    }, 1000);
-  }, []);
+    } else if (appsError) {
+      console.error("Failed to load past launches:", appsError);
+      setLoading(false);
+      setPastLaunches([]);
+    }
+  }, [appsData, appsError]);
 
   // Filter apps based on selected week
   useEffect(() => {

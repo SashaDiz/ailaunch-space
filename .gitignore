@@ -15,3 +15,18 @@ node_modules
 *.local
 .vercel
 dist
+
+# Test artifacts and temporary files
+*.test.tmp
+*.spec.tmp
+test-output-*
+test-results.log
+temp-test-files/
+test-temp/
+tmp-test/
+.test-cache/
+.test-artifacts/
+coverage/
+.nyc_output/
+junit.xml
+test-report.json

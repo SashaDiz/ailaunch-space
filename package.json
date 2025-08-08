@@ -13,7 +13,12 @@
     "db:seed": "node scripts/init-db.js",
     "db:setup": "node scripts/init-database.js",
     "check-functions": "echo 'Serverless Functions:' && find api -name '*.js' -type f | wc -l && echo '/12 (Hobby limit)' && echo 'Current functions:' && find api -name '*.js' -type f",
-    "predeploy": "npm run check-functions"
+    "predeploy": "npm run check-functions",
+    "test": "npm run test:api && npm run test:clean",
+    "test:api": "./test-api.sh",
+    "test:clean": "node scripts/cleanup-test-files.js",
+    "test:watch": "npm run test",
+    "pretest": "npm run test:clean"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.38.1",
