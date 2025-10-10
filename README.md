@@ -22,8 +22,7 @@ A weekly competition platform for AI projects where AI builders can submit their
   - Live on homepage for 7 days
   - Badge for top 3 ranking products
   - High authority backlink for top 3 winners
-  - Standard launch queue
-  - 15 slots per week
+  - 15 shared weekly slots
   - Community voting access
 
 #### Premium Launch ($15)
@@ -32,11 +31,36 @@ A weekly competition platform for AI projects where AI builders can submit their
   - Live on homepage for 7 days
   - Badge for top 3 ranking products
   - Guaranteed high authority backlink
-  - Skip the queue
-  - 10 dedicated weekly slots
+  - 25 total weekly slots (15 shared + 10 premium-only)
   - Premium badge & featured placement
+  - Priority listing placement
 
 **Note**: Both plans can earn badges for top 3 ranking products regardless of the chosen plan.
+
+### Slot System
+
+The platform uses a shared slot system:
+- **Slots 1-15**: Shared between Standard and Premium submissions
+- **Slots 16-25**: Premium-only (available when shared slots fill up)
+- Standard submissions are blocked when `total_submissions >= 15`
+- Premium submissions are blocked when `total_submissions >= 25`
+
+### Draft System
+
+Premium submissions are automatically saved as drafts until payment is confirmed:
+
+- **Draft Creation**: When a user selects Premium but doesn't complete payment, their submission is saved as a draft
+- **Resume Drafts**: Users can resume drafts from their dashboard, modify details, or even switch to Standard plan
+- **Auto-Cleanup**: If a user resubmits with the same name/URL, unpaid drafts are automatically replaced
+- **No Slot Blocking**: Drafts don't count toward weekly slot limits until payment is confirmed
+
+**Draft States:**
+- `status: "draft"` - Unpaid premium submission
+- `is_draft: true` - Flag for easy filtering
+- `payment_status: false` - Not yet paid
+- `scheduled_launch: false` - Not scheduled until payment
+
+After successful payment, drafts are automatically converted to active submissions.
 
 ## 🔐 Authentication & Security
 
@@ -75,14 +99,11 @@ This application implements **defense-in-depth security** with three layers of p
 
 ### Testing Authentication
 
-Run the authentication test suite:
-```bash
-node scripts/test-auth.js
-```
-
-For detailed security documentation, see:
-- `AUTHENTICATION_VERIFICATION.md` - Complete security audit
-- `AUTH_QUICK_REFERENCE.md` - Quick reference guide
+Test authentication by:
+1. Visit `http://localhost:3000`
+2. Click "Sign in"
+3. Try any authentication method (Email, Google, or GitHub)
+4. Verify you're signed in (avatar appears in header)
 
 ## 🛠️ Tech Stack
 
@@ -361,9 +382,12 @@ The platform uses 11 PostgreSQL tables with Row Level Security (RLS) enabled:
 **apps** (AI projects)
 - Directory submissions
 - Fields: name, slug, website_url, short_description, full_description
-- Status: pending, live, rejected
+- Status: draft, pending, scheduled, live, rejected, archived
+- Payment tracking: checkout_session_id, payment_status, payment_date, order_id
+- Draft management: is_draft flag for unpaid premium submissions
 - Link type: dofollow/nofollow tracking
 - Competition & voting data
+- Scheduled launch: scheduled_launch flag controls slot counting
 
 **categories**
 - AI project categories
@@ -465,6 +489,10 @@ pnpm lint         # Run ESLint
 # Database
 pnpm db:test      # Test Supabase connection
 pnpm supabase:types  # Generate TypeScript types
+
+# Payment Testing
+pnpm test:lemonsqueezy  # Test LemonSqueezy connection and webhook setup
+pnpm webhook:simulate   # Simulate webhook events for testing
 ```
 
 ### Admin Features
@@ -489,6 +517,25 @@ pnpm supabase:types  # Generate TypeScript types
    - **Google**: Click "Continue with Google"
    - **GitHub**: Click "Continue with GitHub"
 4. Verify you're signed in (avatar appears in header)
+
+### Testing Payments
+
+**Test LemonSqueezy integration:**
+```bash
+# Test API connection and webhook setup
+pnpm test:lemonsqueezy
+
+# Simulate webhook events without real payment
+pnpm webhook:simulate
+```
+
+**Test with real payment (Test Mode):**
+1. Start dev server and ngrok: `pnpm dev` and `ngrok http 3000`
+2. Update webhook URL in LemonSqueezy dashboard
+3. Enable test mode in LemonSqueezy
+4. Make a test payment using card: `4242 4242 4242 4242`
+5. Watch console logs for webhook processing
+6. Verify directory upgraded in database
 
 ## 🚀 Deployment
 
@@ -526,17 +573,28 @@ After deployment, update Supabase settings:
 
 ### Standard Launch Flow
 1. User submits AI project (chooses "Standard Launch")
-2. Admin approves → Goes live with nofollow link
-3. Lives on homepage for 7 days
-4. Participates in weekly voting
-5. **Top 3 winners** → Automatically get dofollow backlink + badge
+2. Directory created with `status: "pending"` and `scheduled_launch: true`
+3. Competition slot count incremented immediately
+4. Admin approves → Goes live with nofollow link
+5. Lives on homepage for 7 days
+6. Participates in weekly voting
+7. **Top 3 winners** → Automatically get dofollow backlink + badge
 
 ### Premium Launch Flow
-1. User selects Premium Launch ($15)
-2. Pays $15 via LemonSqueezy
-3. AI project submitted and enters approval queue
-4. Upon approval → **Guaranteed dofollow backlink by default**
-5. Can still compete for top 3 ranking and earn badges
+1. User fills out complete submission form (chooses "Premium Launch")
+2. Directory created as **draft** with `status: "draft"` and `scheduled_launch: false`
+3. Draft does NOT count toward competition slots yet
+4. User proceeds to payment ($15 via LemonSqueezy)
+5. **If payment succeeds:**
+   - Webhook updates directory: `status: "pending"`, `scheduled_launch: true`, `payment_status: true`
+   - Competition slot count incremented
+   - Enters admin approval queue
+   - Upon approval → **Guaranteed dofollow backlink by default**
+6. **If payment fails/cancelled:**
+   - Draft remains in user's dashboard
+   - User can resume draft later, modify details, or switch to Standard plan
+   - Can resubmit with same details (old draft auto-deleted)
+7. Can still compete for top 3 ranking and earn badges
 
 ### Weekly Competition (Automated)
 - **Automatically starts every Monday at 00:00 PST (08:00 UTC)**
