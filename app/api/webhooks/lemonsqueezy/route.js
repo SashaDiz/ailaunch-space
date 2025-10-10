@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { db } from "../../../libs/database.js";
 import { verifyWebhookSignature } from "../../../libs/lemonsqueezy.js";
+import { getSupabaseAdmin } from "../../../libs/supabase.js";
 
 // POST /api/webhooks/lemonsqueezy
 export async function POST(request) {
@@ -167,14 +168,16 @@ async function handleOrderCreated(event) {
     }
     
     if (!customData || Object.keys(customData).length === 0) {
-      console.error("❌ No custom data found in webhook. Checking payload structure:", {
+      console.warn("⚠️  No custom data found in webhook. Will attempt to match by email and timestamp.", {
         hasCheckoutData: !!order.checkout_data,
         checkoutDataKeys: order.checkout_data ? Object.keys(order.checkout_data) : [],
         hasFirstOrderItem: !!order.first_order_item,
-        hasOrderItems: !!order.order_items
+        hasOrderItems: !!order.order_items,
+        userEmail: order.user_email
       });
     }
     
+    // Extract custom data fields (may be empty if custom data not found)
     const {
       user_id: userId,
       directory_name: directoryName,
@@ -182,49 +185,103 @@ async function handleOrderCreated(event) {
       plan_type: planType
     } = customData;
 
-    if (!userId) {
-      console.error("❌ No user ID in webhook custom data", {
-        customData,
-        providedFields: Object.keys(customData),
+    let directory;
+    
+    // Strategy 1: If we have custom data with user_id, use it
+    if (userId) {
+      console.log(`Processing payment for user: ${userId}`);
+
+      // Find the directory to update
+      console.log('Searching for directory:', { directorySlug, directoryName, userId });
+      
+      if (directorySlug) {
+        directory = await db.findOne("apps", { 
+          slug: directorySlug,
+          submitted_by: userId 
+        });
+        console.log(directory ? '✅ Directory found by slug' : '❌ Directory not found by slug');
+      }
+      
+      if (!directory && directoryName) {
+        directory = await db.findOne("apps", { 
+          name: directoryName,
+          submitted_by: userId 
+        });
+        console.log(directory ? '✅ Directory found by name' : '❌ Directory not found by name');
+      }
+    }
+    
+    // Strategy 2: If no custom data or directory not found, match by email + unpaid status + recent timestamp
+    if (!directory) {
+      console.log('🔍 Attempting to match directory by email and unpaid status...');
+      
+      // First, find user by email from auth.users using Supabase admin client
+      const supabase = getSupabaseAdmin();
+      
+      // Query auth.users directly using RPC or by listing with filter
+      // Note: Supabase doesn't have a direct getUserByEmail in admin API, so we use a SQL query
+      const { data: users, error: authError } = await supabase
+        .from('users')
+        .select('id')
+        .limit(1);
+      
+      // Fallback: Get user by querying all auth users (inefficient but works)
+      let authUserId = null;
+      
+      // Try to get user through Supabase Auth API
+      const { data: { users: authUsers } = {}, error: listError } = await supabase.auth.admin.listUsers();
+      
+      if (!listError && authUsers) {
+        const authUser = authUsers.find(u => u.email === order.user_email);
+        if (authUser) {
+          authUserId = authUser.id;
+          console.log(`✅ Found user by email in auth.users: ${authUserId}`);
+        } else {
+          console.error("❌ No user found with email in auth.users:", order.user_email);
+        }
+      } else if (listError) {
+        console.error("❌ Error querying auth users:", listError);
+      }
+      
+      // If we found a user, look for their unpaid directory
+      if (authUserId) {
+        // Find the most recent unpaid premium directory for this user
+        const unpaidDirectories = await db.find("apps", {
+          submitted_by: authUserId,
+          plan: "premium",
+          payment_status: false,
+          is_draft: true
+        }, {
+          sort: { payment_initiated_at: -1 },
+          limit: 1
+        });
+        
+        if (unpaidDirectories && unpaidDirectories.length > 0) {
+          directory = unpaidDirectories[0];
+          console.log('✅ Found unpaid directory by email match:', {
+            id: directory.id,
+            name: directory.name,
+            paymentInitiatedAt: directory.payment_initiated_at
+          });
+        } else {
+          console.error("❌ No unpaid premium directories found for user:", {
+            userId: authUserId,
+            email: order.user_email
+          });
+        }
+      }
+    }
+
+    // If still no directory found, we can't process the payment
+    if (!directory) {
+      console.error("❌ Directory not found for payment after all strategies", { 
+        customDataUserId: userId,
+        directoryName, 
+        directorySlug,
         orderEmail: order.user_email,
         orderId: event.data.id
       });
-      throw new Error('Missing user_id in webhook custom data - cannot process payment');
-    }
-
-    console.log(`Processing payment for user: ${userId}`);
-
-    // Find the directory to update
-    console.log('Searching for directory:', { directorySlug, directoryName, userId });
-    
-    let directory;
-    if (directorySlug) {
-      directory = await db.findOne("apps", { 
-        slug: directorySlug,
-        submitted_by: userId 
-      });
-      console.log(directory ? '✅ Directory found by slug' : '❌ Directory not found by slug');
-    }
-    
-    if (!directory && directoryName) {
-      directory = await db.findOne("apps", { 
-        name: directoryName,
-        submitted_by: userId 
-      });
-      console.log(directory ? '✅ Directory found by name' : '❌ Directory not found by name');
-    }
-
-    if (!directory) {
-      console.error("❌ Directory not found for payment", { 
-        userId, 
-        directoryName, 
-        directorySlug,
-        searchCriteria: {
-          bySlug: !!directorySlug,
-          byName: !!directoryName
-        }
-      });
-      throw new Error('Directory not found - cannot process payment');
+      throw new Error('Directory not found - cannot process payment. Please contact support with order ID: ' + event.data.id);
     }
 
     console.log('✅ Found directory:', {
@@ -300,7 +357,7 @@ async function handleOrderCreated(event) {
     console.log('Recording payment in database...');
     
     const paymentRecord = await db.insertOne("payments", {
-      user_id: userId,
+      user_id: userId || directory.submitted_by, // Use userId from custom data or directory's submitted_by
       app_id: directory.id,
       plan: planType || "premium",
       amount: order.total,
