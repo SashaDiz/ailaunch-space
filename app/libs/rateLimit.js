@@ -262,8 +262,8 @@ export const validation = {
   isValidOrigin(origin) {
     const allowedOrigins = [
       'http://localhost:3000',
-      'https://ailaunchspace.com',
-      'https://www.ailaunchspace.com',
+      'https://ailaunch.space',
+      'https://www.ailaunch.space',
     ];
 
     return allowedOrigins.includes(origin) || 

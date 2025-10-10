@@ -19,7 +19,7 @@ export const metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://ailaunchspace.com",
+    url: process.env.NEXT_PUBLIC_APP_URL || "https://ailaunch.space",
     title: "AI Launch Space - Weekly Competition Platform for AI Projects & Get DR22+ Backlinks",
     description: "Submit your AI project to the weekly competition and get high authority backlinks.",
     siteName: "AI Launch Space",

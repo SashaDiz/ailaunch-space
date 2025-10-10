@@ -197,12 +197,12 @@ function RightSidePanel() {
         </div>
         <div className="flex flex-col items-center gap-4">
           <a
-            href="https://frogdr.com/ailaunchspace.com?utm_source=ailaunchspace.com"
+            href="https://frogdr.com/ailaunch.space?utm_source=ailaunch.space"
             target="_blank"
             rel="noopener noreferrer"
           >
             <img
-              src="https://frogdr.com/ailaunchspace.com/badge-white.svg"
+              src="https://frogdr.com/ailaunch.space/badge-white.svg"
               alt="Monitor your Domain Rating with FrogDR"
               className="w-full h-auto"
             />

@@ -73,10 +73,12 @@ LEMONSQUEEZY_VARIANT_ID
 ```
 NEXT_PUBLIC_APP_URL
 ```
-**Value for Production**: `https://your-actual-domain.com`
+**Value for Production**: `https://ailaunch.space`
 **Value for Preview**: `https://your-project.vercel.app` (or leave empty to use Vercel URL)
 **Value for Development**: `http://localhost:3000`
 **Environments**: ☑️ Production ☑️ Preview ☑️ Development
+
+⚠️ **Note**: The platform uses `https://ailaunch.space` (without www). Both `www.ailaunch.space` and `ailaunch.space` will work, as www redirects to non-www automatically.
 
 ---
 
@@ -150,7 +152,7 @@ Environments: Production, Preview, Development
 ### Variable 8
 ```
 Name: NEXT_PUBLIC_APP_URL
-Value: https://your-domain.com
+Value: https://ailaunch.space
 Environments: Production, Preview, Development
 ```
 

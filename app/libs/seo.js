@@ -2,7 +2,7 @@
 
 export const seoConfig = {
   siteName: "AI Launch Space",
-  siteUrl: process.env.NEXT_PUBLIC_APP_URL || "https://ailaunchspace.com",
+  siteUrl: process.env.NEXT_PUBLIC_APP_URL || "https://ailaunch.space",
   defaultTitle: "AI Launch Space - Weekly Competition Platform for AI Projects & Get DR22+ Backlinks",
   defaultDescription: "Submit your AI project to weekly competitions and get high authority backlinks. Join the community of successful AI builders and innovators.",
   defaultKeywords: ["AI", "artificial intelligence", "AI tools", "AI launch", "backlinks", "SEO", "AI projects", "product hunt for AI", "AI directory", "machine learning"],
