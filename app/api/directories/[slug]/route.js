@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 import { db } from "../../../libs/database.js";
 
 // GET /api/directories/[slug] - Get directory by slug or ID
@@ -28,25 +30,51 @@ export async function GET(request, { params }) {
       );
     }
 
-    // Increment view count
-    await db.updateOne(
-      "apps",
-      { id: directory.id },
+    // Check authentication for access control
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
-        $inc: { views: 1 },
-        $set: { updated_at: new Date() },
+        cookies: {
+          get(name) {
+            return cookieStore.get(name)?.value;
+          },
+        },
       }
     );
 
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // Check access: owner can see drafts/pending, others only see live/approved
+    const isOwner = user && directory.submitted_by === user.id;
+    const isPublic = directory.status === "live" || directory.status === "approved";
+
+    if (!isOwner && !isPublic) {
+      return NextResponse.json(
+        { error: "Directory not found or access denied", code: "NOT_FOUND" },
+        { status: 404 }
+      );
+    }
+
+    // Increment view count (only for public/non-owner views to avoid inflating counts during editing)
+    if (!isOwner) {
+      await db.updateOne(
+        "apps",
+        { id: directory.id },
+        {
+          $inc: { views: 1 },
+          $set: { updated_at: new Date() },
+        }
+      );
+    }
+
     // Get user's vote status if authenticated
-    // For now, we'll skip session handling to get the basic functionality working
-    // TODO: Implement proper session handling with NextAuth v5
-    const session = null;
     let userVoted = false;
 
-    if (session?.user?.id) {
+    if (user?.id) {
       const vote = await db.findOne("votes", {
-        user_id: session.user.id,
+        user_id: user.id,
         app_id: directory.id,
       });
       userVoted = !!vote;
