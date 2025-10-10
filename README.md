@@ -539,12 +539,6 @@ pnpm webhook:simulate
 
 ## 🚀 Deployment
 
-### Quick Start
-
-**📖 For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md)**
-
-**🔐 For environment variables setup, see [VERCEL_ENV_SETUP.md](./VERCEL_ENV_SETUP.md)**
-
 ### Vercel (Recommended)
 
 #### Prerequisites
@@ -566,48 +560,77 @@ pnpm webhook:simulate
 
 3. **⚠️ CRITICAL: Add Environment Variables BEFORE deploying**
    
-   **Required Supabase Variables:**
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
+   In Vercel, go to Settings → Environment Variables and add:
    
-   **Required Lemon Squeezy Variables:**
-   - `LEMONSQUEEZY_API_KEY`
-   - `LEMONSQUEEZY_STORE_ID`
-   - `LEMONSQUEEZY_WEBHOOK_SECRET`
-   - `LEMONSQUEEZY_VARIANT_ID`
+   **Required Supabase Variables** (Get from: Supabase Dashboard → Settings → API):
+   - `NEXT_PUBLIC_SUPABASE_URL` = `https://your-project-id.supabase.co`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = Your anon/public key
+   - `SUPABASE_SERVICE_ROLE_KEY` = Your service role key (⚠️ Keep secret!)
+   
+   **Required Lemon Squeezy Variables** (Get from: Lemon Squeezy → Settings → API):
+   - `LEMONSQUEEZY_API_KEY` = Your API key
+   - `LEMONSQUEEZY_STORE_ID` = Your store ID (numeric)
+   - `LEMONSQUEEZY_WEBHOOK_SECRET` = Your webhook signing secret
+   - `LEMONSQUEEZY_VARIANT_ID` = Your premium plan variant ID (numeric)
    
    **Required App Variables:**
-   - `NEXT_PUBLIC_APP_URL`
+   - `NEXT_PUBLIC_APP_URL` = `https://yourdomain.com`
    
-   See [VERCEL_ENV_SETUP.md](./VERCEL_ENV_SETUP.md) for detailed setup.
+   **IMPORTANT**: Set all variables for Production, Preview, AND Development environments!
 
 4. **Deploy**
    - Vercel will automatically build and deploy
    - Build should complete without errors if all env vars are set
 
-5. **Post-Deployment**
-   - Update Lemon Squeezy webhook URL with your deployment URL
-   - Update Supabase authentication settings (see below)
+5. **Post-Deployment Configuration**
+   
+   **a) Update Supabase Authentication Settings:**
+   
+   Go to Supabase Dashboard → Authentication → URL Configuration:
+   
+   - **Site URL**: Set to `https://yourdomain.com`
+   - **Redirect URLs**: Add these URLs (click "Add URL" for each):
+     ```
+     https://yourdomain.com/auth/callback
+     https://yourdomain.com/auth/callback/**
+     https://yourdomain.com/**
+     ```
+   - Click **Save** after adding each URL
+   
+   ⚠️ **CRITICAL**: This prevents authentication from redirecting to localhost in production!
+   
+   **b) Update Lemon Squeezy Webhook:**
+   
+   - Go to Lemon Squeezy → Settings → Webhooks
+   - Update endpoint URL to: `https://yourdomain.com/api/webhooks/lemonsqueezy`
+   
+   **c) Update OAuth Apps (if using Google/GitHub):**
+   
+   For **Google OAuth**:
+   - Go to Google Cloud Console → Credentials
+   - Add authorized redirect URI: `https://your-project.supabase.co/auth/v1/callback`
+   
+   For **GitHub OAuth**:
+   - Go to GitHub → Settings → Developer Settings → OAuth Apps
+   - Update callback URL: `https://yourdomain.com/auth/callback`
 
-### Update Supabase for Production
+### Deployment Troubleshooting
 
-After deployment, update Supabase settings:
+**Build fails with "Missing Supabase environment variables":**
+- ✅ Verify `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are set in Vercel
+- ✅ Check variable names match exactly (case-sensitive)
+- ✅ Ensure no extra spaces in values
 
-**Authentication → URL Configuration**:
-- Add your production domain to Site URL
-- Add `https://yourdomain.com/auth/callback` to Redirect URLs
+**Auth redirects to localhost after production signin:**
+- ✅ Verify production URL is in Supabase redirect URLs list
+- ✅ Check `NEXT_PUBLIC_APP_URL` is set to production domain in Vercel
+- ✅ Clear browser cache and test in incognito mode
+- ✅ Redeploy after making Vercel environment variable changes
 
-**Update OAuth Apps**:
-- Add production callback URLs to Google/GitHub OAuth apps
-
-### Troubleshooting
-
-If you encounter build errors:
-1. ✅ Verify all environment variables are set in Vercel
-2. ✅ Check variable names match exactly (case-sensitive)
-3. ✅ Ensure no extra spaces in variable values
-4. ✅ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed troubleshooting
+**Payment webhooks not working:**
+- ✅ Update Lemon Squeezy webhook URL to production domain
+- ✅ Verify `LEMONSQUEEZY_WEBHOOK_SECRET` matches Lemon Squeezy dashboard
+- ✅ Check Vercel function logs for webhook errors
 
 ## 🎯 How It Works
 
@@ -707,27 +730,34 @@ This will show detailed diagnostics and verify all tables are accessible.
 
 **Solutions**:
 1. **Verify Callback URLs Match Exactly**:
-   - GitHub OAuth App callback: `http://localhost:3000/auth/callback`
+   - GitHub OAuth App callback: `http://localhost:3000/auth/callback` (dev) or `https://yourdomain.com/auth/callback` (prod)
    - No trailing slashes
    - Case-sensitive match required
 
-2. **Check Supabase URL Configuration**:
-   - Site URL must be set to `http://localhost:3000` (dev) or your domain (prod)
-   - All redirect URLs must be added (see Step 1 in Authentication setup)
-   - Click **Save** after each URL
+2. **Check Supabase URL Configuration** (⚠️ MOST COMMON ISSUE):
+   - Site URL must be set to `http://localhost:3000` (dev) or `https://yourdomain.com` (prod)
+   - All redirect URLs must be added to Supabase:
+     - For development: `http://localhost:3000/auth/callback`
+     - For production: `https://yourdomain.com/auth/callback`
+   - Click **Save** after adding each URL
 
 3. **Verify GitHub OAuth App Settings**:
-   - Homepage URL: `http://localhost:3000`
-   - Authorization callback URL: `http://localhost:3000/auth/callback`
-   - Client ID and Secret correctly entered in Supabase
+   - Homepage URL: `http://localhost:3000` (dev) or `https://yourdomain.com` (prod)
+   - Authorization callback URL: `http://localhost:3000/auth/callback` (dev) or `https://yourdomain.com/auth/callback` (prod)
+   - Client ID and Secret correctly entered in Supabase Dashboard
 
-4. **Clear Cache and Restart**:
+4. **For Production Deployments**:
+   - Create a **separate** GitHub OAuth App for production
+   - Use different credentials for dev and prod environments
+   - Ensure `NEXT_PUBLIC_APP_URL` environment variable is set to production domain in Vercel
+
+5. **Clear Cache and Restart**:
    ```bash
    rm -rf .next
    pnpm dev
    ```
 
-5. **Test in Incognito Mode**:
+6. **Test in Incognito Mode**:
    - Clear browser cookies
    - Try in private/incognito window
 
@@ -747,14 +777,41 @@ This will show detailed diagnostics and verify all tables are accessible.
 - Try in incognito/private window
 - Check that NEXT_PUBLIC_APP_URL matches your current environment
 
+#### OAuth Redirects to Localhost in Production
+
+**Symptoms**: After signing in on production, you're redirected back to `localhost:3000` instead of your production domain.
+
+**Root Cause**: Supabase rejects unauthorized redirect URLs and falls back to the first allowed URL (localhost).
+
+**Solutions**:
+1. **Configure Supabase Redirect URLs** (⚠️ CRITICAL FIX):
+   - Go to Supabase Dashboard → Authentication → URL Configuration
+   - Set **Site URL** to: `https://yourdomain.com`
+   - Add these to **Redirect URLs**:
+     - `https://yourdomain.com/auth/callback`
+     - `https://yourdomain.com/auth/callback/**`
+     - `https://yourdomain.com/**`
+   - Click **Save**
+
+2. **Verify Vercel Environment Variable**:
+   - Go to Vercel → Settings → Environment Variables
+   - Ensure `NEXT_PUBLIC_APP_URL` is set to `https://yourdomain.com` for Production
+   - Redeploy after making changes
+
+3. **Clear Cache**:
+   - Wait 2-3 minutes after saving Supabase settings
+   - Clear browser cache or use incognito mode
+   - Test authentication flow again
+
 #### OAuth Works in Dev but Not Production
 
 **Solutions**:
 - Create **separate** OAuth Apps for production (recommended)
 - Use different Client ID and Secret for each environment
-- Update Supabase redirect URLs to include production domain
-- Set `NEXT_PUBLIC_APP_URL` to production domain in environment variables
+- Update Supabase redirect URLs to include production domain (see above)
+- Set `NEXT_PUBLIC_APP_URL` to production domain in Vercel environment variables
 - Verify production callback URLs in OAuth provider settings
+- Ensure Supabase Site URL is set to production domain
 
 ### Debugging Tips
 

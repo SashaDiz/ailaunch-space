@@ -219,10 +219,15 @@ export async function signInWithOAuth(provider) {
     }
   );
 
+  // Get the redirect URL with proper fallback chain
+  const redirectUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
+                     'http://localhost:3000');
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+      redirectTo: `${redirectUrl}/auth/callback`,
     },
   });
 
