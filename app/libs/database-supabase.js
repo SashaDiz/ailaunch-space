@@ -167,12 +167,27 @@ export class SupabaseDatabaseManager {
     return { insertedIds: data.map(d => d.id), insertedCount: data.length };
   }
 
+  // Convert MongoDB-style projection to Supabase select string
+  convertProjection(projection) {
+    if (!projection) return '*';
+    if (typeof projection === 'string') return projection;
+    
+    // Convert MongoDB-style projection object to Supabase select string
+    // { slug: 1, updated_at: 1 } => "slug,updated_at"
+    const fields = Object.entries(projection)
+      .filter(([_, value]) => value === 1 || value === true)
+      .map(([key, _]) => key);
+    
+    return fields.length > 0 ? fields.join(',') : '*';
+  }
+
   // FIND ONE
   async findOne(collectionName, query = {}, options = {}) {
     const table = this.getTableName(collectionName);
     const client = this.getClient();
 
-    let supabaseQuery = client.from(table).select(options.projection || '*');
+    const selectFields = this.convertProjection(options.projection);
+    let supabaseQuery = client.from(table).select(selectFields);
 
     // Apply filters
     supabaseQuery = this.applyFilters(supabaseQuery, query);
@@ -193,7 +208,8 @@ export class SupabaseDatabaseManager {
     const table = this.getTableName(collectionName);
     const client = this.getClient();
 
-    let supabaseQuery = client.from(table).select(options.projection || '*');
+    const selectFields = this.convertProjection(options.projection);
+    let supabaseQuery = client.from(table).select(selectFields);
 
     // Apply filters
     supabaseQuery = this.applyFilters(supabaseQuery, query);

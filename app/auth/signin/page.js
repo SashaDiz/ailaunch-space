@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -9,7 +9,7 @@ import { useSupabase } from "../../components/SupabaseProvider";
 import { useUser } from "../../hooks/useUser";
 import toast from "react-hot-toast";
 
-export default function SignInPage() {
+function SignInContent() {
   const { supabase } = useSupabase();
   const { user } = useUser();
   const router = useRouter();
@@ -310,5 +310,17 @@ export default function SignInPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-base-100 flex items-center justify-center">
+        <div className="loading loading-spinner loading-lg"></div>
+      </div>
+    }>
+      <SignInContent />
+    </Suspense>
   );
 }
