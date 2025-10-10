@@ -1,6 +1,13 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization to avoid build-time errors
+let resend = null;
+const getResend = () => {
+  if (!resend && process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+};
 
 // Email templates
 export const emailTemplates = {
@@ -218,7 +225,8 @@ export const emailTemplates = {
 
 export const sendEmail = async (to, template, data) => {
   try {
-    if (!process.env.RESEND_API_KEY) {
+    const resendClient = getResend();
+    if (!resendClient) {
       console.warn('RESEND_API_KEY not configured, skipping email send');
       return { success: false, error: 'Email service not configured' };
     }
@@ -234,7 +242,7 @@ export const sendEmail = async (to, template, data) => {
 
     const html = emailTemplate.html(data);
 
-    const result = await resend.emails.send({
+    const result = await resendClient.emails.send({
       from: 'AI Launch Space <hello@ailaunchspace.com>',
       to: Array.isArray(to) ? to : [to],
       subject,
