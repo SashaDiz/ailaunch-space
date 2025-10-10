@@ -6,12 +6,24 @@ let supabase = null;
 // Client-side Supabase client (uses anon key, respects RLS)
 // Uses cookies for PKCE flow to work with SSR
 export function getSupabaseClient() {
+  // During build time, environment variables might not be available
+  // Return null gracefully to prevent build errors
+  if (typeof window === 'undefined' && process.env.NODE_ENV === 'production') {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.warn('Supabase environment variables not available during build time');
+      return null;
+    }
+  }
+
   if (!supabase) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Missing Supabase environment variables');
+      throw new Error('Missing Supabase environment variables. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment.');
     }
 
     supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
@@ -25,6 +37,13 @@ export function getSupabaseClient() {
 let supabaseAdmin = null;
 
 export function getSupabaseAdmin() {
+  // During build time, environment variables might not be available
+  // Return null gracefully to prevent build errors
+  if (process.env.NODE_ENV === 'production' && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.warn('Supabase service role key not available during build time');
+    return null;
+  }
+
   if (!supabaseAdmin) {
     // Import createClient from supabase-js for admin client
     const { createClient } = require('@supabase/supabase-js');
@@ -33,7 +52,7 @@ export function getSupabaseAdmin() {
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Missing Supabase service role environment variables');
+      throw new Error('Missing Supabase service role environment variables. Please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in your environment.');
     }
 
     supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {

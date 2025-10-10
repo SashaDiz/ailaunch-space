@@ -4,7 +4,7 @@ import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 
 export const metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')),
   title: "AI Launch Space - Weekly Competition Platform for AI Projects & Get DR22+ Backlinks",
   description: "Submit your AI project to the weekly competition and get high authority backlinks. Join the community of successful AI builders and innovators.",
   keywords: ["AI", "artificial intelligence", "AI tools", "AI launch", "backlinks", "SEO", "AI projects", "product hunt for AI", "AI directory", "machine learning"],

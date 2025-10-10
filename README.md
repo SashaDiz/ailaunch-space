@@ -539,7 +539,20 @@ pnpm webhook:simulate
 
 ## 🚀 Deployment
 
+### Quick Start
+
+**📖 For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md)**
+
+**🔐 For environment variables setup, see [VERCEL_ENV_SETUP.md](./VERCEL_ENV_SETUP.md)**
+
 ### Vercel (Recommended)
+
+#### Prerequisites
+- Supabase project with schema deployed
+- Lemon Squeezy account with products configured
+- All environment variables ready
+
+#### Quick Deploy Steps
 
 1. **Push to GitHub**
    ```bash
@@ -551,12 +564,31 @@ pnpm webhook:simulate
    - Import your repository
    - Vercel will auto-detect Next.js
 
-3. **Add Environment Variables**
-   - Add all variables from `.env.local`
-   - Update URLs to production values
+3. **⚠️ CRITICAL: Add Environment Variables BEFORE deploying**
+   
+   **Required Supabase Variables:**
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   
+   **Required Lemon Squeezy Variables:**
+   - `LEMONSQUEEZY_API_KEY`
+   - `LEMONSQUEEZY_STORE_ID`
+   - `LEMONSQUEEZY_WEBHOOK_SECRET`
+   - `LEMONSQUEEZY_VARIANT_ID`
+   
+   **Required App Variables:**
+   - `NEXT_PUBLIC_APP_URL`
+   
+   See [VERCEL_ENV_SETUP.md](./VERCEL_ENV_SETUP.md) for detailed setup.
 
 4. **Deploy**
    - Vercel will automatically build and deploy
+   - Build should complete without errors if all env vars are set
+
+5. **Post-Deployment**
+   - Update Lemon Squeezy webhook URL with your deployment URL
+   - Update Supabase authentication settings (see below)
 
 ### Update Supabase for Production
 
@@ -568,6 +600,14 @@ After deployment, update Supabase settings:
 
 **Update OAuth Apps**:
 - Add production callback URLs to Google/GitHub OAuth apps
+
+### Troubleshooting
+
+If you encounter build errors:
+1. ✅ Verify all environment variables are set in Vercel
+2. ✅ Check variable names match exactly (case-sensitive)
+3. ✅ Ensure no extra spaces in variable values
+4. ✅ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed troubleshooting
 
 ## 🎯 How It Works
 

@@ -6,8 +6,12 @@ import {
   getOrder
 } from "@lemonsqueezy/lemonsqueezy.js";
 
+// Configuration flag
+let isConfigured = false;
+
 // Configuration function for proper setup validation
 function configureLemonSqueezy() {
+  // Skip configuration during build time if environment variables are missing
   const requiredVars = [
     'LEMONSQUEEZY_API_KEY',
     'LEMONSQUEEZY_STORE_ID',
@@ -27,8 +31,15 @@ function configureLemonSqueezy() {
     const stillMissing = missingVars.filter(varName => !process.env[legacyMapping[varName]]);
     
     if (stillMissing.length > 0) {
+      // During build time, just log a warning instead of throwing
+      if (process.env.NODE_ENV === 'production' && !process.env.VERCEL_ENV) {
+        console.warn(
+          `Lemon Squeezy configuration skipped during build: Missing ${stillMissing.join(', ')}. This is expected during build time.`
+        );
+        return false;
+      }
       throw new Error(
-        `Missing required LEMONSQUEEZY env variables: ${stillMissing.join(', ')}. Please set them in your .env file.`
+        `Missing required LEMONSQUEEZY env variables: ${stillMissing.join(', ')}. Please set them in your environment.`
       );
     }
   }
@@ -40,14 +51,29 @@ function configureLemonSqueezy() {
     apiKey,
     onError: (error) => console.error("Lemon Squeezy Error:", error),
   });
+  
+  return true;
 }
 
 // Initialize Lemon Squeezy with proper validation
+// Only configure if not in build mode
 try {
-  configureLemonSqueezy();
-  console.log('Lemon Squeezy SDK initialized successfully');
+  isConfigured = configureLemonSqueezy();
+  if (isConfigured) {
+    console.log('Lemon Squeezy SDK initialized successfully');
+  }
 } catch (error) {
   console.error('Lemon Squeezy configuration failed:', error.message);
+}
+
+// Helper function to ensure configuration before use
+function ensureConfigured() {
+  if (!isConfigured) {
+    isConfigured = configureLemonSqueezy();
+  }
+  if (!isConfigured) {
+    throw new Error('Lemon Squeezy is not configured. Please check your environment variables.');
+  }
 }
 
 // Payment plans configuration
@@ -107,6 +133,7 @@ export async function createCheckoutSession({
   userId
 }) {
   try {
+    ensureConfigured();
     const plan = paymentPlans[planType];
     
     if (!plan || plan.price === 0) {
@@ -207,6 +234,7 @@ If the automatic redirect doesn't work, manually visit: ${successUrl}`,
 // Verify payment session
 export async function verifyPaymentSession(checkoutId) {
   try {
+    ensureConfigured();
     const response = await getCheckout(checkoutId);
 
     if (response.error) {
@@ -235,6 +263,7 @@ export async function verifyPaymentSession(checkoutId) {
 // Get order details
 export async function getOrderDetails(orderId) {
   try {
+    ensureConfigured();
     const response = await getOrder(orderId);
 
     if (response.error) {
@@ -287,6 +316,7 @@ export function verifyWebhookSignature(rawBody, signature, secret) {
 // Get payment analytics
 export async function getPaymentAnalytics(storeId, startDate, endDate) {
   try {
+    ensureConfigured();
     // Get orders in date range
     const response = await listOrders({
       filter: {
