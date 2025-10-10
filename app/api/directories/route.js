@@ -805,7 +805,7 @@ export async function POST(request) {
     try {
       await webhookEvents.directoryCreated({
         ...directoryData,
-        id: result.id
+        id: result.insertedId
       });
     } catch (webhookError) {
       console.error("Webhook dispatch failed:", webhookError);
