@@ -1,4 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 
 // Create a single supabase client for interacting with your database
 let supabase = null;
@@ -38,9 +39,6 @@ let supabaseAdmin = null;
 
 export function getSupabaseAdmin() {
   if (!supabaseAdmin) {
-    // Import createClient from supabase-js for admin client
-    const { createClient } = require('@supabase/supabase-js');
-    
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
