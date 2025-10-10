@@ -101,7 +101,7 @@ function DirectoryCard({ directory, onResumeDraft }) {
     }
 
     // Redirect to dedicated edit page
-    window.location.href = `/edit/${directory.id}`;
+    window.location.href = `/edit/${directory.slug}`;
   };
   
   const handleResumeDraft = () => {

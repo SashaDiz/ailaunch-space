@@ -27,11 +27,11 @@ export default function EditDirectoryPage() {
       return;
     }
 
-    if (user && params.id) {
+    if (user && params.slug) {
       loadDirectory();
       fetchCategories();
     }
-  }, [user, loading, params.id, router]);
+  }, [user, loading, params.slug, router]);
 
   const fetchCategories = async () => {
     try {
@@ -57,7 +57,7 @@ export default function EditDirectoryPage() {
       if (userDirsResponse.ok) {
         const userDirsData = await userDirsResponse.json();
         const userDirectory = userDirsData.data.directories.find(
-          (dir) => dir.id === params.id
+          (dir) => dir.slug === params.slug
         );
 
         if (!userDirectory) {
@@ -76,7 +76,7 @@ export default function EditDirectoryPage() {
         }
 
         // Load full directory data
-        const response = await fetch(`/api/directories/${params.id}`);
+        const response = await fetch(`/api/directories/${params.slug}`);
         if (response.ok) {
           const result = await response.json();
           const fullDirectory = result.data.directory;
@@ -212,7 +212,7 @@ export default function EditDirectoryPage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          directoryId: params.id,
+          directoryId: params.slug,
           ...formData,
         }),
       });
