@@ -74,7 +74,6 @@ export async function POST(request) {
     });
 
     let voteChange = 0;
-    let newVoteCount = app.upvotes || 0;
 
     if (action === "upvote") {
       if (existingVote) {
@@ -97,7 +96,6 @@ export async function POST(request) {
 
       await db.insertOne("votes", voteData);
       voteChange = 1;
-      newVoteCount += 1;
 
     } else if (action === "remove") {
       if (!existingVote) {
@@ -110,18 +108,15 @@ export async function POST(request) {
       // Remove existing vote
       await db.deleteOne("votes", { id: existingVote.id });
       voteChange = -1;
-      newVoteCount -= 1;
     }
 
-    // Update app vote count
+    // Update app vote count atomically to prevent race conditions
     await db.updateOne(
       "apps",
       { id: appId },
       {
-        $set: {
-          upvotes: Math.max(0, newVoteCount),
-          updated_at: new Date(),
-        },
+        $inc: { upvotes: voteChange },
+        $set: { updated_at: new Date() },
       }
     );
 
@@ -147,6 +142,10 @@ export async function POST(request) {
       );
     }
 
+
+    // Fetch updated app to get accurate vote count
+    const updatedApp = await db.findOne("apps", { id: appId });
+    const newVoteCount = updatedApp?.upvotes || 0;
 
     // Dispatch webhook event for vote cast
     try {

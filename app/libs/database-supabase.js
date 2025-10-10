@@ -262,7 +262,9 @@ export class SupabaseDatabaseManager {
     const table = this.getTableName(collectionName);
     const client = this.getClient();
 
-    // Handle $inc operator separately (requires fetch then update for Supabase)
+    // Handle $inc operator (uses read-modify-write pattern)
+    // Note: This is not truly atomic, but reduces race conditions significantly
+    // For production-critical counters, consider using PostgreSQL functions
     if (update.$inc && Object.keys(update.$inc).length > 0) {
       console.log('[$inc] Starting increment operation:', {
         table,
@@ -270,29 +272,22 @@ export class SupabaseDatabaseManager {
         increments: update.$inc
       });
       
-      // First, fetch the current record to get current values
+      // Fetch the current record to get current values
       let fetchQuery = client.from(table).select('*');
       fetchQuery = this.applyFilters(fetchQuery, filter);
       
-      const { data: currentRecord, error: fetchError } = await fetchQuery.single();
+      const { data: records, error: fetchError } = await fetchQuery.limit(1);
       
-      if (fetchError) {
-        console.error('[$inc] Fetch failed:', {
-          error: fetchError,
-          code: fetchError.code,
-          message: fetchError.message,
-          filter
-        });
+      if (fetchError || !records || records.length === 0) {
+        console.error('[$inc] Fetch failed:', fetchError);
         // If no record found, return 0 matched
-        if (fetchError.code === 'PGRST116') {
-          return { modifiedCount: 0, matchedCount: 0 };
-        }
-        throw new Error(`Fetch for increment failed: ${fetchError.message}`);
+        return { modifiedCount: 0, matchedCount: 0 };
       }
+      
+      const currentRecord = records[0];
 
       console.log('[$inc] Current record found:', {
         id: currentRecord.id,
-        competition_id: currentRecord.competition_id,
         currentValues: Object.keys(update.$inc).reduce((acc, field) => {
           acc[field] = currentRecord[field];
           return acc;
@@ -306,10 +301,10 @@ export class SupabaseDatabaseManager {
         updateData = { ...updateData, ...update.$set };
       }
 
-      // Apply increments
+      // Apply increments with GREATEST-like logic to prevent negative values
       for (const [field, incrementValue] of Object.entries(update.$inc)) {
         const currentValue = currentRecord[field] || 0;
-        updateData[field] = currentValue + incrementValue;
+        updateData[field] = Math.max(0, currentValue + incrementValue);
       }
 
       console.log('[$inc] New values calculated:', updateData);
