@@ -21,9 +21,17 @@ export async function GET(request) {
     }
 
   } catch (error) {
-    console.error("Categories API error:", error);
+    console.error("Categories API error:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     return NextResponse.json(
-      { error: "Internal server error", code: "INTERNAL_ERROR" },
+      { 
+        error: "Internal server error", 
+        code: "INTERNAL_ERROR",
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      },
       { status: 500 }
     );
   }
@@ -31,10 +39,11 @@ export async function GET(request) {
 
 // Helper function to get categories
 async function getCategories(includeCount) {
-  // Fetch categories from database
-  const categories = await db.find("categories", {}, {
-    sort: { name: 1 }, // Sort alphabetically
-  });
+  try {
+    // Fetch categories from database
+    const categories = await db.find("categories", {}, {
+      sort: { name: 1 }, // Sort alphabetically
+    });
 
   let categoriesWithCount = categories;
 
@@ -54,19 +63,24 @@ async function getCategories(includeCount) {
     );
   }
 
-  return NextResponse.json({
-    success: true,
-    data: {
-      categories: categoriesWithCount,
-      total: categories.length,
-    },
-  });
+    return NextResponse.json({
+      success: true,
+      data: {
+        categories: categoriesWithCount,
+        total: categories.length,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    throw error;
+  }
 }
 
 // Helper function to get pricing options
 async function getPricing(includeCount) {
-  // Define unified pricing options
-  const pricingOptions = [
+  try {
+    // Define unified pricing options
+    const pricingOptions = [
     { 
       value: "free", 
       label: "Free", 
@@ -133,11 +147,15 @@ async function getPricing(includeCount) {
     );
   }
 
-  return NextResponse.json({
-    success: true,
-    data: {
-      pricing: pricingWithCount,
-      total: pricingOptions.length,
-    },
-  });
+    return NextResponse.json({
+      success: true,
+      data: {
+        pricing: pricingWithCount,
+        total: pricingOptions.length,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching pricing:", error);
+    throw error;
+  }
 }

@@ -91,8 +91,8 @@ function CountdownTimer({ competitionData }) {
             ? "Competition ended"
             : competitionData &&
               new Date(competitionData.start_date) > new Date()
-            ? "Next launch in"
-            : "New launches in"}
+              ? "Next launch in"
+              : "New launches in"}
         </h2>
         <p className="text-sm text-base-content/60">
           Top 3 weekly products win badges and get dofollow backlinks.{" "}
@@ -196,16 +196,8 @@ function RightSidePanel() {
           </div>
         </div>
         <div className="flex flex-col items-center gap-4">
-          <a
-            href="https://frogdr.com/ailaunch.space?utm_source=ailaunch.space"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img
-              src="https://frogdr.com/ailaunch.space/badge-white.svg"
-              alt="Monitor your Domain Rating with FrogDR"
-              className="w-full h-auto"
-            />
+          <a href="https://frogdr.com/ailaunch.space?utm_source=ailaunch.space" target="_blank">
+            <img src="https://frogdr.com/ailaunch.space/badge-white.svg" alt="Monitor your Domain Rating with FrogDR" width="250" height="54" />
           </a>
         </div>
       </aside>

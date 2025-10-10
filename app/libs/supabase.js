@@ -37,13 +37,6 @@ export function getSupabaseClient() {
 let supabaseAdmin = null;
 
 export function getSupabaseAdmin() {
-  // During build time, environment variables might not be available
-  // Return null gracefully to prevent build errors
-  if (process.env.NODE_ENV === 'production' && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.warn('Supabase service role key not available during build time');
-    return null;
-  }
-
   if (!supabaseAdmin) {
     // Import createClient from supabase-js for admin client
     const { createClient } = require('@supabase/supabase-js');
@@ -52,15 +45,26 @@ export function getSupabaseAdmin() {
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Supabase Environment Variables:', {
+        hasUrl: !!supabaseUrl,
+        hasServiceKey: !!supabaseServiceKey,
+        nodeEnv: process.env.NODE_ENV,
+      });
       throw new Error('Missing Supabase service role environment variables. Please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in your environment.');
     }
 
-    supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-    });
+    try {
+      supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+        },
+      });
+      console.log('Supabase admin client initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize Supabase admin client:', error);
+      throw error;
+    }
   }
 
   return supabaseAdmin;

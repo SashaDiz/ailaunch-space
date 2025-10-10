@@ -12,6 +12,12 @@ export class SupabaseDatabaseManager {
     if (!this.client) {
       this.client = getSupabaseAdmin();
     }
+    
+    if (!this.client) {
+      console.error('Supabase client is not initialized. Check environment variables.');
+      throw new Error('Database client not initialized. Please check NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.');
+    }
+    
     return this.client;
   }
 

@@ -297,9 +297,18 @@ export async function GET(request) {
     });
 
   } catch (error) {
-    console.error("Directories API error:", error);
+    console.error("Directories API error:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      url: request.url
+    });
     return NextResponse.json(
-      { error: "Internal server error", code: "INTERNAL_ERROR" },
+      { 
+        error: "Internal server error", 
+        code: "INTERNAL_ERROR",
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      },
       { status: 500 }
     );
   }

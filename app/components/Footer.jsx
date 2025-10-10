@@ -90,7 +90,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/api"
+                  href="/api-docs"
                   className="text-base-content/70 hover:text-primary transition-colors"
                 >
                   API Documentation
