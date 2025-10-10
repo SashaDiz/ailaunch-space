@@ -24,13 +24,15 @@ export async function GET(request) {
     console.error("Categories API error:", {
       message: error.message,
       stack: error.stack,
-      name: error.name
+      name: error.name,
+      type: type
     });
     return NextResponse.json(
       { 
         error: "Internal server error", 
         code: "INTERNAL_ERROR",
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        message: error.message,
+        details: process.env.NODE_ENV === 'development' ? error.stack : error.message
       },
       { status: 500 }
     );

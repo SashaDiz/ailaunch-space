@@ -188,7 +188,8 @@ export async function GET(request) {
       { 
         error: "Internal server error", 
         code: "INTERNAL_ERROR",
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        message: error.message,
+        details: process.env.NODE_ENV === 'development' ? error.stack : error.message
       },
       { status: 500 }
     );
