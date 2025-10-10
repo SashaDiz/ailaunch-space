@@ -5,6 +5,7 @@ import {
   listOrders,
   getOrder
 } from "@lemonsqueezy/lemonsqueezy.js";
+import crypto from 'crypto';
 
 // Configuration flag
 let isConfigured = false;
@@ -290,9 +291,6 @@ export async function getOrderDetails(orderId) {
 // Following official LemonSqueezy documentation
 export function verifyWebhookSignature(rawBody, signature, secret) {
   try {
-    // For Node.js environment
-    const crypto = require('crypto');
-    
     // Create HMAC digest from raw body
     const hmac = crypto.createHmac('sha256', secret);
     const digest = Buffer.from(hmac.update(rawBody).digest('hex'), 'utf8');
