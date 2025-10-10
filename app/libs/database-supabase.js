@@ -197,16 +197,26 @@ export class SupabaseDatabaseManager {
 
     // Apply filters
     supabaseQuery = this.applyFilters(supabaseQuery, query);
+    
+    // Apply sorting if provided
+    if (options.sort) {
+      for (const [field, direction] of Object.entries(options.sort)) {
+        supabaseQuery = supabaseQuery.order(field, {
+          ascending: direction === 1 || direction === 'asc',
+        });
+      }
+    }
 
-    const { data, error } = await supabaseQuery.single();
+    // Use .limit(1) and get first result instead of .single() to avoid 406 errors
+    const { data, error } = await supabaseQuery.limit(1);
 
-    if (error && error.code !== 'PGRST116') {
-      // PGRST116 is "not found" error, which is ok
+    if (error) {
       console.error(`FindOne error: ${error.message}`);
       return null;
     }
 
-    return data;
+    // Return the first item or null if empty array
+    return data && data.length > 0 ? data[0] : null;
   }
 
   // FIND
