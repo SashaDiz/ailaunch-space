@@ -239,9 +239,16 @@ export async function generateSitemapData(db) {
     );
 
     directories.forEach(directory => {
+      // Handle both Date objects and string dates from database
+      const lastmod = directory.updated_at 
+        ? (typeof directory.updated_at === 'string' 
+            ? directory.updated_at 
+            : directory.updated_at.toISOString())
+        : now;
+      
       pages.push({
         url: `${seoConfig.siteUrl}/directory/${directory.slug}`,
-        lastmod: directory.updated_at.toISOString(),
+        lastmod,
         changefreq: "weekly",
         priority: 0.8,
       });
@@ -261,9 +268,16 @@ export async function generateSitemapData(db) {
     );
 
     categories.forEach(category => {
+      // Handle both Date objects and string dates from database
+      const lastmod = category.updated_at 
+        ? (typeof category.updated_at === 'string' 
+            ? category.updated_at 
+            : category.updated_at.toISOString())
+        : now;
+      
       pages.push({
         url: `${seoConfig.siteUrl}/directories?category=${category.slug}`,
-        lastmod: category.updated_at?.toISOString() || now,
+        lastmod,
         changefreq: "weekly",
         priority: 0.7,
       });

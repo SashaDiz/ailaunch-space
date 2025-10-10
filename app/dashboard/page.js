@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useUser } from "../hooks/useUser";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -14,6 +14,7 @@ import {
   Crown,
   Group,
   StatsReport,
+  Xmark,
 } from "iconoir-react";
 import toast from "react-hot-toast";
 
@@ -344,7 +345,7 @@ function DirectoryCard({ directory, onResumeDraft }) {
   );
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
   const { user, loading: authLoading } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -601,5 +602,17 @@ export default function DashboardPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-base-100 flex items-center justify-center">
+        <span className="loading loading-spinner loading-lg"></span>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   );
 }
