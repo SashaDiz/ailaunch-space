@@ -249,6 +249,8 @@ async function handleOrderCreated(event) {
           payment_date: new Date(),
           order_id: event.data.id,
           scheduled_launch: true, // NOW schedule the launch after payment confirmation
+          status: "pending", // Move from draft to pending status
+          is_draft: false, // No longer a draft once paid
           // updated_at is handled by DB triggers
         },
       }

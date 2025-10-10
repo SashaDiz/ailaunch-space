@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "../../../libs/database.js";
 
 // This cron job endpoint manages automatic weekly competition lifecycle
-// It should be called every hour (or more frequently) to:
+// It runs once daily (midnight UTC) to:
 // 1. Create upcoming weekly competitions
 // 2. Activate competitions that have started
 // 3. Complete competitions that have ended

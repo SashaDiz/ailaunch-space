@@ -116,7 +116,7 @@ function DirectoryCard({ directory, onResumeDraft }) {
     }
     
     try {
-      const response = await fetch(`/api/directories/${directory.id}`, {
+      const response = await fetch(`/api/directories?id=${directory.id}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -125,7 +125,8 @@ function DirectoryCard({ directory, onResumeDraft }) {
         toast.success("Draft deleted successfully");
         window.location.reload();
       } else {
-        toast.error("Failed to delete draft");
+        const data = await response.json();
+        toast.error(data.error || "Failed to delete draft");
       }
     } catch (error) {
       console.error("Error deleting draft:", error);

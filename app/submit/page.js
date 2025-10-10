@@ -679,7 +679,7 @@ function DirectoryInfoStep({ formData, setFormData, errors, categories, checking
 }
 
 
-function PlanStep({ formData, setFormData, errors = {} }) {
+function PlanStep({ formData, setFormData, errors = {}, isEditingDraft = false }) {
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
@@ -687,6 +687,26 @@ function PlanStep({ formData, setFormData, errors = {} }) {
         <p className="text-base-content/70">
           Select the plan that best fits your AI project launch goals
         </p>
+        {isEditingDraft && (
+          <div className="alert alert-info mt-4 max-w-2xl mx-auto">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              className="stroke-current shrink-0 w-6 h-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span className="text-sm">
+              You're editing a draft. You can change your plan before submitting.
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">
@@ -1490,14 +1510,78 @@ export default function SubmitPage() {
   // Handle edit mode
   useEffect(() => {
     const edit = searchParams.get("edit");
+    const draft = searchParams.get("draft");
     const id = searchParams.get("id");
 
     if (edit === "true" && id) {
       setIsEditMode(true);
       setEditDirectoryId(id);
       loadDirectoryForEdit(id);
+    } else if (draft) {
+      // Handle resuming a draft
+      loadDraftForEdit(draft);
     }
   }, [searchParams]);
+
+  const loadDraftForEdit = async (draftId) => {
+    setIsLoading(true);
+    try {
+      // First try to get draft data from sessionStorage
+      const savedDraft = sessionStorage.getItem("resumeDraft");
+      if (savedDraft) {
+        const draftData = JSON.parse(savedDraft);
+        sessionStorage.removeItem("resumeDraft");
+        
+        console.log("Loading draft from session storage:", draftData);
+        
+        // Populate form with draft data
+        setFormData({
+          ...draftData,
+          plan: draftData.plan || "standard",
+        });
+        
+        // Set edit mode for draft
+        setIsEditMode(true);
+        setEditDirectoryId(draftData.id);
+        
+        // Start at step 1 to allow plan change
+        setCurrentStep(1);
+        setIsLoading(false);
+        
+        toast.success("Draft loaded! You can modify and resubmit.");
+        return;
+      }
+      
+      // If no session storage, fetch from API
+      const response = await fetch(`/api/directories/${draftId}`);
+      if (response.ok) {
+        const result = await response.json();
+        const draft = result.data.directory;
+        
+        console.log("Draft loaded from API:", draft);
+        
+        setFormData({
+          ...draft,
+          plan: draft.plan || "standard",
+        });
+        
+        setIsEditMode(true);
+        setEditDirectoryId(draft.id);
+        setCurrentStep(1);
+        
+        toast.success("Draft loaded! You can modify and resubmit.");
+      } else {
+        toast.error("Failed to load draft");
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      console.error("Error loading draft:", error);
+      toast.error("Failed to load draft");
+      router.push("/dashboard");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const loadDirectoryForEdit = async (directoryId) => {
     setIsLoading(true);
@@ -2027,7 +2111,14 @@ export default function SubmitPage() {
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
-        return <PlanStep formData={formData} setFormData={setFormData} errors={errors} />;
+        return (
+          <PlanStep 
+            formData={formData} 
+            setFormData={setFormData} 
+            errors={errors}
+            isEditingDraft={isEditMode}
+          />
+        );
       case 2:
         return (
           <DirectoryInfoStep
