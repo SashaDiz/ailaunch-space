@@ -1,0 +1,450 @@
+---
+alwaysApply: false
+---
+## Accessibility Requirements
+
+### Semantic HTML
+- ✅ Use proper HTML5 semantic elements (`<header>`, `<nav>`, `<main>`, `<footer>`, `<article>`, `<section>`)
+- ✅ Use heading hierarchy correctly (h1 → h2 → h3, no skipping levels)
+- ✅ Use `<button>` for actions, `<a>` for navigation
+- ✅ Use `<form>` elements with proper labels
+
+### Keyboard Navigation
+- ✅ All interactive elements must be keyboard accessible (Tab, Enter, Space, Arrow keys)
+- ✅ Visible focus indicators on all focusable elements **ONLY when using keyboard (TAB), not mouse clicks**
+- ✅ Use `:focus-visible` instead of `:focus` to show focus rings only for keyboard navigation
+- ✅ Logical tab order (use `tabindex="0"` for custom interactive elements, avoid positive tabindex)
+- ✅ Skip-to-content link for keyboard users
+- ✅ Escape key closes modals and dropdowns
+- ✅ Arrow keys for navigating lists/menus
+
+### Screen Reader Support
+- ✅ Meaningful alt text for all images (empty alt="" for decorative images)
+- ✅ ARIA labels where native HTML semantics are insufficient
+- ✅ ARIA live regions for dynamic content updates
+- ✅ Proper form labels associated with inputs
+- ✅ Descriptive link text (avoid "click here", "read more")
+- ✅ Status messages announced (success, error, loading states)
+
+### Color and Contrast
+- ✅ Minimum contrast ratio of **4.5:1** for normal text
+- ✅ Minimum contrast ratio of **3:1** for large text (18pt+)
+- ✅ Don't rely on color alone to convey information
+- ✅ Support for high contrast mode
+- ✅ Sufficient contrast for UI components and graphics
+
+### Visual Design
+- ✅ Text resizable up to 200% without loss of functionality
+- ✅ No horizontal scrolling at 320px width (mobile)
+- ✅ Line height at least 1.5x font size
+- ✅ Paragraph spacing at least 2x font size
+- ✅ Touch targets minimum 44x44px (mobile)
+- ✅ Sufficient spacing between interactive elements
+
+### Forms and Input
+- ✅ Every input has an associated `<label>` or `aria-label`
+- ✅ Required fields clearly marked
+- ✅ Error messages clearly associated with fields
+- ✅ Inline validation with clear error descriptions
+- ✅ Submit buttons clearly labeled
+- ✅ Form instructions provided before the form
+- ✅ Autocomplete attributes where appropriate
+
+### Navigation
+- ✅ Multiple ways to find pages (menu, search, sitemap)
+- ✅ Clear current location indicator (breadcrumbs, active nav item)
+- ✅ Consistent navigation across pages
+- ✅ Descriptive page titles
+- ✅ Skip navigation link at top of page
+
+### Media and Content
+- ✅ Captions for video content
+- ✅ Transcripts for audio content
+- ✅ No auto-playing media (or provide controls)
+- ✅ No content that flashes more than 3 times per second
+- ✅ Pause/stop controls for moving content
+
+### Responsive and Mobile
+- ✅ Responsive design works at all breakpoints
+- ✅ Portrait and landscape orientations supported
+- ✅ Pinch-to-zoom not disabled
+- ✅ Touch targets large enough for mobile
+- ✅ No content-only horizontal scrolling
+
+---
+
+## Focus Management - Keyboard vs Mouse
+
+### The Problem
+By default, browsers show focus outlines on ALL interactions (keyboard AND mouse clicks), which can be visually distracting for mouse users while being essential for keyboard users.
+
+### The Solution: `:focus-visible`
+Use the `:focus-visible` pseudo-class to show focus indicators ONLY for keyboard navigation, not mouse clicks.
+
+### Implementation in globals.css
+
+```css
+/* Remove default focus outline for all elements */
+*:focus {
+  outline: none;
+}
+
+/* Add visible focus ring ONLY when using keyboard navigation */
+*:focus-visible {
+  outline: 2px solid hsl(var(--p));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Enhanced focus for interactive elements */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: 2px solid hsl(var(--p));
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px hsl(var(--p) / 0.1);
+}
+```
+
+### How It Works
+- **Mouse click**: No focus ring appears (better UX for mouse users)
+- **Keyboard navigation (TAB)**: Clear focus ring appears (essential for keyboard users)
+- **Touch**: Behaves like mouse (no focus ring on tap)
+
+### Browser Support
+`:focus-visible` is supported in all modern browsers (Chrome 86+, Firefox 85+, Safari 15.4+, Edge 86+). For older browsers, they will fall back to showing focus on all interactions, which is still accessible.
+
+### Testing
+1. Navigate with TAB key → Focus rings should be visible
+2. Click with mouse → No focus rings should appear
+3. Use screen reader → Focus should still be announced
+
+---
+
+## Component-Specific Guidelines
+
+### Buttons
+```jsx
+// ✅ Good
+<button className="btn" aria-label="Close dialog">
+  <XIcon aria-hidden="true" />
+</button>
+
+// ❌ Bad
+<div onClick={handleClick}>Close</div>
+```
+
+### Links
+```jsx
+// ✅ Good
+<a href="/submit" className="link">
+  Submit your directory to DirectoryHunt
+</a>
+
+// ❌ Bad
+<a href="/submit">Click here</a>
+```
+
+### Images
+```jsx
+// ✅ Good - Informative image
+<img src="logo.svg" alt="DirectoryHunt - Discover the best directories" />
+
+// ✅ Good - Decorative image
+<div className="bg-pattern" role="img" aria-hidden="true" />
+
+// ❌ Bad
+<img src="logo.svg" />
+```
+
+### Forms
+```jsx
+// ✅ Good
+<label htmlFor="directory-name">Directory Name *</label>
+<input 
+  id="directory-name"
+  type="text"
+  required
+  aria-required="true"
+  aria-invalid={errors.name ? "true" : "false"}
+  aria-describedby={errors.name ? "name-error" : undefined}
+/>
+{errors.name && (
+  <span id="name-error" className="error" role="alert">
+    {errors.name.message}
+  </span>
+)}
+
+// ❌ Bad
+<input type="text" placeholder="Directory Name" />
+```
+
+### Modals
+```jsx
+// ✅ Good
+<dialog
+  role="dialog"
+  aria-labelledby="modal-title"
+  aria-describedby="modal-description"
+  aria-modal="true"
+>
+  <h2 id="modal-title">Confirm Submission</h2>
+  <p id="modal-description">Are you sure you want to submit?</p>
+  <button onClick={handleClose}>Close</button>
+</dialog>
+```
+
+### Loading States
+```jsx
+// ✅ Good
+<div role="status" aria-live="polite" aria-atomic="true">
+  {isLoading ? (
+    <span>
+      <Spinner aria-hidden="true" />
+      <span className="sr-only">Loading directories...</span>
+    </span>
+  ) : (
+    <span className="sr-only">Directories loaded</span>
+  )}
+</div>
+```
+
+### Cards/Product Listings
+```jsx
+// ✅ Good
+<article className="directory-card" aria-labelledby={`dir-${id}`}>
+  <h3 id={`dir-${id}`}>{name}</h3>
+  <p>{description}</p>
+  <button aria-label={`Vote for ${name}`}>
+    <ThumbsUpIcon aria-hidden="true" />
+    <span>{upvotes}</span>
+  </button>
+</article>
+```
+
+### Tables
+```jsx
+// ✅ Good
+<table>
+  <caption>Top Directories This Week</caption>
+  <thead>
+    <tr>
+      <th scope="col">Rank</th>
+      <th scope="col">Directory</th>
+      <th scope="col">Upvotes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th scope="row">1</th>
+      <td>AI Tools Directory</td>
+      <td>234</td>
+    </tr>
+  </tbody>
+</table>
+```
+
+---
+
+## ARIA Patterns to Use
+
+### Live Regions
+```jsx
+// Success messages
+<div role="alert" aria-live="assertive">
+  Directory submitted successfully!
+</div>
+
+// Status updates
+<div role="status" aria-live="polite">
+  3 new directories added
+</div>
+```
+
+### Hidden Content
+```jsx
+// Screen reader only text
+<span className="sr-only">Current page</span>
+
+// Utility class in globals.css
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+```
+
+### Expandable Sections
+```jsx
+<button
+  aria-expanded={isOpen}
+  aria-controls="faq-answer-1"
+  onClick={() => setIsOpen(!isOpen)}
+>
+  What is DirectoryHunt?
+</button>
+<div id="faq-answer-1" hidden={!isOpen}>
+  DirectoryHunt is a platform to discover directories...
+</div>
+```
+
+---
+
+## Testing Checklist
+
+### Automated Testing
+- [ ] Run axe DevTools or WAVE browser extension
+- [ ] Run Lighthouse accessibility audit (aim for 90+)
+- [ ] Use automated testing tools (jest-axe, pa11y)
+
+### Manual Testing
+- [ ] Test with keyboard only (unplug mouse)
+- [ ] Test with screen reader (NVDA, JAWS, VoiceOver)
+- [ ] Test with browser zoom at 200%
+- [ ] Test in high contrast mode
+- [ ] Test on mobile devices
+- [ ] Test with different color blindness simulators
+
+### Screen Reader Testing
+**macOS VoiceOver:**
+- Cmd + F5 to toggle
+- VO + A to read all
+- VO + Right Arrow to navigate
+
+**Windows NVDA:**
+- Free and open source
+- Download from nvaccess.org
+- Insert + Down Arrow to read all
+
+### Keyboard Shortcuts to Support
+- Tab / Shift+Tab: Navigate forward/backward
+- Enter: Activate buttons/links
+- Space: Toggle checkboxes/buttons
+- Escape: Close modals/dropdowns
+- Arrow keys: Navigate within menus/lists
+
+---
+
+## Common Accessibility Issues to Avoid
+
+### ❌ DON'T
+- Use `<div>` or `<span>` as buttons without proper ARIA
+- Disable zoom with `user-scalable=no`
+- Use only icons without text labels
+- Auto-play videos with sound
+- Use `tabindex` values greater than 0
+- Rely on placeholder text instead of labels
+- Use `onClick` on non-interactive elements
+- Create custom controls that aren't keyboard accessible
+- Use low contrast colors (gray on gray)
+- Have empty links or buttons
+- Use "click here" or "read more" as link text
+- Convey information using color alone
+- **Use `:focus` without `:focus-visible` - this shows focus rings on mouse clicks**
+- Remove focus styles entirely with `outline: none` without providing alternative focus indicators
+
+### ✅ DO
+- Use semantic HTML elements
+- Provide text alternatives for non-text content
+- Ensure all functionality is keyboard accessible
+- Give users enough time to read and use content
+- Design content to be responsive and mobile-friendly
+- Make it easy to distinguish foreground from background
+- Provide clear, consistent navigation
+- Use ARIA when HTML semantics aren't enough
+- Test with real users with disabilities
+- Keep accessibility in mind from the start
+
+---
+
+## Resources
+
+### Tools
+- [axe DevTools](https://www.deque.com/axe/devtools/) - Browser extension for testing
+- [WAVE](https://wave.webaim.org/) - Web accessibility evaluation tool
+- [Lighthouse](https://developers.google.com/web/tools/lighthouse) - Built into Chrome DevTools
+- [Color Contrast Analyzer](https://www.tpgi.com/color-contrast-checker/)
+- [Screen Reader Testing](https://www.nvaccess.org/) - NVDA for Windows
+
+### Documentation
+- [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
+- [MDN Accessibility](https://developer.mozilla.org/en-US/docs/Web/Accessibility)
+- [A11y Project](https://www.a11yproject.com/)
+- [WAI-ARIA Authoring Practices](https://www.w3.org/WAI/ARIA/apg/)
+
+### React-Specific
+- [React Accessibility Docs](https://react.dev/learn/accessibility)
+- [eslint-plugin-jsx-a11y](https://github.com/jsx-eslint/eslint-plugin-jsx-a11y)
+- [react-aria](https://react-spectrum.adobe.com/react-aria/) - Adobe's accessible components
+
+---
+
+## Implementation Priority
+
+### Phase 1: Critical (Do First)
+1. Add proper semantic HTML structure
+2. Ensure keyboard navigation works everywhere
+3. Add alt text to all images
+4. Fix color contrast issues
+5. Add proper form labels
+
+### Phase 2: Important (Do Soon)
+1. Add ARIA labels where needed
+2. Implement skip-to-content link
+3. Add focus visible styles
+4. Test with screen readers
+5. Ensure mobile touch targets are large enough
+
+### Phase 3: Enhanced (Nice to Have)
+1. Add keyboard shortcuts
+2. Create accessibility statement page
+3. Implement preference storage (reduced motion, high contrast)
+4. Add comprehensive ARIA live regions
+5. Create detailed accessibility documentation for users
+
+---
+
+## Accessibility Statement
+
+Consider adding an `/accessibility` page to the site with:
+- Commitment to accessibility
+- WCAG compliance level
+- Known issues and workarounds
+- Contact information for accessibility feedback
+- Date of last accessibility audit
+
+---
+
+## Legal Compliance
+
+DirectoryHunt should comply with:
+- **ADA** (Americans with Disabilities Act) - US
+- **Section 508** - US Federal agencies
+- **EN 301 549** - European standard
+- **AODA** - Ontario, Canada
+- **WCAG 2.1 Level AA** - International standard
+
+---
+
+## Questions?
+
+For accessibility questions or to report issues, please:
+1. Open a GitHub issue labeled "accessibility"
+2. Contact the development team
+3. Review this document regularly and update as standards evolve
+
+---
+
+**Last Updated:** October 8, 2025  
+**Next Review:** Every 6 months or when major features are added
+

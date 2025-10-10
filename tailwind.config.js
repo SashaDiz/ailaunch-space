@@ -1,25 +1,74 @@
 /* eslint-env node */
-/* global module, require */
-module.exports = {
+import daisyui from 'daisyui';
+
+export default {
+  content: [
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      fontFamily: {
+        'sans': ['TikTok Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.5s ease-in-out',
+        'slide-up': 'slideUp 0.3s ease-out',
+        'pulse-slow': 'pulse 3s infinite',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideUp: {
+          '0%': { transform: 'translateY(10px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+      },
+    },
+  },
   plugins: [
-    require('daisyui')
+    daisyui
   ],
   daisyui: {
     themes: [
       {
         light: {
-          ...require('daisyui/src/colors/themes')['[data-theme=light]'],
+          'primary': '#2563eb',
+          'secondary': '#7c3aed',
+          'accent': '#06b6d4',
+          'neutral': '#374151',
+          'base-100': '#ffffff',
+          'base-200': '#f9fafb',
+          'base-300': '#f3f4f6',
+          'info': '#0ea5e9',
+          'success': '#10b981',
+          'warning': '#f59e0b',
+          'error': '#ef4444',
         },
         dark: {
-          ...require('daisyui/src/colors/themes')['[data-theme=dark]'],
+          'primary': '#3b82f6',
+          'secondary': '#8b5cf6',
+          'accent': '#06b6d4',
+          'neutral': '#1f2937',
+          'base-100': '#111827',
+          'base-200': '#1f2937',
+          'base-300': '#374151',
+          'info': '#0ea5e9',
+          'success': '#10b981',
+          'warning': '#f59e0b',
+          'error': '#ef4444',
         },
         abyss: {
-          ...require('daisyui/src/colors/themes')['[data-theme=dark]'],
           'primary': '#1e293b',
           'secondary': '#64748b',
           'accent': '#0ea5e9',
           'neutral': '#334155',
           'base-100': '#0f172a',
+          'base-200': '#1e293b',
+          'base-300': '#334155',
           'info': '#38bdf8',
           'success': '#22d3ee',
           'warning': '#fbbf24',

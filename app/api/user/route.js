@@ -1,0 +1,206 @@
+import { NextResponse } from "next/server";
+import { getSupabaseAdmin } from "../../libs/supabase.js";
+import { db } from "../../libs/database.js";
+import { getSession } from "../../libs/auth-supabase.js";
+
+// User authentication middleware
+async function checkUserAuth() {
+  const session = await getSession();
+  
+  if (!session?.user?.id) {
+    return { error: NextResponse.json(
+      { error: "Authentication required", code: "UNAUTHORIZED" },
+      { status: 401 }
+    )};
+  }
+
+  return { session: { user: session.user } };
+}
+
+// GET /api/user?type=directories|stats
+export async function GET(request) {
+  try {
+    const authCheck = await checkUserAuth();
+    if (authCheck.error) return authCheck.error;
+
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get("type");
+
+    switch (type) {
+      case "directories":
+        return await getUserDirectories(authCheck.session, searchParams);
+      case "stats":
+        return await getUserStats(authCheck.session, searchParams);
+      default:
+        return NextResponse.json(
+          { error: "Invalid type parameter. Use: directories, stats" },
+          { status: 400 }
+        );
+    }
+  } catch (error) {
+    console.error("User API error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+// Helper functions
+async function getUserDirectories(session, searchParams) {
+  const page = parseInt(searchParams.get("page") || "1");
+  const limit = parseInt(searchParams.get("limit") || "10");
+  const status = searchParams.get("status");
+  
+  const filter = { submitted_by: session.user.id };
+  
+  if (status && status !== "all") {
+    filter.status = status;
+  }
+
+  const skip = (page - 1) * limit;
+  
+  const [directories, total] = await Promise.all([
+    db.find("apps", filter, {
+      skip,
+      limit,
+      sort: { created_at: -1 },
+    }),
+    db.count("apps", filter),
+  ]);
+
+  return NextResponse.json({
+    success: true,
+    data: {
+      directories,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    },
+  });
+}
+
+async function getUserStats(session, searchParams) {
+  const userId = session.user.id;
+
+  // Get user's directories for calculations
+  const directories = await db.find("apps", { submitted_by: userId });
+
+  // Get user data for votes cast
+  const userData = await db.findOne("users", { id: userId });
+
+  // Calculate stats
+  const totalDirectories = directories.length;
+  const totalVotesReceived = directories.reduce(
+    (sum, dir) => sum + (dir.upvotes || 0),
+    0
+  );
+  const totalVotesCast = userData?.total_votes || 0; // Votes cast by this user
+  const totalViews = directories.reduce(
+    (sum, dir) => sum + (dir.views || 0),
+    0
+  );
+  const totalClicks = directories.reduce(
+    (sum, dir) => sum + (dir.clicks || 0),
+    0
+  );
+
+  // Find best rankings
+  const weeklyPositions = directories
+    .filter((dir) => dir.weekly_position)
+    .map((dir) => dir.weekly_position);
+
+  const bestWeeklyRank =
+    weeklyPositions.length > 0 ? Math.min(...weeklyPositions) : null;
+  const overallBestRank = bestWeeklyRank;
+
+  // Count winners
+  const weeklyWins = directories.filter((dir) => dir.weekly_winner).length;
+
+  // Count by status
+  const liveDirectories = directories.filter(
+    (dir) => dir.status === "live"
+  ).length;
+  const scheduledDirectories = directories.filter(
+    (dir) => dir.status === "scheduled"
+  ).length;
+  const pendingDirectories = directories.filter(
+    (dir) => dir.status === "pending"
+  ).length;
+
+  // Get dofollow links count
+  const totalDofollow = directories.reduce(
+    (sum, dir) => sum + (dir.dofollow_links_earned || 0),
+    0
+  );
+
+  return NextResponse.json({
+    success: true,
+    data: {
+      totalDirectories,
+      totalVotesReceived,
+      totalVotesCast,
+      totalViews,
+      totalClicks,
+      bestRank: overallBestRank,
+      bestWeeklyRank,
+      weeklyWins,
+      liveDirectories,
+      scheduledDirectories,
+      pendingDirectories,
+      totalEngagement: totalVotesReceived + totalViews + totalClicks,
+      totalDofollow,
+      // Additional stats for compatibility
+      totalSubmissions: totalDirectories,
+      totalVotes: totalVotesCast, // This represents votes cast by user
+      approvedSubmissions: liveDirectories,
+    },
+  });
+}
+
+// DELETE /api/user - Delete user account and all associated data
+export async function DELETE(request) {
+  try {
+    const authCheck = await checkUserAuth();
+    if (authCheck.error) return authCheck.error;
+
+    const userId = authCheck.session.user.id;
+    const supabaseAdmin = getSupabaseAdmin();
+
+    // Delete user's directories/apps
+    await db.deleteMany("apps", { submitted_by: userId });
+
+    // Delete user's votes
+    await db.deleteMany("votes", { user_id: userId });
+
+    // Delete user record from users table
+    await db.deleteOne("users", { id: userId });
+
+    // Delete user from Supabase Auth
+    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(
+      userId
+    );
+
+    if (deleteError) {
+      console.error("Error deleting user from Supabase Auth:", deleteError);
+      throw deleteError;
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Account deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete user error:", error);
+    return NextResponse.json(
+      { 
+        error: "Failed to delete account",
+        details: error.message 
+      },
+      { status: 500 }
+    );
+  }
+}

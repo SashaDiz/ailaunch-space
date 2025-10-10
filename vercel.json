@@ -1,71 +1,13 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "functions": {
-    "api/webhooks/clerk.js": {
-      "maxDuration": 10
-    },
-    "api/index.js": {
-      "maxDuration": 10
-    },
-    "api/apps.js": {
-      "maxDuration": 10
-    },
-    "api/profile.js": {
-      "maxDuration": 10
-    }
-  },
-  "rewrites": [
+  "version": 2,
+  "buildCommand": "pnpm build",
+  "outputDirectory": ".next",
+  "installCommand": "pnpm install",
+  "framework": "nextjs",
+  "crons": [
     {
-      "source": "/api/dashboard",
-      "destination": "/api/index"
-    },
-    {
-      "source": "/api/categories",
-      "destination": "/api/index"
-    },
-    {
-      "source": "/api/weeks",
-      "destination": "/api/index"
-    },
-    {
-      "source": "/api/user/me",
-      "destination": "/api/index"
-    },
-    {
-      "source": "/api/submit-directory",
-      "destination": "/api/index"
-    },
-    {
-      "source": "/api/apps/(.*)",
-      "destination": "/api/apps?slug=$1"
-    },
-    {
-      "source": "/api/apps",
-      "destination": "/api/apps"
-    },
-    {
-      "source": "/api/profile/(.*)",
-      "destination": "/api/profile?userId=$1"
-    },
-    {
-      "source": "/api/profile",
-      "destination": "/api/profile"
-    },
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/assets/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
+      "path": "/api/cron/competitions",
+      "schedule": "0 * * * *"
     }
   ]
 }

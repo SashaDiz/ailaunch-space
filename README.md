@@ -1,234 +1,455 @@
-# Directory Hunt 🎯
+# AI Launch Space 🚀
 
-A directory launch platform where creators can submit their directories, get valuable backlinks, and compete for weekly recognition. Think Product Hunt but specifically for directory projects.
+A weekly competition platform for AI projects where AI builders can submit their tools, get valuable backlinks, and compete for weekly recognition. Think Product Hunt but specifically for AI projects and tools.
 
-## 🚀 Features Completed
+## 🚀 Features
 
-✅ **Authentication System** - Clerk integration with user management  
-✅ **Directory Submissions** - Full form with validation and payment plans  
-✅ **Real-time Voting** - Vote for your favorite directories  
-✅ **User Dashboard** - Track submissions, views, and votes  
-✅ **API Endpoints** - Complete backend with MongoDB integration  
-✅ **Responsive Design** - Mobile-friendly with TailwindCSS  
-✅ **Weekly/Monthly Rankings** - Leaderboard system with winners  
-✅ **Profile Management** - User profiles with submission history
+### Core Features
+- **Supabase Authentication** - Email (Magic Link), Google OAuth, GitHub OAuth
+- **AI Project Submissions** - Multi-step form with FREE and Premium plans
+- **Real-time Voting** - Community-driven upvoting system
+- **Weekly Competitions** - Top 3 FREE submissions win dofollow backlinks
+- **User Dashboard** - Track submissions, views, and votes
+- **Admin Dashboard** - Manage submissions, competitions, and link types
+- **Responsive Design** - Mobile-friendly with TailwindCSS + daisyUI
+- **SEO Optimization** - Sitemap, meta tags, and backlink management
+
+### Launch Plans
+
+#### Standard Launch (FREE)
+- **Cost**: Free
+- **Features**: 
+  - Live on homepage for 7 days
+  - Badge for top 3 ranking products
+  - High authority backlink for top 3 winners
+  - Standard launch queue
+  - 15 slots per week
+  - Community voting access
+
+#### Premium Launch ($15)
+- **Cost**: $15 per submission
+- **Features**:
+  - Live on homepage for 7 days
+  - Badge for top 3 ranking products
+  - Guaranteed high authority backlink
+  - Skip the queue
+  - 10 dedicated weekly slots
+  - Premium badge & featured placement
+
+**Note**: Both plans can earn badges for top 3 ranking products regardless of the chosen plan.
+
+## 🔐 Authentication & Security
+
+### Multi-Layer Security Architecture
+
+This application implements **defense-in-depth security** with three layers of protection:
+
+1. **Client-Side Protection**
+   - Submit page redirects unauthenticated users to sign-in
+   - Preserves redirect URL for seamless return after login
+   - Improves UX by preventing unnecessary API calls
+
+2. **API-Level Authentication**
+   - All protected endpoints validate Supabase session
+   - Returns 401 Unauthorized for invalid requests
+   - Comprehensive logging for debugging
+
+3. **Database Row Level Security (RLS)**
+   - PostgreSQL RLS policies enforce data access rules
+   - Users can only submit/update their own directories
+   - Users can only vote once per directory
+   - Cannot be bypassed from application code
+
+### Authenticated Actions
+
+✅ **Authenticated users can:**
+- Submit AI projects to launches (FREE or Premium)
+- Vote for directories
+- Update their own submissions
+- View their dashboard
+
+❌ **Unauthenticated users:**
+- Are redirected to sign-in when accessing protected pages
+- Receive 401 errors when accessing protected APIs
+- Cannot bypass security via database RLS policies
+
+### Testing Authentication
+
+Run the authentication test suite:
+```bash
+node scripts/test-auth.js
+```
+
+For detailed security documentation, see:
+- `AUTHENTICATION_VERIFICATION.md` - Complete security audit
+- `AUTH_QUICK_REFERENCE.md` - Quick reference guide
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: React 19 + Vite + TailwindCSS + Radix UI
-- **Authentication**: Clerk (complete user management)
-- **Database**: MongoDB with schemas and validation
-- **API**: Serverless functions with proper error handling
-- **Deployment**: Vercel-ready with optimized function usage
+### Frontend
+- **React 19** - Modern UI library
+- **Next.js 15** - Full-stack framework with App Router
+- **Tailwind CSS 4** - Utility-first CSS
+- **daisyUI 5** - Component library
+- **Iconoir React** - Icon library
 
-## 🏃‍♂️ Quick Start
+### Backend
+- **Node.js** - Runtime environment
+- **Supabase (PostgreSQL)** - Database & Authentication with RLS
+- **Next.js API Routes** - Serverless endpoints
+- **LemonSqueezy** - Payment processing
+
+### Key Libraries
+- **@supabase/supabase-js** - Supabase client
+- **@supabase/auth-helpers-nextjs** - Auth helpers
+- **Zod** - Schema validation
+- **React Hook Form** - Form management
+- **React Hot Toast** - Notifications
+- **pnpm** - Package manager
+
+## 📋 Prerequisites
+
+- Node.js 18+
+- Supabase account (free tier available)
+- pnpm (recommended) or npm
+- LemonSqueezy account (for payments)
+
+## 🚀 Quick Start
 
 ### 1. Clone & Install
 
 ```bash
 git clone <repository-url>
-cd directoryhunt
+cd ailaunchspace
 pnpm install
 ```
 
-### 2. Environment Setup
+### 2. Supabase Setup
 
-```bash
-cp .env.example .env.local
-```
+1. **Create a Supabase project** at https://supabase.com
+2. **Run the database schema**:
+   - Go to Supabase Dashboard → SQL Editor
+   - Copy and run the contents of `supabase/schema.sql`
+3. **Get your API keys**:
+   - Go to Project Settings → API
+   - Copy the Project URL and keys
 
-Update `.env.local` with your actual credentials:
+### 3. Environment Setup
+
+Create `.env.local` file:
 
 ```env
-VITE_CLERK_PUBLISHABLE_KEY=pk_test_your_key_here
-CLERK_SECRET_KEY=sk_test_your_secret_here
-MONGODB_URI=mongodb://localhost:27017/directoryhunt
-VITE_APP_URL=http://localhost:5173
-CLERK_WEBHOOK_SECRET=whsec_your_webhook_secret
+# App Configuration
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NODE_ENV=development
+
+# Supabase (Get from: https://app.supabase.com/project/_/settings/api)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+SUPABASE_PROJECT_ID=your-project-id
+
+# LemonSqueezy (Payment)
+LEMONSQUEEZY_API_KEY=your_lemonsqueezy_api_key
+LEMONSQUEEZY_STORE_ID=your_store_id
+LEMONSQUEEZY_WEBHOOK_SECRET=your_webhook_secret
+LEMONSQUEEZY_PRODUCT_ID_PREMIUM=your_premium_product_id
+
+# Cron Job Security (Generate a random secret string)
+CRON_SECRET=your_random_secret_string_here
+
+# Analytics (Optional)
+NEXT_PUBLIC_GA_ID=your_google_analytics_id
 ```
 
-### 3. Initialize Database
+### 4. Configure Supabase Authentication
+
+#### Step 1: Configure URL Settings
+
+Go to **Authentication → URL Configuration** in Supabase Dashboard:
+
+**For Local Development:**
+- **Site URL**: `http://localhost:3000`
+- **Redirect URLs** (add all of these):
+  ```
+  http://localhost:3000/auth/callback
+  http://localhost:3000/auth/callback/**
+  http://localhost:3000/**
+  ```
+
+**For Production:**
+- **Site URL**: `https://yourdomain.com`
+- **Redirect URLs** (add all of these):
+  ```
+  https://yourdomain.com/auth/callback
+  https://yourdomain.com/auth/callback/**
+  https://yourdomain.com/**
+  ```
+
+⚠️ **IMPORTANT**: Click **Save** after adding each redirect URL!
+
+#### Step 2: Enable Auth Providers
+
+Go to **Authentication → Providers**:
+
+**Email (Magic Link)** ✅
+- Enabled by default
+- No additional configuration needed
+- Customize email templates if desired
+
+**Google OAuth** (Optional)
+
+1. **Create OAuth Credentials**:
+   - Go to https://console.cloud.google.com/
+   - Create a new project or select existing
+   - Navigate to "Credentials" → "Create Credentials" → "OAuth 2.0 Client ID"
+   - Application type: Web application
+   
+2. **Configure OAuth App**:
+   - **Authorized JavaScript origins**: `http://localhost:3000` (dev) or `https://yourdomain.com` (prod)
+   - **Authorized redirect URIs**: `https://your-project.supabase.co/auth/v1/callback`
+   
+3. **Enable in Supabase**:
+   - Go to Authentication → Providers
+   - Enable "Google" provider
+   - Add Client ID and Client Secret from Google
+   - Click **Save**
+
+**GitHub OAuth** (Optional)
+
+1. **Create OAuth App**:
+   - Go to https://github.com/settings/developers
+   - Click "New OAuth App"
+   
+2. **Configure OAuth App**:
+   
+   **For Local Development:**
+   - **Application name**: Your App Name (Local)
+   - **Homepage URL**: `http://localhost:3000`
+   - **Authorization callback URL**: `http://localhost:3000/auth/callback`
+   
+   **For Production:**
+   - **Application name**: Your App Name
+   - **Homepage URL**: `https://yourdomain.com`
+   - **Authorization callback URL**: `https://yourdomain.com/auth/callback`
+   
+3. **Copy Credentials**:
+   - Copy the **Client ID** and **Client Secret**
+   
+4. **Enable in Supabase**:
+   - Go to Authentication → Providers
+   - Find and enable "GitHub"
+   - Enter Client ID and Client Secret
+   - Click **Save**
+
+💡 **Tip**: For production, create **separate** OAuth Apps for each provider to avoid conflicts between development and production environments.
+
+### 5. Test Database Connection
 
 ```bash
-pnpm run db:init
+pnpm db:test
 ```
 
-### 4. Start Development
+You should see:
+```
+✓ Database connection successful
+✓ All 11 tables exist and are accessible!
+```
+
+### 6. Start Development
 
 ```bash
 pnpm dev
 ```
 
-### 5. Add Sample Data (Optional)
+Visit `http://localhost:3000` to see your app! 🎉
 
-```bash
-curl -X POST http://localhost:5173/api/seed-data
+## 🔐 Authentication
+
+### Sign-In Methods
+
+The platform supports three authentication methods:
+
+1. **Email (Magic Link)** - Users receive a sign-in link via email
+2. **Google OAuth** - Sign in with Google account
+3. **GitHub OAuth** - Sign in with GitHub account
+
+### Usage in Code
+
+**Client-Side (React Components)**:
+```javascript
+'use client';
+import { useUser } from '@/app/hooks/useUser';
+import { useSupabase } from '@/app/components/SupabaseProvider';
+
+export default function MyComponent() {
+  const { user, loading } = useUser();
+  const { supabase } = useSupabase();
+
+  if (loading) return <div>Loading...</div>;
+  if (!user) return <div>Please sign in</div>;
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  return <div>Hello, {user.email}!</div>;
+}
 ```
 
-Visit `http://localhost:5173` to see your app! 🎉
+**Server-Side (API Routes)**:
+```javascript
+import { getSupabaseAdmin } from '@/app/libs/supabase';
 
-- **Launch Scheduling**: Products are organized by launch weeks
-- **Voting System**: Community-driven upvoting and engagement
-- **User Profiles**: Comprehensive user profiles with social links
-- **Authentication**: Secure authentication via Clerk (Google, GitHub OAuth)
-- **Responsive Design**: Mobile-first responsive UI with Tailwind CSS
-
-### Premium Features
-
-- **Priority Listing**: Premium submissions get featured placement
-- **Enhanced Analytics**: Detailed metrics and insights
-- **Backlink Support**: SEO boost through backlinks
-- **Extended Descriptions**: More detailed product descriptions
-
-### Admin Features
-
-- **Content Moderation**: Approve/reject submissions
-- **Analytics Dashboard**: Platform-wide metrics and insights
-- **User Management**: Manage user accounts and subscriptions
-
-## 🛠 Tech Stack
-
-### Frontend
-
-- **React 19** - UI library
-- **Vite** - Build tool and dev server
-- **React Router** - Client-side routing
-- **Tailwind CSS** - Utility-first CSS framework
-- **Radix UI** - Accessible component primitives
-- **Framer Motion** - Animation library
-- **Lucide React** - Icon library
-
-### Backend
-
-- **Node.js** - Runtime environment
-- **MongoDB** - NoSQL database
-- **Vercel Functions** - Serverless API endpoints
-
-### Authentication & Services
-
-- **Clerk** - Authentication and user management
-- **Resend** - Email service
-- **Vercel** - Hosting and deployment
-
-### Development Tools
-
-- **ESLint** - Code linting
-- **Zod** - Schema validation
-- **React Hook Form** - Form handling
-- **Date-fns** - Date utilities
-
-## 📋 Prerequisites
-
-- Node.js 18+
-- MongoDB (local or cloud instance)
-- pnpm (recommended) or npm
-- Clerk account for authentication
-- Resend account for emails (optional)
-
-## 🚀 Quick Start
-
-1. **Clone the repository**
-
-   ```bash
-   git clone <repository-url>
-   cd directoryhunt
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   pnpm install
-   ```
-
-3. **Set up environment variables**
-
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
-
-4. **Initialize the database**
-
-   ```bash
-   npm run db:init
-   ```
-
-5. **Start the development server**
-   ```bash
-   npm run dev
-   ```
-
-The application will be available at `http://localhost:5173`
-
-## � Documentation
-
-Our comprehensive documentation is organized as follows:
-
-### 📖 **Core Guides**
-
-- **[Development Guide](docs/DEVELOPMENT.md)** - Setup, coding standards, and workflow
-- **[API Reference](docs/API.md)** - Complete API documentation with examples
-- **[Database Schema](docs/DATABASE.md)** - Database structure and operations
-- **[Deployment Guide](docs/DEPLOYMENT.md)** - Deploy to various platforms
-
-### ⚡ **Serverless Function Management**
-
-- **[Serverless Functions Guide](docs/SERVERLESS_FUNCTIONS.md)** - Critical guidelines for staying within Vercel limits
-- **[Architecture Decisions](docs/ARCHITECTURE.md)** - Technical decision records including function consolidation
-
-### 🛠 **Practical Resources**
-
-- **[Code Examples](docs/EXAMPLES.md)** - Implementation patterns and snippets
-- **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
-- **[FAQ](docs/FAQ.md)** - Frequently asked questions
-
-### 🤝 **Contributing**
-
-- **[Contributing Guide](CONTRIBUTING.md)** - How to contribute to the project
-- **[Documentation Index](docs/README.md)** - Complete documentation overview
-
-### 🤖 **For AI Assistants**
-
-- **[AI Context](.ai-context.md)** - Structured project context
-- **[Project Summary](.ai-project-summary.json)** - Machine-readable metadata
-
-> **Quick Tip**: Start with the [Documentation Index](docs/README.md) to find exactly what you need!
-
-### Getting API Keys
-
-1. **Clerk**: Sign up at [clerk.com](https://clerk.com) and create a new application
-2. **MongoDB**: Use MongoDB Atlas or local installation
-3. **Resend**: Sign up at [resend.com](https://resend.com) for email services
-4. **OAuth**: Configure in Google Cloud Console and GitHub Developer Settings
-
-## 🗃 Database Setup
-
-The application uses MongoDB with the following collections:
-
-- **users** - User profiles and authentication data
-- **apps** - Product/application submissions
-- **categories** - Product categories
-- **launch_weeks** - Launch week scheduling
-- **votes** - User voting data
-
-### Initialize Database
-
-```bash
-# Initialize database with indexes and seed data
-npm run db:init
-
-# Alternative: Use the database setup script
-npm run db:setup
+const supabase = getSupabaseAdmin();
+const { data: { user } } = await supabase.auth.getUser(token);
 ```
 
-### Database Schema
+## 📡 API Documentation
 
-Key models include:
+### Core Endpoints
 
-- **User**: Clerk-synced user profiles with social links and subscription data
-- **App**: Product submissions with metadata, launch scheduling, and engagement metrics
-- **LaunchWeek**: Weekly launch periods with app organization
-- **Category**: Product categorization system
+#### AI Projects
+- `GET /api/directories` - List all approved AI projects
+- `POST /api/directories` - Submit new AI project
+- `GET /api/directories/[slug]` - Get specific AI project
+- `PUT /api/directories/update` - Update AI project
+
+#### Voting
+- `POST /api/vote` - Vote on an AI project
+
+#### User
+- `GET /api/user/route` - Get current user
+- `GET /api/user/directories` - Get user's AI projects
+
+#### Admin
+- `GET /api/admin` - List all submissions (admin only)
+- `POST /api/admin/link-type` - Manage link types (admin only)
+- `POST /api/admin/complete-competition` - Complete weekly competition (admin only)
+
+#### Authentication
+- `GET /auth/signin` - Sign in page
+- `GET /auth/callback` - OAuth callback handler
+
+#### Categories & Competitions
+- `GET /api/categories` - Get all categories
+- `GET /api/competitions` - Get current competition
+
+#### Cron Jobs (Automated)
+- `GET /api/cron/competitions` - Manage weekly competitions automatically
+  - Creates upcoming competitions
+  - Activates started competitions
+  - Completes expired competitions
+  - Awards winners
+  - **Authentication**: Requires `Authorization: Bearer CRON_SECRET` header
+  - **Schedule**: Runs every hour (configured in `vercel.json`)
+  - **Manual trigger**: `curl -H "Authorization: Bearer YOUR_CRON_SECRET" https://yourdomain.com/api/cron/competitions`
+
+## 🗃️ Database Schema
+
+### Supabase Tables
+
+The platform uses 11 PostgreSQL tables with Row Level Security (RLS) enabled:
+
+#### Core Tables
+
+**users**
+- User profiles and authentication
+- Stores: id, email, name, avatar_url, is_admin, total_submissions, total_votes
+- Auto-created on first sign-in
+
+**apps** (AI projects)
+- Directory submissions
+- Fields: name, slug, website_url, short_description, full_description
+- Status: pending, live, rejected
+- Link type: dofollow/nofollow tracking
+- Competition & voting data
+
+**categories**
+- AI project categories
+- Each with name, slug, and description
+
+**competitions**
+- Weekly competition tracking
+- Start/end dates, status, winners
+- Separate slots for FREE (15) and Premium (10) plans
+
+**votes**
+- User voting records
+- Links: user_id, app_id, competition_id
+- Timestamp tracking
+
+#### Supporting Tables
+
+**payments** - LemonSqueezy payment records  
+**newsletter** - Newsletter subscriptions  
+**sidebar_content** - Dynamic sidebar widgets  
+**backlinks** - Backlink management  
+**analytics** - Usage statistics  
+**external_webhooks** - Webhook configurations
+
+### Link Type Management
+
+```javascript
+{
+  link_type: "nofollow" | "dofollow",
+  dofollow_status: boolean,
+  dofollow_reason: "weekly_winner" | "manual_upgrade" | "premium_plan",
+  dofollow_awarded_at: Date,
+  weekly_position: 1 | 2 | 3
+}
+```
+
+## 📁 Project Structure
+
+```
+ailaunchspace/
+├── app/
+│   ├── api/                 # Next.js API routes
+│   │   ├── admin/          # Admin endpoints
+│   │   ├── categories/     # Categories
+│   │   ├── competitions/   # Competitions
+│   │   ├── directories/    # Directory CRUD
+│   │   ├── user/           # User data
+│   │   ├── vote/           # Voting system
+│   │   └── webhooks/       # Payment webhooks
+│   ├── components/         # UI components
+│   │   ├── admin/         # Admin components
+│   │   ├── SupabaseProvider.jsx  # Auth context
+│   │   ├── Header.jsx     # Navigation
+│   │   └── ...
+│   ├── auth/              # Auth pages
+│   │   ├── signin/        # Sign in page
+│   │   └── callback/      # OAuth callback
+│   ├── admin/             # Admin pages
+│   ├── dashboard/         # User dashboard
+│   ├── directories/       # Browse AI projects
+│   ├── directory/[slug]/  # AI project detail
+│   ├── submit/            # Submit form
+│   ├── hooks/             # React hooks
+│   │   └── useUser.js     # Auth hook
+│   ├── libs/              # Shared libraries
+│   │   ├── supabase.js    # Supabase clients
+│   │   ├── database.js    # DB utilities
+│   │   ├── database-supabase.js  # Supabase manager
+│   │   ├── auth.js        # Auth functions
+│   │   └── auth-helpers.js  # Server auth helpers
+│   ├── layout.js          # Root layout
+│   └── page.js            # Homepage
+├── supabase/              # Supabase files
+│   ├── schema.sql         # Database schema
+│   ├── setup_admin.sql    # Admin setup
+│   ├── test_rls.sql       # RLS tests
+│   └── verify_schema.sql  # Verification
+├── scripts/               # Utility scripts
+│   ├── test-connection.js # DB test
+│   └── seed-sample-data.js  # Sample data
+├── public/                # Static assets
+├── .env.local            # Environment variables
+├── package.json          # Dependencies
+├── tailwind.config.js    # Tailwind config
+└── next.config.js        # Next.js config
+```
 
 ## 🔧 Development
 
@@ -236,216 +457,253 @@ Key models include:
 
 ```bash
 # Development
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run preview      # Preview production build
-npm run lint         # Run ESLint
+pnpm dev          # Start dev server
+pnpm build        # Build for production
+pnpm start        # Start production server
+pnpm lint         # Run ESLint
 
 # Database
-npm run db:init      # Initialize database
-npm run db:seed      # Seed database with sample data
-npm run db:setup     # Full database setup
+pnpm db:test      # Test Supabase connection
+pnpm supabase:types  # Generate TypeScript types
 ```
 
-### Development Workflow
+### Admin Features
 
-1. **Start the development server**
+#### Link Type Management
+- Toggle dofollow/nofollow for any AI project
+- View dofollow reason (winner/manual/premium)
+- Track link type changes
+- Bulk operations
 
-   ```bash
-   npm run dev
-   ```
+#### Competition Management
+- Complete weekly competitions
+- Award dofollow to top 3 winners
+- View competition statistics
 
-2. **Make your changes**
+### Testing Authentication
 
-   - Frontend code in `src/`
-   - API endpoints in `api/`
-   - Database models in `libs/models/`
-
-3. **Test your changes**
-   - Manual testing via the browser
-   - API testing via the `/webhook-test` endpoint
-
-## 📡 API Documentation
-
-### Authentication
-
-All protected endpoints require Clerk authentication. The user ID is passed via the `x-clerk-user-id` header.
-
-### Core Endpoints
-
-#### Apps
-
-- `GET /api/apps` - List all approved apps
-- `GET /api/apps/[slug]` - Get specific app details by slug
-- `GET /api/apps/edit/[id]` - Get specific app details for editing
-- `PUT /api/apps/edit/[id]` - Update an app
-- `DELETE /api/apps/edit/[id]` - Delete an app
-- `POST /api/submit-directory` - Submit new app
-- `POST /api/apps/[slug]/vote` - Vote on an app
-
-#### User Management
-
-- `GET /api/user/me` - Get current user profile
-- `PUT /api/profile/sync` - Sync user profile with Clerk
-- `GET /api/profile/[userId]` - Get user profile by ID
-
-#### Categories & Launch Weeks
-
-- `GET /api/categories` - List all categories
-- `GET /api/weeks` - List launch weeks
-
-#### Dashboard (Protected)
-
-- `GET /api/dashboard` - Get user dashboard data
-
-#### Webhooks
-
-- `POST /api/webhooks/clerk` - Clerk user sync webhook
-
-### Request/Response Examples
-
-#### Submit App
-
-```javascript
-POST /api/submit-directory
-Content-Type: multipart/form-data
-
-{
-  "name": "My Awesome App",
-  "short_description": "A brief description",
-  "full_description": "Detailed description...",
-  "website_url": "https://myapp.com",
-  "categories": ["productivity", "ai"],
-  "pricing": "Freemium",
-  "contact_email": "contact@myapp.com",
-  "plan": "standard"
-}
-```
-
-#### Vote on App
-
-```javascript
-POST /api/apps/my-app-slug/vote
-{
-  "vote_type": "upvote" // or "downvote"
-}
-```
-
-## 📁 Project Structure
-
-```
-directoryhunt/
-├── api/                    # Serverless API functions
-│   ├── apps/              # App-related endpoints
-│   ├── categories/        # Category management
-│   ├── dashboard/         # Dashboard data
-│   ├── profile/           # User profile management
-│   ├── submit-directory/  # App submission
-│   ├── user/             # User data
-│   ├── webhooks/         # External service webhooks
-│   └── weeks/            # Launch week management
-├── libs/                  # Shared libraries
-│   ├── models/           # Database models and schemas
-│   ├── database.js       # Database utilities
-│   └── mongodb.js        # MongoDB connection
-├── public/               # Static assets
-├── scripts/              # Database and utility scripts
-├── src/                  # Frontend React application
-│   ├── components/       # Reusable UI components
-│   │   ├── auth/        # Authentication components
-│   │   └── ui/          # Base UI components
-│   ├── contexts/        # React contexts
-│   ├── hooks/           # Custom React hooks
-│   ├── lib/             # Frontend utilities
-│   ├── pages/           # Page components
-│   └── assets/          # Images and icons
-├── .env                 # Environment variables
-├── package.json         # Dependencies and scripts
-├── tailwind.config.js   # Tailwind CSS configuration
-├── vite.config.js       # Vite configuration
-└── vercel.json         # Vercel deployment configuration
-```
-
-### Key Directories
-
-- **`src/components/ui/`** - Reusable UI components built with Radix UI
-- **`src/pages/`** - Main application pages (Home, Profile, Submit, etc.)
-- **`api/`** - Serverless functions for backend functionality
-- **`libs/models/`** - Database schemas and business logic
-- **`scripts/`** - Database initialization and utility scripts
+1. Visit `http://localhost:3000`
+2. Click "Sign in"
+3. Try any authentication method:
+   - **Email**: Enter email → Check inbox → Click magic link
+   - **Google**: Click "Continue with Google"
+   - **GitHub**: Click "Continue with GitHub"
+4. Verify you're signed in (avatar appears in header)
 
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
 
-1. **Connect your repository to Vercel**
-2. **Set environment variables in Vercel dashboard**
-3. **Deploy**
+1. **Push to GitHub**
    ```bash
-   vercel --prod
+   git push origin main
    ```
 
-### Environment Variables for Production
+2. **Import to Vercel**
+   - Go to https://vercel.com
+   - Import your repository
+   - Vercel will auto-detect Next.js
 
-Ensure all environment variables are set in your deployment platform:
+3. **Add Environment Variables**
+   - Add all variables from `.env.local`
+   - Update URLs to production values
 
-- Database connection strings
-- Authentication keys
-- API keys for external services
+4. **Deploy**
+   - Vercel will automatically build and deploy
 
-### Build Configuration
+### Update Supabase for Production
 
-The project includes:
+After deployment, update Supabase settings:
 
-- `vercel.json` for Vercel-specific configuration
-- Build optimization for production
-- Static asset caching headers
+**Authentication → URL Configuration**:
+- Add your production domain to Site URL
+- Add `https://yourdomain.com/auth/callback` to Redirect URLs
+
+**Update OAuth Apps**:
+- Add production callback URLs to Google/GitHub OAuth apps
+
+## 🎯 How It Works
+
+### Standard Launch Flow
+1. User submits AI project (chooses "Standard Launch")
+2. Admin approves → Goes live with nofollow link
+3. Lives on homepage for 7 days
+4. Participates in weekly voting
+5. **Top 3 winners** → Automatically get dofollow backlink + badge
+
+### Premium Launch Flow
+1. User selects Premium Launch ($15)
+2. Pays $15 via LemonSqueezy
+3. AI project submitted and enters approval queue
+4. Upon approval → **Guaranteed dofollow backlink by default**
+5. Can still compete for top 3 ranking and earn badges
+
+### Weekly Competition (Automated)
+- **Automatically starts every Monday at 00:00 PST (08:00 UTC)**
+- **Automatically ends the following Monday at 23:59:59 PST (07:59:59 UTC)**
+- Top 3 submissions with most votes win (both Standard and Premium)
+- Winners get dofollow backlinks + badges automatically
+- System creates 8 weeks of competitions in advance
+- Cron job runs every hour to:
+  - Create upcoming competitions
+  - Activate competitions when Monday arrives
+  - Complete competitions when they end
+  - Award winners automatically
+
+### Auto User Creation
+When users sign in for the first time:
+- User record automatically created in `users` table
+- Profile data synced from OAuth provider
+- Stats initialized (submissions: 0, votes: 0)
+
+## 🛡️ Security
+
+### Row Level Security (RLS)
+All tables have RLS policies enabled:
+- Users can only modify their own data
+- Admins have full access
+- Public can read approved content
+
+### Authentication
+- Secure token-based authentication
+- HTTP-only cookies
+- Automatic token refresh
+- Session management
 
 ## 🤝 Contributing
 
-1. **Fork the repository**
-2. **Create a feature branch**
-   ```bash
-   git checkout -b feature/amazing-feature
-   ```
-3. **Make your changes**
-4. **Test thoroughly**
-5. **Commit your changes**
-   ```bash
-   git commit -m 'Add some amazing feature'
-   ```
-6. **Push to the branch**
-   ```bash
-   git push origin feature/amazing-feature
-   ```
-7. **Open a Pull Request**
-
-### Development Guidelines
-
-- Follow the existing code style
-- Write meaningful commit messages
-- Test your changes thoroughly
-- Update documentation as needed
-- Ensure responsive design compatibility
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License.
 
-## 🆘 Support
+## 🆘 Troubleshooting
 
-For support and questions:
+### Database Connection Issues
 
-- Create an issue in the repository
-- Check the FAQ page in the application
-- Review the API documentation
+```bash
+pnpm db:test
+```
 
-## 🔄 Version History
+This will show detailed diagnostics and verify all tables are accessible.
 
-- **v1.0.0** - Initial release with core functionality
-- **v1.1.0** - Added premium features and enhanced UI
-- **v1.2.0** - Improved analytics and user dashboard
+### Authentication Issues
+
+#### Email Magic Link Not Working
+
+**Symptoms**: Email not arriving or link doesn't work
+- ✅ Check spam/junk folder
+- ✅ Verify "Email" provider is enabled in Supabase → Authentication → Providers
+- ✅ Check email templates in Supabase (Authentication → Email Templates)
+- ✅ Review Supabase Auth logs (Authentication → Logs) for errors
+- ✅ Ensure Site URL is correctly set in Supabase
+
+#### GitHub OAuth: "Unable to exchange external code"
+
+**Symptoms**: Redirected back to main page without authentication
+
+**Solutions**:
+1. **Verify Callback URLs Match Exactly**:
+   - GitHub OAuth App callback: `http://localhost:3000/auth/callback`
+   - No trailing slashes
+   - Case-sensitive match required
+
+2. **Check Supabase URL Configuration**:
+   - Site URL must be set to `http://localhost:3000` (dev) or your domain (prod)
+   - All redirect URLs must be added (see Step 1 in Authentication setup)
+   - Click **Save** after each URL
+
+3. **Verify GitHub OAuth App Settings**:
+   - Homepage URL: `http://localhost:3000`
+   - Authorization callback URL: `http://localhost:3000/auth/callback`
+   - Client ID and Secret correctly entered in Supabase
+
+4. **Clear Cache and Restart**:
+   ```bash
+   rm -rf .next
+   pnpm dev
+   ```
+
+5. **Test in Incognito Mode**:
+   - Clear browser cookies
+   - Try in private/incognito window
+
+#### Google OAuth: "redirect_uri_mismatch"
+
+**Solutions**:
+- Ensure authorized redirect URI in Google Console matches: `https://your-project.supabase.co/auth/v1/callback`
+- Check that Supabase Site URL is correctly configured
+- Verify Client ID and Secret are correct
+- Google OAuth redirect uses Supabase URL, not your app URL
+
+#### "Invalid state parameter" Error
+
+**Solutions**:
+- Clear browser cookies for localhost
+- Restart development server
+- Try in incognito/private window
+- Check that NEXT_PUBLIC_APP_URL matches your current environment
+
+#### OAuth Works in Dev but Not Production
+
+**Solutions**:
+- Create **separate** OAuth Apps for production (recommended)
+- Use different Client ID and Secret for each environment
+- Update Supabase redirect URLs to include production domain
+- Set `NEXT_PUBLIC_APP_URL` to production domain in environment variables
+- Verify production callback URLs in OAuth provider settings
+
+### Debugging Tips
+
+1. **Browser Console**: Check for detailed JavaScript errors (F12 → Console)
+2. **Network Tab**: Inspect redirect URLs and API responses (F12 → Network)
+3. **Server Logs**: Check terminal where `pnpm dev` is running
+4. **Supabase Auth Logs**: Check Authentication → Logs in Supabase Dashboard
+5. **Error Messages**: The sign-in page displays detailed error information
+
+### Build Errors
+
+```bash
+rm -rf .next node_modules
+pnpm install
+pnpm build
+```
+
+### Common Issues
+
+**Port 3000 already in use**:
+```bash
+lsof -ti:3000 | xargs kill -9
+pnpm dev
+```
+
+**Environment variables not loading**:
+- Restart development server after changing `.env.local`
+- Verify variable names start with `NEXT_PUBLIC_` for client-side access
+- Check for typos in variable names
+
+**Supabase connection timeout**:
+- Check if Supabase project is paused (free tier pauses after 1 week of inactivity)
+- Verify SUPABASE_URL and keys are correct
+- Check internet connection
+
+## 📊 Database Schema Reference
+
+For detailed schema information, see `supabase/schema.sql`
+
+Key features:
+- Timestamps (created_at, updated_at) auto-managed
+- Indexes for performance
+- Foreign key constraints
+- RLS policies for security
 
 ---
 
-Built with ❤️ using React, Vite, and MongoDB
+Built with ❤️ using React 19, Next.js 15, Supabase, and PostgreSQL
+
+**Status**: ✅ Fully Connected & Ready for Development
