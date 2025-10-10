@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -164,7 +164,7 @@ function FilterSidebar({
   );
 }
 
-export default function DirectoriesPage() {
+function DirectoriesPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -550,5 +550,29 @@ export default function DirectoriesPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Loading fallback component
+function DirectoriesPageLoading() {
+  return (
+    <div className="min-h-screen bg-base-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="text-center mb-8">
+          <div className="skeleton h-10 w-64 mx-auto mb-4"></div>
+          <div className="skeleton h-6 w-96 mx-auto"></div>
+        </div>
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    </div>
+  );
+}
+
+// Main export with Suspense boundary
+export default function DirectoriesPage() {
+  return (
+    <Suspense fallback={<DirectoriesPageLoading />}>
+      <DirectoriesPageContent />
+    </Suspense>
   );
 }
