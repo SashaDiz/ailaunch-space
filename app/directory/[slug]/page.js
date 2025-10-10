@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -15,7 +15,7 @@ import toast from "react-hot-toast";
 import { SocialShare } from "../../components/SocialShare";
 import { CategoryBadge, PricingBadge } from "../../components/CategoryBadge";
 
-export default function DirectoryDetailPage() {
+function DirectoryDetailPageContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const { slug } = params;
@@ -602,5 +602,22 @@ export default function DirectoryDetailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function DirectoryDetailPage() {
+  return (
+    <Suspense 
+      fallback={
+        <div className="min-h-screen bg-base-100 flex items-center justify-center">
+          <div className="text-center">
+            <span className="loading loading-spinner loading-lg"></span>
+            <p className="mt-4 text-base-content/70">Loading directory...</p>
+          </div>
+        </div>
+      }
+    >
+      <DirectoryDetailPageContent />
+    </Suspense>
   );
 }

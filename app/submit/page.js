@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useUser } from "../hooks/useUser";
 import { useRouter, useSearchParams } from "next/navigation";
 import { NavArrowLeft, NavArrowRight, Xmark, Plus } from "iconoir-react";
@@ -1118,7 +1118,7 @@ function WeekSelectionStep({ formData, setFormData, errors }) {
   );
 }
 
-export default function SubmitPage() {
+function SubmitPageContent() {
   const { user, loading } = useUser();
   const isLoaded = !loading;
 
@@ -2336,5 +2336,22 @@ export default function SubmitPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SubmitPage() {
+  return (
+    <Suspense 
+      fallback={
+        <div className="min-h-screen bg-base-100 flex items-center justify-center">
+          <div className="text-center">
+            <span className="loading loading-spinner loading-lg"></span>
+            <p className="mt-4 text-base-content/70">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <SubmitPageContent />
+    </Suspense>
   );
 }
