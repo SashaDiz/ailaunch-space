@@ -208,7 +208,8 @@ CREATE TABLE IF NOT EXISTS public.apps (
   guaranteed_backlinks INTEGER DEFAULT 0,
   
   -- Status and Moderation
-  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'live', 'archived', 'scheduled')),
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'live', 'archived', 'scheduled', 'draft')),
+  is_draft BOOLEAN DEFAULT false,
   rejection_reason TEXT,
   featured BOOLEAN DEFAULT false,
   homepage_featured BOOLEAN DEFAULT false,
@@ -253,6 +254,7 @@ CREATE TABLE IF NOT EXISTS public.apps (
 CREATE INDEX idx_apps_slug ON public.apps(slug);
 CREATE INDEX idx_apps_status ON public.apps(status);
 CREATE INDEX idx_apps_plan ON public.apps(plan);
+CREATE INDEX idx_apps_is_draft ON public.apps(is_draft);
 CREATE INDEX idx_apps_submitted_by ON public.apps(submitted_by);
 CREATE INDEX idx_apps_launch_week ON public.apps(launch_week);
 CREATE INDEX idx_apps_launch_month ON public.apps(launch_month);
