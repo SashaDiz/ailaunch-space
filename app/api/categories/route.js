@@ -4,6 +4,19 @@ import { db } from "../../libs/database.js";
 // GET /api/categories?type=categories|pricing - Get categories or pricing data
 export async function GET(request) {
   try {
+    // Verify database connection
+    if (!db) {
+      console.error("Database client is not initialized");
+      return NextResponse.json(
+        { 
+          error: "Database connection failed", 
+          code: "DB_NOT_INITIALIZED",
+          message: "Database client is not available"
+        },
+        { status: 500 }
+      );
+    }
+    
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type") || "categories";
     const includeCount = searchParams.get("includeCount") === "true";
