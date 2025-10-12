@@ -1525,6 +1525,14 @@ function SubmitPageContent() {
 
   const loadDraftForEdit = async (draftId) => {
     setIsLoading(true);
+    
+    // Clear any stale payment polling state when resuming a draft
+    console.log("Clearing any stale payment polling state...");
+    localStorage.removeItem("payment_polling");
+    localStorage.removeItem("premium_form_data");
+    localStorage.removeItem("premium_directory_id");
+    setPaymentPolling(null);
+    
     try {
       // First try to get draft data from sessionStorage
       const savedDraft = sessionStorage.getItem("resumeDraft");
@@ -1658,11 +1666,18 @@ function SubmitPageContent() {
           if (timeSinceStart < 10 * 60 * 1000) {
             console.log("Checking payment status on page load...", pollingData);
             
-            // Immediately check payment status
+            // Immediately check payment status with timeout
             try {
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+              
               const statusResponse = await fetch(
-                `/api/payments?type=status&directoryId=${pollingData.directoryId}`
+                `/api/payments?type=status&directoryId=${pollingData.directoryId}`,
+                { signal: controller.signal }
               );
+              
+              clearTimeout(timeoutId);
+              
               if (statusResponse.ok) {
                 const statusResult = await statusResponse.json();
                 if (statusResult.success && statusResult.paymentStatus) {
@@ -1679,18 +1694,36 @@ function SubmitPageContent() {
                 }
               }
             } catch (statusError) {
-              console.error("Error checking payment status:", statusError);
+              if (statusError.name === 'AbortError') {
+                console.warn("Payment status check timed out - clearing stale payment polling");
+                toast.error("Previous payment session expired. Please start a new submission.");
+                localStorage.removeItem("payment_polling");
+                localStorage.removeItem("premium_form_data");
+                localStorage.removeItem("premium_directory_id");
+              } else {
+                console.error("Error checking payment status:", statusError);
+                // Clear stale data on error
+                localStorage.removeItem("payment_polling");
+                localStorage.removeItem("premium_form_data");
+                localStorage.removeItem("premium_directory_id");
+              }
+              return; // Don't resume polling on error
             }
             
-            // If payment not confirmed yet, resume polling
+            // If payment not confirmed yet, resume polling only if no error
             console.log("Payment not confirmed yet, resuming polling...");
             startPaymentPolling(pollingData.directoryId);
           } else {
+            console.log("Payment polling expired (>10 minutes), clearing state");
             localStorage.removeItem("payment_polling");
+            localStorage.removeItem("premium_form_data");
+            localStorage.removeItem("premium_directory_id");
           }
         } catch (error) {
           console.error("Error parsing payment polling data:", error);
           localStorage.removeItem("payment_polling");
+          localStorage.removeItem("premium_form_data");
+          localStorage.removeItem("premium_directory_id");
         }
       }
 
@@ -2224,32 +2257,62 @@ function SubmitPageContent() {
                   Directory ID: {paymentPolling.directoryId} • Polling since:{" "}
                   {new Date(paymentPolling.startTime).toLocaleTimeString()}
                 </p>
-                <button
-                  onClick={async () => {
-                    try {
-                      const response = await fetch(
-                        `/api/payments?type=status&directoryId=${paymentPolling.directoryId}`
-                      );
-                      if (response.ok) {
-                        const result = await response.json();
-                        if (result.success && result.paymentStatus) {
-                          toast.success("✅ Payment confirmed! Redirecting...");
-                          setTimeout(() => {
-                            window.location.href = `/submit?payment=success&directoryId=${paymentPolling.directoryId}`;
-                          }, 1000);
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={async () => {
+                      try {
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 5000);
+                        
+                        const response = await fetch(
+                          `/api/payments?type=status&directoryId=${paymentPolling.directoryId}`,
+                          { signal: controller.signal }
+                        );
+                        
+                        clearTimeout(timeoutId);
+                        
+                        if (response.ok) {
+                          const result = await response.json();
+                          if (result.success && result.paymentStatus) {
+                            toast.success("✅ Payment confirmed! Redirecting...");
+                            localStorage.removeItem("payment_polling");
+                            setTimeout(() => {
+                              window.location.href = `/submit?payment=success&directoryId=${paymentPolling.directoryId}`;
+                            }, 1000);
+                          } else {
+                            toast.error("Payment not yet confirmed. Please wait or try again.");
+                          }
+                        }
+                      } catch (error) {
+                        if (error.name === 'AbortError') {
+                          toast.error("Request timed out. Please try again or clear the payment state.");
                         } else {
-                          toast.error("Payment not yet confirmed. Please wait or try again.");
+                          console.error("Payment check error:", error);
+                          toast.error("Failed to check payment status");
                         }
                       }
-                    } catch (error) {
-                      console.error("Payment check error:", error);
-                      toast.error("Failed to check payment status");
-                    }
-                  }}
-                  className="btn btn-sm btn-primary mt-3"
-                >
-                  ✅ I've Completed Payment - Check Status
-                </button>
+                    }}
+                    className="btn btn-sm btn-primary"
+                  >
+                    ✅ I've Completed Payment - Check Status
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (confirm("Are you sure you want to clear the payment polling state and start fresh? This won't cancel any completed payment.")) {
+                        localStorage.removeItem("payment_polling");
+                        localStorage.removeItem("premium_form_data");
+                        localStorage.removeItem("premium_directory_id");
+                        setPaymentPolling(null);
+                        setFormData({ plan: "standard" });
+                        setCurrentStep(1);
+                        toast.success("Payment state cleared. You can start a new submission.");
+                      }
+                    }}
+                    className="btn btn-sm btn-error btn-outline"
+                  >
+                    🔄 Clear & Start Fresh
+                  </button>
+                </div>
               </div>
             </div>
           </div>
