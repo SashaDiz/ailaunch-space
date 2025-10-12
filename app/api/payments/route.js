@@ -26,7 +26,9 @@ export async function POST(request) {
       planType,
       directoryId,
       userId: session.user.id,
-      userEmail: session.user.email
+      userEmail: session.user.email,
+      customerEmailFromForm: customerEmail,
+      finalEmail: customerEmail || session.user.email
     });
 
     // Validate required fields
@@ -46,6 +48,19 @@ export async function POST(request) {
         { 
           error: "Only premium plan requires payment",
           code: "INVALID_PLAN"
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate email
+    const emailToUse = customerEmail || session.user.email;
+    if (!emailToUse || !emailToUse.includes('@')) {
+      console.error('Invalid email for checkout:', { customerEmail, userEmail: session.user.email });
+      return NextResponse.json(
+        { 
+          error: "Valid email is required for payment processing",
+          code: "INVALID_EMAIL"
         },
         { status: 400 }
       );
@@ -90,9 +105,11 @@ export async function POST(request) {
 
     // Create Lemon Squeezy checkout session
     try {
+      console.log('Creating checkout session with validated email:', emailToUse);
+      
       const checkout = await createCheckoutSession({
         planType,
-        customerEmail: customerEmail || session.user.email,
+        customerEmail: emailToUse, // Use the validated email
         directoryData: {
           name: directoryData?.name || directory.name,
           slug: directoryData?.slug || directory.slug,

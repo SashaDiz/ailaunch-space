@@ -152,6 +152,11 @@ export async function createCheckoutSession({
 
     console.log('Using variantId:', variantId, 'for plan:', planType);
 
+    // Ensure email is valid before sending
+    const validEmail = customerEmail && customerEmail.includes('@') ? customerEmail : '';
+    
+    console.log('Setting up checkout with email:', validEmail);
+
     const checkoutData = {
       storeId: process.env.LEMONSQUEEZY_STORE_ID || process.env.LS_STORE_ID,
       variantId: variantId,
@@ -162,23 +167,28 @@ export async function createCheckoutSession({
           logo: true,
         },
         checkout_data: {
-          email: customerEmail,
+          email: validEmail, // Pre-fill email on checkout form
           name: directoryData.name || "",
           custom: {
             user_id: userId,
             directory_name: directoryData.name,
             directory_slug: directoryData.slug || '',
             plan_type: planType,
+            user_email: validEmail, // Also store in custom data as backup
           }
         },
         product_options: {
           enabled_variants: [variantId],
           redirect_url: successUrl,
-          receipt_button_text: "Complete AI Project Launch",
+          receipt_button_text: "✅ Complete Your Submission (Click Here)",
           receipt_link_url: successUrl,
-          receipt_thank_you_note: `🎉 Payment successful! IMPORTANT: Copy this link and paste it in your browser to complete your AI project submission: ${successUrl}
-          
-If the automatic redirect doesn't work, manually visit: ${successUrl}`,
+          receipt_thank_you_note: `🎉 Payment successful! 
+
+IMPORTANT: Click the button below to return to your platform and complete your submission.
+
+Your payment has been received and your project will be scheduled for launch once you complete the submission.
+
+Return URL: ${successUrl}`,
         },
         expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
       }

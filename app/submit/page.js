@@ -1654,9 +1654,36 @@ function SubmitPageContent() {
           const pollingData = JSON.parse(paymentPolling);
           const timeSinceStart = Date.now() - pollingData.startTime;
 
-          // If polling started less than 10 minutes ago, resume it
+          // If polling started less than 10 minutes ago, check payment status immediately
           if (timeSinceStart < 10 * 60 * 1000) {
-            console.log("Resuming payment polling...", pollingData);
+            console.log("Checking payment status on page load...", pollingData);
+            
+            // Immediately check payment status
+            try {
+              const statusResponse = await fetch(
+                `/api/payments?type=status&directoryId=${pollingData.directoryId}`
+              );
+              if (statusResponse.ok) {
+                const statusResult = await statusResponse.json();
+                if (statusResult.success && statusResult.paymentStatus) {
+                  console.log("✅ Payment already completed! Redirecting...");
+                  localStorage.removeItem("payment_polling");
+                  localStorage.removeItem("premium_form_data");
+                  localStorage.removeItem("premium_directory_id");
+                  
+                  toast.success("🎉 Payment confirmed! Your project has been submitted.");
+                  setTimeout(() => {
+                    window.location.href = `/submit?payment=success&directoryId=${pollingData.directoryId}`;
+                  }, 1500);
+                  return; // Stop further processing
+                }
+              }
+            } catch (statusError) {
+              console.error("Error checking payment status:", statusError);
+            }
+            
+            // If payment not confirmed yet, resume polling
+            console.log("Payment not confirmed yet, resuming polling...");
             startPaymentPolling(pollingData.directoryId);
           } else {
             localStorage.removeItem("payment_polling");
@@ -2180,20 +2207,49 @@ function SubmitPageContent() {
         {/* Payment Polling Indicator */}
         {paymentPolling && (
           <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg animate-pulse">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-1">
               <div className="loading loading-spinner loading-sm text-blue-600"></div>
-              <div>
+              <div className="flex-1">
                 <h3 className="font-bold text-blue-800">
                   💳 Waiting for Payment Confirmation
                 </h3>
                 <p className="text-sm text-blue-700">
-                  Complete your payment in the popup window. This page will
-                  automatically update when payment is received.
+                  <strong>After completing payment:</strong>
+                  <br />
+                  1. Click the "✅ Complete Your Submission" button on the receipt page
+                  <br />
+                  2. Or close the payment window - this page will automatically update
                 </p>
-                <p className="text-xs text-blue-600 mt-1">
+                <p className="text-xs text-blue-600 mt-2">
                   Directory ID: {paymentPolling.directoryId} • Polling since:{" "}
                   {new Date(paymentPolling.startTime).toLocaleTimeString()}
                 </p>
+                <button
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(
+                        `/api/payments?type=status&directoryId=${paymentPolling.directoryId}`
+                      );
+                      if (response.ok) {
+                        const result = await response.json();
+                        if (result.success && result.paymentStatus) {
+                          toast.success("✅ Payment confirmed! Redirecting...");
+                          setTimeout(() => {
+                            window.location.href = `/submit?payment=success&directoryId=${paymentPolling.directoryId}`;
+                          }, 1000);
+                        } else {
+                          toast.error("Payment not yet confirmed. Please wait or try again.");
+                        }
+                      }
+                    } catch (error) {
+                      console.error("Payment check error:", error);
+                      toast.error("Failed to check payment status");
+                    }
+                  }}
+                  className="btn btn-sm btn-primary mt-3"
+                >
+                  ✅ I've Completed Payment - Check Status
+                </button>
               </div>
             </div>
           </div>

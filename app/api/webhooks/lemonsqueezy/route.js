@@ -167,6 +167,15 @@ async function handleOrderCreated(event) {
       console.log("✅ Found custom data in order_items[0].meta.custom_data:", customData);
     }
     
+    // Also extract email from checkout_data if available (for better matching)
+    const checkoutEmail = order.checkout_data?.email || order.user_email;
+    console.log('📧 Customer emails:', {
+      fromOrder: order.user_email,
+      fromCheckoutData: order.checkout_data?.email,
+      fromCustomData: customData.user_email,
+      finalEmail: checkoutEmail
+    });
+    
     if (!customData || Object.keys(customData).length === 0) {
       console.warn("⚠️  No custom data found in webhook. Will attempt to match by email and timestamp.", {
         hasCheckoutData: !!order.checkout_data,
@@ -215,15 +224,12 @@ async function handleOrderCreated(event) {
     if (!directory) {
       console.log('🔍 Attempting to match directory by email and unpaid status...');
       
+      // Use the most reliable email source (checkoutEmail includes fallbacks)
+      const emailToMatch = checkoutEmail || order.user_email;
+      console.log('Using email for matching:', emailToMatch);
+      
       // First, find user by email from auth.users using Supabase admin client
       const supabase = getSupabaseAdmin();
-      
-      // Query auth.users directly using RPC or by listing with filter
-      // Note: Supabase doesn't have a direct getUserByEmail in admin API, so we use a SQL query
-      const { data: users, error: authError } = await supabase
-        .from('users')
-        .select('id')
-        .limit(1);
       
       // Fallback: Get user by querying all auth users (inefficient but works)
       let authUserId = null;
@@ -232,12 +238,12 @@ async function handleOrderCreated(event) {
       const { data: { users: authUsers } = {}, error: listError } = await supabase.auth.admin.listUsers();
       
       if (!listError && authUsers) {
-        const authUser = authUsers.find(u => u.email === order.user_email);
+        const authUser = authUsers.find(u => u.email === emailToMatch);
         if (authUser) {
           authUserId = authUser.id;
-          console.log(`✅ Found user by email in auth.users: ${authUserId}`);
+          console.log(`✅ Found user by email in auth.users: ${authUserId} (${emailToMatch})`);
         } else {
-          console.error("❌ No user found with email in auth.users:", order.user_email);
+          console.error("❌ No user found with email in auth.users:", emailToMatch);
         }
       } else if (listError) {
         console.error("❌ Error querying auth users:", listError);
