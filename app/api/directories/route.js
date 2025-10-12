@@ -201,20 +201,22 @@ export async function GET(request) {
       }
     }
 
-    // Build sort options
+    // Build sort options - higher values first, premium badge priority when equal
     let sortOptions = {};
     switch (sort) {
       case "upvotes":
-        sortOptions = { upvotes: -1, created_at: -1 };
+        // Sort by: 1) upvotes DESC, 2) premium_badge DESC (true first), 3) date DESC
+        sortOptions = { upvotes: -1, premium_badge: -1, created_at: -1 };
         break;
       case "recent":
         sortOptions = { created_at: -1 };
         break;
       case "views":
-        sortOptions = { views: -1, upvotes: -1 };
+        sortOptions = { views: -1, premium_badge: -1, upvotes: -1 };
         break;
       default:
-        sortOptions = { upvotes: -1, created_at: -1 };
+        // Default to upvotes DESC with premium badge priority
+        sortOptions = { upvotes: -1, premium_badge: -1, created_at: -1 };
     }
 
     // Calculate skip for pagination
@@ -224,7 +226,7 @@ export async function GET(request) {
     const totalCount = await db.count("apps", filter);
     const totalPages = Math.ceil(totalCount / limit);
 
-    // Fetch directories
+    // Fetch directories with sorting
     const directories = await db.find(
       "apps", 
       filter,

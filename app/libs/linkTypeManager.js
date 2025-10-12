@@ -142,7 +142,7 @@ export async function awardDofollowToWeeklyWinners(competitionId) {
     plan: "standard", // Only standard (FREE) plans compete for dofollow
     status: "live",
   }, {
-    sort: { upvotes: -1, created_at: 1 }, // Sort by upvotes descending, then by created date
+    sort: { upvotes: -1, premium_badge: -1, created_at: -1 }, // Sort by upvotes DESC, then premium badge, then date DESC
     limit: 3
   });
 

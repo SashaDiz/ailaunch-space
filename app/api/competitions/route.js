@@ -376,12 +376,12 @@ async function processExpiredCompetition(competition) {
   try {
     console.log(`Auto-processing expired competition: ${competition.competition_id}`);
     
-    // Get all directories in this competition sorted by votes
+    // Get all directories in this competition sorted by votes, then premium badge
     const directories = await db.find("apps", {
       weekly_competition_id: competition.id, // UUID reference
       status: "live"
     }, {
-      sort: { upvotes: -1 }
+      sort: { upvotes: -1, premium_badge: -1, created_at: -1 }
     });
     
     if (directories.length === 0) {

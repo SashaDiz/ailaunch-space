@@ -341,11 +341,11 @@ export default function HomePage() {
   };
 
   return (
-    <div className="max-w-[96rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Hero Section */}
-      <div className="grid lg:grid-cols-4 gap-8">
+      <div className="grid lg:grid-cols-3 gap-8">
         {/* Main Content Area */}
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-2">
           {/* Hero Header */}
           <section
             ref={heroRef}

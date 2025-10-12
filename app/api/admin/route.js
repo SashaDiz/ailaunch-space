@@ -613,7 +613,7 @@ async function getCompletableCompetitions() {
         plan: "standard",
         status: "live",
       }, {
-        sort: { upvotes: -1 },
+        sort: { upvotes: -1, premium_badge: -1, created_at: -1 },
         limit: 3
       });
 

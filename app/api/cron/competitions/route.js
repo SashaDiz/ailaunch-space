@@ -328,7 +328,7 @@ async function completeExpiredCompetitions(now) {
 // Award winners for a completed competition
 async function awardWinners(competition) {
   try {
-    // Get all live directories in this competition, sorted by upvotes
+    // Get all live directories in this competition, sorted by upvotes, then premium badge
     const directories = await db.find(
       'apps',
       {
@@ -336,7 +336,7 @@ async function awardWinners(competition) {
         status: 'live',
       },
       {
-        sort: { upvotes: -1 },
+        sort: { upvotes: -1, premium_badge: -1, created_at: -1 },
       }
     );
     

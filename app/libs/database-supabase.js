@@ -203,6 +203,7 @@ export class SupabaseDatabaseManager {
       for (const [field, direction] of Object.entries(options.sort)) {
         supabaseQuery = supabaseQuery.order(field, {
           ascending: direction === 1 || direction === 'asc',
+          nullsFirst: false, // Always put null values at the end
         });
       }
     }
@@ -235,6 +236,7 @@ export class SupabaseDatabaseManager {
       for (const [field, direction] of Object.entries(options.sort)) {
         supabaseQuery = supabaseQuery.order(field, {
           ascending: direction === 1 || direction === 'asc',
+          nullsFirst: false, // Always put null values at the end
         });
       }
     }
