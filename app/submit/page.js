@@ -1135,6 +1135,7 @@ function SubmitPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentPolling, setPaymentPolling] = useState(null); // Track payment polling state
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isDraftMode, setIsDraftMode] = useState(false); // Distinguish draft from edit
   const [editDirectoryId, setEditDirectoryId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [checkingDuplicate, setCheckingDuplicate] = useState(false);
@@ -1603,8 +1604,8 @@ function SubmitPageContent() {
           plan: cleanedData.plan || "standard",
         });
         
-        // Set edit mode for draft
-        setIsEditMode(true);
+        // Set draft mode (not edit mode - this is a new submission from draft)
+        setIsDraftMode(true);
         setEditDirectoryId(draftData.id);
         
         // Start at step 1 to allow plan change
@@ -1630,7 +1631,7 @@ function SubmitPageContent() {
           plan: cleanedData.plan || "standard",
         });
         
-        setIsEditMode(true);
+        setIsDraftMode(true);
         setEditDirectoryId(draft.id);
         setCurrentStep(1);
         
@@ -2171,7 +2172,7 @@ function SubmitPageContent() {
     setIsSubmitting(true);
     try {
       if (isEditMode && editDirectoryId) {
-        // Edit mode - update existing directory
+        // Edit mode - update existing directory (scheduled/published)
         const updateData = {
           directoryId: editDirectoryId,
           ...formData,
@@ -2179,7 +2180,7 @@ function SubmitPageContent() {
           backlink_verified: null,
         };
 
-        const response = await fetch("/api/directories/update", {
+        const response = await fetch("/api/directories", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(updateData),
@@ -2260,7 +2261,7 @@ function SubmitPageContent() {
             formData={formData} 
             setFormData={setFormData} 
             errors={errors}
-            isEditingDraft={isEditMode}
+            isEditingDraft={isDraftMode}
           />
         );
       case 2:
