@@ -29,25 +29,27 @@ const DirectoryInfoSchema = z.object({
     .min(1, "Short description is required")
     .max(160, "Short description must be 160 characters or less"),
   contact_email: z.string().email("Please enter a valid email address"),
-  maker_name: z.string().optional(),
+  maker_name: z.string().nullable().optional(),
   maker_twitter: z
     .string()
     .regex(/^@?[A-Za-z0-9_]*$/, "Invalid Twitter handle")
+    .nullable()
     .optional()
     .or(z.literal("")),
   // Details
-  full_description: z.string().optional(),
+  full_description: z.string().nullable().optional(),
   categories: z
     .array(z.string())
     .min(1, "Please select at least one category")
     .max(3, "You can select up to 3 categories"),
   pricing: z
     .enum(["Free", "Freemium", "Premium", "One-time", "Subscription"])
+    .nullable()
     .optional(),
-  video_url: z.string().url("Please enter a valid video URL").optional().or(z.literal("")),
+  video_url: z.string().url("Please enter a valid video URL").nullable().optional().or(z.literal("")),
   // Media
   logo_url: z.string().url("Please enter a valid logo URL"),
-  screenshots: z.array(z.string().url()).max(5, "Maximum 5 screenshots allowed").optional(),
+  screenshots: z.array(z.string().url()).max(5, "Maximum 5 screenshots allowed").nullable().optional(),
 });
 
 const LaunchWeekSchema = z.object({
@@ -1274,9 +1276,15 @@ function SubmitPageContent() {
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "");
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+
       const response = await fetch(
-        `/api/directories?check_duplicate=true&slug=${encodeURIComponent(slug)}`
+        `/api/directories?check_duplicate=true&slug=${encodeURIComponent(slug)}`,
+        { signal: controller.signal }
       );
+      
+      clearTimeout(timeoutId);
       
       if (response.ok) {
         const result = await response.json();
@@ -1296,7 +1304,20 @@ function SubmitPageContent() {
         }
       }
     } catch (error) {
-      console.error("Name duplicate check error:", error);
+      if (error.name === 'AbortError') {
+        console.warn("Name duplicate check timed out - allowing to proceed");
+      } else {
+        console.error("Name duplicate check error:", error);
+      }
+      // On error, clear the name error to allow user to proceed
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        // Only clear if the error is about duplicates, keep validation errors
+        if (newErrors.name && newErrors.name.includes("already exists")) {
+          delete newErrors.name;
+        }
+        return newErrors;
+      });
     } finally {
       setCheckingName(false);
     }
@@ -1311,9 +1332,15 @@ function SubmitPageContent() {
     setCheckingDuplicate(true);
     
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+
       const response = await fetch(
-        `/api/directories?check_duplicate=true&website_url=${encodeURIComponent(websiteUrl)}`
+        `/api/directories?check_duplicate=true&website_url=${encodeURIComponent(websiteUrl)}`,
+        { signal: controller.signal }
       );
+      
+      clearTimeout(timeoutId);
       
       if (response.ok) {
         const result = await response.json();
@@ -1335,7 +1362,20 @@ function SubmitPageContent() {
         }
       }
     } catch (error) {
-      console.error("Duplicate check error:", error);
+      if (error.name === 'AbortError') {
+        console.warn("Website duplicate check timed out - allowing to proceed");
+      } else {
+        console.error("Duplicate check error:", error);
+      }
+      // On error, clear the duplicate error to allow user to proceed
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        // Only clear if the error is about duplicates, keep validation errors
+        if (newErrors.website_url && newErrors.website_url.includes("already been submitted")) {
+          delete newErrors.website_url;
+        }
+        return newErrors;
+      });
     } finally {
       setCheckingDuplicate(false);
     }
@@ -1507,6 +1547,20 @@ function SubmitPageContent() {
     }, 5000);
   };
 
+  // Helper function to clean null values from draft data
+  const cleanDraftData = (data) => {
+    const cleaned = {};
+    for (const [key, value] of Object.entries(data)) {
+      // Convert null to undefined for optional fields
+      if (value === null) {
+        cleaned[key] = undefined;
+      } else {
+        cleaned[key] = value;
+      }
+    }
+    return cleaned;
+  };
+
   // Handle edit mode
   useEffect(() => {
     const edit = searchParams.get("edit");
@@ -1542,10 +1596,11 @@ function SubmitPageContent() {
         
         console.log("Loading draft from session storage:", draftData);
         
-        // Populate form with draft data
+        // Clean and populate form with draft data
+        const cleanedData = cleanDraftData(draftData);
         setFormData({
-          ...draftData,
-          plan: draftData.plan || "standard",
+          ...cleanedData,
+          plan: cleanedData.plan || "standard",
         });
         
         // Set edit mode for draft
@@ -1568,9 +1623,11 @@ function SubmitPageContent() {
         
         console.log("Draft loaded from API:", draft);
         
+        // Clean and populate form with draft data
+        const cleanedData = cleanDraftData(draft);
         setFormData({
-          ...draft,
-          plan: draft.plan || "standard",
+          ...cleanedData,
+          plan: cleanedData.plan || "standard",
         });
         
         setIsEditMode(true);
@@ -1848,6 +1905,10 @@ function SubmitPageContent() {
   const validateStep = (step) => {
     const newErrors = {};
 
+    console.log("Validating step:", step, "with formData:", formData);
+    console.log("Current errors:", errors);
+    console.log("Checking states:", { checkingDuplicate, checkingName });
+
     // Check if we're still checking for duplicates
     if (step === 2 && (checkingDuplicate || checkingName)) {
       toast.error("Please wait while we verify your AI project details");
@@ -1866,35 +1927,58 @@ function SubmitPageContent() {
       return false;
     }
 
+    // Check for any other existing errors
+    if (step === 2 && Object.keys(errors).length > 0) {
+      console.error("Existing errors found:", errors);
+      const errorMessages = Object.entries(errors)
+        .map(([field, message]) => `${field}: ${message}`)
+        .join(", ");
+      toast.error(`Please fix the following errors: ${errorMessages}`);
+      return false;
+    }
+
     try {
       switch (step) {
         case 1:
           PlanSelectionSchema.parse(formData);
+          console.log("✅ Step 1 validation passed");
           break;
 
         case 2:
+          console.log("Validating step 2 with schema...");
           DirectoryInfoSchema.parse(formData);
+          console.log("✅ Step 2 validation passed");
           break;
 
         case 3:
           LaunchWeekSchema.parse(formData);
+          console.log("✅ Step 3 validation passed");
           break;
       }
     } catch (error) {
+      console.error("Zod validation error:", error);
       if (error.errors) {
         // Handle Zod validation errors
         error.errors.forEach((err) => {
           const field = err.path[0];
           newErrors[field] = err.message;
+          console.error(`Validation error for field ${field}:`, err.message);
         });
+        
+        // Show the first error to the user
+        const firstError = error.errors[0];
+        toast.error(`${firstError.path[0]}: ${firstError.message}`);
       } else {
         console.error("Validation error:", error);
         newErrors.general = "Validation failed";
+        toast.error("Validation failed. Please check all required fields.");
       }
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const isValid = Object.keys(newErrors).length === 0;
+    console.log("Validation result:", isValid ? "✅ PASSED" : "❌ FAILED", newErrors);
+    return isValid;
   };
 
   const handlePremiumPayment = async () => {
