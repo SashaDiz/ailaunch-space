@@ -427,16 +427,41 @@ async function approveDirectory(request, session) {
   const userEmail = user?.email || directory.contact_email;
 
   if (action === 'approve') {
+    // Check the competition status to determine directory status
+    let directoryStatus = 'live'; // Default to live if no competition
+    let shouldPublishNow = true;
+    
+    if (directory.weekly_competition_id) {
+      const competition = await db.findOne("competitions", { id: directory.weekly_competition_id });
+      
+      if (competition) {
+        // If competition is upcoming, set directory to scheduled
+        // If competition is active, set directory to live
+        // If competition is completed/cancelled, set directory to live (fallback)
+        if (competition.status === 'upcoming') {
+          directoryStatus = 'scheduled';
+          shouldPublishNow = false;
+        } else if (competition.status === 'active') {
+          directoryStatus = 'live';
+          shouldPublishNow = true;
+        }
+      }
+    }
+    
     // Approve the directory
     const updateData = {
-      status: 'live',
+      status: directoryStatus,
       approved: true,
-      published_at: new Date(),
-      launched_at: new Date(),
-      homepage_start_date: new Date(),
-      homepage_end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
       // updated_at is handled by DB triggers
     };
+    
+    // Only set publish/launch dates if going live immediately
+    if (shouldPublishNow) {
+      updateData.published_at = new Date();
+      updateData.launched_at = new Date();
+      updateData.homepage_start_date = new Date();
+      updateData.homepage_end_date = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+    }
 
     // If premium plan, set dofollow status
     if (directory.plan === 'premium') {
@@ -480,11 +505,14 @@ async function approveDirectory(request, session) {
 
     return NextResponse.json({
       success: true,
-      message: "Directory approved successfully",
+      message: directoryStatus === 'scheduled' 
+        ? "Directory approved and scheduled for launch" 
+        : "Directory approved and is now live",
       data: {
         directoryId,
-        status: 'live',
+        status: directoryStatus,
         emailSent: !!userEmail,
+        scheduledForLaunch: directoryStatus === 'scheduled',
       },
     });
 

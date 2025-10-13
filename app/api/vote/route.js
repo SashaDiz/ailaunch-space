@@ -67,6 +67,45 @@ export async function POST(request) {
       );
     }
 
+    // VOTING RESTRICTION: Only allow voting for "live" submissions
+    if (app.status !== "live") {
+      return NextResponse.json(
+        { 
+          error: "Voting is only allowed for live submissions", 
+          code: "INVALID_STATUS",
+          message: `This submission is currently "${app.status}". Only submissions with status "live" can receive votes.`
+        },
+        { status: 403 }
+      );
+    }
+
+    // VOTING RESTRICTION: Only allow voting for submissions in active competitions
+    if (!app.weekly_competition_id) {
+      return NextResponse.json(
+        { 
+          error: "This submission is not part of any competition", 
+          code: "NO_COMPETITION",
+          message: "Voting is only allowed for submissions participating in the current launch week."
+        },
+        { status: 403 }
+      );
+    }
+
+    // Verify the competition is currently active
+    const competition = await db.findOne("competitions", { id: app.weekly_competition_id });
+    if (!competition || competition.status !== "active") {
+      return NextResponse.json(
+        { 
+          error: "Voting is only allowed for the current active launch week", 
+          code: "COMPETITION_NOT_ACTIVE",
+          message: competition 
+            ? `This launch week is "${competition.status}". Voting is only available during active launch weeks.`
+            : "This submission's competition is no longer available."
+        },
+        { status: 403 }
+      );
+    }
+
     // Check if user already voted
     const existingVote = await db.findOne("votes", {
       user_id: userId,

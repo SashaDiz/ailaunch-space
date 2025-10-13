@@ -69,6 +69,13 @@ function DirectoryDetailPageContent() {
   const handleVote = async () => {
     if (!directory) return;
 
+    // Check if voting is allowed based on status and competition
+    if (!isVotingAllowed()) {
+      const reason = getVotingDisabledReason();
+      toast.error(reason);
+      return;
+    }
+
     setIsVoting(true);
     try {
       const action = directory.userVoted ? "remove" : "upvote";
@@ -93,6 +100,8 @@ function DirectoryDetailPageContent() {
         const error = await response.json();
         if (error.code === "UNAUTHORIZED") {
           toast.error("Please sign in to vote");
+        } else if (error.code === "INVALID_STATUS" || error.code === "NO_COMPETITION" || error.code === "COMPETITION_NOT_ACTIVE") {
+          toast.error(error.message || error.error);
         } else {
           toast.error(error.message || "Failed to vote");
         }
@@ -102,6 +111,59 @@ function DirectoryDetailPageContent() {
     } finally {
       setIsVoting(false);
     }
+  };
+
+  // Helper function to check if voting is allowed
+  const isVotingAllowed = () => {
+    if (!directory) return false;
+    
+    // Only "live" submissions can receive votes
+    if (directory.status !== "live") return false;
+    
+    // Must be part of an active competition
+    if (!directory.competitions || directory.competitions.length === 0) return false;
+    
+    // Check if any competition is currently active
+    const hasActiveCompetition = directory.competitions.some(
+      (comp) => comp.status === "active"
+    );
+    
+    return hasActiveCompetition;
+  };
+
+  // Helper function to get the reason why voting is disabled
+  const getVotingDisabledReason = () => {
+    if (!directory) return "Unable to vote";
+    
+    if (directory.status === "scheduled") {
+      return "Voting will be available when this project launches";
+    }
+    
+    if (directory.status === "pending") {
+      return "This submission is under review and not yet available for voting";
+    }
+    
+    if (directory.status === "draft") {
+      return "This is a draft submission and cannot receive votes";
+    }
+    
+    if (directory.status !== "live") {
+      return `Voting is only allowed for live submissions (current status: ${directory.status})`;
+    }
+    
+    if (!directory.competitions || directory.competitions.length === 0) {
+      return "This submission is not part of any launch week competition";
+    }
+    
+    const hasActiveCompetition = directory.competitions.some(
+      (comp) => comp.status === "active"
+    );
+    
+    if (!hasActiveCompetition) {
+      return "Voting is only available during the active launch week";
+    }
+    
+    return "Voting is not currently available";
   };
 
   const handleVisitWebsite = async () => {
@@ -297,17 +359,20 @@ function DirectoryDetailPageContent() {
                   </a>
                 </div>
 
-                <button
-                  onClick={handleVote}
-                  disabled={isVoting}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-4 rounded-xl min-w-20 text-md font-semibold transition duration-300 ease-in-out -translate-y-0.5
-                        ${
-                          directory.userVoted
-                            ? "bg-black text-white translate-0"
-                            : "bg-white text-black shadow-[0_4px_0_rgba(0,0,0,1)] border-2 border-black hover:shadow-[0_2px_0_rgba(0,0,0,1)] hover:translate-y-0"
-                        }
-                        ${isVoting ? "cursor-default" : "cursor-pointer"}`}
-                >
+                <div className="relative group">
+                  <button
+                    onClick={handleVote}
+                    disabled={isVoting || !isVotingAllowed()}
+                    title={!isVotingAllowed() ? getVotingDisabledReason() : ""}
+                    className={`inline-flex items-center gap-1.5 px-3.5 py-4 rounded-xl min-w-20 text-md font-semibold transition duration-300 ease-in-out -translate-y-0.5
+                          ${
+                            directory.userVoted
+                              ? "bg-black text-white translate-0"
+                              : "bg-white text-black shadow-[0_4px_0_rgba(0,0,0,1)] border-2 border-black hover:shadow-[0_2px_0_rgba(0,0,0,1)] hover:translate-y-0"
+                          }
+                          ${isVoting || !isVotingAllowed() ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
+                          ${!isVotingAllowed() ? "grayscale" : ""}`}
+                  >
                   <svg
                     width="24px"
                     height="24px"
@@ -338,7 +403,16 @@ function DirectoryDetailPageContent() {
                       {directory.upvotes}
                     </span>
                   )}
-                </button>
+                  </button>
+                  {!isVotingAllowed() && (
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      {getVotingDisabledReason()}
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+                        <div className="border-4 border-transparent border-t-gray-900"></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
