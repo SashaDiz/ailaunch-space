@@ -69,10 +69,51 @@ async function getUserDirectories(session, searchParams) {
     db.count("apps", filter),
   ]);
 
+  // Add competition status and status badges to directories
+  const now = new Date();
+  const directoriesWithStatus = await Promise.all(
+    directories.map(async (dir) => {
+      let statusBadge = "live"; // Default badge
+      let canVote = false;
+      
+      if (dir.weekly_competition_id) {
+        const competition = await db.findOne("competitions", {
+          id: dir.weekly_competition_id,
+        });
+        
+        if (competition) {
+          const startDate = new Date(competition.start_date);
+          const endDate = new Date(competition.end_date);
+          
+          // Determine competition status and voting availability
+          if (endDate < now) {
+            // Competition is completed
+            statusBadge = "past";
+            canVote = false;
+          } else if (startDate > now) {
+            // Competition hasn't started yet
+            statusBadge = "scheduled";
+            canVote = false;
+          } else {
+            // Competition is currently active
+            statusBadge = "live";
+            canVote = true;
+          }
+        }
+      }
+      
+      return {
+        ...dir,
+        statusBadge: statusBadge,
+        canVote: canVote,
+      };
+    })
+  );
+
   return NextResponse.json({
     success: true,
     data: {
-      directories,
+      directories: directoriesWithStatus,
       pagination: {
         page,
         limit,

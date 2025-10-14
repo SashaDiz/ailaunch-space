@@ -46,15 +46,38 @@ export async function GET(request, { params }) {
 
     const { data: { user } } = await supabase.auth.getUser();
 
-    // Check access: owner can see drafts/pending, others only see live/approved
+    // Check access: владелец может видеть всегда, остальные - только если проект уже начался
     const isOwner = user && directory.submitted_by === user.id;
-    const isPublic = directory.status === "live" || directory.status === "approved";
-
-    if (!isOwner && !isPublic) {
-      return NextResponse.json(
-        { error: "Directory not found or access denied", code: "NOT_FOUND" },
-        { status: 404 }
-      );
+    
+    if (!isOwner) {
+      // Для не-владельцев: проверяем статус и даты
+      // 1. Проект должен быть "live" (не draft/pending)
+      if (directory.status !== "live") {
+        return NextResponse.json(
+          { error: "Directory not found or access denied", code: "NOT_FOUND" },
+          { status: 404 }
+        );
+      }
+      
+      // 2. Если у проекта есть конкурс, проверяем что он уже начался (не Scheduled)
+      if (directory.weekly_competition_id) {
+        const competition = await db.findOne("competitions", {
+          id: directory.weekly_competition_id,
+        });
+        
+        if (competition) {
+          const now = new Date();
+          const startDate = new Date(competition.start_date);
+          
+          // Если конкурс ещё не начался - доступ запрещён (проект в статусе "Scheduled")
+          if (now < startDate) {
+            return NextResponse.json(
+              { error: "Directory not found or access denied", code: "NOT_FOUND" },
+              { status: 404 }
+            );
+          }
+        }
+      }
     }
 
     // Increment view count (only for public/non-owner views to avoid inflating counts during editing)
@@ -95,12 +118,41 @@ export async function GET(request, { params }) {
       }
     );
 
-    // Get current competition for this directory
+    // Get current competition for this directory and determine status
     const competitions = directory.weekly_competition_id
       ? await db.find("competitions", {
           id: directory.weekly_competition_id, // Query by UUID
         })
       : [];
+    
+    // Определяем статус проекта и доступность голосования
+    let statusBadge = "live";
+    let canVote = false;
+    let competitionStatus = "unknown";
+    
+    if (competitions.length > 0) {
+      const competition = competitions[0];
+      const now = new Date();
+      const startDate = new Date(competition.start_date);
+      const endDate = new Date(competition.end_date);
+      
+      if (now < startDate) {
+        // Конкурс ещё не начался
+        statusBadge = "scheduled";
+        canVote = false;
+        competitionStatus = "upcoming";
+      } else if (now >= startDate && now <= endDate) {
+        // Конкурс идёт прямо сейчас
+        statusBadge = "live";
+        canVote = true;
+        competitionStatus = "active";
+      } else {
+        // Конкурс закончился
+        statusBadge = "past";
+        canVote = false;
+        competitionStatus = "completed";
+      }
+    }
 
     // Format response
     const directoryWithMetadata = {
@@ -109,6 +161,9 @@ export async function GET(request, { params }) {
       views: directory.views, // View count already incremented in database
       relatedDirectories: relatedDirectories,
       competitions: competitions,
+      statusBadge: statusBadge, // "scheduled", "live", "past" - виден только владельцу в dashboard
+      canVote: canVote, // можно ли голосовать за этот проект
+      competitionStatus: competitionStatus,
     };
 
     return NextResponse.json({

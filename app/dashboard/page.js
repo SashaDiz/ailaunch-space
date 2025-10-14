@@ -42,11 +42,25 @@ function StatsCard({ icon: Icon, title, value, description, className = "" }) {
 }
 
 function DirectoryCard({ directory, onResumeDraft }) {
-  const getStatusBadge = (status, isDraft) => {
-    if (isDraft) {
+  const getStatusBadge = (directory, isDraft) => {
+    if (isDraft || directory.status === "draft") {
       return <span className="badge badge-ghost badge-sm">Draft</span>;
     }
-    switch (status) {
+    
+    // Use statusBadge for competition-related status (past, scheduled, live)
+    if (directory.statusBadge) {
+      switch (directory.statusBadge) {
+        case "past":
+          return <span className="badge badge-neutral badge-sm">Past</span>;
+        case "scheduled":
+          return <span className="badge badge-info badge-sm">Scheduled</span>;
+        case "live":
+          return <span className="badge badge-success badge-sm">Live</span>;
+      }
+    }
+    
+    // Fallback to regular status for non-competition statuses
+    switch (directory.status) {
       case "live":
         return <span className="badge badge-success badge-sm">Live</span>;
       case "pending":
@@ -64,7 +78,7 @@ function DirectoryCard({ directory, onResumeDraft }) {
       case "draft":
         return <span className="badge badge-ghost badge-sm">Draft</span>;
       default:
-        return <span className="badge badge-neutral badge-sm">{status}</span>;
+        return <span className="badge badge-neutral badge-sm">{directory.status}</span>;
     }
   };
 
@@ -171,7 +185,7 @@ function DirectoryCard({ directory, onResumeDraft }) {
                 {directory.premium_badge && (
                   <Crown className="w-4 h-4 text-amber-500" />
                 )}
-                {getStatusBadge(directory.status, directory.is_draft)}
+                {getStatusBadge(directory, directory.is_draft)}
               </div>
               <p className="text-sm text-gray-600">
                 Launched {formatDate(directory.launch_date)}

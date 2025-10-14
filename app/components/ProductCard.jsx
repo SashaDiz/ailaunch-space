@@ -46,6 +46,7 @@ export function ProductCard({
   onVote,
   inactiveCta = false,
   viewMode = "list",
+  showStatusBadge = false,
 }) {
   const [isVoting, setIsVoting] = useState(false);
   const [currentVotes, setCurrentVotes] = useState(directory.upvotes);
@@ -62,15 +63,8 @@ export function ProductCard({
     // Only "live" submissions can receive votes
     if (directory.status !== "live") return false;
     
-    // Must be part of an active competition
-    if (!directory.competitions || directory.competitions.length === 0) return false;
-    
-    // Check if any competition is currently active
-    const hasActiveCompetition = directory.competitions.some(
-      (comp) => comp.status === "active"
-    );
-    
-    return hasActiveCompetition;
+    // Use the canVote field from API (which already handles all competition logic)
+    return directory.canVote === true;
   };
 
   // Helper function to get the reason why voting is disabled
@@ -95,16 +89,17 @@ export function ProductCard({
       return `Only live submissions can receive votes`;
     }
     
-    if (!directory.competitions || directory.competitions.length === 0) {
-      return "Not part of any launch week";
+    // Use statusBadge from API to determine the reason
+    if (directory.statusBadge === "scheduled") {
+      return "Voting will be available when the launch week starts";
     }
     
-    const hasActiveCompetition = directory.competitions.some(
-      (comp) => comp.status === "active"
-    );
+    if (directory.statusBadge === "past") {
+      return "Voting period has ended for this launch";
+    }
     
-    if (!hasActiveCompetition) {
-      return "Voting is only available during active launch weeks";
+    if (!directory.competitions || directory.competitions.length === 0) {
+      return "Not part of any launch week";
     }
     
     return "Voting is not currently available";
@@ -271,6 +266,21 @@ export function ProductCard({
               {directory.plan === "premium" && (
                 <span className="badge badge-primary badge-sm">Premium</span>
               )}
+
+              {/* Status Badge - Only show on private dashboard */}
+              {showStatusBadge && directory.statusBadge && (
+                <span className={`badge badge-sm ${
+                  directory.statusBadge === "past" 
+                    ? "badge-ghost" 
+                    : directory.statusBadge === "scheduled" 
+                    ? "badge-warning" 
+                    : "badge-success"
+                }`}>
+                  {directory.statusBadge === "past" ? "Past" : 
+                   directory.statusBadge === "scheduled" ? "Scheduled" : 
+                   "Live"}
+                </span>
+              )}
             </div>
           </div>
 
@@ -354,6 +364,21 @@ export function ProductCard({
 
               {directory.plan === "premium" && (
                 <span className="badge badge-primary badge-sm">Premium</span>
+              )}
+
+              {/* Status Badge - Only show on private dashboard */}
+              {showStatusBadge && directory.statusBadge && (
+                <span className={`badge badge-sm ${
+                  directory.statusBadge === "past" 
+                    ? "badge-ghost" 
+                    : directory.statusBadge === "scheduled" 
+                    ? "badge-warning" 
+                    : "badge-success"
+                }`}>
+                  {directory.statusBadge === "past" ? "Past" : 
+                   directory.statusBadge === "scheduled" ? "Scheduled" : 
+                   "Live"}
+                </span>
               )}
             </div>
 

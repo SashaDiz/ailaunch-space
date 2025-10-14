@@ -91,16 +91,40 @@ export async function POST(request) {
       );
     }
 
-    // Verify the competition is currently active
+    // Verify the competition is currently active AND running (between start and end dates)
     const competition = await db.findOne("competitions", { id: app.weekly_competition_id });
-    if (!competition || competition.status !== "active") {
+    if (!competition) {
       return NextResponse.json(
         { 
-          error: "Voting is only allowed for the current active launch week", 
-          code: "COMPETITION_NOT_ACTIVE",
-          message: competition 
-            ? `This launch week is "${competition.status}". Voting is only available during active launch weeks.`
-            : "This submission's competition is no longer available."
+          error: "This submission's competition is no longer available", 
+          code: "NO_COMPETITION"
+        },
+        { status: 403 }
+      );
+    }
+    
+    const now = new Date();
+    const startDate = new Date(competition.start_date);
+    const endDate = new Date(competition.end_date);
+    
+    // Проверяем что конкурс идёт прямо сейчас (статус Live)
+    if (now < startDate) {
+      return NextResponse.json(
+        { 
+          error: "Voting will be available when the launch week starts", 
+          code: "COMPETITION_NOT_STARTED",
+          message: `This launch is scheduled for ${startDate.toLocaleDateString()}. Voting will open on that date.`
+        },
+        { status: 403 }
+      );
+    }
+    
+    if (now > endDate) {
+      return NextResponse.json(
+        { 
+          error: "Voting period has ended for this launch", 
+          code: "COMPETITION_ENDED",
+          message: `This launch week ended on ${endDate.toLocaleDateString()}. Voting is no longer available.`
         },
         { status: 403 }
       );

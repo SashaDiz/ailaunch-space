@@ -162,20 +162,21 @@ export async function GET(request) {
       }
     }
 
-    // Add competition filter if specified
+    // Add competition filter if specified (для главной страницы с текущим конкурсом)
     if (competition === "weekly") {
-      // Show only directories from active weekly competitions
-      // Get current active weekly competition
+      // Показывать только проекты из активного конкурса, который СЕЙЧАС идёт
+      const now = new Date();
       const activeWeekly = await db.findOne("competitions", {
         type: "weekly",
-        status: "active"
+        status: "active",
+        start_date: { $lte: now }, // Конкурс уже начался
+        end_date: { $gte: now },   // Конкурс ещё не закончился
       });
       
       if (activeWeekly) {
-        filter.weekly_competition_id = activeWeekly.id; // UUID reference
-        filter.entered_weekly = true;
+        filter.weekly_competition_id = activeWeekly.id;
       } else {
-        // No active weekly competition, return empty results immediately
+        // Нет активного конкурса ПРЯМО СЕЙЧАС - возвращаем пустой результат
         return NextResponse.json({
           success: true,
           data: {
@@ -200,6 +201,10 @@ export async function GET(request) {
         });
       }
     }
+    
+    // Для Browse страницы (/directories) показываем все live проекты
+    // независимо от того, в каком они статусе (Scheduled/Live/Past)
+    // Фильтрация по датам будет на фронтенде для определения бейджей
 
     // Build sort options - higher values first, premium badge priority when equal
     let sortOptions = {};
@@ -269,16 +274,60 @@ export async function GET(request) {
       }, {});
     }
 
-    // Add userVoted field to each directory
-    const directoriesWithVotes = directories.map(dir => ({
-      ...dir,
-      userVoted: userVotes[dir.id] || false,
-    }));
+    // Get competition data for each directory and determine status badges
+    const directoriesWithCompetitions = await Promise.all(
+      directories.map(async (dir) => {
+        let competitions = [];
+        let competitionStatus = "unknown";
+        let statusBadge = "live"; // Default badge
+        let canVote = false; // Можно ли голосовать
+        
+        if (dir.weekly_competition_id) {
+          competitions = await db.find("competitions", {
+            id: dir.weekly_competition_id,
+          });
+          
+          if (competitions.length > 0) {
+            const competition = competitions[0];
+            const now = new Date();
+            const startDate = new Date(competition.start_date);
+            const endDate = new Date(competition.end_date);
+            
+            // Determine competition status and voting availability
+            if (endDate < now) {
+              // Конкурс завершён
+              competitionStatus = "completed";
+              statusBadge = "past";
+              canVote = false;
+            } else if (startDate > now) {
+              // Конкурс ещё не начался
+              competitionStatus = "upcoming";
+              statusBadge = "scheduled";
+              canVote = false;
+            } else {
+              // Конкурс идёт прямо сейчас
+              competitionStatus = "active";
+              statusBadge = "live";
+              canVote = true;
+            }
+          }
+        }
+        
+        return {
+          ...dir,
+          userVoted: userVotes[dir.id] || false,
+          competitions: competitions,
+          competitionStatus: competitionStatus,
+          statusBadge: statusBadge, // "scheduled", "live", "past"
+          canVote: canVote, // можно ли голосовать за этот проект
+        };
+      })
+    );
 
     return NextResponse.json({
       success: true,
       data: {
-        directories: directoriesWithVotes,
+        directories: directoriesWithCompetitions,
         pagination: {
           page,
           limit,

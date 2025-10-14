@@ -120,15 +120,9 @@ function DirectoryDetailPageContent() {
     // Only "live" submissions can receive votes
     if (directory.status !== "live") return false;
     
-    // Must be part of an active competition
-    if (!directory.competitions || directory.competitions.length === 0) return false;
-    
-    // Check if any competition is currently active
-    const hasActiveCompetition = directory.competitions.some(
-      (comp) => comp.status === "active"
-    );
-    
-    return hasActiveCompetition;
+    // Use the statusBadge to determine if voting is allowed
+    // Only "live" statusBadge allows voting (scheduled and past don't)
+    return directory.statusBadge === "live" && directory.canVote === true;
   };
 
   // Helper function to get the reason why voting is disabled
@@ -151,16 +145,13 @@ function DirectoryDetailPageContent() {
       return `Voting is only allowed for live submissions (current status: ${directory.status})`;
     }
     
-    if (!directory.competitions || directory.competitions.length === 0) {
-      return "This submission is not part of any launch week competition";
+    // Use statusBadge to determine the reason
+    if (directory.statusBadge === "scheduled") {
+      return "Voting will be available when the launch week starts";
     }
     
-    const hasActiveCompetition = directory.competitions.some(
-      (comp) => comp.status === "active"
-    );
-    
-    if (!hasActiveCompetition) {
-      return "Voting is only available during the active launch week";
+    if (directory.statusBadge === "past") {
+      return "Voting period has ended for this launch";
     }
     
     return "Voting is not currently available";
@@ -563,12 +554,16 @@ function DirectoryDetailPageContent() {
                     <span className="text-base-content/60">Status:</span>
                     <span
                       className={`badge ${
-                        directory.status === "live"
-                          ? "badge-success"
-                          : "badge-warning"
+                        directory.statusBadge === "past"
+                          ? "badge-ghost"
+                          : directory.statusBadge === "scheduled"
+                          ? "badge-warning"
+                          : "badge-success"
                       } badge-sm`}
                     >
-                      {directory.status}
+                      {directory.statusBadge === "past" ? "Past" : 
+                       directory.statusBadge === "scheduled" ? "Scheduled" : 
+                       "Live"}
                     </span>
                   </div>
 

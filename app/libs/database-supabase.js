@@ -66,6 +66,24 @@ export class SupabaseDatabaseManager {
                   return `${field}.ilike.%${pattern}%`;
                 } else if (val.$in) {
                   return val.$in.map(v => `${field}.eq.${v}`).join(',');
+                } else if (val.$ne !== undefined) {
+                  return `${field}.neq.${val.$ne}`;
+                } else if (val.$exists !== undefined) {
+                  // $exists: false means field is null
+                  // $exists: true means field is not null
+                  return val.$exists ? `${field}.not.is.null` : `${field}.is.null`;
+                } else if (val.$gt !== undefined) {
+                  const compareValue = val.$gt instanceof Date ? val.$gt.toISOString() : val.$gt;
+                  return `${field}.gt.${compareValue}`;
+                } else if (val.$gte !== undefined) {
+                  const compareValue = val.$gte instanceof Date ? val.$gte.toISOString() : val.$gte;
+                  return `${field}.gte.${compareValue}`;
+                } else if (val.$lt !== undefined) {
+                  const compareValue = val.$lt instanceof Date ? val.$lt.toISOString() : val.$lt;
+                  return `${field}.lt.${compareValue}`;
+                } else if (val.$lte !== undefined) {
+                  const compareValue = val.$lte instanceof Date ? val.$lte.toISOString() : val.$lte;
+                  return `${field}.lte.${compareValue}`;
                 }
               }
               return `${field}.eq.${val}`;
