@@ -85,7 +85,8 @@ export async function GET(request) {
     
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
-    const category = searchParams.get("category");
+    const category = searchParams.get("category"); // Legacy single category
+    const categories = searchParams.get("categories"); // New multiple categories
     const pricing = searchParams.get("pricing");
     const competition = searchParams.get("competition"); // 'weekly'
     const status = searchParams.get("status") || "live";
@@ -95,7 +96,34 @@ export async function GET(request) {
     // Build query filter
     const filter = { status };
     
-    if (category && category !== "all") {
+    // Handle multiple categories (new approach)
+    if (categories) {
+      const categoryList = categories.split(',').filter(cat => cat.trim());
+      if (categoryList.length > 0) {
+        // For multiple categories, we need to find all matching categories first
+        const categoryDocs = await db.find("categories", {
+          $or: categoryList.map(cat => [
+            { slug: cat },
+            { name: cat }
+          ]).flat()
+        });
+        
+        if (categoryDocs.length > 0) {
+          // Create array of all possible category identifiers
+          const allCategoryIds = categoryDocs.reduce((acc, doc) => {
+            acc.push(doc.slug, doc.name);
+            return acc;
+          }, []);
+          
+          filter.categories = { $overlaps: allCategoryIds };
+        } else {
+          // Fallback to direct category slugs/names
+          filter.categories = { $overlaps: categoryList };
+        }
+      }
+    }
+    // Legacy single category support
+    else if (category && category !== "all") {
       // Try to find the category by slug first, then by name
       const categoryDoc = await db.findOne("categories", {
         $or: [
@@ -107,11 +135,11 @@ export async function GET(request) {
       if (categoryDoc) {
         // Use both slug and name for backward compatibility
         filter.categories = { 
-          $in: [categoryDoc.slug, categoryDoc.name] 
+          $overlaps: [categoryDoc.slug, categoryDoc.name] 
         };
       } else {
         // Fallback to original category filter
-        filter.categories = { $in: [category] };
+        filter.categories = { $overlaps: [category] };
       }
     }
 
@@ -121,14 +149,10 @@ export async function GET(request) {
       const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const safeSearch = escapeRegex(search.trim());
       
-      filter.$and = filter.$and || [];
-      filter.$and.push({
-        $or: [
-          { name: { $regex: safeSearch, $options: "i" } },
-          { short_description: { $regex: safeSearch, $options: "i" } },
-          { categories: { $regex: safeSearch, $options: "i" } },
-        ]
-      });
+      filter.$or = [
+        { name: { $regex: safeSearch, $options: "i" } },
+        { short_description: { $regex: safeSearch, $options: "i" } },
+      ];
     }
 
     // Handle pricing filter
@@ -451,12 +475,11 @@ export async function POST(request) {
       launch_week: body.launch_week,
       name: body.name,
       hasWebsiteUrl: !!body.website_url,
-      hasContactEmail: !!body.contact_email,
       categoriesCount: body.categories?.length
     });
     
     // Basic validation
-    const requiredFields = ["name", "short_description", "website_url", "categories", "contact_email", "plan", "launch_week"];
+    const requiredFields = ["name", "short_description", "website_url", "categories", "plan", "launch_week"];
     const missingFields = requiredFields.filter(field => !body[field]);
     
     if (missingFields.length > 0) {
@@ -739,9 +762,9 @@ export async function POST(request) {
       scheduled_launch: body.plan === "standard",
       
       // Contact and ownership
-      contact_email: body.contact_email,
+      contact_email: user.email,
       submitted_by: user.id,
-      maker_name: body.maker_name || user.name,
+      maker_name: user.name || user.full_name,
       maker_twitter: body.maker_twitter || "",
       
       // Plan details
@@ -1030,8 +1053,9 @@ export async function PUT(request) {
     if (updateFields.categories) updateData.categories = updateFields.categories;
     if (updateFields.pricing) updateData.pricing = updateFields.pricing;
     if (updateFields.tags) updateData.tags = updateFields.tags;
-    if (updateFields.contact_email) updateData.contact_email = updateFields.contact_email;
-    if (updateFields.maker_name) updateData.maker_name = updateFields.maker_name;
+    // contact_email and maker_name are now derived from user account
+    // if (updateFields.contact_email) updateData.contact_email = updateFields.contact_email;
+    // if (updateFields.maker_name) updateData.maker_name = updateFields.maker_name;
     if (updateFields.maker_twitter) updateData.maker_twitter = updateFields.maker_twitter;
     if (updateFields.backlink_url) updateData.backlink_url = updateFields.backlink_url;
     if (updateFields.launch_week) updateData.launch_week = updateFields.launch_week;

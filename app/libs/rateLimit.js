@@ -251,7 +251,8 @@ export const validation = {
       short_description: this.sanitizeString(data.short_description, 160),
       full_description: this.sanitizeString(data.full_description, 2000),
       website_url: this.isValidURL(data.website_url) ? data.website_url : '',
-      contact_email: this.isValidEmail(data.contact_email) ? data.contact_email : '',
+      // contact_email will be populated from user account
+      // contact_email: this.isValidEmail(data.contact_email) ? data.contact_email : '',
       categories: Array.isArray(data.categories) ? data.categories.slice(0, 5) : [],
       tags: Array.isArray(data.tags) ? data.tags.slice(0, 10) : [],
       plan: ['standard', 'premium'].includes(data.plan) ? data.plan : 'standard',

@@ -1,4 +1,4 @@
-# AI Launch Space 🚀
+# Directory Hunt 🚀
 
 A weekly competition platform for AI projects where AI builders can submit their tools, get valuable backlinks, and compete for weekly recognition. Think Product Hunt but specifically for AI projects and tools.
 
@@ -128,6 +128,11 @@ Test authentication by:
 - **React Hot Toast** - Notifications
 - **pnpm** - Package manager
 
+### File Upload & Storage
+- **Supabase S3 Storage** - Image upload with drag & drop
+- **Image optimization** - Automatic compression and validation
+- **Multiple formats** - JPEG, PNG, WebP support
+
 ## 📋 Prerequisites
 
 - Node.js 18+
@@ -181,6 +186,13 @@ CRON_SECRET=your_random_secret_string_here
 
 # Analytics (Optional)
 NEXT_PUBLIC_GA_ID=your_google_analytics_id
+
+# Supabase S3 Storage (for image uploads)
+SUPABASE_S3_ENDPOINT=https://your-project.supabase.co/storage/v1/s3
+SUPABASE_S3_REGION=us-east-1
+SUPABASE_S3_ACCESS_KEY_ID=your_s3_access_key_id
+SUPABASE_S3_SECRET_ACCESS_KEY=your_s3_secret_access_key
+SUPABASE_S3_BUCKET=logos
 ```
 
 ### 4. Configure Supabase Authentication
@@ -265,7 +277,28 @@ Go to **Authentication → Providers**:
 
 💡 **Tip**: For production, create **separate** OAuth Apps for each provider to avoid conflicts between development and production environments.
 
-### 5. Test Database Connection
+### 5. Setup Supabase S3 Storage (for image uploads)
+
+1. **Create S3 Access Keys**:
+   - Go to Supabase Dashboard → Settings → Storage
+   - Create new Access Key in S3 Access Keys section
+   - Save the Access Key ID and Secret Access Key
+
+2. **Create Storage Bucket**:
+   - Go to Storage in Supabase Dashboard
+   - Create a new bucket named `logos`
+   - Set up storage policies for public read and authenticated upload
+
+3. **Add S3 variables to `.env.local`**:
+   ```env
+   SUPABASE_S3_ENDPOINT=https://your-project.supabase.co/storage/v1/s3
+   SUPABASE_S3_REGION=us-east-1
+   SUPABASE_S3_ACCESS_KEY_ID=your_s3_access_key_id
+   SUPABASE_S3_SECRET_ACCESS_KEY=your_s3_secret_access_key
+   SUPABASE_S3_BUCKET=logos
+   ```
+
+### 6. Test Database Connection
 
 ```bash
 pnpm db:test
@@ -277,7 +310,7 @@ You should see:
 ✓ All 11 tables exist and are accessible!
 ```
 
-### 6. Start Development
+### 7. Start Development
 
 ```bash
 pnpm dev
@@ -335,6 +368,13 @@ const { data: { user } } = await supabase.auth.getUser(token);
 - `POST /api/directories` - Submit new AI project
 - `GET /api/directories/[slug]` - Get specific AI project
 - `PUT /api/directories/update` - Update AI project
+
+#### File Upload
+- `POST /api/upload` - Upload images to Supabase S3 storage
+  - Supports JPEG, PNG, WebP formats
+  - Maximum file size: 1MB
+  - Drag & drop interface
+  - Automatic image optimization
 
 #### Voting
 - `POST /api/vote` - Vote on an AI project
@@ -572,6 +612,13 @@ pnpm webhook:simulate
    - `LEMONSQUEEZY_STORE_ID` = Your store ID (numeric)
    - `LEMONSQUEEZY_WEBHOOK_SECRET` = Your webhook signing secret
    - `LEMONSQUEEZY_VARIANT_ID` = Your premium plan variant ID (numeric)
+   
+   **Required Supabase S3 Variables** (Get from: Supabase → Settings → Storage):
+   - `SUPABASE_S3_ENDPOINT` = Your S3 endpoint URL
+   - `SUPABASE_S3_REGION` = Your S3 region (usually us-east-1)
+   - `SUPABASE_S3_ACCESS_KEY_ID` = Your S3 access key ID
+   - `SUPABASE_S3_SECRET_ACCESS_KEY` = Your S3 secret access key
+   - `SUPABASE_S3_BUCKET` = Your storage bucket name (logos)
    
    **Required App Variables:**
    - `NEXT_PUBLIC_APP_URL` = `https://yourdomain.com`

@@ -31,16 +31,18 @@ const VIEW_MODES = [
 
 function FilterSidebar({
   categories,
-  selectedCategory,
-  setSelectedCategory,
+  selectedCategories,
+  setSelectedCategories,
   selectedPricing,
   setSelectedPricing,
   onClose,
 }) {
   const [pricingOptions, setPricingOptions] = useState([]);
+  const [groupedCategories, setGroupedCategories] = useState({});
 
   useEffect(() => {
     fetchPricingOptions();
+    fetchGroupedCategories();
   }, []);
 
   const fetchPricingOptions = async () => {
@@ -56,13 +58,70 @@ function FilterSidebar({
       setPricingOptions([
         { value: "free", label: "Free", app_count: 0 },
         { value: "freemium", label: "Freemium", app_count: 0 },
-        { value: "paid", label: "Premium/Paid", app_count: 0 },
+        { value: "paid", label: "Paid", app_count: 0 },
       ]);
     }
   };
 
+  const fetchGroupedCategories = async () => {
+    try {
+      const response = await fetch("/api/categories?includeCount=true");
+      if (response.ok) {
+        const data = await response.json();
+        setGroupedCategories(data.data.groupedCategories || {});
+      }
+    } catch (error) {
+      console.error("Failed to fetch grouped categories:", error);
+    }
+  };
+
+  // Generate color for category dots
+  const getCategoryDotColor = (category) => {
+    let hash = 0;
+    for (let i = 0; i < category.length; i++) {
+      hash = category.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    const colors = [
+      "bg-blue-500",
+      "bg-purple-500",
+      "bg-green-500",
+      "bg-pink-500",
+      "bg-orange-500",
+      "bg-indigo-500",
+      "bg-cyan-500",
+      "bg-emerald-500",
+      "bg-lime-500",
+      "bg-violet-500",
+      "bg-rose-500",
+      "bg-amber-500",
+      "bg-teal-500",
+      "bg-slate-500",
+      "bg-red-500",
+      "bg-yellow-500",
+    ];
+
+    return colors[Math.abs(hash) % colors.length];
+  };
+
+  // Handle category selection
+  const handleCategoryToggle = (categorySlug) => {
+    setSelectedCategories(prev => {
+      if (prev.includes(categorySlug)) {
+        return prev.filter(slug => slug !== categorySlug);
+      } else {
+        return [...prev, categorySlug];
+      }
+    });
+  };
+
+  // Clear all selected categories
+  const clearAllCategories = () => {
+    setSelectedCategories([]);
+  };
+
   return (
-    <div className="bg-base-100 border border-base-300 rounded-lg p-4 space-y-6">
+    <div className="bg-base-100 border border-base-300 rounded-lg p-4 space-y-6 max-h-screen overflow-y-auto">
       <div className="flex items-center justify-between">
         <h3 className="font-semibold flex items-center">Filters</h3>
         {onClose && (
@@ -74,40 +133,109 @@ function FilterSidebar({
 
       {/* Categories */}
       <div>
-        <h4 className="font-medium mb-3 text-sm text-base-content/80">
-          Categories
-        </h4>
-        <div className="space-y-2">
-          <label className="flex items-center space-x-2 cursor-pointer">
-            <input
-              type="radio"
-              name="category"
-              className="radio radio-primary radio-sm"
-              checked={selectedCategory === "all"}
-              onChange={() => setSelectedCategory("all")}
-            />
-            <span className="text-sm">All Categories</span>
-          </label>
-          {categories.map((category) => (
-            <label
-              key={category.slug}
-              className="flex items-center space-x-2 cursor-pointer"
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="font-medium text-sm text-base-content/80">
+            Categories
+          </h4>
+          {selectedCategories.length > 0 && (
+            <button
+              onClick={clearAllCategories}
+              className="text-xs text-primary hover:text-primary/80"
             >
-              <input
-                type="radio"
-                name="category"
-                className="radio radio-primary radio-sm"
-                checked={selectedCategory === category.slug}
-                onChange={() => setSelectedCategory(category.slug)}
-              />
-              <span className="text-sm">{category.name}</span>
-              {category.app_count > 0 && (
-                <span className="badge badge-ghost badge-xs">
-                  {category.app_count}
-                </span>
-              )}
-            </label>
-          ))}
+              Clear all
+            </button>
+          )}
+        </div>
+        
+        {selectedCategories.length > 0 && (
+          <div className="mb-3 p-2 bg-primary/10 rounded-lg">
+            <div className="text-xs text-primary font-medium mb-1">
+              {selectedCategories.length} selected
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {selectedCategories.map((categorySlug) => {
+                // Find category name from all categories
+                const category = [...categories, ...Object.values(groupedCategories).flat()]
+                  .find(cat => cat.slug === categorySlug);
+                return (
+                  <span
+                    key={categorySlug}
+                    className="badge badge-primary badge-xs"
+                  >
+                    {category?.name || categorySlug}
+                    <button
+                      onClick={() => handleCategoryToggle(categorySlug)}
+                      className="ml-1 hover:bg-primary/20 rounded-full w-3 h-3 flex items-center justify-center"
+                    >
+                      ×
+                    </button>
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Grouped Categories with Scroll */}
+        <div className="max-h-80 overflow-y-auto border border-base-300 rounded-lg">
+          {Object.keys(groupedCategories).length > 0 ? (
+            Object.entries(groupedCategories).map(([sphere, sphereCategories]) => (
+              <div key={sphere} className="border-b border-base-300 last:border-b-0">
+                {/* Sphere Header */}
+                <div className="px-3 py-2 bg-base-200 text-xs font-medium text-base-content/70 sticky top-0 z-10">
+                  {sphere}
+                </div>
+                
+                {/* Categories in Sphere */}
+                <div className="py-1">
+                  {sphereCategories.map((category) => (
+                    <label
+                      key={category.slug}
+                      className="flex items-center space-x-2 cursor-pointer hover:bg-base-200 rounded-md p-2 mx-1"
+                    >
+                      <input
+                        type="checkbox"
+                        className="checkbox checkbox-primary checkbox-sm"
+                        checked={selectedCategories.includes(category.slug)}
+                        onChange={() => handleCategoryToggle(category.slug)}
+                      />
+                      <span className={`w-2 h-2 ${getCategoryDotColor(category.name)} rounded-full flex-shrink-0`}></span>
+                      <span className="text-sm flex-1 truncate">{category.name}</span>
+                      {category.app_count > 0 && (
+                        <span className="badge badge-ghost badge-xs flex-shrink-0">
+                          {category.app_count}
+                        </span>
+                      )}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))
+          ) : (
+            /* Fallback to simple list if grouped data not available */
+            <div className="p-2">
+              {categories.map((category) => (
+                <label
+                  key={category.slug}
+                  className="flex items-center space-x-2 cursor-pointer hover:bg-base-200 rounded-md p-2"
+                >
+                  <input
+                    type="checkbox"
+                    className="checkbox checkbox-primary checkbox-sm"
+                    checked={selectedCategories.includes(category.slug)}
+                    onChange={() => handleCategoryToggle(category.slug)}
+                  />
+                  <span className={`w-2 h-2 ${getCategoryDotColor(category.name)} rounded-full flex-shrink-0`}></span>
+                  <span className="text-sm flex-1 truncate">{category.name}</span>
+                  {category.app_count > 0 && (
+                    <span className="badge badge-ghost badge-xs flex-shrink-0">
+                      {category.app_count}
+                    </span>
+                  )}
+                </label>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -116,8 +244,10 @@ function FilterSidebar({
         <h4 className="font-medium mb-3 text-sm text-base-content/80">
           Pricing
         </h4>
-        <div className="space-y-2">
-          <label className="flex items-center space-x-2 cursor-pointer">
+        
+        {/* All Pricing Option */}
+        <div className="mb-3">
+          <label className="flex items-center space-x-2 cursor-pointer hover:bg-base-200 rounded-md p-2 -m-2">
             <input
               type="radio"
               name="pricing"
@@ -125,35 +255,41 @@ function FilterSidebar({
               checked={selectedPricing === "all"}
               onChange={() => setSelectedPricing("all")}
             />
-            <span className="text-sm">All Pricing</span>
+            <span className="text-sm font-medium">All Pricing</span>
           </label>
-          {pricingOptions.map((pricing) => (
-            <label
-              key={pricing.value}
-              className="flex items-center space-x-2 cursor-pointer"
-            >
-              <input
-                type="radio"
-                name="pricing"
-                className="radio radio-primary radio-sm"
-                checked={selectedPricing === pricing.value}
-                onChange={() => setSelectedPricing(pricing.value)}
-              />
-              <span className="text-sm">{pricing.label}</span>
-              {pricing.app_count > 0 && (
-                <span className="badge badge-ghost badge-xs">
-                  {pricing.app_count}
-                </span>
-              )}
-            </label>
-          ))}
+        </div>
+
+        {/* Pricing Options with Scroll */}
+        <div className="max-h-32 overflow-y-auto border border-base-300 rounded-lg">
+          <div className="p-2">
+            {pricingOptions.map((pricing) => (
+              <label
+                key={pricing.value}
+                className="flex items-center space-x-2 cursor-pointer hover:bg-base-200 rounded-md p-2"
+              >
+                <input
+                  type="radio"
+                  name="pricing"
+                  className="radio radio-primary radio-sm"
+                  checked={selectedPricing === pricing.value}
+                  onChange={() => setSelectedPricing(pricing.value)}
+                />
+                <span className="text-sm flex-1 truncate">{pricing.label}</span>
+                {pricing.app_count > 0 && (
+                  <span className="badge badge-ghost badge-xs flex-shrink-0">
+                    {pricing.app_count}
+                  </span>
+                )}
+              </label>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Clear Filters */}
       <button
         onClick={() => {
-          setSelectedCategory("all");
+          setSelectedCategories([]);
           setSelectedPricing("all");
         }}
         className="btn btn-outline btn-sm w-full"
@@ -174,8 +310,8 @@ function DirectoriesPageContent() {
   const [searchQuery, setSearchQuery] = useState(
     searchParams.get("search") || ""
   );
-  const [selectedCategory, setSelectedCategory] = useState(
-    searchParams.get("category") || "all"
+  const [selectedCategories, setSelectedCategories] = useState(
+    searchParams.get("categories") ? searchParams.get("categories").split(",") : []
   );
   const [selectedPricing, setSelectedPricing] = useState("all");
   const [sortBy, setSortBy] = useState(searchParams.get("sort") || "upvotes");
@@ -189,13 +325,14 @@ function DirectoriesPageContent() {
 
   // Sync URL params to state after hydration
   useEffect(() => {
-    setSelectedCategory(searchParams.get("category") || "all");
+    const categoriesParam = searchParams.get("categories");
+    setSelectedCategories(categoriesParam ? categoriesParam.split(",") : []);
     setSelectedPricing(searchParams.get("pricing") || "all");
   }, [searchParams]);
 
   useEffect(() => {
     fetchDirectories();
-  }, [selectedCategory, selectedPricing, sortBy, searchQuery]);
+  }, [selectedCategories, selectedPricing, sortBy, searchQuery]);
 
   // Update URL when filters change (but not on initial load)
   useEffect(() => {
@@ -203,7 +340,7 @@ function DirectoriesPageContent() {
       // Only after initial load
       handleFilterChange();
     }
-  }, [selectedCategory, selectedPricing, sortBy]);
+  }, [selectedCategories, selectedPricing, sortBy]);
 
   const fetchCategories = async () => {
     try {
@@ -228,8 +365,8 @@ function DirectoriesPageContent() {
         status: "live",
       });
 
-      if (selectedCategory !== "all") {
-        params.set("category", selectedCategory);
+      if (selectedCategories.length > 0) {
+        params.set("categories", selectedCategories.join(","));
       }
 
       if (selectedPricing !== "all") {
@@ -262,7 +399,7 @@ function DirectoriesPageContent() {
     // Update URL
     const params = new URLSearchParams();
     if (searchQuery.trim()) params.set("search", searchQuery.trim());
-    if (selectedCategory !== "all") params.set("category", selectedCategory);
+    if (selectedCategories.length > 0) params.set("categories", selectedCategories.join(","));
     if (selectedPricing !== "all") params.set("pricing", selectedPricing);
     if (sortBy !== "upvotes") params.set("sort", sortBy);
 
@@ -280,7 +417,7 @@ function DirectoriesPageContent() {
     // Update URL with current filter state
     const params = new URLSearchParams();
     if (searchQuery.trim()) params.set("search", searchQuery.trim());
-    if (selectedCategory !== "all") params.set("category", selectedCategory);
+    if (selectedCategories.length > 0) params.set("categories", selectedCategories.join(","));
     if (selectedPricing !== "all") params.set("pricing", selectedPricing);
     if (sortBy !== "upvotes") params.set("sort", sortBy);
 
@@ -407,8 +544,8 @@ function DirectoriesPageContent() {
             <div className="sticky top-24">
               <FilterSidebar
                 categories={categories}
-                selectedCategory={selectedCategory}
-                setSelectedCategory={setSelectedCategory}
+                selectedCategories={selectedCategories}
+                setSelectedCategories={setSelectedCategories}
                 selectedPricing={selectedPricing}
                 setSelectedPricing={setSelectedPricing}
                 onClose={() => setShowFilters(false)}
@@ -535,7 +672,7 @@ function DirectoriesPageContent() {
                 </div>
                 <button
                   onClick={() => {
-                    setSelectedCategory("all");
+                    setSelectedCategories([]);
                     setSelectedPricing("all");
                     setSearchQuery("");
                     fetchDirectories(1);

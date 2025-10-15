@@ -63,9 +63,17 @@ export class SupabaseDatabaseManager {
               if (typeof val === 'object' && val !== null) {
                 if (val.$regex) {
                   const pattern = val.$regex.source || val.$regex;
-                  return `${field}.ilike.%${pattern}%`;
+                  // Escape % for LIKE pattern
+                  const escapedPattern = String(pattern).replace(/%/g, '\\%').replace(/_/g, '\\_');
+                  return `${field}.ilike.*${escapedPattern}*`;
                 } else if (val.$in) {
-                  return val.$in.map(v => `${field}.eq.${v}`).join(',');
+                  // Handle array fields in OR conditions
+                  if (field === 'categories' || field === 'tags') {
+                    // For array fields, we need multiple conditions
+                    return val.$in.map(v => `${field}.ov.{${v}}`).join(',');
+                  } else {
+                    return val.$in.map(v => `${field}.eq.${v}`).join(',');
+                  }
                 } else if (val.$ne !== undefined) {
                   return `${field}.neq.${val.$ne}`;
                 } else if (val.$exists !== undefined) {
@@ -100,8 +108,14 @@ export class SupabaseDatabaseManager {
       } else if (typeof value === 'object' && value !== null && !(value instanceof Date)) {
         // Handle operators like $in, $gt, $gte, $lt, $lte, etc.
         if (value.$in) {
-          // Use .in() for standard $in queries on scalar columns
-          query = query.in(key, value.$in);
+          // Special handling for JSONB array columns like 'categories'
+          // Use overlaps for array fields, in for scalar fields
+          if (key === 'categories' || key === 'tags') {
+            query = query.overlaps(key, value.$in);
+          } else {
+            // Use .in() for standard $in queries on scalar columns
+            query = query.in(key, value.$in);
+          }
         } else if (value.$overlaps) {
           // Explicit overlaps operator for array columns
           query = query.overlaps(key, value.$overlaps);

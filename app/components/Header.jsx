@@ -13,6 +13,7 @@ export function Header() {
   const { supabase } = useSupabase();
   const router = useRouter();
   const [categories, setCategories] = useState([]);
+  const [groupedCategories, setGroupedCategories] = useState({});
 
   useEffect(() => {
     fetchCategories();
@@ -25,6 +26,7 @@ export function Header() {
         const data = await response.json();
         // Get all categories for the dropdown
         setCategories(data.data.categories || []);
+        setGroupedCategories(data.data.groupedCategories || {});
       }
     } catch (error) {
       console.error("Failed to fetch categories:", error);
@@ -92,46 +94,52 @@ export function Header() {
                   Browse AI Projects
                   <NavArrowDown className="ml-1 h-3 w-3" />
                 </div>
-                <ul
-                  tabIndex={0}
-                  className="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-box w-64 border border-base-300"
-                >
-                  <li>
+                <div className="dropdown-content bg-base-100 rounded-box w-80 border border-base-300 shadow-lg max-h-96 overflow-hidden">
+                  {/* Header */}
+                  <div className="p-3 border-b border-base-300">
                     <Link
                       href="/directories"
-                      className="flex items-center font-medium"
+                      className="flex items-center font-medium text-primary hover:text-primary/80"
                     >
                       <span className="w-2 h-2 bg-primary rounded-full mr-2"></span>
                       View all AI projects
                     </Link>
-                  </li>
-                  <div className="divider my-1"></div>
-                  {categories.map((category) => (
-                    <li key={category.id || category.name}>
-                      <Link
-                        href={`/directories?category=${
-                          category.slug || category.name
-                        }`}
-                        className="flex items-center"
-                      >
-                        <span
-                          className={`w-2 h-2 ${getCategoryDotColor(
-                            category.name
-                          )} rounded-full mr-2`}
-                        ></span>
-                        {category.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+                  </div>
+
+                  {/* Scrollable Categories */}
+                  <div className="max-h-80 overflow-y-auto">
+                    {Object.entries(groupedCategories).map(([sphere, sphereCategories]) => (
+                      <div key={sphere} className="border-b border-base-300 last:border-b-0">
+                        {/* Sphere Header */}
+                        <div className="px-3 py-2 bg-base-200 text-sm font-medium text-base-content/80 sticky top-0">
+                          {sphere}
+                        </div>
+                        
+                        {/* Categories in Sphere */}
+                        <div className="py-1">
+                          {sphereCategories.map((category) => (
+                            <Link
+                              key={category.id || category.name}
+                              href={`/directories?category=${
+                                category.slug || category.name
+                              }`}
+                              className="flex items-center px-6 py-2 text-sm text-base-content hover:bg-base-200 hover:text-primary transition-colors"
+                            >
+                              <span
+                                className={`w-2 h-2 ${getCategoryDotColor(
+                                  category.name
+                                )} rounded-full mr-3 flex-shrink-0`}
+                              ></span>
+                              <span className="truncate">{category.name}</span>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
-              <Link
-                href="/past-launches"
-                className="px-3 py-2 text-sm font-medium text-base-content hover:text-primary transition-colors"
-              >
-                Past Launches
-              </Link>
             </nav>
           </div>
 

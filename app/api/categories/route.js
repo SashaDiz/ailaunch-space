@@ -57,7 +57,7 @@ async function getCategories(includeCount) {
   try {
     // Fetch categories from database
     const categories = await db.find("categories", {}, {
-      sort: { name: 1 }, // Sort alphabetically
+      sort: { sort_order: 1, name: 1 }, // Sort by sort_order first, then alphabetically
     });
 
   let categoriesWithCount = categories;
@@ -66,9 +66,11 @@ async function getCategories(includeCount) {
   if (includeCount) {
     categoriesWithCount = await Promise.all(
       categories.map(async (category) => {
+        // Count apps that have this category in their categories array
+        // For PostgreSQL arrays, we need to use contains operator
         const appCount = await db.count("apps", {
           status: "live",
-          categories: { $in: [category.slug, category.name] }
+          categories: { $contains: [category.name] }
         });
         return {
           ...category,
@@ -78,10 +80,21 @@ async function getCategories(includeCount) {
     );
   }
 
+  // Group categories by sphere
+  const groupedCategories = categoriesWithCount.reduce((acc, category) => {
+    const sphere = category.sphere || 'Other';
+    if (!acc[sphere]) {
+      acc[sphere] = [];
+    }
+    acc[sphere].push(category);
+    return acc;
+  }, {});
+
     return NextResponse.json({
       success: true,
       data: {
         categories: categoriesWithCount,
+        groupedCategories: groupedCategories,
         total: categories.length,
       },
     });
@@ -110,9 +123,9 @@ async function getPricing(includeCount) {
     },
     { 
       value: "paid", 
-      label: "Premium/Paid", 
+      label: "Paid", 
       description: "Paid subscription or one-time purchase",
-      keywords: ["paid", "premium", "subscription", "$", "buy", "purchase", "pro", "plus"]
+      keywords: ["paid", "premium", "subscription", "$", "buy", "purchase", "pro", "plus", "one-time"]
     }
   ];
 
@@ -129,6 +142,7 @@ async function getPricing(includeCount) {
             appCount = await db.count("apps", {
               status: "live",
               $or: [
+                { pricing: "Free" },
                 { pricing: { $regex: /free/i } },
                 { pricing: { $exists: false } },
                 { pricing: "" }
@@ -138,17 +152,21 @@ async function getPricing(includeCount) {
           case "freemium":
             appCount = await db.count("apps", {
               status: "live",
-              pricing: { $regex: /freemium/i }
+              $or: [
+                { pricing: "Freemium" },
+                { pricing: { $regex: /freemium/i } }
+              ]
             });
             break;
           case "paid":
             appCount = await db.count("apps", {
               status: "live",
-              $and: [
-                { pricing: { $exists: true } },
-                { pricing: { $ne: "" } },
-                { pricing: { $not: { $regex: /free/i } } },
-                { pricing: { $not: { $regex: /^freemium$/i } } }
+              $or: [
+                { pricing: "Paid" },
+                { pricing: { $regex: /paid/i } },
+                { pricing: { $regex: /premium/i } },
+                { pricing: { $regex: /subscription/i } },
+                { pricing: { $regex: /one-time/i } }
               ]
             });
             break;

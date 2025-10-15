@@ -6,6 +6,7 @@ const nextConfig = {
       "localhost",
       "avatars.githubusercontent.com",
       "lh3.googleusercontent.com",
+      "sdfzsocizvmgrisnlcvz.storage.supabase.co", // Supabase S3 storage domain
     ],
   },
   serverExternalPackages: ["mongodb"],

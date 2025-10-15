@@ -777,16 +777,72 @@ CREATE POLICY "Only admins can access webhooks" ON public.external_webhooks
 -- SEED DATA
 -- ============================================================================
 
--- Insert default categories
+-- Insert default categories with new structure
 INSERT INTO public.categories (name, slug, description, css_class, color, sort_order, featured) VALUES
-  ('AI & ML', 'ai-ml', 'Artificial Intelligence and Machine Learning directories', 'category-ai', '#3b82f6', 1, true),
-  ('Business & Finance', 'business-finance', 'Business tools and financial services directories', 'category-business', '#10b981', 2, true),
-  ('Marketing & SEO', 'marketing-seo', 'Marketing tools and SEO service directories', 'category-marketing', '#f59e0b', 3, true),
-  ('Dev Tools', 'dev-tools', 'Developer tools and resources directories', 'category-dev-tools', '#8b5cf6', 4, true),
-  ('Productivity', 'productivity', 'Productivity and workflow tool directories', 'category-productivity', '#ef4444', 5, true),
-  ('Design', 'design', 'Design tools and creative resource directories', 'category-design', '#ec4899', 6, true),
-  ('SaaS', 'saas', 'Software as a Service platform directories', 'category-saas', '#06b6d4', 7, true),
-  ('Other', 'other', 'Other miscellaneous directories', 'category-other', '#6b7280', 8, false)
+  -- Business & Finance
+  ('Finance & FinTech', 'finance-fintech', 'Financial technology and fintech solutions', 'category-finance', '#10b981', 1, true),
+  ('HR & Recruitment', 'hr-recruitment', 'Human resources and recruitment tools', 'category-hr', '#059669', 2, false),
+  ('Marketing & Sales', 'marketing-sales', 'Marketing automation and sales tools', 'category-marketing', '#047857', 3, true),
+  ('Startup & Small Business', 'startup-small-business', 'Tools for startups and small businesses', 'category-startup', '#065f46', 4, false),
+  ('Business Intelligence & Analytics', 'business-intelligence-analytics', 'BI tools and business analytics', 'category-bi', '#064e3b', 5, false),
+  ('Customer Service & Support', 'customer-service-support', 'Customer support and service tools', 'category-support', '#022c22', 6, false),
+  
+  -- Consumer & Lifestyle
+  ('Education & Learning', 'education-learning', 'Educational tools and learning platforms', 'category-education', '#3b82f6', 7, true),
+  ('Health & Wellness', 'health-wellness', 'Health, fitness and wellness applications', 'category-health', '#2563eb', 8, true),
+  ('Productivity', 'productivity', 'Productivity and workflow optimization tools', 'category-productivity', '#1d4ed8', 9, true),
+  ('Personal Assistant Tools', 'personal-assistant-tools', 'AI-powered personal assistant applications', 'category-assistant', '#1e40af', 10, false),
+  
+  -- Content & Creativity
+  ('Design & Art', 'design-art', 'Design tools and creative applications', 'category-design', '#ec4899', 11, true),
+  ('Video & Content Creation', 'video-content-creation', 'Video editing and content creation tools', 'category-video', '#db2777', 12, true),
+  ('Music & Audio', 'music-audio', 'Music production and audio editing tools', 'category-music', '#be185d', 13, false),
+  ('Writing & Copywriting', 'writing-copywriting', 'Writing and copywriting assistance tools', 'category-writing', '#9d174d', 14, false),
+  ('Image Generation', 'image-generation', 'AI-powered image generation tools', 'category-image-gen', '#831843', 15, true),
+  ('Animation & VFX', 'animation-vfx', 'Animation and visual effects software', 'category-animation', '#6b21a8', 16, false),
+  
+  -- Developer & Tech
+  ('Developer Tools', 'developer-tools', 'Development tools and programming resources', 'category-dev', '#8b5cf6', 17, true),
+  ('AI & Machine Learning', 'ai-machine-learning', 'AI/ML development and research tools', 'category-ai', '#7c3aed', 18, true),
+  ('Data Management', 'data-management', 'Data storage, processing and management tools', 'category-data', '#6d28d9', 19, false),
+  ('API & Integration Tools', 'api-integration-tools', 'API development and integration platforms', 'category-api', '#5b21b6', 20, false),
+  ('No-Code/Low-Code', 'no-code-low-code', 'No-code and low-code development platforms', 'category-nocode', '#4c1d95', 21, false),
+  ('Automation Tools', 'automation-tools', 'Workflow automation and process optimization', 'category-automation', '#3d1a78', 22, false),
+  
+  -- E-commerce & Retail
+  ('E-commerce', 'ecommerce', 'E-commerce platforms and online store tools', 'category-ecommerce', '#f59e0b', 23, true),
+  ('Customer Analytics', 'customer-analytics', 'Customer behavior and analytics tools', 'category-customer-analytics', '#d97706', 24, false),
+  ('Recommendation Systems', 'recommendation-systems', 'AI-powered recommendation engines', 'category-recommendations', '#b45309', 25, false),
+  ('Chatbots & Virtual Assistants', 'chatbots-virtual-assistants', 'Customer service chatbots and virtual assistants', 'category-chatbots', '#92400e', 26, false),
+  
+  -- Entertainment & Media
+  ('Gaming', 'gaming', 'Gaming platforms and game development tools', 'category-gaming', '#ef4444', 27, true),
+  ('Social Media Tools', 'social-media-tools', 'Social media management and marketing tools', 'category-social', '#dc2626', 28, false),
+  ('Streaming & Podcasting', 'streaming-podcasting', 'Streaming platforms and podcasting tools', 'category-streaming', '#b91c1c', 29, false),
+  
+  -- Industry-Specific
+  ('Healthcare & MedTech', 'healthcare-medtech', 'Healthcare technology and medical applications', 'category-healthcare', '#06b6d4', 30, true),
+  ('Legal & Compliance', 'legal-compliance', 'Legal technology and compliance tools', 'category-legal', '#0891b2', 31, false),
+  ('Real Estate & PropTech', 'real-estate-proptech', 'Real estate technology and property tools', 'category-realestate', '#0e7490', 32, false),
+  ('Research & Academia', 'research-academia', 'Research tools and academic applications', 'category-research', '#155e75', 33, false),
+  
+  -- Language & Communication
+  ('Translation & Localization', 'translation-localization', 'Translation and localization services', 'category-translation', '#f97316', 34, false),
+  ('Text Analysis & NLP', 'text-analysis-nlp', 'Natural language processing and text analysis', 'category-nlp', '#ea580c', 35, false),
+  ('Voice & Speech', 'voice-speech', 'Voice recognition and speech processing tools', 'category-voice', '#c2410c', 36, false),
+  ('Chatbots & Conversational AI', 'chatbots-conversational-ai', 'Conversational AI and chatbot platforms', 'category-conversational', '#9a3412', 37, false),
+  
+  -- Vision & Recognition
+  ('Computer Vision', 'computer-vision', 'Computer vision and image recognition tools', 'category-vision', '#84cc16', 38, false),
+  ('Image Recognition', 'image-recognition', 'Image recognition and analysis platforms', 'category-image-recognition', '#65a30d', 39, false),
+  ('Video Analysis', 'video-analysis', 'Video analysis and processing tools', 'category-video-analysis', '#4d7c0f', 40, false),
+  ('OCR & Document Processing', 'ocr-document-processing', 'Optical character recognition and document processing', 'category-ocr', '#365314', 41, false),
+  
+  -- Other
+  ('Cybersecurity', 'cybersecurity', 'Cybersecurity and security tools', 'category-security', '#6b7280', 42, true),
+  ('Sustainability & Impact', 'sustainability-impact', 'Sustainability and social impact tools', 'category-sustainability', '#4b5563', 43, false),
+  ('Research Tools', 'research-tools', 'General research and analysis tools', 'category-research-tools', '#374151', 44, false),
+  ('General AI Tools', 'general-ai-tools', 'General-purpose AI tools and platforms', 'category-general-ai', '#1f2937', 45, false)
 ON CONFLICT (slug) DO NOTHING;
 
 -- ============================================================================

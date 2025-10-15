@@ -78,9 +78,9 @@ export const AppSchema = z.object({
   launch_date: z.date(),
 
   // Contact and Ownership
-  contact_email: z.string().email(),
+  contact_email: z.string().email(), // Will be populated from user account
   submitted_by: z.string(), // User ID
-  maker_name: z.string().optional(),
+  maker_name: z.string().optional(), // Will be populated from user account
   maker_twitter: z.string().optional(),
 
   // Plan and Features (Updated pricing)
@@ -176,8 +176,6 @@ export const DirectorySubmissionSchema = z.object({
     .string()
     .min(1, "Short description is required")
     .max(160, "Short description must be 160 characters or less"),
-  contact_email: z.string().email("Please enter a valid email address"),
-  maker_name: z.string().optional(),
   maker_twitter: z
     .string()
     .regex(/^@?[A-Za-z0-9_]+$/, "Invalid Twitter handle")
@@ -191,7 +189,7 @@ export const DirectorySubmissionSchema = z.object({
     .min(1, "Please select at least one category")
     .max(3, "You can select up to 3 categories"),
   pricing: z
-    .enum(["Free", "Freemium", "Premium", "One-time", "Subscription"])
+    .enum(["Free", "Freemium", "Paid"])
     .optional(),
   video_url: z.string().url("Please enter a valid video URL").optional().or(z.literal("")),
 
@@ -215,8 +213,6 @@ export const BasicInfoSchema = DirectorySubmissionSchema.pick({
   name: true,
   website_url: true,
   short_description: true,
-  contact_email: true,
-  maker_name: true,
   maker_twitter: true,
 });
 

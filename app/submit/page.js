@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useCallback } from "react";
 import { useUser } from "../hooks/useUser";
 import { useRouter, useSearchParams } from "next/navigation";
-import { NavArrowLeft, NavArrowRight, Xmark, Plus } from "iconoir-react";
+import { NavArrowLeft, NavArrowRight, Xmark } from "iconoir-react";
 import toast from "react-hot-toast";
 // Import Zod for validation
 import { z } from "zod";
+import CategorySelector from "../components/CategorySelector";
+import ImageUpload from "../components/ImageUpload";
 
 // Validation schemas for each step
 const PlanSelectionSchema = z.object({
@@ -26,10 +28,8 @@ const DirectoryInfoSchema = z.object({
   website_url: z.string().url("Please enter a valid website URL"),
   short_description: z
     .string()
-    .min(1, "Short description is required")
-    .max(160, "Short description must be 160 characters or less"),
-  contact_email: z.string().email("Please enter a valid email address"),
-  maker_name: z.string().nullable().optional(),
+    .min(1, "Short title is required")
+    .max(100, "Short title must be 100 characters or less"),
   maker_twitter: z
     .string()
     .regex(/^@?[A-Za-z0-9_]*$/, "Invalid Twitter handle")
@@ -43,13 +43,11 @@ const DirectoryInfoSchema = z.object({
     .min(1, "Please select at least one category")
     .max(3, "You can select up to 3 categories"),
   pricing: z
-    .enum(["Free", "Freemium", "Premium", "One-time", "Subscription"])
+    .enum(["Free", "Freemium", "Paid"])
     .nullable()
     .optional(),
-  video_url: z.string().url("Please enter a valid video URL").nullable().optional().or(z.literal("")),
   // Media
   logo_url: z.string().url("Please enter a valid logo URL"),
-  screenshots: z.array(z.string().url()).max(5, "Maximum 5 screenshots allowed").nullable().optional(),
 });
 
 const LaunchWeekSchema = z.object({
@@ -154,74 +152,7 @@ function StepIndicator({ currentStep, steps }) {
 }
 
 // Merged step combining Basic Info, Details, and Media
-function DirectoryInfoStep({ formData, setFormData, errors, categories, checkingDuplicate, checkingName }) {
-  const [customCategory, setCustomCategory] = useState("");
-  const [logoPreview, setLogoPreview] = useState(formData.logo_url || "");
-  const [screenshots, setScreenshots] = useState(formData.screenshots || []);
-
-  const handleLogoUrlChange = (url) => {
-    try {
-      if (url && url.trim()) {
-        new URL(url);
-        setLogoPreview(url);
-      } else {
-        setLogoPreview("");
-      }
-    } catch {
-      setLogoPreview("");
-    }
-    setFormData({ ...formData, logo_url: url });
-  };
-
-  const addScreenshot = (url) => {
-    if (!url || url.trim() === "") {
-      return;
-    }
-
-    // Validate URL format
-    try {
-      new URL(url);
-    } catch (e) {
-      toast.error("Please enter a valid screenshot URL");
-      return;
-    }
-
-    if (!screenshots.includes(url)) {
-      const newScreenshots = [...screenshots, url];
-      setScreenshots(newScreenshots);
-      setFormData({ ...formData, screenshots: newScreenshots });
-      toast.success("Screenshot added successfully");
-    } else {
-      toast.error("This screenshot URL is already added");
-    }
-  };
-
-  const removeScreenshot = (index) => {
-    const newScreenshots = screenshots.filter((_, i) => i !== index);
-    setScreenshots(newScreenshots);
-    setFormData({ ...formData, screenshots: newScreenshots });
-  };
-
-  const addCustomCategory = () => {
-    if (
-      customCategory.trim() &&
-      !formData.categories?.includes(customCategory.trim())
-    ) {
-      const newCategories = [
-        ...(formData.categories || []),
-        customCategory.trim(),
-      ];
-      setFormData({ ...formData, categories: newCategories });
-      setCustomCategory("");
-    }
-  };
-
-  const removeCategory = (categoryToRemove) => {
-    const newCategories =
-      formData.categories?.filter((cat) => cat !== categoryToRemove) || [];
-    setFormData({ ...formData, categories: newCategories });
-  };
-
+function DirectoryInfoStep({ formData, setFormData, errors, checkingDuplicate, checkingName }) {
   return (
     <div className="space-y-8">
       {/* Basic Information Section */}
@@ -287,17 +218,18 @@ function DirectoryInfoStep({ formData, setFormData, errors, categories, checking
           <div>
             <label className="form-control w-full">
               <div className="label">
-                <span className="label-text">Short Description *</span>
+                <span className="label-text">Short Title *</span>
                 <span className="label-text-alt text-base-content/60">
-                  {formData.short_description?.length || 0}/160
+                  {formData.short_description?.length || 0}/100
                 </span>
               </div>
-              <textarea
-                className={`textarea textarea-bordered h-24 w-full resize-none ${
-                  errors.short_description ? "textarea-error" : ""
+              <input
+                type="text"
+                className={`input input-bordered w-full ${
+                  errors.short_description ? "input-error" : ""
                 }`}
-                placeholder="A brief description of your AI project (max 160 characters)"
-                maxLength={160}
+                placeholder="A catchy one-line title for your AI project"
+                maxLength={100}
                 value={formData.short_description || ""}
                 onChange={(e) =>
                   setFormData({ ...formData, short_description: e.target.value })
@@ -311,48 +243,6 @@ function DirectoryInfoStep({ formData, setFormData, errors, categories, checking
             </label>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="form-control w-full">
-                <div className="label">
-                  <span className="label-text">Contact Email *</span>
-                </div>
-                <input
-                  type="email"
-                  placeholder="contact@your-project.com"
-                  className={`input input-bordered w-full ${
-                    errors.contact_email ? "input-error" : ""
-                  }`}
-                  value={formData.contact_email || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, contact_email: e.target.value })
-                  }
-                />
-                {errors.contact_email && (
-                  <div className="text-error text-sm mt-1">
-                    {errors.contact_email}
-                  </div>
-                )}
-              </label>
-            </div>
-
-            <div>
-              <label className="form-control w-full">
-                <div className="label">
-                  <span className="label-text">Maker Name</span>
-                </div>
-                <input
-                  type="text"
-                  placeholder="Your name"
-                  className="input input-bordered w-full"
-                  value={formData.maker_name || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, maker_name: e.target.value })
-                  }
-                />
-              </label>
-            </div>
-          </div>
 
           <div>
             <label className="form-control w-full">
@@ -404,141 +294,53 @@ function DirectoryInfoStep({ formData, setFormData, errors, categories, checking
           </div>
 
           <div>
-            <label className="form-control w-full">
-              <div className="label">
-                <span className="label-text">Categories *</span>
-                <span className="label-text-alt text-base-content/60">
-                  Select up to 3 categories
-                </span>
-              </div>
-            </label>
-
-            {/* Category Selection */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-              {categories.map((category) => (
-                <label key={category.name} className="cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="hidden"
-                    checked={formData.categories?.includes(category.name) || false}
-                    onChange={(e) => {
-                      const currentCategories = formData.categories || [];
-                      if (e.target.checked) {
-                        if (currentCategories.length < 3) {
-                          setFormData({
-                            ...formData,
-                            categories: [...currentCategories, category.name],
-                          });
-                        } else {
-                          toast.error("You can select up to 3 categories");
-                        }
-                      } else {
-                        removeCategory(category.name);
-                      }
-                    }}
-                  />
-                  <div
-                    className={`p-3 border rounded-lg text-sm transition-all ${
-                      formData.categories?.includes(category.name)
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-base-300 hover:border-primary/50"
-                    }`}
-                  >
-                    {category.name}
-                  </div>
-                </label>
-              ))}
-            </div>
-
-            {/* Custom Category Input */}
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Add custom category"
-                className="input input-bordered input-sm flex-1"
-                value={customCategory}
-                onChange={(e) => setCustomCategory(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && addCustomCategory()}
-              />
-              <button
-                type="button"
-                onClick={addCustomCategory}
-                className="btn btn-sm btn-outline"
-                disabled={
-                  !customCategory.trim() || (formData.categories?.length || 0) >= 3
-                }
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Selected Categories */}
-            {formData.categories?.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-3">
-                {formData.categories.map((category) => (
-                  <div key={category} className="badge badge-primary gap-2">
-                    {category}
-                    <button
-                      type="button"
-                      onClick={() => removeCategory(category)}
-                      className="btn btn-xs btn-circle btn-ghost"
-                    >
-                      <Xmark className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {errors.categories && (
-              <div className="text-error text-sm mt-1">{errors.categories}</div>
-            )}
+            <CategorySelector
+              selectedCategories={formData.categories || []}
+              onCategoriesChange={(newCategories) => 
+                setFormData({ ...formData, categories: newCategories })
+              }
+              maxSelections={3}
+              error={errors.categories}
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="form-control w-full">
+              <div className="form-control w-full">
                 <div className="label">
                   <span className="label-text">Pricing Model</span>
                 </div>
-                <select
-                  className="select select-bordered w-full"
-                  value={formData.pricing || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, pricing: e.target.value })
-                  }
-                >
-                  <option value="">Select pricing model</option>
-                  <option value="Free">Free</option>
-                  <option value="Freemium">Freemium</option>
-                  <option value="Premium">Premium</option>
-                  <option value="One-time">One-time Purchase</option>
-                  <option value="Subscription">Subscription</option>
-                </select>
-              </label>
+                <div className="flex gap-2 w-full">
+                  {["Free", "Freemium", "Paid"].map((option) => (
+                    <label
+                      key={option}
+                      className="flex-1"
+                    >
+                      <input
+                        type="radio"
+                        name="pricing"
+                        value={option}
+                        checked={formData.pricing === option}
+                        onChange={(e) =>
+                          setFormData({ ...formData, pricing: e.target.value })
+                        }
+                        className="sr-only"
+                      />
+                      <span
+                        className={`btn btn-sm w-full ${
+                          formData.pricing === option
+                            ? "btn-primary"
+                            : "btn-outline"
+                        }`}
+                      >
+                        {option}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label className="form-control w-full">
-                <div className="label">
-                  <span className="label-text">Video URL (optional)</span>
-                </div>
-                <input
-                  type="url"
-                  placeholder="https://youtube.com/watch?v=..."
-                  className={`input input-bordered w-full ${
-                    errors.video_url ? "input-error" : ""
-                  }`}
-                  value={formData.video_url || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, video_url: e.target.value })
-                  }
-                />
-                {errors.video_url && (
-                  <div className="text-error text-sm mt-1">{errors.video_url}</div>
-                )}
-              </label>
-            </div>
           </div>
         </div>
       </div>
@@ -549,131 +351,14 @@ function DirectoryInfoStep({ formData, setFormData, errors, categories, checking
           Media & Assets
         </h3>
         <div className="space-y-6">
-          <div>
-            <label className="form-control w-full">
-              <div className="label">
-                <span className="label-text">Logo URL *</span>
-                <span className="label-text-alt text-base-content/60">
-                  Direct link to your logo image
-                </span>
-              </div>
-              <input
-                type="url"
-                placeholder="https://example.com/logo.png"
-                className={`input input-bordered w-full ${
-                  errors.logo_url ? "input-error" : ""
-                }`}
-                value={formData.logo_url || ""}
-                onChange={(e) => handleLogoUrlChange(e.target.value)}
-              />
-              {errors.logo_url && (
-                <div className="text-error text-sm mt-1">{errors.logo_url}</div>
-              )}
-            </label>
-
-            {/* Logo Preview */}
-            {logoPreview && (
-              <div className="mt-3">
-                <div className="text-sm font-medium mb-2">Logo Preview:</div>
-                <div className="w-16 h-16 border border-base-300 rounded-lg overflow-hidden bg-base-100">
-                  <img
-                    src={logoPreview}
-                    alt="Logo preview"
-                    className="w-full h-full object-cover"
-                    onError={() => setLogoPreview("")}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div>
-            <label className="form-control w-full">
-              <div className="label">
-                <span className="label-text">Screenshots (optional)</span>
-                <span className="label-text-alt text-base-content/60">
-                  Up to 5 screenshots
-                </span>
-              </div>
-            </label>
-
-            {/* Add Screenshot */}
-            <div className="flex gap-2 mb-4">
-              <input
-                type="url"
-                placeholder="https://example.com/screenshot.png"
-                className="input input-bordered input-sm flex-1"
-                onKeyPress={(e) => {
-                  if (e.key === "Enter") {
-                    addScreenshot(e.target.value);
-                    e.target.value = "";
-                  }
-                }}
-              />
-              <button
-                type="button"
-                onClick={(e) => {
-                  const input = e.target.parentElement.querySelector("input");
-                  addScreenshot(input.value);
-                  input.value = "";
-                }}
-                className="btn btn-sm btn-outline"
-                disabled={screenshots.length >= 5}
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Screenshots Preview */}
-            {screenshots.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {screenshots.map((screenshot, index) => (
-                  <div key={index} className="relative group">
-                    <div className="aspect-video border border-base-300 rounded-lg overflow-hidden bg-base-100">
-                      <img
-                        src={screenshot}
-                        alt={`Screenshot ${index + 1}`}
-                        className="w-full h-full object-cover"
-                        onError={() => removeScreenshot(index)}
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeScreenshot(index)}
-                      className="absolute -top-2 -right-2 btn btn-xs btn-circle btn-error opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Xmark className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="alert alert-info">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              className="stroke-current shrink-0 w-6 h-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              ></path>
-            </svg>
-            <div>
-              <h3 className="font-bold">Image Guidelines</h3>
-              <div className="text-sm">
-                • Logo: 256x256px minimum, square format preferred
-                <br />
-                • Screenshots: 1200x800px minimum, 16:9 or 4:3 aspect ratio
-                <br />• Use direct image URLs (ending in .png, .jpg, or .webp)
-              </div>
-            </div>
-          </div>
+          <ImageUpload
+            value={formData.logo_url || ""}
+            onChange={(url) => setFormData({ ...formData, logo_url: url })}
+            error={errors.logo_url}
+            label="Logo"
+            maxSize={1}
+            required={true}
+          />
         </div>
       </div>
     </div>
@@ -1125,10 +810,19 @@ function SubmitPageContent() {
   const isLoaded = !loading;
 
   const router = useRouter();
-  const searchParams = useSearchParams();
+  
+  // Safely get search params with error handling
+  let searchParams;
+  try {
+    searchParams = useSearchParams();
+  } catch (error) {
+    console.error("Error getting search params:", error);
+    searchParams = new URLSearchParams();
+  }
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     plan: "standard", // Default to standard plan
+    pricing: "Free", // Default to Free pricing
   });
   const [errors, setErrors] = useState({});
   const [categories, setCategories] = useState([]);
@@ -1140,27 +834,8 @@ function SubmitPageContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [checkingDuplicate, setCheckingDuplicate] = useState(false);
   const [checkingName, setCheckingName] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Validate email format
-  const validateEmail = (email) => {
-    if (!email || email.trim() === "") {
-      return;
-    }
-    
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setErrors(prev => ({
-        ...prev,
-        contact_email: "Please enter a valid email address",
-      }));
-    } else {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors.contact_email;
-        return newErrors;
-      });
-    }
-  };
 
   // Validate logo URL
   const validateLogoUrl = (url) => {
@@ -1187,45 +862,19 @@ function SubmitPageContent() {
     }
   };
 
-  // Validate video URL (optional)
-  const validateVideoUrl = (url) => {
-    if (!url || url.trim() === "") {
-      // Clear error if field is empty (it's optional)
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors.video_url;
-        return newErrors;
-      });
-      return;
-    }
 
-    try {
-      new URL(url);
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors.video_url;
-        return newErrors;
-      });
-    } catch (e) {
+
+  // Validate short title
+  const validateShortTitle = (title) => {
+    if (!title || title.trim() === "") {
       setErrors(prev => ({
         ...prev,
-        video_url: "Please enter a valid URL or leave it empty",
+        short_description: "Short title is required",
       }));
-    }
-  };
-
-
-  // Validate short description
-  const validateShortDescription = (description) => {
-    if (!description || description.trim() === "") {
+    } else if (title.length > 100) {
       setErrors(prev => ({
         ...prev,
-        short_description: "Short description is required",
-      }));
-    } else if (description.length > 160) {
-      setErrors(prev => ({
-        ...prev,
-        short_description: "Short description must be 160 characters or less",
+        short_description: "Short title must be 100 characters or less",
       }));
     } else {
       setErrors(prev => {
@@ -1434,16 +1083,6 @@ function SubmitPageContent() {
     return () => clearTimeout(timeoutId);
   }, [formData.website_url]);
 
-  // Debounce email validation
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (formData.contact_email) {
-        validateEmail(formData.contact_email);
-      }
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [formData.contact_email]);
 
   // Debounce logo URL validation
   useEffect(() => {
@@ -1456,35 +1095,37 @@ function SubmitPageContent() {
     return () => clearTimeout(timeoutId);
   }, [formData.logo_url]);
 
-  // Debounce video URL validation
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      validateVideoUrl(formData.video_url);
-    }, 500);
 
-    return () => clearTimeout(timeoutId);
-  }, [formData.video_url]);
-
-  // Debounce short description validation
+  // Debounce short title validation
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (formData.short_description) {
-        validateShortDescription(formData.short_description);
+        validateShortTitle(formData.short_description);
       }
     }, 500);
 
     return () => clearTimeout(timeoutId);
   }, [formData.short_description]);
 
+  // Component initialization
+  useEffect(() => {
+    // Mark component as initialized after a short delay to prevent race conditions
+    const timer = setTimeout(() => {
+      setIsInitialized(true);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   // Redirect to sign in if not authenticated
   useEffect(() => {
-    if (isLoaded && !user) {
+    if (isLoaded && !user && isInitialized) {
       // Store the current URL to redirect back after sign in
       const currentPath = window.location.pathname + window.location.search;
       sessionStorage.setItem('redirectAfterSignIn', currentPath);
       router.push('/auth/signin');
     }
-  }, [user, isLoaded, router]);
+  }, [user, isLoaded, router, isInitialized]);
 
   // Payment polling for automatic redirect when LemonJS fails
   const startPaymentPolling = (directoryId) => {
@@ -1564,17 +1205,21 @@ function SubmitPageContent() {
 
   // Handle edit mode
   useEffect(() => {
-    const edit = searchParams.get("edit");
-    const draft = searchParams.get("draft");
-    const id = searchParams.get("id");
+    try {
+      const edit = searchParams?.get("edit");
+      const draft = searchParams?.get("draft");
+      const id = searchParams?.get("id");
 
-    if (edit === "true" && id) {
-      setIsEditMode(true);
-      setEditDirectoryId(id);
-      loadDirectoryForEdit(id);
-    } else if (draft) {
-      // Handle resuming a draft
-      loadDraftForEdit(draft);
+      if (edit === "true" && id) {
+        setIsEditMode(true);
+        setEditDirectoryId(id);
+        loadDirectoryForEdit(id);
+      } else if (draft) {
+        // Handle resuming a draft
+        loadDraftForEdit(draft);
+      }
+    } catch (error) {
+      console.error("Error handling edit mode:", error);
     }
   }, [searchParams]);
 
@@ -1679,7 +1324,6 @@ function SubmitPageContent() {
           screenshots: directory.screenshots || ["", "", "", "", ""],
           video_url: directory.video_url || "",
           launch_week: directory.launch_week || "",
-          contact_email: directory.contact_email || "",
           backlink_url: directory.backlink_url || "",
         });
 
@@ -1860,10 +1504,10 @@ function SubmitPageContent() {
       fetchCategories();
     };
 
-    if (user && isLoaded) {
+    if (user && isLoaded && isInitialized) {
       handlePaymentCheck();
     }
-  }, [user, isLoaded]);
+  }, [user, isLoaded, isInitialized]);
 
   // Clear old premium session data for regular users (safety net)
   useEffect(() => {
@@ -1987,7 +1631,7 @@ function SubmitPageContent() {
     try {
       // Validate that we have all required data before proceeding
       if (!formData.name || !formData.short_description || !formData.website_url || 
-          !formData.contact_email || !formData.categories || formData.categories.length === 0 ||
+          !formData.categories || formData.categories.length === 0 ||
           !formData.logo_url || !formData.launch_week) {
         toast.error("Please fill in all required fields before proceeding to payment");
         setIsSubmitting(false);
@@ -2037,7 +1681,7 @@ function SubmitPageContent() {
               description: formData.short_description,
               website_url: formData.website_url,
             },
-            customerEmail: formData.contact_email,
+            customerEmail: user.email,
           }),
         });
 
@@ -2270,7 +1914,6 @@ function SubmitPageContent() {
             formData={formData}
             setFormData={setFormData}
             errors={errors}
-            categories={categories}
             checkingDuplicate={checkingDuplicate}
             checkingName={checkingName}
           />
@@ -2288,14 +1931,14 @@ function SubmitPageContent() {
     }
   };
 
-  // Show loading state when checking authentication or loading directory for edit
-  if (!isLoaded || isLoading) {
+  // Show loading state when checking authentication, initializing, or loading directory for edit
+  if (!isLoaded || !isInitialized || isLoading) {
     return (
       <div className="min-h-screen bg-base-100 flex items-center justify-center">
         <div className="text-center">
           <span className="loading loading-spinner loading-lg"></span>
           <p className="mt-4 text-base-content/70">
-            {isLoading ? "Loading directory for editing..." : "Loading..."}
+            {isLoading ? "Loading directory for editing..." : "Initializing form..."}
           </p>
         </div>
       </div>
@@ -2543,19 +2186,84 @@ function SubmitPageContent() {
   );
 }
 
-export default function SubmitPage() {
+// Error Boundary Component
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Submit page error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-base-100 flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto p-6">
+            <div className="alert alert-error mb-4">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="stroke-current shrink-0 h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <div>
+                <h3 className="font-bold">Something went wrong!</h3>
+                <div className="text-sm">
+                  There was an error loading the submission form. Please try refreshing the page.
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="btn btn-primary"
+            >
+              Refresh Page
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// Wrapper component for useSearchParams
+function SubmitPageWithSearchParams() {
   return (
     <Suspense 
       fallback={
         <div className="min-h-screen bg-base-100 flex items-center justify-center">
           <div className="text-center">
             <span className="loading loading-spinner loading-lg"></span>
-            <p className="mt-4 text-base-content/70">Loading...</p>
+            <p className="mt-4 text-base-content/70">Loading submission form...</p>
           </div>
         </div>
       }
     >
       <SubmitPageContent />
     </Suspense>
+  );
+}
+
+export default function SubmitPage() {
+  return (
+    <ErrorBoundary>
+      <SubmitPageWithSearchParams />
+    </ErrorBoundary>
   );
 }

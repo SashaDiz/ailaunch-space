@@ -7,6 +7,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { NavArrowLeft, FloppyDisk, Xmark } from "iconoir-react";
 import toast from "react-hot-toast";
+import CategorySelector from "../../components/CategorySelector";
+import ImageUpload from "../../components/ImageUpload";
 
 export default function EditDirectoryPage() {
   const router = useRouter();
@@ -14,7 +16,6 @@ export default function EditDirectoryPage() {
   const { user, loading } = useUser();
   const [directory, setDirectory] = useState(null);
   const [formData, setFormData] = useState({});
-  const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
@@ -29,21 +30,9 @@ export default function EditDirectoryPage() {
 
     if (user && params.slug) {
       loadDirectory();
-      fetchCategories();
     }
   }, [user, loading, params.slug, router]);
 
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch("/api/categories");
-      if (response.ok) {
-        const data = await response.json();
-        setCategories(data.data.categories || []);
-      }
-    } catch (error) {
-      console.error("Failed to fetch categories:", error);
-    }
-  };
 
   const loadDirectory = async () => {
     setIsLoading(true);
@@ -91,8 +80,6 @@ export default function EditDirectoryPage() {
             pricing: fullDirectory.pricing || "",
             logo_url: fullDirectory.logo_url || "",
             screenshots: fullDirectory.screenshots || ["", "", "", "", ""],
-            video_url: fullDirectory.video_url || "",
-            contact_email: fullDirectory.contact_email || "",
             backlink_url: fullDirectory.backlink_url || "",
           });
 
@@ -128,32 +115,6 @@ export default function EditDirectoryPage() {
     }
   };
 
-  const handleCategoryChange = (category) => {
-    setFormData((prev) => {
-      const currentCategories = prev.categories || [];
-      if (currentCategories.includes(category)) {
-        // Remove category
-        return {
-          ...prev,
-          categories: currentCategories.filter((c) => c !== category),
-        };
-      } else if (currentCategories.length < 3) {
-        // Add category if under limit
-        return {
-          ...prev,
-          categories: [...currentCategories, category],
-        };
-      }
-      return prev;
-    });
-  };
-
-  const removeCategory = (categoryToRemove) => {
-    setFormData((prev) => ({
-      ...prev,
-      categories: (prev.categories || []).filter((c) => c !== categoryToRemove),
-    }));
-  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -173,10 +134,10 @@ export default function EditDirectoryPage() {
     }
 
     if (!formData.short_description?.trim()) {
-      newErrors.short_description = "Short description is required";
-    } else if (formData.short_description.length < 10) {
+      newErrors.short_description = "Short title is required";
+    } else if (formData.short_description.length < 5) {
       newErrors.short_description =
-        "Short description must be at least 10 characters";
+        "Short title must be at least 5 characters";
     }
 
     if (!formData.full_description?.trim()) {
@@ -353,9 +314,9 @@ export default function EditDirectoryPage() {
 
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">Short Description *</span>
+                  <span className="label-text">Short Title *</span>
                   <span className="label-text-alt">
-                    {formData.short_description?.length || 0}/200
+                    {formData.short_description?.length || 0}/100
                   </span>
                 </label>
                 <input
@@ -367,8 +328,8 @@ export default function EditDirectoryPage() {
                   onChange={(e) =>
                     handleInputChange("short_description", e.target.value)
                   }
-                  placeholder="Brief description of your AI project"
-                  maxLength={200}
+                  placeholder="A catchy one-line title for your AI project"
+                  maxLength={100}
                 />
                 {errors.short_description && (
                   <label className="label">
@@ -408,6 +369,24 @@ export default function EditDirectoryPage() {
             </div>
           </div>
 
+          {/* Media & Assets */}
+          <div className="card bg-base-100 shadow-sm border border-base-300">
+            <div className="card-body">
+              <h2 className="card-title mb-6">Media & Assets</h2>
+              
+              <div className="form-control">
+                <ImageUpload
+                  value={formData.logo_url || ""}
+                  onChange={(url) => handleInputChange("logo_url", url)}
+                  error={errors.logo_url}
+                  label="Logo"
+                  maxSize={1}
+                  required={false}
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Categories & Pricing */}
           <div className="card bg-base-100 shadow-sm border border-base-300">
             <div className="card-body">
@@ -415,92 +394,32 @@ export default function EditDirectoryPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">
-                      Categories * (Select up to 3)
-                    </span>
-                  </label>
-
-                  {/* Selected Categories */}
-                  {formData.categories?.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {formData.categories.map((category) => (
-                        <span
-                          key={category}
-                          className="badge badge-primary gap-2"
-                        >
-                          {category}
-                          <button
-                            type="button"
-                            className="text-primary-content hover:bg-primary-focus rounded-full"
-                            onClick={() => removeCategory(category)}
-                          >
-                            <Xmark className="w-3 h-3" />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Available Categories */}
-                  <div className="border rounded-lg p-4 max-h-48 overflow-y-auto">
-                    <div className="grid grid-cols-2 gap-2">
-                      {categories.map((category) => (
-                        <label
-                          key={category.id || category.name}
-                          className="label cursor-pointer justify-start"
-                        >
-                          <input
-                            type="checkbox"
-                            className="checkbox checkbox-sm mr-2"
-                            checked={
-                              formData.categories?.includes(category.name) ||
-                              false
-                            }
-                            onChange={() => handleCategoryChange(category.name)}
-                            disabled={
-                              !formData.categories?.includes(category.name) &&
-                              formData.categories?.length >= 3
-                            }
-                          />
-                          <span className="label-text text-sm">
-                            {category.name}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  {errors.categories && (
-                    <label className="label">
-                      <span className="label-text-alt text-error">
-                        {errors.categories}
-                      </span>
-                    </label>
-                  )}
+                  <CategorySelector
+                    selectedCategories={formData.categories || []}
+                    onCategoriesChange={(newCategories) => 
+                      setFormData({ ...formData, categories: newCategories })
+                    }
+                    maxSelections={3}
+                    error={errors.categories}
+                  />
                 </div>
 
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text">Pricing Model *</span>
                   </label>
-                  <div className="space-y-2">
+                  <div className="tabs tabs-boxed bg-base-200">
                     {["Free", "Freemium", "Paid"].map((option) => (
-                      <label
+                      <button
                         key={option}
-                        className="label cursor-pointer justify-start"
+                        type="button"
+                        className={`tab flex-1 ${
+                          formData.pricing === option ? "tab-active" : ""
+                        }`}
+                        onClick={() => handleInputChange("pricing", option)}
                       >
-                        <input
-                          type="radio"
-                          name="pricing"
-                          className="radio radio-primary mr-3"
-                          value={option}
-                          checked={formData.pricing === option}
-                          onChange={(e) =>
-                            handleInputChange("pricing", e.target.value)
-                          }
-                        />
-                        <span className="label-text">{option}</span>
-                      </label>
+                        {option}
+                      </button>
                     ))}
                   </div>
                   {errors.pricing && (
@@ -521,34 +440,11 @@ export default function EditDirectoryPage() {
               <h2 className="card-title mb-6">Contact Information</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Contact Email</span>
-                  </label>
-                  <input
-                    type="email"
-                    className="input input-bordered"
-                    value={formData.contact_email || ""}
-                    onChange={(e) =>
-                      handleInputChange("contact_email", e.target.value)
-                    }
-                    placeholder="contact@your-directory.com"
-                  />
-                </div>
 
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text">Video URL (optional)</span>
                   </label>
-                  <input
-                    type="url"
-                    className="input input-bordered"
-                    value={formData.video_url || ""}
-                    onChange={(e) =>
-                      handleInputChange("video_url", e.target.value)
-                    }
-                    placeholder="https://youtube.com/watch?v=..."
-                  />
                 </div>
               </div>
             </div>
