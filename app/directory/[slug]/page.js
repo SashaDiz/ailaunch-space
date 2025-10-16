@@ -14,12 +14,16 @@ import {
 import toast from "react-hot-toast";
 import { SocialShare } from "../../components/SocialShare";
 import { CategoryBadge, PricingBadge } from "../../components/CategoryBadge";
+import WinnerBadge from "../../components/WinnerBadge";
+import WinnerEmbed, { WinnerEmbedButton } from "../../components/WinnerEmbed";
+import { useUser } from "../../hooks/useUser";
 
 function DirectoryDetailPageContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const { slug } = params;
   const submitted = searchParams.get("submitted") === "true";
+  const { user } = useUser();
 
   const [directory, setDirectory] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -294,6 +298,10 @@ function DirectoryDetailPageContent() {
                     <h1 className="text-2xl lg:text-3xl font-bold">
                       {directory.name}
                     </h1>
+                    
+                    {/* Winner Badge */}
+                    <WinnerBadge position={directory.weekly_position} size="md" />
+                    
                     {directory.premium_badge && (
                       <span className="badge badge-primary">Premium</span>
                     )}
@@ -466,6 +474,27 @@ function DirectoryDetailPageContent() {
                       {directory.full_description}
                     </p>
                   </div>
+                </div>
+              </div>
+            )}
+
+
+            {/* Winner Embed Section - Only for makers */}
+            {directory.weekly_position && user && directory.submitted_by === user.id && (
+              <div className="card rounded-xl border border-base-300">
+                <div className="card-body">
+                  <h2 className="text-xl font-bold mb-4">
+                    🏆 Embed Your Winner Badge
+                  </h2>
+                  <p className="text-base-content/70 mb-6">
+                    Congratulations on winning {directory.weekly_position === 1 ? '1st' : directory.weekly_position === 2 ? '2nd' : '3rd'} place! 
+                    Add this badge to your website to showcase your achievement and get a dofollow backlink to AILaunch.space.
+                  </p>
+                  <WinnerEmbed 
+                    position={directory.weekly_position}
+                    directoryName={directory.name}
+                    directorySlug={directory.slug}
+                  />
                 </div>
               </div>
             )}

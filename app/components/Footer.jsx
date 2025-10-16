@@ -88,6 +88,7 @@ export function Footer() {
                   Help Center
                 </Link>
               </li>
+              {/* CHANGELOG FEATURE DISABLED - COMMENTED OUT FOR FUTURE DEVELOPMENT
               <li>
                 <Link
                   href="/changelog"
@@ -96,6 +97,7 @@ export function Footer() {
                   Changelog
                 </Link>
               </li>
+              */}
             </ul>
           </div>
 

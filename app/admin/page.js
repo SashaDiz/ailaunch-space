@@ -9,6 +9,7 @@ import {
   Clock,
   Plus,
   EditPencil,
+  Trophy,
 } from "iconoir-react";
 import toast from "react-hot-toast";
 
@@ -233,23 +234,21 @@ export default function AdminPage() {
                 <div className="card bg-base-100 shadow-sm border border-base-300 hover:shadow-md transition-all">
                   <div className="card-body p-6">
                     <div className="flex items-start space-x-4">
-                      <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <svg className="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
+                      <div className="w-12 h-12 bg-warning/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Trophy className="w-6 h-6 text-warning" />
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-lg font-semibold">Changelog Management</h3>
+                          <h3 className="text-lg font-semibold">Winner Badge Management</h3>
                         </div>
                         <p className="text-base-content/70 text-sm mb-4">
-                          Create and manage changelog entries to keep users informed about platform updates and new features.
+                          Select and manage weekly competition winners, assign 1st, 2nd, and 3rd place badges, and verify backlink placements for dofollow links.
                         </p>
                         <Link
-                          href="/admin/changelog"
-                          className="btn btn-success btn-sm"
+                          href="/admin/directories?tab=winners"
+                          className="btn btn-warning btn-sm"
                         >
-                          Manage Changelog
+                          Manage Winners
                         </Link>
                       </div>
                     </div>

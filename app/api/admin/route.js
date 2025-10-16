@@ -6,6 +6,7 @@ import { checkIsAdmin } from "../../libs/auth.js";
 import { db } from "../../libs/database.js";
 import { emailNotifications } from "../../libs/email.js";
 import { webhookEvents } from "../../libs/webhooks.js";
+import { notificationManager } from "../../libs/notification-service.js";
 import { 
   toggleLinkType, 
   upgradeToDofollow, 
@@ -143,9 +144,11 @@ export async function POST(request) {
         return await completeCompetition(request);
       case "link-type":
         return await updateLinkType(request, authCheck.session);
+      case "winner-badge":
+        return await updateWinnerBadge(request, authCheck.session);
       default:
         return NextResponse.json(
-          { error: "Invalid action parameter. Use: approve-directory, complete-competition, link-type" },
+          { error: "Invalid action parameter. Use: approve-directory, complete-competition, link-type, winner-badge" },
           { status: 400 }
         );
     }
@@ -484,16 +487,33 @@ async function approveDirectory(request, session) {
       );
     }
 
-    // Send approval email
+    // Send approval notification
     try {
-      if (userEmail) {
-        await emailNotifications.directoryApproved(userEmail, {
-          directoryName: directory.name,
-          slug: directory.slug,
+      if (userEmail && user) {
+        await notificationManager.sendSubmissionApprovalNotification({
+          userId: user.id,
+          userEmail: userEmail,
+          directory: {
+            id: directory.id,
+            name: directory.name,
+            slug: directory.slug
+          }
         });
       }
-    } catch (emailError) {
-      console.error("Failed to send approval email:", emailError);
+    } catch (notificationError) {
+      console.error("Failed to send approval notification:", notificationError);
+      
+      // Fallback to legacy email system
+      try {
+        if (userEmail) {
+          await emailNotifications.directoryApproved(userEmail, {
+            directoryName: directory.name,
+            slug: directory.slug,
+          });
+        }
+      } catch (emailError) {
+        console.error("Failed to send approval email:", emailError);
+      }
     }
 
     // Trigger webhook for approved directory
@@ -538,16 +558,34 @@ async function approveDirectory(request, session) {
       );
     }
 
-    // Send rejection email
+    // Send rejection notification
     try {
-      if (userEmail) {
-        await emailNotifications.directoryRejected(userEmail, {
-          directoryName: directory.name,
-          rejectionReason: rejectionReason,
+      if (userEmail && user) {
+        await notificationManager.sendSubmissionDeclineNotification({
+          userId: user.id,
+          userEmail: userEmail,
+          directory: {
+            id: directory.id,
+            name: directory.name,
+            slug: directory.slug
+          },
+          rejectionReason: rejectionReason
         });
       }
-    } catch (emailError) {
-      console.error("Failed to send rejection email:", emailError);
+    } catch (notificationError) {
+      console.error("Failed to send rejection notification:", notificationError);
+      
+      // Fallback to legacy email system
+      try {
+        if (userEmail) {
+          await emailNotifications.directoryRejected(userEmail, {
+            directoryName: directory.name,
+            rejectionReason: rejectionReason,
+          });
+        }
+      } catch (emailError) {
+        console.error("Failed to send rejection email:", emailError);
+      }
     }
 
     // Trigger webhook for rejected directory
@@ -766,5 +804,80 @@ async function updateLinkType(request, session) {
 
     default:
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+  }
+}
+
+// Update winner badge for a directory
+async function updateWinnerBadge(request, session) {
+  try {
+    const body = await request.json();
+    const { action, directoryId, weekly_position } = body;
+
+    if (!directoryId) {
+      return NextResponse.json(
+        { error: "directoryId is required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate weekly_position if provided
+    if (weekly_position !== null && (weekly_position < 1 || weekly_position > 3)) {
+      return NextResponse.json(
+        { error: "weekly_position must be 1, 2, 3, or null" },
+        { status: 400 }
+      );
+    }
+
+    // Get the directory to verify it exists
+    const directory = await db.findOne("apps", { id: directoryId });
+    if (!directory) {
+      return NextResponse.json(
+        { error: "Directory not found" },
+        { status: 404 }
+      );
+    }
+
+    // Update the directory with new winner position
+    const updateData = {
+      weekly_position: weekly_position,
+      updated_at: new Date()
+    };
+
+    // If setting a winner position, also update link type to dofollow if it's not already
+    if (weekly_position && weekly_position >= 1 && weekly_position <= 3) {
+      updateData.link_type = "dofollow";
+      updateData.dofollow_status = true;
+      updateData.dofollow_reason = "weekly_winner";
+      updateData.dofollow_awarded_at = new Date();
+    } else if (weekly_position === null) {
+      // If removing winner badge, keep link type but update reason
+      if (directory.dofollow_reason === "weekly_winner") {
+        updateData.dofollow_reason = "manual_upgrade";
+      }
+    }
+
+    const updatedDirectory = await db.updateOne("apps", { id: directoryId }, updateData);
+
+    if (!updatedDirectory) {
+      return NextResponse.json(
+        { error: "Failed to update directory" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: weekly_position 
+        ? `Winner badge updated to ${weekly_position}${weekly_position === 1 ? 'st' : weekly_position === 2 ? 'nd' : 'rd'} place`
+        : "Winner badge removed",
+      directory: updatedDirectory,
+    });
+
+  } catch (error) {
+    console.error("Winner badge update error:", error);
+    return NextResponse.json(
+      { error: "Failed to update winner badge", details: error.message },
+      { status: 500 }
+    );
   }
 }

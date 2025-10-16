@@ -1,3 +1,5 @@
+// CHANGELOG FEATURE DISABLED - COMMENTED OUT FOR FUTURE DEVELOPMENT
+/*
 import Link from "next/link";
 import { createClient } from '@supabase/supabase-js';
 
@@ -139,6 +141,28 @@ export default async function ChangelogPage() {
 
         <div className="text-center mt-12">
           <Link href="/" className="btn btn-ghost">
+            Back to Home
+          </Link>
+        </div>
+      </div>
+    </main>
+  );
+}
+*/
+
+import Link from "next/link";
+
+// Disabled changelog page - return simple message
+export default function ChangelogPage() {
+  return (
+    <main className="min-h-screen bg-base-100">
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4">Changelog</h1>
+          <p className="text-lg text-base-content/70 mb-8">
+            The changelog feature is currently disabled and will be available in a future update.
+          </p>
+          <Link href="/" className="btn btn-primary">
             Back to Home
           </Link>
         </div>

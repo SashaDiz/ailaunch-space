@@ -166,6 +166,17 @@ export async function signUpWithEmail(email, password, metadata = {}) {
       total_submissions: 0,
       total_votes: 0,
       reputation: 0,
+      notification_preferences: {
+        account_creation: true,
+        account_deletion: true,
+        weekly_competition_entry: true,
+        submission_approval: true,
+        submission_decline: true,
+        competition_winners: true,
+        winner_reminder: true,
+        weekly_digest: false,
+        marketing_emails: false
+      }
     });
   }
 
@@ -198,7 +209,7 @@ export async function signOut() {
 }
 
 // Sign in with OAuth provider
-export async function signInWithOAuth(provider) {
+export async function signInWithOAuth(provider, request) {
   const cookieStore = await cookies();
   
   const supabase = createServerClient(
@@ -219,10 +230,17 @@ export async function signInWithOAuth(provider) {
     }
   );
 
-  // Get the redirect URL with proper fallback chain
-  const redirectUrl = process.env.NEXT_PUBLIC_APP_URL || 
-                     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
-                     'http://localhost:3000');
+  // Get the redirect URL dynamically from the request origin
+  let redirectUrl;
+  if (request) {
+    const url = new URL(request.url);
+    redirectUrl = url.origin;
+  } else {
+    // Fallback for when request is not available
+    redirectUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
+                  'http://localhost:3000');
+  }
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,

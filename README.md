@@ -11,6 +11,7 @@ A weekly competition platform for AI projects where AI builders can submit their
 - **Weekly Competitions** - Top 3 FREE submissions win dofollow backlinks
 - **User Dashboard** - Track submissions, views, and votes
 - **Admin Dashboard** - Manage submissions, competitions, and link types
+- **Email Notification System** - Automated notifications for user actions and events
 - **Responsive Design** - Mobile-friendly with TailwindCSS + daisyUI
 - **SEO Optimization** - Sitemap, meta tags, and backlink management
 
@@ -126,6 +127,7 @@ Test authentication by:
 - **Zod** - Schema validation
 - **React Hook Form** - Form management
 - **React Hot Toast** - Notifications
+- **Resend** - Email delivery service
 - **pnpm** - Package manager
 
 ### File Upload & Storage
@@ -180,6 +182,9 @@ LEMONSQUEEZY_API_KEY=your_lemonsqueezy_api_key
 LEMONSQUEEZY_STORE_ID=your_store_id
 LEMONSQUEEZY_WEBHOOK_SECRET=your_webhook_secret
 LEMONSQUEEZY_PRODUCT_ID_PREMIUM=your_premium_product_id
+
+# Email Notifications (Resend)
+RESEND_API_KEY=your_resend_api_key
 
 # Cron Job Security (Generate a random secret string)
 CRON_SECRET=your_random_secret_string_here
@@ -395,6 +400,10 @@ const { data: { user } } = await supabase.auth.getUser(token);
 - `PUT /api/changelog/[id]` - Update changelog entry (admin only)
 - `DELETE /api/changelog/[id]` - Delete changelog entry (admin only)
 
+#### Notifications
+- `POST /api/notifications` - Send notification (admin use)
+- `GET /api/notifications` - Get user notification history
+
 #### Authentication
 - `GET /auth/signin` - Sign in page
 - `GET /auth/callback` - OAuth callback handler
@@ -413,6 +422,18 @@ const { data: { user } } = await supabase.auth.getUser(token);
   - **Schedule**: Runs every hour (configured in `vercel.json`)
   - **Manual trigger**: `curl -H "Authorization: Bearer YOUR_CRON_SECRET" https://yourdomain.com/api/cron/competitions`
 
+- `GET /api/cron/winner-reminders` - Send daily reminders to competition winners
+  - Reminds winners to add badges to their websites
+  - **Authentication**: Requires `Authorization: Bearer CRON_SECRET` header
+  - **Schedule**: Runs daily at 9 AM UTC
+  - **Manual trigger**: `curl -H "Authorization: Bearer YOUR_CRON_SECRET" https://yourdomain.com/api/cron/winner-reminders`
+
+- `GET /api/cron/account-notifications` - Send welcome emails for new accounts
+  - Catches up on missed welcome emails
+  - **Authentication**: Requires `Authorization: Bearer CRON_SECRET` header
+  - **Schedule**: Runs every hour
+  - **Manual trigger**: `curl -H "Authorization: Bearer YOUR_CRON_SECRET" https://yourdomain.com/api/cron/account-notifications`
+
 ## 🗃️ Database Schema
 
 ### Supabase Tables
@@ -424,6 +445,7 @@ The platform uses 12 PostgreSQL tables with Row Level Security (RLS) enabled:
 **users**
 - User profiles and authentication
 - Stores: id, email, name, avatar_url, is_admin, total_submissions, total_votes
+- Notification preferences for email notifications
 - Auto-created on first sign-in
 
 **apps** (AI projects)
@@ -458,7 +480,8 @@ The platform uses 12 PostgreSQL tables with Row Level Security (RLS) enabled:
 **backlinks** - Backlink management  
 **analytics** - Usage statistics  
 **external_webhooks** - Webhook configurations  
-**changelog** - Platform update announcements and changelog entries
+**changelog** - Platform update announcements and changelog entries  
+**email_notifications** - Email notification tracking and delivery status
 
 ### Link Type Management
 
@@ -472,6 +495,46 @@ The platform uses 12 PostgreSQL tables with Row Level Security (RLS) enabled:
 }
 ```
 
+## 📧 Email Notification System
+
+### Overview
+The platform includes a comprehensive email notification system that provides automated notifications for various user actions and events, with user preference management and comprehensive tracking.
+
+### Notification Types
+1. **Account Notifications**
+   - Account creation welcome email
+   - Account deletion confirmation
+
+2. **Submission Notifications**
+   - Project approval notifications
+   - Project rejection notifications with feedback
+
+3. **Competition Notifications**
+   - Weekly competition entry confirmation
+   - Competition winner announcements
+   - Winner badge reminders for dofollow links
+
+4. **Optional Notifications** (Future Features)
+   - Weekly digest
+   - Marketing emails
+
+### User Preferences
+Users can manage their notification preferences in the Settings page (`/settings`). Each notification type can be individually enabled/disabled.
+
+### Architecture
+- **Email Templates** (`app/libs/email.js`) - Beautiful, responsive HTML email templates with consistent branding
+- **Notification Service** (`app/libs/notification-service.js`) - Comprehensive notification management with user preference checking
+- **Database Tracking** - All emails tracked in `email_notifications` table with delivery status
+- **Resend Integration** - Professional email delivery with tracking and error handling
+
+### Integration Points
+The notification system is integrated into:
+- User registration (welcome emails)
+- Account deletion (confirmation emails)
+- Project approval/rejection (admin workflow notifications)
+- Competition winners (winner announcements)
+- Winner reminders (cron job for badge reminders)
+
 ## 📁 Project Structure
 
 ```
@@ -480,8 +543,15 @@ ailaunchspace/
 │   ├── api/                 # Next.js API routes
 │   │   ├── admin/          # Admin endpoints
 │   │   ├── categories/     # Categories
+│   │   ├── changelog/      # Changelog management
 │   │   ├── competitions/   # Competitions
+│   │   ├── cron/           # Automated cron jobs
+│   │   │   ├── account-notifications/  # Welcome email catch-up
+│   │   │   ├── competitions/           # Competition lifecycle
+│   │   │   └── winner-reminders/       # Winner badge reminders
 │   │   ├── directories/    # Directory CRUD
+│   │   ├── newsletter/     # Newsletter subscriptions
+│   │   ├── notifications/  # Email notifications
 │   │   ├── user/           # User data
 │   │   ├── vote/           # Voting system
 │   │   └── webhooks/       # Payment webhooks
@@ -505,7 +575,9 @@ ailaunchspace/
 │   │   ├── database.js    # DB utilities
 │   │   ├── database-supabase.js  # Supabase manager
 │   │   ├── auth.js        # Auth functions
-│   │   └── auth-helpers.js  # Server auth helpers
+│   │   ├── auth-helpers.js  # Server auth helpers
+│   │   ├── email.js       # Email templates and sending
+│   │   └── notification-service.js  # Notification management
 │   ├── layout.js          # Root layout
 │   └── page.js            # Homepage
 ├── supabase/              # Supabase files
@@ -629,6 +701,9 @@ pnpm webhook:simulate
    - `LEMONSQUEEZY_STORE_ID` = Your store ID (numeric)
    - `LEMONSQUEEZY_WEBHOOK_SECRET` = Your webhook signing secret
    - `LEMONSQUEEZY_VARIANT_ID` = Your premium plan variant ID (numeric)
+   
+   **Required Email Variables** (Get from: Resend → API Keys):
+   - `RESEND_API_KEY` = Your Resend API key for email notifications
    
    **Required Supabase S3 Variables** (Get from: Supabase → Settings → Storage):
    - `SUPABASE_S3_ENDPOINT` = Your S3 endpoint URL

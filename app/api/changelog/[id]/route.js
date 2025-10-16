@@ -1,3 +1,5 @@
+// CHANGELOG FEATURE DISABLED - COMMENTED OUT FOR FUTURE DEVELOPMENT
+/*
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
@@ -192,4 +194,27 @@ export async function DELETE(request, { params }) {
       { status: 500 }
     );
   }
+}
+*/
+
+// Return disabled response for all changelog API calls
+export async function GET() {
+  return new Response(JSON.stringify({ error: 'Changelog feature is currently disabled' }), {
+    status: 503,
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+export async function PUT() {
+  return new Response(JSON.stringify({ error: 'Changelog feature is currently disabled' }), {
+    status: 503,
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+export async function DELETE() {
+  return new Response(JSON.stringify({ error: 'Changelog feature is currently disabled' }), {
+    status: 503,
+    headers: { 'Content-Type': 'application/json' }
+  });
 }

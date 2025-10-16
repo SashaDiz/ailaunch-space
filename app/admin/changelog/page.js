@@ -1,10 +1,12 @@
+// CHANGELOG FEATURE DISABLED - COMMENTED OUT FOR FUTURE DEVELOPMENT
+/*
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { useUser } from "../../hooks/useUser";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Plus, EditPencil, Trash, Eye, EyeOff, Star, Calendar } from "iconoir-react";
+import { Plus, EditPencil, Trash, Eye, EyeClosed, Star, Calendar } from "iconoir-react";
 import toast from "react-hot-toast";
 
 export default function AdminChangelogPage() {
@@ -222,7 +224,7 @@ export default function AdminChangelogPage() {
   return (
     <div className="min-h-screen bg-base-100">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
+       
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between">
             <div>
@@ -246,7 +248,6 @@ export default function AdminChangelogPage() {
           </div>
         </div>
 
-        {/* Form */}
         {showForm && (
           <div className="card bg-base-100 shadow-sm border border-base-300 mb-8">
             <div className="card-body">
@@ -381,7 +382,6 @@ export default function AdminChangelogPage() {
           </div>
         )}
 
-        {/* Changelog Entries List */}
         <div className="space-y-4">
           {loading ? (
             <div className="flex justify-center">
@@ -421,7 +421,7 @@ export default function AdminChangelogPage() {
                           </span>
                         ) : (
                           <span className="badge badge-warning">
-                            <EyeOff className="w-3 h-3 mr-1" />
+                            <EyeClosed className="w-3 h-3 mr-1" />
                             Draft
                           </span>
                         )}
@@ -470,7 +470,7 @@ export default function AdminChangelogPage() {
                         }`}
                         title={entry.published ? "Unpublish" : "Publish"}
                       >
-                        {entry.published ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {entry.published ? <EyeClosed className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                       <button
                         onClick={() => handleDelete(entry.id)}
@@ -485,6 +485,28 @@ export default function AdminChangelogPage() {
               </div>
             ))
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+*/
+
+import Link from "next/link";
+
+// Disabled admin changelog page
+export default function AdminChangelogPage() {
+  return (
+    <div className="min-h-screen bg-base-100">
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4">Admin Changelog</h1>
+          <p className="text-lg text-base-content/70 mb-8">
+            The changelog management feature is currently disabled and will be available in a future update.
+          </p>
+          <Link href="/admin" className="btn btn-primary">
+            Back to Admin
+          </Link>
         </div>
       </div>
     </div>

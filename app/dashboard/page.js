@@ -17,6 +17,8 @@ import {
   Xmark,
 } from "iconoir-react";
 import toast from "react-hot-toast";
+import WinnerBadge from "../components/WinnerBadge";
+import { WinnerEmbedButton } from "../components/WinnerEmbed";
 
 function StatsCard({ icon: Icon, title, value, description, className = "" }) {
   return (
@@ -182,6 +184,20 @@ function DirectoryCard({ directory, onResumeDraft }) {
                 <h3 className="text-lg font-semibold text-gray-900">
                   {directory.name}
                 </h3>
+                
+                {/* Winner Badge */}
+                <WinnerBadge position={directory.weekly_position} size="sm" />
+                
+                {/* Embed Button for Winners */}
+                {directory.weekly_position && (
+                  <WinnerEmbedButton
+                    position={directory.weekly_position}
+                    directoryName={directory.name}
+                    directorySlug={directory.slug}
+                    className="btn-xs"
+                  />
+                )}
+                
                 {directory.premium_badge && (
                   <Crown className="w-4 h-4 text-amber-500" />
                 )}

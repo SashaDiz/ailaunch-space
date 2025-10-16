@@ -4,14 +4,10 @@ import React, { useState, useEffect } from "react";
 import {
   ShareIos,
   Twitter,
-  Facebook,
   Linkedin,
-  Mail,
   Link,
   Check,
   Copy,
-  Send,
-  ChatBubbleEmpty,
 } from "iconoir-react";
 import toast from "react-hot-toast";
 
@@ -62,56 +58,26 @@ export function SocialShare({
         )}&text=${encodeURIComponent(shareTitle)}&hashtags=${shareHashtags.join(
           ","
         )}`,
-        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-          shareUrl
-        )}&quote=${encodeURIComponent(shareTitle)}&hashtag=${encodeURIComponent(
-          "#" + shareHashtags[0]
-        )}`,
-        linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
-          shareUrl
-        )}&title=${encodeURIComponent(shareTitle)}&summary=${encodeURIComponent(
-          shareDescription
-        )}`,
-        reddit: `https://reddit.com/submit?url=${encodeURIComponent(
-          shareUrl
-        )}&title=${encodeURIComponent(shareTitle)}&text=${encodeURIComponent(
-          shareDescription
-        )}`,
-        hackernews: `https://news.ycombinator.com/submitlink?u=${encodeURIComponent(
-          shareUrl
-        )}&t=${encodeURIComponent(shareTitle)}`,
-        telegram: `https://t.me/share/url?url=${encodeURIComponent(
-          shareUrl
-        )}&text=${encodeURIComponent(shareTitle + " - " + shareDescription)}`,
-        whatsapp: `https://wa.me/?text=${encodeURIComponent(
-          shareTitle + "\n" + shareDescription + "\n" + shareUrl
-        )}`,
-        email: `mailto:?subject=${encodeURIComponent(
-          shareTitle
-        )}&body=${encodeURIComponent(
-          `Hi,\n\nI thought you might be interested in this directory:\n\n${shareTitle}\n${shareDescription}\n\nCheck it out here: ${shareUrl}\n\nBest regards!`
+        linkedin: `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(
+          shareTitle + " - " + shareDescription + " " + shareUrl
         )}`,
       };
 
       if (customUrl) {
         window.open(customUrl, "_blank", "width=600,height=400");
       } else if (shareUrls[platform]) {
-        if (platform === "email") {
-          window.location.href = shareUrls[platform];
-        } else {
-          const popup = window.open(
-            shareUrls[platform],
-            "_blank",
-            "width=600,height=400"
-          );
+        const popup = window.open(
+          shareUrls[platform],
+          "_blank",
+          "width=600,height=400"
+        );
 
-          // Check if popup was blocked
-          if (!popup || popup.closed || typeof popup.closed === "undefined") {
-            // Fallback: copy link to clipboard
-            toast.error("Popup blocked. Link copied to clipboard instead!");
-            await navigator.clipboard.writeText(shareUrl);
-            return;
-          }
+        // Check if popup was blocked
+        if (!popup || popup.closed || typeof popup.closed === "undefined") {
+          // Fallback: copy link to clipboard
+          toast.error("Popup blocked. Link copied to clipboard instead!");
+          await navigator.clipboard.writeText(shareUrl);
+          return;
         }
 
         toast.success(
@@ -195,13 +161,6 @@ export function SocialShare({
           <Twitter className={iconSize} />
         </button>
         <button
-          onClick={() => handleShare("facebook")}
-          className={`btn btn-ghost ${buttonSize} text-[#1877F2] hover:bg-[#1877F2]/10`}
-          title="Share on Facebook"
-        >
-          <Facebook className={iconSize} />
-        </button>
-        <button
           onClick={() => handleShare("linkedin")}
           className={`btn btn-ghost ${buttonSize} text-[#0077B5] hover:bg-[#0077B5]/10`}
           title="Share on LinkedIn"
@@ -239,25 +198,11 @@ export function SocialShare({
             <Twitter className="w-4 h-4" />
           </button>
           <button
-            onClick={() => handleShare("facebook")}
-            className="btn btn-circle btn-ghost bg-[#1877F2] text-white hover:bg-[#1877F2]/80 shadow-lg"
-            title="Share on Facebook"
-          >
-            <Facebook className="w-4 h-4" />
-          </button>
-          <button
             onClick={() => handleShare("linkedin")}
             className="btn btn-circle btn-ghost bg-[#0077B5] text-white hover:bg-[#0077B5]/80 shadow-lg"
             title="Share on LinkedIn"
           >
             <Linkedin className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleShare("whatsapp")}
-            className="btn btn-circle btn-ghost bg-[#25D366] text-white hover:bg-[#25D366]/80 shadow-lg"
-            title="Share on WhatsApp"
-          >
-            <ChatBubbleEmpty className="w-4 h-4" />
           </button>
           <button
             onClick={handleCopyLink}
@@ -310,7 +255,7 @@ export function SocialShare({
             </button>
           )}
 
-          <div className="grid grid-cols-2 gap-2 mb-4">
+          <div className="grid grid-cols-1 gap-2 mb-4">
             {/* Twitter */}
             <button
               onClick={() => handleShare("twitter")}
@@ -318,15 +263,6 @@ export function SocialShare({
             >
               <Twitter className="w-4 h-4 mr-2" />
               Twitter
-            </button>
-
-            {/* Facebook */}
-            <button
-              onClick={() => handleShare("facebook")}
-              className="btn btn-ghost justify-start text-[#1877F2] hover:bg-[#1877F2]/10"
-            >
-              <Facebook className="w-4 h-4 mr-2" />
-              Facebook
             </button>
 
             {/* LinkedIn */}
@@ -337,60 +273,6 @@ export function SocialShare({
               <Linkedin className="w-4 h-4 mr-2" />
               LinkedIn
             </button>
-
-            {/* Email */}
-            <button
-              onClick={() => handleShare("email")}
-              className="btn btn-ghost justify-start text-base-content hover:bg-base-200"
-            >
-              <Mail className="w-4 h-4 mr-2" />
-              Email
-            </button>
-
-            {/* WhatsApp */}
-            <button
-              onClick={() => handleShare("whatsapp")}
-              className="btn btn-ghost justify-start text-[#25D366] hover:bg-[#25D366]/10"
-            >
-              <ChatBubbleEmpty className="w-4 h-4 mr-2" />
-              WhatsApp
-            </button>
-
-            {/* Telegram */}
-            <button
-              onClick={() => handleShare("telegram")}
-              className="btn btn-ghost justify-start text-[#0088CC] hover:bg-[#0088CC]/10"
-            >
-              <Send className="w-4 h-4 mr-2" />
-              Telegram
-            </button>
-          </div>
-
-          {/* Developer communities */}
-          <div className="border-t border-base-300 pt-3 mb-4">
-            <p className="text-xs text-base-content/60 mb-2">
-              Developer Communities
-            </p>
-            <div className="grid grid-cols-1 gap-2">
-              <button
-                onClick={() => handleShare("reddit")}
-                className="btn btn-ghost btn-sm justify-start text-[#FF4500] hover:bg-[#FF4500]/10"
-              >
-                <div className="w-4 h-4 mr-2 bg-[#FF4500] rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">r</span>
-                </div>
-                Reddit
-              </button>
-              <button
-                onClick={() => handleShare("hackernews")}
-                className="btn btn-ghost btn-sm justify-start text-[#FF6600] hover:bg-[#FF6600]/10"
-              >
-                <div className="w-4 h-4 mr-2 bg-[#FF6600] rounded-sm flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">Y</span>
-                </div>
-                Hacker News
-              </button>
-            </div>
           </div>
 
           {/* Copy link */}

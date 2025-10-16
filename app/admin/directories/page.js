@@ -16,6 +16,8 @@ import {
   OpenNewWindow,
 } from "iconoir-react";
 import toast from "react-hot-toast";
+import WinnerBadge from "../../components/WinnerBadge";
+import { WinnerEmbedButton } from "../../components/WinnerEmbed";
 
 // Helper function to generate directory link with ref parameter and proper rel attribute
 const generateDirectoryLink = (directory) => {
@@ -38,9 +40,22 @@ function DirectoryRow({ directory, onStatusUpdate }) {
   const [updating, setUpdating] = useState(false);
   const [togglingLinkType, setTogglingLinkType] = useState(false);
   const [currentLinkType, setCurrentLinkType] = useState(directory.link_type || "nofollow");
+  const [updatingWinnerBadge, setUpdatingWinnerBadge] = useState(false);
+  const [currentWinnerPosition, setCurrentWinnerPosition] = useState(directory.weekly_position || null);
 
   // Generate directory link data once for use in multiple places
   const directoryLink = generateDirectoryLink(directory);
+
+  const handleVisitWebsite = async () => {
+    // Track click analytics
+    try {
+      await fetch(`/api/directories/${directory.slug}/click`, {
+        method: "POST",
+      });
+    } catch (error) {
+      console.error("Failed to track click:", error);
+    }
+  };
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -158,6 +173,42 @@ function DirectoryRow({ directory, onStatusUpdate }) {
     }
   };
 
+  const handleWinnerBadgeUpdate = async (position) => {
+    setUpdatingWinnerBadge(true);
+    try {
+      const response = await fetch("/api/admin?action=winner-badge", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ 
+          action: "update",
+          directoryId: directory.id,
+          weekly_position: position
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentWinnerPosition(data.directory.weekly_position);
+        toast.success(
+          position 
+            ? `Winner badge updated to ${position}${position === 1 ? 'st' : position === 2 ? 'nd' : 'rd'} place` 
+            : "Winner badge removed"
+        );
+        onStatusUpdate(directory.id, directory.status); // Trigger refresh
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update winner badge");
+      }
+    } catch (error) {
+      console.error("Winner badge update error:", error);
+      toast.error(error.message || "Failed to update winner badge");
+    } finally {
+      setUpdatingWinnerBadge(false);
+    }
+  };
+
   const formatDate = (date) => {
     if (!date) return "N/A";
     try {
@@ -227,6 +278,70 @@ function DirectoryRow({ directory, onStatusUpdate }) {
         </div>
       </td>
       <td>
+        <div className="flex flex-col gap-2">
+          {/* Current Winner Badge Display */}
+          {currentWinnerPosition && (
+            <WinnerBadge position={currentWinnerPosition} size="xs" />
+          )}
+          
+          {/* Winner Badge Management */}
+          <div className="flex gap-1 flex-wrap">
+            <button
+              onClick={() => handleWinnerBadgeUpdate(1)}
+              disabled={updatingWinnerBadge}
+              className={`btn btn-xs ${
+                currentWinnerPosition === 1 ? "btn-primary" : "btn-ghost"
+              }`}
+              title="Set as 1st place winner"
+            >
+              1st
+            </button>
+            <button
+              onClick={() => handleWinnerBadgeUpdate(2)}
+              disabled={updatingWinnerBadge}
+              className={`btn btn-xs ${
+                currentWinnerPosition === 2 ? "btn-primary" : "btn-ghost"
+              }`}
+              title="Set as 2nd place winner"
+            >
+              2nd
+            </button>
+            <button
+              onClick={() => handleWinnerBadgeUpdate(3)}
+              disabled={updatingWinnerBadge}
+              className={`btn btn-xs ${
+                currentWinnerPosition === 3 ? "btn-primary" : "btn-ghost"
+              }`}
+              title="Set as 3rd place winner"
+            >
+              3rd
+            </button>
+            <button
+              onClick={() => handleWinnerBadgeUpdate(null)}
+              disabled={updatingWinnerBadge}
+              className="btn btn-xs btn-ghost"
+              title="Remove winner badge"
+            >
+              ✕
+            </button>
+            
+            {/* Embed Button - Only show for winners */}
+            {currentWinnerPosition && (
+              <WinnerEmbedButton
+                position={currentWinnerPosition}
+                directoryName={directory.name}
+                directorySlug={directory.slug}
+                className="btn-xs"
+              />
+            )}
+          </div>
+          
+          {updatingWinnerBadge && (
+            <span className="text-xs text-base-content/60">Updating...</span>
+          )}
+        </div>
+      </td>
+      <td>
         <div className="text-sm">
           <div>{directory.upvotes} votes</div>
           <div className="text-base-content/60">{directory.views} views</div>
@@ -272,6 +387,7 @@ function DirectoryRow({ directory, onStatusUpdate }) {
             rel={directoryLink.rel}
             className="btn btn-ghost btn-xs"
             title="Visit Website"
+            onClick={handleVisitWebsite}
           >
             <OpenNewWindow className="w-4 h-4" />
           </Link>
@@ -526,6 +642,7 @@ export default function AdminDirectoriesPage() {
                         <th>Directory</th>
                         <th>Status</th>
                         <th>Plan</th>
+                        <th>Winner Badge</th>
                         <th>Performance</th>
                         <th>Submitted</th>
                         <th>Actions</th>

@@ -7,6 +7,7 @@ import { OpenNewWindow, Plus } from "iconoir-react";
 import toast from "react-hot-toast";
 import { SocialShare } from "./SocialShare";
 import { CategoryBadge, PricingBadge } from "./CategoryBadge";
+import WinnerBadge from "./WinnerBadge";
 
 // Helper function to generate directory link with ref parameter and proper rel attribute
 const generateDirectoryLink = (directory) => {
@@ -103,6 +104,17 @@ export function ProductCard({
     }
     
     return "Voting is not currently available";
+  };
+
+  const handleVisitWebsite = async () => {
+    // Track click analytics
+    try {
+      await fetch(`/api/directories/${directory.slug}/click`, {
+        method: "POST",
+      });
+    } catch (error) {
+      console.error("Failed to track click:", error);
+    }
   };
 
   const handleVote = async (e) => {
@@ -246,22 +258,8 @@ export function ProductCard({
                 {directory.name}
               </h3>
 
-              {/* Winner Badges */}
-              {directory.weekly_position === 1 && (
-                <span className="badge bg-gradient-to-r from-yellow-400 to-yellow-600 text-yellow-900 border-yellow-500 badge-sm font-bold">
-                  🥇 1st Weekly
-                </span>
-              )}
-              {directory.weekly_position === 2 && (
-                <span className="badge bg-gradient-to-r from-gray-300 to-gray-500 text-gray-900 border-gray-400 badge-sm font-bold">
-                  🥈 2nd Weekly
-                </span>
-              )}
-              {directory.weekly_position === 3 && (
-                <span className="badge bg-gradient-to-r from-orange-400 to-orange-600 text-orange-900 border-orange-500 badge-sm font-bold">
-                  🥉 3rd Weekly
-                </span>
-              )}
+              {/* Winner Badge */}
+              <WinnerBadge position={directory.weekly_position} size="sm" />
 
               {directory.plan === "premium" && (
                 <span className="badge badge-primary badge-sm">Premium</span>
@@ -308,7 +306,10 @@ export function ProductCard({
               target="_blank"
               rel={directoryLink.rel}
               className="cursor-pointer inline-flex items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-2 py-2 text-gray-600 hover:bg-gray-100 transition"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleVisitWebsite();
+              }}
             >
               <OpenNewWindow className="w-4 h-4" />
             </a>
@@ -345,22 +346,8 @@ export function ProductCard({
                 {directory.name}
               </h3>
 
-              {/* Winner Badges */}
-              {directory.weekly_position === 1 && (
-                <span className="badge bg-gradient-to-r from-yellow-400 to-yellow-600 text-yellow-900 border-yellow-500 badge-sm font-bold">
-                  🥇 1st Weekly
-                </span>
-              )}
-              {directory.weekly_position === 2 && (
-                <span className="badge bg-gradient-to-r from-gray-300 to-gray-500 text-gray-900 border-gray-400 badge-sm font-bold">
-                  🥈 2nd Weekly
-                </span>
-              )}
-              {directory.weekly_position === 3 && (
-                <span className="badge bg-gradient-to-r from-orange-400 to-orange-600 text-orange-900 border-orange-500 badge-sm font-bold">
-                  🥉 3rd Weekly
-                </span>
-              )}
+              {/* Winner Badge */}
+              <WinnerBadge position={directory.weekly_position} size="sm" />
 
               {directory.plan === "premium" && (
                 <span className="badge badge-primary badge-sm">Premium</span>
@@ -407,7 +394,10 @@ export function ProductCard({
             target="_blank"
             rel={directoryLink.rel}
             className="cursor-pointer inline-flex items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-2 py-2 text-gray-600 hover:bg-gray-100 transition"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleVisitWebsite();
+            }}
           >
             <OpenNewWindow className="w-4 h-4" />
           </a>

@@ -10,6 +10,8 @@ import {
   Link as LinkIcon,
   WarningTriangle,
   Github,
+  Bell,
+  Check,
 } from "iconoir-react";
 import toast from "react-hot-toast";
 import Link from "next/link";
@@ -23,6 +25,20 @@ export default function SettingsPage() {
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isLinking, setIsLinking] = useState({});
+  
+  // Notification preferences state
+  const [notificationPreferences, setNotificationPreferences] = useState({
+    account_creation: true,
+    account_deletion: true,
+    weekly_competition_entry: true,
+    submission_approval: true,
+    submission_decline: true,
+    competition_winners: true,
+    winner_reminder: true,
+    weekly_digest: false,
+    marketing_emails: false
+  });
+  const [isUpdatingNotifications, setIsUpdatingNotifications] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -34,6 +50,9 @@ export default function SettingsPage() {
 
     // Get connected providers from user metadata
     fetchConnectedProviders();
+    
+    // Get notification preferences
+    fetchNotificationPreferences();
   }, [user, authLoading, router]);
 
   const fetchConnectedProviders = async () => {
@@ -59,6 +78,90 @@ export default function SettingsPage() {
     } catch (error) {
       console.error("Failed to fetch connected providers:", error);
     }
+  };
+
+  const fetchNotificationPreferences = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('notification_preferences')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching notification preferences:", error);
+        return;
+      }
+
+      if (data?.notification_preferences) {
+        setNotificationPreferences(data.notification_preferences);
+      }
+    } catch (error) {
+      console.error("Failed to fetch notification preferences:", error);
+    }
+  };
+
+  const updateNotificationPreferences = async () => {
+    if (!user) return;
+
+    setIsUpdatingNotifications(true);
+    try {
+      // Ensure mandatory notifications are always enabled
+      const mandatoryNotifications = [
+        'account_creation',
+        'account_deletion',
+        'submission_approval',
+        'submission_decline'
+      ];
+
+      const updatedPreferences = { ...notificationPreferences };
+      
+      // Force mandatory notifications to be enabled
+      mandatoryNotifications.forEach(type => {
+        updatedPreferences[type] = true;
+      });
+
+      const { error } = await supabase
+        .from('users')
+        .update({ notification_preferences: updatedPreferences })
+        .eq('id', user.id);
+
+      if (error) {
+        throw error;
+      }
+
+      // Update local state to reflect the enforced preferences
+      setNotificationPreferences(updatedPreferences);
+
+      toast.success("Notification preferences updated successfully");
+    } catch (error) {
+      console.error("Failed to update notification preferences:", error);
+      toast.error("Failed to update notification preferences");
+    } finally {
+      setIsUpdatingNotifications(false);
+    }
+  };
+
+  const toggleNotificationPreference = (key) => {
+    // Prevent toggling mandatory notifications
+    const mandatoryNotifications = [
+      'account_creation',
+      'account_deletion',
+      'submission_approval',
+      'submission_decline'
+    ];
+
+    if (mandatoryNotifications.includes(key)) {
+      toast.error("This notification cannot be disabled");
+      return;
+    }
+
+    setNotificationPreferences(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
   };
 
   const handleLinkProvider = async (provider) => {
@@ -202,6 +305,118 @@ export default function SettingsPage() {
           <p className="text-base-content/70 mt-2">
             Manage your connected accounts and account preferences.
           </p>
+        </div>
+
+        {/* Notification Preferences Section */}
+        <div className="card bg-base-100 shadow-sm border border-base-300 mb-6">
+          <div className="card-body">
+            <h2 className="card-title text-xl mb-4">
+              <Bell className="w-5 h-5" />
+              Email Notifications
+            </h2>
+            <p className="text-base-content/70 mb-6">
+              Manage your email notification preferences. Some notifications are required and cannot be disabled.
+            </p>
+
+            <div className="space-y-4">
+              {/* Competition Notifications */}
+              <div>
+                <h3 className="font-semibold text-lg mb-3">Competitions</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 border border-base-300 rounded-lg">
+                    <div>
+                      <h4 className="font-medium">Weekly Competition Entry</h4>
+                      <p className="text-sm text-base-content/60">When your project enters a weekly competition</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      className="toggle toggle-primary"
+                      checked={notificationPreferences.weekly_competition_entry}
+                      onChange={() => toggleNotificationPreference('weekly_competition_entry')}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 border border-base-300 rounded-lg">
+                    <div>
+                      <h4 className="font-medium">Competition Winners</h4>
+                      <p className="text-sm text-base-content/60">When you win a position in competitions</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      className="toggle toggle-primary"
+                      checked={notificationPreferences.competition_winners}
+                      onChange={() => toggleNotificationPreference('competition_winners')}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 border border-base-300 rounded-lg">
+                    <div>
+                      <h4 className="font-medium">Winner Badge Reminder</h4>
+                      <p className="text-sm text-base-content/60">Reminders to add winner badges for dofollow links</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      className="toggle toggle-primary"
+                      checked={notificationPreferences.winner_reminder}
+                      onChange={() => toggleNotificationPreference('winner_reminder')}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Optional Notifications */}
+              <div>
+                <h3 className="font-semibold text-lg mb-3">Optional</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 border border-base-300 rounded-lg">
+                    <div>
+                      <h4 className="font-medium">Weekly Digest</h4>
+                      <p className="text-sm text-base-content/60">Weekly summary of Directory Hunt activity</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      className="toggle toggle-primary"
+                      checked={notificationPreferences.weekly_digest}
+                      onChange={() => toggleNotificationPreference('weekly_digest')}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 border border-base-300 rounded-lg">
+                    <div>
+                      <h4 className="font-medium">Marketing Emails</h4>
+                      <p className="text-sm text-base-content/60">Product updates and promotional content</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      className="toggle toggle-primary"
+                      checked={notificationPreferences.marketing_emails}
+                      onChange={() => toggleNotificationPreference('marketing_emails')}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4">
+                <button
+                  onClick={updateNotificationPreferences}
+                  disabled={isUpdatingNotifications}
+                  className="btn btn-primary"
+                >
+                  {isUpdatingNotifications ? (
+                    <>
+                      <span className="loading loading-spinner loading-sm"></span>
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4 mr-2" />
+                      Save Preferences
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Connected Accounts Section */}

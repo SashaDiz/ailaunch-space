@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "../../../libs/database.js";
+import { notificationManager } from "../../../libs/notification-service.js";
 
 // This cron job endpoint manages automatic weekly competition lifecycle
 // It runs once daily (midnight UTC) to:
@@ -376,6 +377,23 @@ async function awardWinners(competition) {
       });
       
       console.log(`🏆 Position ${position}: ${winner.name} (${winner.upvotes} upvotes)`);
+
+      // Send winner notification
+      try {
+        const user = await db.findOne('users', { id: winner.submitted_by });
+        if (user && user.email) {
+          await notificationManager.sendCompetitionWinnerNotification({
+            userId: user.id,
+            userEmail: user.email,
+            directory: winner,
+            competition: competition,
+            position: position
+          });
+          console.log(`📧 Winner notification sent to ${user.email}`);
+        }
+      } catch (notificationError) {
+        console.error(`Failed to send winner notification for ${winner.name}:`, notificationError);
+      }
     }
     
     // Remove non-winners from weekly display

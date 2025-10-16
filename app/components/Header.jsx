@@ -74,6 +74,7 @@ export function Header() {
                 alt="AI Launch Space"
                 height={100}
                 width={100}
+                priority
                 style={{ width: "auto", height: "auto" }}
               />
             </Link>

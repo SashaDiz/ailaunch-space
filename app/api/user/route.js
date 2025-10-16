@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "../../libs/supabase.js";
 import { db } from "../../libs/database.js";
 import { getSession } from "../../libs/auth-supabase.js";
+import { notificationManager } from "../../libs/notification-service.js";
 
 // User authentication middleware
 async function checkUserAuth() {
@@ -210,6 +211,24 @@ export async function DELETE(request) {
 
     const userId = authCheck.session.user.id;
     const supabaseAdmin = getSupabaseAdmin();
+
+    // Get user data before deletion for notification
+    const userData = await db.findOne("users", { id: userId });
+
+    // Send account deletion notification before deleting
+    try {
+      if (userData?.email) {
+        await notificationManager.sendAccountDeletionNotification({
+          id: userId,
+          email: userData.email,
+          full_name: userData.full_name,
+          first_name: userData.first_name
+        });
+      }
+    } catch (notificationError) {
+      console.error("Failed to send account deletion notification:", notificationError);
+      // Continue with deletion even if notification fails
+    }
 
     // Delete user's directories/apps
     await db.deleteMany("apps", { submitted_by: userId });

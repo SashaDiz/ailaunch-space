@@ -1,13 +1,13 @@
+// CHANGELOG FEATURE DISABLED - COMMENTED OUT FOR FUTURE DEVELOPMENT
+/*
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+import { getSupabaseAdmin } from '../../libs/supabase.js';
 
 export async function GET(request) {
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = getSupabaseAdmin();
     const { searchParams } = new URL(request.url);
     const published = searchParams.get('published');
     const featured = searchParams.get('featured');
@@ -50,14 +50,21 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const cookieStore = cookies();
-    const supabase = createClient(
-      supabaseUrl,
-      process.env.SUPABASE_ANON_KEY,
+    const cookieStore = await cookies();
+    
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
-        global: {
-          headers: {
-            Cookie: cookieStore.toString(),
+        cookies: {
+          get(name) {
+            return cookieStore.get(name)?.value;
+          },
+          set(name, value, options) {
+            cookieStore.set({ name, value, ...options });
+          },
+          remove(name, options) {
+            cookieStore.set({ name, value: '', ...options });
           },
         },
       }
@@ -98,7 +105,7 @@ export async function POST(request) {
       );
     }
 
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    const supabaseAdmin = getSupabaseAdmin();
 
     const changelogData = {
       title,
@@ -137,4 +144,20 @@ export async function POST(request) {
       { status: 500 }
     );
   }
+}
+*/
+
+// Return disabled response for all changelog API calls
+export async function GET() {
+  return new Response(JSON.stringify({ error: 'Changelog feature is currently disabled' }), {
+    status: 503,
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+export async function POST() {
+  return new Response(JSON.stringify({ error: 'Changelog feature is currently disabled' }), {
+    status: 503,
+    headers: { 'Content-Type': 'application/json' }
+  });
 }
