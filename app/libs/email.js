@@ -612,13 +612,14 @@ export const newsletterAudience = {
         throw listError;
       }
 
-      // Look for existing newsletter audience
+      // Look for existing newsletter audience (try multiple possible names)
+      const possibleNames = ['AI Launch Space Newsletter', 'General', 'Newsletter'];
       const existingAudience = audiences.data?.find(audience => 
-        audience.name === 'AI Launch Space Newsletter'
+        possibleNames.includes(audience.name)
       );
 
       if (existingAudience) {
-        console.log('Found existing newsletter audience:', existingAudience.id);
+        console.log('Found existing newsletter audience:', existingAudience.id, 'with name:', existingAudience.name);
         return existingAudience.id;
       }
 
@@ -718,8 +719,8 @@ export const sendEmail = async (to, template, data, options = {}) => {
       return { success: false, error: 'Email service not configured' };
     }
 
-    // Development mode safety check - only send to verified email
-    if (process.env.NODE_ENV === 'development') {
+    // Development mode safety check - only redirect for non-newsletter emails
+    if (process.env.NODE_ENV === 'development' && template !== 'newsletterWelcome') {
       const verifiedEmail = 'elkiwebdesign@gmail.com';
       console.log(`Development mode: Redirecting email from ${to} to ${verifiedEmail}`);
       to = verifiedEmail;
