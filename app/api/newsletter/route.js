@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/libs/supabase.js';
-import { sendEmail } from '@/libs/email.js';
+import { sendEmail, newsletterAudience } from '@/libs/email.js';
 
 export async function POST(request) {
   try {
@@ -70,6 +70,14 @@ export async function POST(request) {
           );
         }
 
+        // Add to Resend audience for resubscription
+        try {
+          await newsletterAudience.addContact(normalizedEmail);
+        } catch (audienceError) {
+          console.error('Error adding contact to Resend audience:', audienceError);
+          // Don't fail the subscription if audience management fails
+        }
+
         // Send welcome email for resubscription
         try {
           await sendEmail(normalizedEmail, 'newsletterWelcome', {
@@ -114,6 +122,14 @@ export async function POST(request) {
         { error: 'Failed to subscribe to newsletter' },
         { status: 500 }
       );
+    }
+
+    // Add to Resend audience
+    try {
+      await newsletterAudience.addContact(normalizedEmail);
+    } catch (audienceError) {
+      console.error('Error adding contact to Resend audience:', audienceError);
+      // Don't fail the subscription if audience management fails
     }
 
     // Send welcome email
@@ -234,6 +250,14 @@ export async function DELETE(request) {
         { error: 'Failed to unsubscribe' },
         { status: 500 }
       );
+    }
+
+    // Remove from Resend audience
+    try {
+      await newsletterAudience.removeContact(normalizedEmail);
+    } catch (audienceError) {
+      console.error('Error removing contact from Resend audience:', audienceError);
+      // Don't fail the unsubscribe if audience management fails
     }
 
     return NextResponse.json({

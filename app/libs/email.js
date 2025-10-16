@@ -592,6 +592,124 @@ export const emailTemplates = {
   }
 };
 
+// Newsletter audience management
+export const newsletterAudience = {
+  async getOrCreateAudience() {
+    try {
+      const resendClient = getResend();
+      if (!resendClient) {
+        throw new Error('Resend client not initialized');
+      }
+
+      // Try to get existing audience
+      const { data: audiences, error: listError } = await resendClient.audiences.list({
+        limit: 50,
+        offset: 0,
+      });
+
+      if (listError) {
+        console.error('Error listing audiences:', listError);
+        throw listError;
+      }
+
+      // Look for existing newsletter audience
+      const existingAudience = audiences.data?.find(audience => 
+        audience.name === 'AI Launch Space Newsletter'
+      );
+
+      if (existingAudience) {
+        console.log('Found existing newsletter audience:', existingAudience.id);
+        return existingAudience.id;
+      }
+
+      // Create new audience if none exists
+      const { data: newAudience, error: createError } = await resendClient.audiences.create({
+        name: 'AI Launch Space Newsletter',
+      });
+
+      if (createError) {
+        console.error('Error creating audience:', createError);
+        throw createError;
+      }
+
+      console.log('Created new newsletter audience:', newAudience.id);
+      return newAudience.id;
+    } catch (error) {
+      console.error('Audience management error:', error);
+      throw error;
+    }
+  },
+
+  async addContact(email, firstName = null, lastName = null) {
+    try {
+      const resendClient = getResend();
+      if (!resendClient) {
+        throw new Error('Resend client not initialized');
+      }
+
+      const audienceId = await this.getOrCreateAudience();
+
+      // Check if contact already exists
+      const { data: existingContact, error: getError } = await resendClient.contacts.get({
+        audienceId,
+        email,
+      });
+
+      if (existingContact) {
+        console.log('Contact already exists in audience:', email);
+        return existingContact;
+      }
+
+      // Add new contact
+      const { data: newContact, error: createError } = await resendClient.contacts.create({
+        audienceId,
+        email,
+        firstName,
+        lastName,
+        unsubscribed: false,
+      });
+
+      if (createError) {
+        console.error('Error adding contact to audience:', createError);
+        throw createError;
+      }
+
+      console.log('Added contact to newsletter audience:', email);
+      return newContact;
+    } catch (error) {
+      console.error('Contact management error:', error);
+      throw error;
+    }
+  },
+
+  async removeContact(email) {
+    try {
+      const resendClient = getResend();
+      if (!resendClient) {
+        throw new Error('Resend client not initialized');
+      }
+
+      const audienceId = await this.getOrCreateAudience();
+
+      const { data, error } = await resendClient.contacts.remove({
+        audienceId,
+        email,
+      });
+
+      if (error) {
+        console.error('Error removing contact from audience:', error);
+        throw error;
+      }
+
+      console.log('Removed contact from newsletter audience:', email);
+      return data;
+    } catch (error) {
+      console.error('Contact removal error:', error);
+      throw error;
+    }
+  }
+};
+
 export const sendEmail = async (to, template, data, options = {}) => {
   try {
     const resendClient = getResend();
