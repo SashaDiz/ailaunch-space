@@ -90,14 +90,6 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/api-docs"
-                  className="text-base-content/70 hover:text-primary transition-colors"
-                >
-                  API Documentation
-                </Link>
-              </li>
-              <li>
-                <Link
                   href="/changelog"
                   className="text-base-content/70 hover:text-primary transition-colors"
                 >

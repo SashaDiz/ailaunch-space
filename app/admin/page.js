@@ -197,33 +197,61 @@ export default function AdminPage() {
             {/* Review Section */}
             <div>
               <h2 className="text-2xl font-bold mb-6">Review & Approve</h2>
-              <div className="card bg-base-100 shadow-sm border border-base-300 hover:shadow-md transition-all">
-                <div className="card-body p-6">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <EditPencil className="w-6 h-6 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-lg font-semibold">Project Submissions</h3>
-                        {stats.pendingDirectories > 0 && (
-                          <span className="badge badge-warning badge-sm">
-                            {stats.pendingDirectories} pending
-                          </span>
-                        )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="card bg-base-100 shadow-sm border border-base-300 hover:shadow-md transition-all">
+                  <div className="card-body p-6">
+                    <div className="flex items-start space-x-4">
+                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <EditPencil className="w-6 h-6 text-primary" />
                       </div>
-                      <p className="text-base-content/70 text-sm mb-4">
-                        Review submitted AI projects, approve or reject submissions, and manage dofollow backlinks for competition winners.
-                      </p>
-                      <Link
-                        href="/admin/directories"
-                        className="btn btn-primary btn-sm"
-                      >
-                        {stats.pendingDirectories > 0 
-                          ? `Review ${stats.pendingDirectories} Pending` 
-                          : "Manage Submissions"
-                        }
-                      </Link>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="text-lg font-semibold">Project Submissions</h3>
+                          {stats.pendingDirectories > 0 && (
+                            <span className="badge badge-warning badge-sm">
+                              {stats.pendingDirectories} pending
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-base-content/70 text-sm mb-4">
+                          Review submitted AI projects, approve or reject submissions, and manage dofollow backlinks for competition winners.
+                        </p>
+                        <Link
+                          href="/admin/directories"
+                          className="btn btn-primary btn-sm"
+                        >
+                          {stats.pendingDirectories > 0 
+                            ? `Review ${stats.pendingDirectories} Pending` 
+                            : "Manage Submissions"
+                          }
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="card bg-base-100 shadow-sm border border-base-300 hover:shadow-md transition-all">
+                  <div className="card-body p-6">
+                    <div className="flex items-start space-x-4">
+                      <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="text-lg font-semibold">Changelog Management</h3>
+                        </div>
+                        <p className="text-base-content/70 text-sm mb-4">
+                          Create and manage changelog entries to keep users informed about platform updates and new features.
+                        </p>
+                        <Link
+                          href="/admin/changelog"
+                          className="btn btn-success btn-sm"
+                        >
+                          Manage Changelog
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -388,6 +388,13 @@ const { data: { user } } = await supabase.auth.getUser(token);
 - `POST /api/admin/link-type` - Manage link types (admin only)
 - `POST /api/admin/complete-competition` - Complete weekly competition (admin only)
 
+#### Changelog
+- `GET /api/changelog` - Get published changelog entries (public)
+- `POST /api/changelog` - Create changelog entry (admin only)
+- `GET /api/changelog/[id]` - Get specific changelog entry (public)
+- `PUT /api/changelog/[id]` - Update changelog entry (admin only)
+- `DELETE /api/changelog/[id]` - Delete changelog entry (admin only)
+
 #### Authentication
 - `GET /auth/signin` - Sign in page
 - `GET /auth/callback` - OAuth callback handler
@@ -410,7 +417,7 @@ const { data: { user } } = await supabase.auth.getUser(token);
 
 ### Supabase Tables
 
-The platform uses 11 PostgreSQL tables with Row Level Security (RLS) enabled:
+The platform uses 12 PostgreSQL tables with Row Level Security (RLS) enabled:
 
 #### Core Tables
 
@@ -450,7 +457,8 @@ The platform uses 11 PostgreSQL tables with Row Level Security (RLS) enabled:
 **sidebar_content** - Dynamic sidebar widgets  
 **backlinks** - Backlink management  
 **analytics** - Usage statistics  
-**external_webhooks** - Webhook configurations
+**external_webhooks** - Webhook configurations  
+**changelog** - Platform update announcements and changelog entries
 
 ### Link Type Management
 
@@ -547,6 +555,15 @@ pnpm webhook:simulate   # Simulate webhook events for testing
 - Complete weekly competitions
 - Award dofollow to top 3 winners
 - View competition statistics
+
+#### Changelog Management
+- Create and manage changelog entries
+- Support for different entry types (feature, bugfix, improvement, breaking, announcement)
+- Publish/unpublish entries
+- Featured entry highlighting
+- Version tracking
+- Author attribution
+- Public changelog page displays published entries
 
 ### Testing Authentication
 
