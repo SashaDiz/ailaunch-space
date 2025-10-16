@@ -810,15 +810,7 @@ function SubmitPageContent() {
   const isLoaded = !loading;
 
   const router = useRouter();
-  
-  // Safely get search params with error handling
-  let searchParams;
-  try {
-    searchParams = useSearchParams();
-  } catch (error) {
-    console.error("Error getting search params:", error);
-    searchParams = new URLSearchParams();
-  }
+  const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     plan: "standard", // Default to standard plan
@@ -1205,21 +1197,19 @@ function SubmitPageContent() {
 
   // Handle edit mode
   useEffect(() => {
-    try {
-      const edit = searchParams?.get("edit");
-      const draft = searchParams?.get("draft");
-      const id = searchParams?.get("id");
+    if (!searchParams) return;
+    
+    const edit = searchParams.get("edit");
+    const draft = searchParams.get("draft");
+    const id = searchParams.get("id");
 
-      if (edit === "true" && id) {
-        setIsEditMode(true);
-        setEditDirectoryId(id);
-        loadDirectoryForEdit(id);
-      } else if (draft) {
-        // Handle resuming a draft
-        loadDraftForEdit(draft);
-      }
-    } catch (error) {
-      console.error("Error handling edit mode:", error);
+    if (edit === "true" && id) {
+      setIsEditMode(true);
+      setEditDirectoryId(id);
+      loadDirectoryForEdit(id);
+    } else if (draft) {
+      // Handle resuming a draft
+      loadDraftForEdit(draft);
     }
   }, [searchParams]);
 
