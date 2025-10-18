@@ -36,7 +36,7 @@ export default {
     themes: [
       {
         light: {
-          'primary': '#2563eb',
+          'primary': '#ED0D79',
           'secondary': '#7c3aed',
           'accent': '#06b6d4',
           'neutral': '#374151',
@@ -49,7 +49,7 @@ export default {
           'error': '#ef4444',
         },
         dark: {
-          'primary': '#3b82f6',
+          'primary': '#ED0D79',
           'secondary': '#8b5cf6',
           'accent': '#06b6d4',
           'neutral': '#1f2937',
@@ -62,7 +62,7 @@ export default {
           'error': '#ef4444',
         },
         abyss: {
-          'primary': '#1e293b',
+          'primary': '#ED0D79',
           'secondary': '#64748b',
           'accent': '#0ea5e9',
           'neutral': '#334155',

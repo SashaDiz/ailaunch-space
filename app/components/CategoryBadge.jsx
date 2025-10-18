@@ -9,15 +9,45 @@ export function CategoryBadge({ category, clickable = true, size = "sm" }) {
     return null;
   }
 
-  const baseClasses = `inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-900 hover:bg-gray-200 transition-colors`;
-  
-  const sizeClasses = {
-    xs: "px-1.5 py-0.5 text-xs",
-    sm: "px-2 py-1 text-xs", 
-    md: "px-3 py-1.5 text-sm"
+  // Generate color for category badges (same logic as header dropdown)
+  const getCategoryColor = (category) => {
+    let hash = 0;
+    for (let i = 0; i < category.length; i++) {
+      hash = category.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    const colors = [
+      { bg: "bg-blue-100", text: "text-blue-800", hover: "hover:bg-blue-200" },
+      { bg: "bg-purple-100", text: "text-purple-800", hover: "hover:bg-purple-200" },
+      { bg: "bg-green-100", text: "text-green-800", hover: "hover:bg-green-200" },
+      { bg: "bg-pink-100", text: "text-pink-800", hover: "hover:bg-pink-200" },
+      { bg: "bg-orange-100", text: "text-orange-800", hover: "hover:bg-orange-200" },
+      { bg: "bg-indigo-100", text: "text-indigo-800", hover: "hover:bg-indigo-200" },
+      { bg: "bg-cyan-100", text: "text-cyan-800", hover: "hover:bg-cyan-200" },
+      { bg: "bg-emerald-100", text: "text-emerald-800", hover: "hover:bg-emerald-200" },
+      { bg: "bg-lime-100", text: "text-lime-800", hover: "hover:bg-lime-200" },
+      { bg: "bg-violet-100", text: "text-violet-800", hover: "hover:bg-violet-200" },
+      { bg: "bg-rose-100", text: "text-rose-800", hover: "hover:bg-rose-200" },
+      { bg: "bg-amber-100", text: "text-amber-800", hover: "hover:bg-amber-200" },
+      { bg: "bg-teal-100", text: "text-teal-800", hover: "hover:bg-teal-200" },
+      { bg: "bg-slate-100", text: "text-slate-800", hover: "hover:bg-slate-200" },
+      { bg: "bg-red-100", text: "text-red-800", hover: "hover:bg-red-200" },
+      { bg: "bg-yellow-100", text: "text-yellow-800", hover: "hover:bg-yellow-200" },
+    ];
+
+    return colors[Math.abs(hash) % colors.length];
   };
 
-  const classes = `${baseClasses.replace("px-2 py-1 text-xs", sizeClasses[size])}`;
+  const colorScheme = getCategoryColor(category);
+  const baseClasses = `inline-flex items-center px-2 py-1.5 leading-none text-xs font-normal rounded-lg ${colorScheme.bg} ${colorScheme.text} ${colorScheme.hover} transition-colors`;
+  
+  const sizeClasses = {
+    xs: "px-2 py-1.5 text-xs",
+    sm: "px-2.5 py-1.5 text-xs", 
+    md: "px-3 py-2 text-sm"
+  };
+
+  const classes = `${baseClasses.replace("px-3 py-2 text-xs", sizeClasses[size])}`;
 
   // Map category names to slugs for consistent filtering
   const categorySlugMap = {
@@ -121,15 +151,15 @@ export function CategoryBadge({ category, clickable = true, size = "sm" }) {
 }
 
 export function PricingBadge({ pricing, clickable = true, size = "sm" }) {
-  const baseClasses = `inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-900 hover:bg-gray-200 transition-colors`;
+  const baseClasses = `inline-flex items-center px-2 py-1.5 text-xs font-normal rounded-lg bg-gray-100 text-gray-900 hover:bg-gray-200 transition-colors`;
   
   const sizeClasses = {
-    xs: "px-1.5 py-0.5 text-xs",
-    sm: "px-2 py-1 text-xs", 
-    md: "px-3 py-1.5 text-sm"
+    xs: "px-2 py-1.5 text-xs",
+    sm: "px-2.5 py-1.5 text-xs", 
+    md: "px-3 py-2 text-sm"
   };
 
-  const classes = `${baseClasses.replace("px-2 py-1 text-xs", sizeClasses[size])}`;
+  const classes = `${baseClasses.replace("px-2 py-1.5 text-xs", sizeClasses[size])}`;
 
   // Map pricing values to consistent format
   const pricingMap = {

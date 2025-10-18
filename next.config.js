@@ -23,6 +23,31 @@ const nextConfig = {
       };
     }
 
+    // Fix for React 19 compatibility and module loading issues
+    config.resolve = {
+      ...config.resolve,
+      fallback: {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+        os: false,
+      },
+    };
+
+    // Add module rules for better compatibility
+    config.module = {
+      ...config.module,
+      rules: [
+        ...config.module.rules,
+        {
+          test: /\.m?js$/,
+          resolve: {
+            fullySpecified: false,
+          },
+        },
+      ],
+    };
+
     // Configure filesystem cache to reduce large string warnings
     if (config.cache && config.cache.type === "filesystem") {
       config.cache.maxMemoryGenerations = 0;

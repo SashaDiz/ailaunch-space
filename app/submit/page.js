@@ -7,8 +7,18 @@ import { NavArrowLeft, NavArrowRight, Xmark } from "iconoir-react";
 import toast from "react-hot-toast";
 // Import Zod for validation
 import { z } from "zod";
-import CategorySelector from "../components/CategorySelector";
-import ImageUpload from "../components/ImageUpload";
+import dynamic from "next/dynamic";
+
+// Use dynamic imports to prevent webpack issues
+const CategorySelector = dynamic(() => import("../components/CategorySelector").then(mod => ({ default: mod.CategorySelector })), {
+  ssr: false,
+  loading: () => <div className="loading loading-spinner loading-sm"></div>
+});
+
+const ImageUpload = dynamic(() => import("../components/ImageUpload"), {
+  ssr: false,
+  loading: () => <div className="loading loading-spinner loading-sm"></div>
+});
 
 // Validation schemas for each step
 const PlanSelectionSchema = z.object({
@@ -808,6 +818,23 @@ function WeekSelectionStep({ formData, setFormData, errors }) {
 function SubmitPageContent() {
   const { user, loading } = useUser();
   const isLoaded = !loading;
+
+  // Add error boundary for webpack issues
+  const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    const handleError = (error) => {
+      console.error("Global error caught:", error);
+      if (error.message && error.message.includes("Cannot read properties of undefined")) {
+        setHasError(true);
+        setErrorMessage("Module loading error detected. Please refresh the page.");
+      }
+    };
+
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -1747,7 +1774,7 @@ function SubmitPageContent() {
                     window.open(checkoutResult.data.checkoutUrl, "_blank"),
                   style: {
                     cursor: "pointer",
-                    background: "#3b82f6",
+                    background: "#ED0D79",
                     color: "#ffffff",
                   },
                 }
@@ -1938,6 +1965,43 @@ function SubmitPageContent() {
   // Don't render the form if user is not authenticated (will redirect)
   if (!user) {
     return null;
+  }
+
+  // Show error state if webpack error detected
+  if (hasError) {
+    return (
+      <div className="min-h-screen bg-base-100 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="alert alert-error mb-4">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="stroke-current shrink-0 h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <div>
+              <h3 className="font-bold">Module Loading Error</h3>
+              <div className="text-sm">
+                {errorMessage}
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            className="btn btn-primary"
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -2245,15 +2309,54 @@ function SubmitPageWithSearchParams() {
         </div>
       }
     >
-      <SubmitPageContent />
+      <ErrorBoundary>
+        <SubmitPageContent />
+      </ErrorBoundary>
     </Suspense>
   );
 }
 
 export default function SubmitPage() {
-  return (
-    <ErrorBoundary>
-      <SubmitPageWithSearchParams />
-    </ErrorBoundary>
-  );
+  try {
+    return (
+      <ErrorBoundary>
+        <SubmitPageWithSearchParams />
+      </ErrorBoundary>
+    );
+  } catch (error) {
+    console.error("Submit page error:", error);
+    return (
+      <div className="min-h-screen bg-base-100 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="alert alert-error mb-4">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="stroke-current shrink-0 h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <div>
+              <h3 className="font-bold">Page Loading Error</h3>
+              <div className="text-sm">
+                There was an error loading the submission form. Please refresh the page.
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            className="btn btn-primary"
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>
+    );
+  }
 }

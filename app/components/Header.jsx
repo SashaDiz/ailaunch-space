@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUser } from "../hooks/useUser";
 import { useSupabase } from "./SupabaseProvider";
-import { Menu, NavArrowDown } from "iconoir-react";
+import { Menu, NavArrowDown, PlusCircle } from "iconoir-react";
 import Image from "next/image";
+import { gsap } from "gsap";
 
 export function Header() {
   const { user, loading } = useUser();
@@ -14,9 +15,31 @@ export function Header() {
   const router = useRouter();
   const [categories, setCategories] = useState([]);
   const [groupedCategories, setGroupedCategories] = useState({});
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  const plusIconRef = useRef(null);
 
   useEffect(() => {
     fetchCategories();
+  }, []);
+
+  // Ensure we're on the client side before setting up scroll listener
+  useEffect(() => {
+    setIsClient(true);
+    
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      setIsScrolled(scrollTop > 0);
+    };
+
+    // Add scroll listener
+    window.addEventListener('scroll', handleScroll);
+    
+    // Check initial scroll position
+    handleScroll();
+
+    // Cleanup
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const fetchCategories = async () => {
@@ -30,6 +53,26 @@ export function Header() {
       }
     } catch (error) {
       console.error("Failed to fetch categories:", error);
+    }
+  };
+
+  const handlePlusIconHover = () => {
+    if (isClient && plusIconRef.current) {
+      gsap.to(plusIconRef.current, {
+        rotation: 90,
+        duration: 0.3,
+        ease: "power2.out"
+      });
+    }
+  };
+
+  const handlePlusIconLeave = () => {
+    if (isClient && plusIconRef.current) {
+      gsap.to(plusIconRef.current, {
+        rotation: 0,
+        duration: 0.3,
+        ease: "power2.out"
+      });
     }
   };
 
@@ -63,24 +106,29 @@ export function Header() {
   };
 
   return (
-    <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
+    <header className={`sticky top-0 z-50 transition-all duration-300 ${
+      isClient && isScrolled 
+        ? 'bg-white/80 backdrop-blur-md' 
+        : 'bg-transparent backdrop-blur-none'
+    }`}>
+      <div className="max-w-[1280px] mx-auto px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo and Brand */}
-          <div className="flex items-center space-x-4">
             <Link href="/">
               <Image
                 src="/assets/logo.svg"
                 alt="AI Launch Space"
-                height={100}
-                width={100}
+                height={40}
+                width={40}
                 priority
-                style={{ width: "auto", height: "auto" }}
+                style={{ width: "auto", height: "44px" }}
               />
             </Link>
 
+          {/* Right side - Navigation, CTA and Auth */}
+          <div className="flex items-center space-x-3">
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center space-x-1 ml-8">
+            <nav className="hidden lg:flex items-center space-x-1">
               <Link
                 href="/pricing"
                 className="px-3 py-2 text-sm font-medium text-base-content hover:text-primary transition-colors"
@@ -140,22 +188,24 @@ export function Header() {
                   </div>
                 </div>
               </div>
-
             </nav>
-          </div>
-
-          {/* Right side - CTA and Auth */}
-          <div className="flex items-center space-x-3">
             {/* Launch AI Project Button */}
             <Link
               href="/submit"
-              className="btn btn-primary btn-sm lg:btn-md font-medium hidden sm:flex"
+              className="text-center bg-[#ED0D79] text-white rounded-lg px-4 py-3 font-semibold text-sm no-underline transition duration-300 hover:scale-105 hidden sm:flex items-center gap-2"
+              onMouseEnter={handlePlusIconHover}
+              onMouseLeave={handlePlusIconLeave}
             >
+              <PlusCircle 
+                ref={plusIconRef} 
+                className="h-[18px] w-[18px]"
+                strokeWidth={2}
+              />
               Launch your AI project
             </Link>
 
             {/* Authentication */}
-            {loading ? (
+            {!isClient || loading ? (
               <div className="skeleton w-8 h-8 rounded-full"></div>
             ) : user ? (
               <div className="dropdown dropdown-end">

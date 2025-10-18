@@ -26,7 +26,7 @@ export const emailTemplates = {
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
               <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: inline-block; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
+                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
                   ALS
                 </div>
                 <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: 700;">
@@ -55,7 +55,7 @@ export const emailTemplates = {
 
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${process.env.NEXT_PUBLIC_APP_URL}/submit" 
-                   style="display: inline-block; background: #3b82f6; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
+                   style="display: inline-block; background: #ED0D79; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
                   Submit Your Project
                 </a>
                 <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" 
@@ -149,7 +149,7 @@ export const emailTemplates = {
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
               <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: inline-block; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
+                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
                   ALS
                 </div>
                 <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: 700;">
@@ -192,7 +192,7 @@ export const emailTemplates = {
 
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${process.env.NEXT_PUBLIC_APP_URL}/directory/${data.slug}" 
-                   style="display: inline-block; background: #3b82f6; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
+                   style="display: inline-block; background: #ED0D79; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
                   View Your Project
                 </a>
                 <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" 
@@ -228,7 +228,7 @@ export const emailTemplates = {
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
               <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: inline-block; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
+                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
                   ALS
                 </div>
                 <div style="font-size: 48px; margin-bottom: 10px;">🏆</div>
@@ -266,7 +266,7 @@ export const emailTemplates = {
 
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${process.env.NEXT_PUBLIC_APP_URL}/directory/${data.slug}" 
-                   style="display: inline-block; background: #3b82f6; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
+                   style="display: inline-block; background: #ED0D79; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
                   View Directory
                 </a>
                 <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" 
@@ -302,7 +302,7 @@ export const emailTemplates = {
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
               <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: inline-block; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
+                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
                   ALS
                 </div>
                 <div style="font-size: 48px; margin-bottom: 10px;">🔗</div>
@@ -339,7 +339,7 @@ export const emailTemplates = {
 
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" 
-                   style="display: inline-block; background: #3b82f6; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
+                   style="display: inline-block; background: #ED0D79; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
                   Get Embed Code
                 </a>
                 <a href="${process.env.NEXT_PUBLIC_APP_URL}/directory/${data.slug}" 
@@ -376,7 +376,7 @@ export const emailTemplates = {
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
               <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: inline-block; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
+                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
                   ALS
                 </div>
                 <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: 700;">
@@ -405,7 +405,7 @@ export const emailTemplates = {
 
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${process.env.NEXT_PUBLIC_APP_URL}/directory/${data.slug}" 
-                   style="display: inline-block; background: #3b82f6; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
+                   style="display: inline-block; background: #ED0D79; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
                   View Your Project
                 </a>
                 <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" 
@@ -441,7 +441,7 @@ export const emailTemplates = {
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
               <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: inline-block; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
+                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
                   ALS
                 </div>
                 <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: 700;">
@@ -477,7 +477,7 @@ export const emailTemplates = {
 
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${process.env.NEXT_PUBLIC_APP_URL}/submit" 
-                   style="display: inline-block; background: #3b82f6; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
+                   style="display: inline-block; background: #ED0D79; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
                   Submit Again
                 </a>
                 <a href="mailto:hello@ailaunch.space" 
@@ -514,7 +514,7 @@ export const emailTemplates = {
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
               <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: inline-block; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
+                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
                   ALS
                 </div>
                 <div style="font-size: 48px; margin-bottom: 10px;">📧</div>
@@ -557,7 +557,7 @@ export const emailTemplates = {
 
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" 
-                   style="display: inline-block; background: #3b82f6; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
+                   style="display: inline-block; background: #ED0D79; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
                   Create Account
                 </a>
                 <a href="${process.env.NEXT_PUBLIC_APP_URL}/settings" 

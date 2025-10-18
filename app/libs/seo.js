@@ -10,7 +10,7 @@ export const seoConfig = {
   author: "AI Launch Space",
   language: "en",
   locale: "en_US",
-  themeColor: "#3b82f6",
+  themeColor: "#ED0D79",
 };
 
 // Generate meta tags for pages

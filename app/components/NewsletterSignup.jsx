@@ -85,7 +85,7 @@ export function NewsletterSignup({
     return (
       <div className={`flex flex-col sm:flex-row gap-2 ${className}`}>
         <div className="relative flex-1">
-          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-base-content/50" />
+          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#ED0D79]" />
           <input
             type="email"
             value={email}
@@ -98,14 +98,16 @@ export function NewsletterSignup({
         <button
           onClick={handleSubmit}
           disabled={status === "loading" || status === "success"}
-          className={`btn ${
-            status === "success" ? "btn-success" : "btn-primary"
-          } min-w-[120px]`}
+          className={`text-center ${
+            status === "success" 
+              ? "bg-green-500 text-white" 
+              : "bg-[#ED0D79] text-white"
+          } rounded-lg px-4 py-3 font-semibold text-sm no-underline transition duration-300 hover:scale-105 min-w-[120px] flex items-center justify-center gap-2 disabled:hover:scale-100 disabled:opacity-70`}
         >
           {status === "loading" && (
-            <RefreshDouble className="w-4 h-4 animate-spin mr-2" />
+            <RefreshDouble className="w-4 h-4 animate-spin" />
           )}
-          {status === "success" && <Check className="w-4 h-4 mr-2" />}
+          {status === "success" && <Check className="w-4 h-4" />}
           {status === "success" ? "Subscribed!" : buttonText}
         </button>
         {error && <p className="text-error text-sm mt-1">{error}</p>}
@@ -117,10 +119,10 @@ export function NewsletterSignup({
     return (
       <div className={`${className}`}>
         <div className="flex items-center space-x-2 mb-3">
-          <Mail className="w-5 h-5 text-primary" />
-          <h3 className="font-semibold text-lg">Stay Updated</h3>
+          <Mail className="w-6 h-6 mb-[2px] text-[#ED0D79]" />
+          <h3 className="font-semibold text-lg leading-none text-white">Stay Updated</h3>
         </div>
-        <p className="text-base-content/70 text-sm mb-4">
+        <p className="text-white/70 text-sm mb-4">
           Get weekly updates on new directories, competition results, and
           platform news.
         </p>
@@ -138,14 +140,16 @@ export function NewsletterSignup({
           <button
             type="submit"
             disabled={status === "loading" || status === "success"}
-            className={`btn w-full ${
-              status === "success" ? "btn-success" : "btn-primary"
-            }`}
+            className={`text-center w-full ${
+              status === "success" 
+                ? "bg-green-500 text-white" 
+                : "bg-[#ED0D79] text-white"
+            } rounded-lg px-4 py-3 font-semibold text-sm no-underline transition duration-300 hover:scale-105 flex items-center justify-center gap-2 disabled:hover:scale-100 disabled:opacity-70`}
           >
             {status === "loading" && (
-              <RefreshDouble className="w-4 h-4 animate-spin mr-2" />
+              <RefreshDouble className="w-4 h-4 animate-spin" />
             )}
-            {status === "success" && <Check className="w-4 h-4 mr-2" />}
+            {status === "success" && <Check className="w-4 h-4" />}
             {status === "success" ? "Subscribed!" : buttonText}
           </button>
           {error && <p className="text-error text-sm">{error}</p>}
@@ -162,13 +166,13 @@ export function NewsletterSignup({
       <div className="card-body p-6">
         <div className="flex items-center space-x-3 mb-4">
           <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-            <Mail className="w-6 h-6 text-primary" />
+            <Mail className="w-6 h-6 text-[#ED0D79]" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold">
+            <h3 className="text-lg font-semibold leading-none">
               {title || "Join Our Newsletter"}
             </h3>
-            <p className="text-base-content/60 text-sm">
+            <p className="text-white/70 text-sm">
               {description ||
                 "Get the latest directory updates and platform news"}
             </p>
@@ -177,7 +181,7 @@ export function NewsletterSignup({
 
         {showBenefits && (
           <div className="mb-6">
-            <ul className="space-y-2 text-sm text-base-content/70">
+            <ul className="space-y-2 text-sm text-white/70">
               <li className="flex items-center">
                 <div className="w-2 h-2 bg-primary rounded-full mr-3"></div>
                 Weekly directory roundups
@@ -201,7 +205,7 @@ export function NewsletterSignup({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="form-control">
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-base-content/50" />
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#ED0D79]" />
               <input
                 type="email"
                 value={email}
@@ -221,19 +225,21 @@ export function NewsletterSignup({
           <button
             type="submit"
             disabled={status === "loading" || status === "success"}
-            className={`btn w-full ${
-              status === "success" ? "btn-success" : "btn-primary"
-            }`}
+            className={`text-center w-full ${
+              status === "success" 
+                ? "bg-green-500 text-white" 
+                : "bg-[#ED0D79] text-white"
+            } rounded-lg px-4 py-3 font-semibold text-sm no-underline transition duration-300 hover:scale-105 flex items-center justify-center gap-2 disabled:hover:scale-100 disabled:opacity-70`}
           >
             {status === "loading" && (
-              <RefreshDouble className="w-4 h-4 animate-spin mr-2" />
+              <RefreshDouble className="w-4 h-4 animate-spin" />
             )}
-            {status === "success" && <Check className="w-4 h-4 mr-2" />}
+            {status === "success" && <Check className="w-4 h-4" />}
             {status === "success" ? "Successfully Subscribed!" : buttonText}
           </button>
         </form>
 
-        <p className="text-xs text-base-content/50 mt-4 text-center">
+          <p className="text-xs text-white/70 mt-4 text-center">
           No spam. Unsubscribe at any time. We respect your privacy.
         </p>
       </div>
@@ -280,10 +286,10 @@ export function NewsletterPopup({
         <div className="card-body p-6">
           <div className="text-center mb-6">
             <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-              <Mail className="w-8 h-8 text-white" />
+              <Mail className="w-8 h-8 text-[#ED0D79]" />
             </div>
             <h2 className="text-2xl font-bold mb-2">Don't Miss Out!</h2>
-            <p className="text-base-content/70">
+            <p className="text-white/70">
               Join 500+ directory builders getting weekly updates on the latest
               launches, competition results, and platform features.
             </p>
@@ -299,7 +305,7 @@ export function NewsletterPopup({
           />
 
           <div className="text-center">
-            <p className="text-xs text-base-content/50">
+              <p className="text-xs text-white/70">
               Join our community and get exclusive insights delivered to your
               inbox.
             </p>
