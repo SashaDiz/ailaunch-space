@@ -12,7 +12,7 @@ import {
 import toast from "react-hot-toast";
 
 export function SocialShare({
-  directoryId,
+  projectId,
   slug,
   title,
   description,
@@ -48,7 +48,7 @@ export function SocialShare({
   const handleShare = async (platform, customUrl = null) => {
     try {
       // Track the share
-      if (directoryId || slug) {
+      if (projectId || slug) {
         // Analytics removed
       }
 
@@ -97,7 +97,7 @@ export function SocialShare({
       toast.success("Link copied to clipboard!");
 
       // Track copy action
-      if (directoryId || slug) {
+      if (projectId || slug) {
         // Analytics removed
       }
 
@@ -128,7 +128,7 @@ export function SocialShare({
         await navigator.share(shareData);
 
         // Track native share
-        if (directoryId || slug) {
+        if (projectId || slug) {
           // Analytics removed
         }
 
@@ -242,7 +242,7 @@ export function SocialShare({
           tabIndex={0}
           className="dropdown-content card bg-base-100 shadow-xl border border-base-300 w-80 p-4 mt-2"
         >
-          <h3 className="font-semibold mb-3">Share this directory</h3>
+          <h3 className="font-semibold mb-3">Share this project</h3>
 
           {/* Native share (if available) */}
           {isClient && navigator.share && (

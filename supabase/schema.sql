@@ -150,7 +150,7 @@ CREATE INDEX idx_competitions_start_date ON public.competitions(start_date);
 CREATE INDEX idx_competitions_end_date ON public.competitions(end_date);
 
 -- ============================================================================
--- APPS (DIRECTORIES) TABLE
+-- APPS (PROJECTS) TABLE
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS public.apps (
@@ -225,6 +225,8 @@ CREATE TABLE IF NOT EXISTS public.apps (
   total_engagement INTEGER DEFAULT 0,
   
   -- Ranking and Competition
+  -- TODO: Implement advanced ranking system
+  -- These columns are ready for future ranking algorithms
   weekly_ranking INTEGER,
   overall_ranking INTEGER,
   ranking_score NUMERIC DEFAULT 0,

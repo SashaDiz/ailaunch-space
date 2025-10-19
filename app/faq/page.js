@@ -46,7 +46,7 @@ const faqs = [
   {
     question: "What happens if I don't win the weekly competition?",
     answer:
-      "Standard submissions that don't win top 3 keep their nofollow backlink but remain in the directory permanently. Premium submissions always get their guaranteed dofollow backlink regardless of competition results. All submissions stay in the directory for future discovery even after the competition ends.",
+      "Standard submissions that don't win top 3 keep their nofollow backlink but remain in the projects listing permanently. Premium submissions always get their guaranteed dofollow backlink regardless of competition results. All submissions stay in the projects listing for future discovery even after the competition ends.",
   },
   {
     question: "How do I get my backlink and badge?",

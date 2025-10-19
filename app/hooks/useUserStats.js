@@ -12,8 +12,8 @@ export function useUserStats() {
     totalClicks: 0,
     bestRank: null,
     weeklyWins: 0,
-    liveDirectories: 0,
-    pendingDirectories: 0,
+    liveProjects: 0,
+    pendingProjects: 0,
     loading: true,
     error: null,
   });

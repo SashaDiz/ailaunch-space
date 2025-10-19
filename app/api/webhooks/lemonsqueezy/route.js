@@ -189,40 +189,40 @@ async function handleOrderCreated(event) {
     // Extract custom data fields (may be empty if custom data not found)
     const {
       user_id: userId,
-      directory_name: directoryName,
-      directory_slug: directorySlug,
+      project_name: projectName,
+      project_slug: projectSlug,
       plan_type: planType
     } = customData;
 
-    let directory;
+    let project;
     
     // Strategy 1: If we have custom data with user_id, use it
     if (userId) {
       console.log(`Processing payment for user: ${userId}`);
 
-      // Find the directory to update
-      console.log('Searching for directory:', { directorySlug, directoryName, userId });
+      // Find the project to update
+      console.log('Searching for project:', { projectSlug, projectName, userId });
       
-      if (directorySlug) {
-        directory = await db.findOne("apps", { 
-          slug: directorySlug,
+      if (projectSlug) {
+        project = await db.findOne("apps", { 
+          slug: projectSlug,
           submitted_by: userId 
         });
-        console.log(directory ? '✅ Directory found by slug' : '❌ Directory not found by slug');
+        console.log(project ? '✅ Project found by slug' : '❌ Project not found by slug');
       }
       
-      if (!directory && directoryName) {
-        directory = await db.findOne("apps", { 
-          name: directoryName,
+      if (!project && projectName) {
+        project = await db.findOne("apps", { 
+          name: projectName,
           submitted_by: userId 
         });
-        console.log(directory ? '✅ Directory found by name' : '❌ Directory not found by name');
+        console.log(project ? '✅ Project found by name' : '❌ Project not found by name');
       }
     }
     
-    // Strategy 2: If no custom data or directory not found, match by email + unpaid status + recent timestamp
-    if (!directory) {
-      console.log('🔍 Attempting to match directory by email and unpaid status...');
+    // Strategy 2: If no custom data or project not found, match by email + unpaid status + recent timestamp
+    if (!project) {
+      console.log('🔍 Attempting to match project by email and unpaid status...');
       
       // Use the most reliable email source (checkoutEmail includes fallbacks)
       const emailToMatch = checkoutEmail || order.user_email;
@@ -249,10 +249,10 @@ async function handleOrderCreated(event) {
         console.error("❌ Error querying auth users:", listError);
       }
       
-      // If we found a user, look for their unpaid directory
+      // If we found a user, look for their unpaid project
       if (authUserId) {
-        // Find the most recent unpaid premium directory for this user
-        const unpaidDirectories = await db.find("apps", {
+        // Find the most recent unpaid premium project for this user
+        const unpaidProjects = await db.find("apps", {
           submitted_by: authUserId,
           plan: "premium",
           payment_status: false,
@@ -262,15 +262,15 @@ async function handleOrderCreated(event) {
           limit: 1
         });
         
-        if (unpaidDirectories && unpaidDirectories.length > 0) {
-          directory = unpaidDirectories[0];
-          console.log('✅ Found unpaid directory by email match:', {
-            id: directory.id,
-            name: directory.name,
-            paymentInitiatedAt: directory.payment_initiated_at
+        if (unpaidProjects && unpaidProjects.length > 0) {
+          project = unpaidProjects[0];
+          console.log('✅ Found unpaid project by email match:', {
+            id: project.id,
+            name: project.name,
+            paymentInitiatedAt: project.payment_initiated_at
           });
         } else {
-          console.error("❌ No unpaid premium directories found for user:", {
+          console.error("❌ No unpaid premium projects found for user:", {
             userId: authUserId,
             email: order.user_email
           });
@@ -278,33 +278,33 @@ async function handleOrderCreated(event) {
       }
     }
 
-    // If still no directory found, we can't process the payment
-    if (!directory) {
-      console.error("❌ Directory not found for payment after all strategies", { 
+    // If still no project found, we can't process the payment
+    if (!project) {
+      console.error("❌ Project not found for payment after all strategies", { 
         customDataUserId: userId,
-        directoryName, 
-        directorySlug,
+        projectName, 
+        projectSlug,
         orderEmail: order.user_email,
         orderId: event.data.id
       });
-      throw new Error('Directory not found - cannot process payment. Please contact support with order ID: ' + event.data.id);
+      throw new Error('Project not found - cannot process payment. Please contact support with order ID: ' + event.data.id);
     }
 
-    console.log('✅ Found directory:', {
-      id: directory.id,
-      name: directory.name,
-      slug: directory.slug,
-      currentPlan: directory.plan || 'standard',
-      launchWeek: directory.launch_week,
-      scheduledLaunch: directory.scheduled_launch
+    console.log('✅ Found project:', {
+      id: project.id,
+      name: project.name,
+      slug: project.slug,
+      currentPlan: project.plan || 'standard',
+      launchWeek: project.launch_week,
+      scheduledLaunch: project.scheduled_launch
     });
 
-    // Update directory with payment information and schedule the launch
-    console.log('Updating directory with payment info and scheduling launch...');
+    // Update project with payment information and schedule the launch
+    console.log('Updating project with payment info and scheduling launch...');
     
     const updateResult = await db.updateOne(
       "apps",
-      { id: directory.id },
+      { id: project.id },
       {
         $set: {
           plan: planType || "premium",
@@ -320,24 +320,24 @@ async function handleOrderCreated(event) {
     );
 
     if (!updateResult) {
-      throw new Error('Failed to update directory');
+      throw new Error('Failed to update project');
     }
 
-    console.log('✅ Directory updated successfully and launch scheduled');
+    console.log('✅ Project updated successfully and launch scheduled');
     
     // Increment competition counts now that payment is confirmed
-    if (directory.weekly_competition_id) {
+    if (project.weekly_competition_id) {
       console.log('Incrementing competition counts after payment confirmation...');
       
       // Find the competition by ID
       const competition = await db.findOne("competitions", { 
-        id: directory.weekly_competition_id 
+        id: project.weekly_competition_id 
       });
       
       if (competition) {
         const competitionUpdateResult = await db.updateOne(
           "competitions",
-          { id: directory.weekly_competition_id },
+          { id: project.weekly_competition_id },
           {
             $inc: { 
               total_submissions: 1,
@@ -353,18 +353,18 @@ async function handleOrderCreated(event) {
           modifiedCount: competitionUpdateResult.modifiedCount
         });
       } else {
-        console.warn('⚠️  Competition not found for directory:', directory.weekly_competition_id);
+        console.warn('⚠️  Competition not found for project:', project.weekly_competition_id);
       }
     } else {
-      console.warn('⚠️  No weekly_competition_id set for directory');
+      console.warn('⚠️  No weekly_competition_id set for project');
     }
 
     // Record payment in payments collection
     console.log('Recording payment in database...');
     
     const paymentRecord = await db.insertOne("payments", {
-      user_id: userId || directory.submitted_by, // Use userId from custom data or directory's submitted_by
-      app_id: directory.id,
+      user_id: userId || project.submitted_by, // Use userId from custom data or project's submitted_by
+      app_id: project.id,
       plan: planType || "premium",
       amount: order.total,
       currency: order.currency,
@@ -388,7 +388,7 @@ async function handleOrderCreated(event) {
     });
 
     console.log(`\n🎉 LemonSqueezy payment processed successfully!`);
-    console.log(`   Directory: ${directory.name} (${directory.id})`);
+    console.log(`   Project: ${project.name} (${project.id})`);
     console.log(`   Plan: ${planType || "premium"}`);
     console.log(`   Amount: ${order.currency} ${order.total / 100}`);
     console.log(`   Order ID: ${order.identifier}`);
@@ -412,20 +412,20 @@ async function handleOrderRefunded(event) {
     const order = event.data.attributes;
     const orderId = event.data.id;
 
-    // Find the directory associated with this order
-    const directory = await db.findOne("apps", { 
+    // Find the project associated with this order
+    const project = await db.findOne("apps", { 
       order_id: orderId 
     });
 
-    if (!directory) {
-      console.error("Directory not found for refunded order", orderId);
+    if (!project) {
+      console.error("Project not found for refunded order", orderId);
       return;
     }
 
-    // Revert directory back to standard plan
+    // Revert project back to standard plan
     await db.updateOne(
       "apps",
-      { id: directory.id },
+      { id: project.id },
       {
         $set: {
           plan: "standard",
@@ -452,7 +452,7 @@ async function handleOrderRefunded(event) {
       }
     );
 
-    console.log(`Lemonsqueezy order refunded for directory ${directory.id}`);
+    console.log(`Lemonsqueezy order refunded for project ${project.id}`);
     
     // TODO: Send refund notification email
     // TODO: Remove any premium features

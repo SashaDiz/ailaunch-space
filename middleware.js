@@ -47,8 +47,8 @@ export async function middleware(request) {
   const { data: { session }, error } = await supabase.auth.getSession();
   
   // Log session status in middleware (only for debugging)
-  if (request.nextUrl.pathname.startsWith('/api/directories') && request.method === 'POST') {
-    console.log('Middleware - Session check for POST /api/directories:', {
+  if (request.nextUrl.pathname.startsWith('/api/projects') && request.method === 'POST') {
+    console.log('Middleware - Session check for POST /api/projects:', {
       hasSession: !!session,
       userId: session?.user?.id,
       error: error?.message,

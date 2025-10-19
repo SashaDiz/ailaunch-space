@@ -5,7 +5,7 @@ export const seoConfig = {
   siteUrl: process.env.NEXT_PUBLIC_APP_URL || "https://ailaunch.space",
   defaultTitle: "AI Launch Space - Weekly Competition Platform for AI Projects & Get DR22+ Backlinks",
   defaultDescription: "Submit your AI project to weekly competitions and get high authority backlinks. Join the community of successful AI builders and innovators.",
-  defaultKeywords: ["AI", "artificial intelligence", "AI tools", "AI launch", "backlinks", "SEO", "AI projects", "product hunt for AI", "AI directory", "machine learning"],
+  defaultKeywords: ["AI", "artificial intelligence", "AI tools", "AI launch", "backlinks", "SEO", "AI projects", "product hunt for AI", "AI project", "machine learning"],
   twitterHandle: "@ailaunchspace",
   author: "AI Launch Space",
   language: "en",
@@ -210,7 +210,7 @@ export async function generateSitemapData(db) {
   // Static pages
   const staticPages = [
     { url: "/", priority: 1.0, changefreq: "daily" },
-    { url: "/directories", priority: 0.9, changefreq: "daily" },
+    { url: "/projects", priority: 0.9, changefreq: "daily" },
     { url: "/submit", priority: 0.8, changefreq: "weekly" },
     { url: "/pricing", priority: 0.7, changefreq: "monthly" },
     { url: "/past-launches", priority: 0.6, changefreq: "weekly" },
@@ -227,9 +227,9 @@ export async function generateSitemapData(db) {
     });
   });
 
-  // Dynamic pages - directories
+  // Dynamic pages - projects
   try {
-    const directories = await db.find(
+    const projects = await db.find(
       "apps",
       { status: "live" },
       {
@@ -238,23 +238,23 @@ export async function generateSitemapData(db) {
       }
     );
 
-    directories.forEach(directory => {
+    projects.forEach(project => {
       // Handle both Date objects and string dates from database
-      const lastmod = directory.updated_at 
-        ? (typeof directory.updated_at === 'string' 
-            ? directory.updated_at 
-            : directory.updated_at.toISOString())
+      const lastmod = project.updated_at 
+        ? (typeof project.updated_at === 'string' 
+            ? project.updated_at 
+            : project.updated_at.toISOString())
         : now;
       
       pages.push({
-        url: `${seoConfig.siteUrl}/directory/${directory.slug}`,
+        url: `${seoConfig.siteUrl}/project/${project.slug}`,
         lastmod,
         changefreq: "weekly",
         priority: 0.8,
       });
     });
   } catch (error) {
-    console.error("Error generating sitemap for directories:", error);
+    console.error("Error generating sitemap for projects:", error);
   }
 
   // Category pages
@@ -276,7 +276,7 @@ export async function generateSitemapData(db) {
         : now;
       
       pages.push({
-        url: `${seoConfig.siteUrl}/directories?category=${category.slug}`,
+        url: `${seoConfig.siteUrl}/projects?category=${category.slug}`,
         lastmod,
         changefreq: "weekly",
         priority: 0.7,
@@ -402,22 +402,22 @@ export function calculateReadingTime(content) {
   return Math.ceil(wordCount / wordsPerMinute);
 }
 
-// Generate meta keywords from directory data
-export function generateDirectoryKeywords(directory) {
+// Generate meta keywords from project data
+export function generateProjectKeywords(project) {
   const keywords = new Set();
   
   // Add categories
-  if (directory.categories) {
-    directory.categories.forEach(cat => keywords.add(cat));
+  if (project.categories) {
+    project.categories.forEach(cat => keywords.add(cat));
   }
   
   // Add tags
-  if (directory.tags) {
-    directory.tags.forEach(tag => keywords.add(tag));
+  if (project.tags) {
+    project.tags.forEach(tag => keywords.add(tag));
   }
   
   // Extract from description
-  const descriptionKeywords = extractKeywords(directory.short_description, 5);
+  const descriptionKeywords = extractKeywords(project.short_description, 5);
   descriptionKeywords.forEach(keyword => keywords.add(keyword));
   
   // Add common AI-related terms

@@ -1,4 +1,5 @@
 import "./globals.css";
+import Script from "next/script";
 import { Providers } from "./components/Providers";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
@@ -73,6 +74,11 @@ export default function RootLayout({ children }) {
             <Footer />
           </div>
         </Providers>
+        <Script
+          src="https://app.rybbit.io/api/script.js"
+          data-site-id="302768bfc01e"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

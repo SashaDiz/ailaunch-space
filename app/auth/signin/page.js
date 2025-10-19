@@ -143,7 +143,7 @@ function SignInContent() {
             Welcome back
           </h2>
           <p className="text-base-content/70">
-            Sign in to your account to vote, submit directories, and track your
+            Sign in to your account to vote, submit projects, and track your
             launches.
           </p>
         </div>
@@ -278,12 +278,12 @@ function SignInContent() {
                 <div className="flex items-center">
                   <FlashOff className="w-4 h-4 text-primary mr-2 flex-shrink-0" />
                   <span>
-                    Vote on directories and participate in competitions
+                    Vote on projects and participate in competitions
                   </span>
                 </div>
                 <div className="flex items-center">
                   <FlashOff className="w-4 h-4 text-primary mr-2 flex-shrink-0" />
-                  <span>Submit your own directories and track performance</span>
+                  <span>Submit your own projects and track performance</span>
                 </div>
                 <div className="flex items-center">
                   <FlashOff className="w-4 h-4 text-primary mr-2 flex-shrink-0" />

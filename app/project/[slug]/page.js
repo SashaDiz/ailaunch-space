@@ -10,6 +10,7 @@ import {
   NavArrowLeft,
   Group,
   Medal,
+  Crown,
 } from "iconoir-react";
 import toast from "react-hot-toast";
 import { SocialShare } from "../../components/SocialShare";
@@ -18,21 +19,21 @@ import WinnerBadge from "../../components/WinnerBadge";
 import WinnerEmbed, { WinnerEmbedButton } from "../../components/WinnerEmbed";
 import { useUser } from "../../hooks/useUser";
 
-function DirectoryDetailPageContent() {
+function ProjectDetailPageContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const { slug } = params;
   const submitted = searchParams.get("submitted") === "true";
   const { user } = useUser();
 
-  const [directory, setDirectory] = useState(null);
+  const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isVoting, setIsVoting] = useState(false);
   const fetchingRef = useRef(false);
 
   useEffect(() => {
     if (slug) {
-      fetchDirectory();
+      fetchProject();
     }
   }, [slug]);
 
@@ -47,23 +48,23 @@ function DirectoryDetailPageContent() {
     }
   }, [submitted]);
 
-  const fetchDirectory = async () => {
+  const fetchProject = async () => {
     // Prevent duplicate calls (helpful in development with StrictMode)
     if (fetchingRef.current) return;
 
     try {
       fetchingRef.current = true;
       setLoading(true);
-      const response = await fetch(`/api/directories/${slug}`);
+      const response = await fetch(`/api/projects/${slug}`);
       if (response.ok) {
         const data = await response.json();
-        setDirectory(data.data.directory);
+        setProject(data.data.project);
       } else {
-        toast.error("Directory not found");
+        toast.error("AI project not found");
       }
     } catch (error) {
-      console.error("Failed to fetch directory:", error);
-      toast.error("Failed to load directory");
+      console.error("Failed to fetch AI project:", error);
+      toast.error("Failed to load AI project");
     } finally {
       setLoading(false);
       fetchingRef.current = false;
@@ -71,7 +72,7 @@ function DirectoryDetailPageContent() {
   };
 
   const handleVote = async () => {
-    if (!directory) return;
+    if (!project) return;
 
     // Check if voting is allowed based on status and competition
     if (!isVotingAllowed()) {
@@ -82,24 +83,24 @@ function DirectoryDetailPageContent() {
 
     setIsVoting(true);
     try {
-      const action = directory.userVoted ? "remove" : "upvote";
+      const action = project.userVoted ? "remove" : "upvote";
       const response = await fetch("/api/vote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          appId: directory.id,
+          appId: project.id,
           action,
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        setDirectory((prev) => ({
+        setProject((prev) => ({
           ...prev,
           upvotes: data.data.newVoteCount,
           userVoted: data.data.userVoted,
         }));
-        toast.success(directory.userVoted ? "Vote removed!" : "Vote added!");
+        toast.success(project.userVoted ? "Vote removed!" : "Vote added!");
       } else {
         const error = await response.json();
         if (error.code === "UNAUTHORIZED") {
@@ -119,42 +120,42 @@ function DirectoryDetailPageContent() {
 
   // Helper function to check if voting is allowed
   const isVotingAllowed = () => {
-    if (!directory) return false;
+    if (!project) return false;
     
     // Only "live" submissions can receive votes
-    if (directory.status !== "live") return false;
+    if (project.status !== "live") return false;
     
     // Use the statusBadge to determine if voting is allowed
     // Only "live" statusBadge allows voting (scheduled and past don't)
-    return directory.statusBadge === "live" && directory.canVote === true;
+    return project.statusBadge === "live" && project.canVote === true;
   };
 
   // Helper function to get the reason why voting is disabled
   const getVotingDisabledReason = () => {
-    if (!directory) return "Unable to vote";
+    if (!project) return "Unable to vote";
     
-    if (directory.status === "scheduled") {
+    if (project.status === "scheduled") {
       return "Voting will be available when this project launches";
     }
     
-    if (directory.status === "pending") {
+    if (project.status === "pending") {
       return "This submission is under review and not yet available for voting";
     }
     
-    if (directory.status === "draft") {
+    if (project.status === "draft") {
       return "This is a draft submission and cannot receive votes";
     }
     
-    if (directory.status !== "live") {
-      return `Voting is only allowed for live submissions (current status: ${directory.status})`;
+    if (project.status !== "live") {
+      return `Voting is only allowed for live submissions (current status: ${project.status})`;
     }
     
     // Use statusBadge to determine the reason
-    if (directory.statusBadge === "scheduled") {
+    if (project.statusBadge === "scheduled") {
       return "Voting will be available when the launch week starts";
     }
     
-    if (directory.statusBadge === "past") {
+    if (project.statusBadge === "past") {
       return "Voting period has ended for this launch";
     }
     
@@ -164,7 +165,7 @@ function DirectoryDetailPageContent() {
   const handleVisitWebsite = async () => {
     // Track click analytics
     try {
-      await fetch(`/api/directories/${directory.slug}/click`, {
+      await fetch(`/api/projects/${project.slug}/click`, {
         method: "POST",
       });
     } catch (error) {
@@ -174,25 +175,25 @@ function DirectoryDetailPageContent() {
 
   // Generate website link with ref parameter and proper rel attribute
   const getWebsiteLink = () => {
-    if (!directory?.website_url) return { url: '#', rel: 'nofollow noopener noreferrer' };
+    if (!project?.website_url) return { url: '#', rel: 'nofollow noopener noreferrer' };
     
     try {
-      const url = new URL(directory.website_url);
+      const url = new URL(project.website_url);
       url.searchParams.set('ref', 'ailaunchspace');
       
       // Use link_type field from database
-      const isDofollow = directory.link_type === "dofollow";
+      const isDofollow = project.link_type === "dofollow";
       
       return {
         url: url.toString(),
         rel: isDofollow ? "noopener noreferrer" : "nofollow noopener noreferrer"
       };
     } catch (error) {
-      return { url: directory.website_url, rel: 'nofollow noopener noreferrer' };
+      return { url: project.website_url, rel: 'nofollow noopener noreferrer' };
     }
   };
 
-  const websiteLink = directory ? getWebsiteLink() : { url: '#', rel: 'nofollow noopener noreferrer' };
+  const websiteLink = project ? getWebsiteLink() : { url: '#', rel: 'nofollow noopener noreferrer' };
 
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString("en-US", {
@@ -225,14 +226,14 @@ function DirectoryDetailPageContent() {
     );
   }
 
-  if (!directory) {
+  if (!project) {
     return (
       <div className="min-h-screen bg-base-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-16">
-            <h1 className="text-2xl font-bold mb-4">Directory Not Found</h1>
+            <h1 className="text-2xl font-bold mb-4">AI Project Not Found</h1>
             <p className="text-base-content/70 mb-6">
-              The directory you're looking for doesn't exist or has been
+              The AI project you're looking for doesn't exist or has been
               removed.
             </p>
             <Link href="/" className="btn btn-outline">
@@ -255,19 +256,19 @@ function DirectoryDetailPageContent() {
               <Link href="/">Home</Link>
             </li>
             <li>
-              <span className="text-base-content/60">{directory.name}</span>
+              <span className="text-base-content/60">{project.name}</span>
             </li>
           </ul>
         </div>
 
-        {/* Success Banner for Submitted Directories */}
+        {/* Success Banner for Submitted Projects */}
         {submitted && (
           <div className="alert alert-success mb-8">
             <CheckCircle className="w-6 h-6" />
             <div>
               <h3 className="font-medium">🎉 Submission Successful!</h3>
               <div className="text-sm">
-                Your directory "{directory.name}" is now live and competing in
+                Your AI project "{project.name}" is now live and competing in
                 this week's and month's competitions. Share it with your network
                 to get more votes!
               </div>
@@ -284,8 +285,8 @@ function DirectoryDetailPageContent() {
                 <div className="avatar">
                   <div className="w-32 h-32 rounded-2xl border border-base-300">
                     <Image
-                      src={directory.logo_url}
-                      alt={`${directory.name} logo`}
+                      src={project.logo_url}
+                      alt={`${project.name} logo`}
                       width={80}
                       height={80}
                       className="rounded-2xl object-cover"
@@ -296,35 +297,38 @@ function DirectoryDetailPageContent() {
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-2">
                     <h1 className="text-2xl lg:text-3xl font-bold">
-                      {directory.name}
+                      {project.name}
                     </h1>
                     
                     {/* Winner Badge */}
-                    <WinnerBadge position={directory.weekly_position} size="md" />
+                    <WinnerBadge position={project.weekly_position} size="md" />
                     
-                    {directory.premium_badge && (
-                      <span className="badge badge-primary">Premium</span>
+                    {project.premium_badge && (
+                      <span className="inline-flex leading-none items-center gap-1 px-1 py-0.5 text-[11px] font-medium text-white rounded-sm" style={{backgroundColor: '#ED0D79'}}>
+                        <Crown className="w-4 h-4" strokeWidth={1.5} />
+                        <span className="mt-0.5">Premium</span>
+                      </span>
                     )}
-                    {directory.status === "pending" && (
+                    {project.status === "pending" && (
                       <span className="badge badge-warning">Under Review</span>
                     )}
                   </div>
 
                   <p className="text-base-content/70 text-md mb-4">
-                    {directory.short_description}
+                    {project.short_description}
                   </p>
 
                   {/* Categories and Pricing */}
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {directory.categories?.map((category) => (
+                    {project.categories?.map((category) => (
                       <CategoryBadge
                         key={category}
                         category={category}
                         size="sm"
                       />
                     ))}
-                    {directory.pricing && (
-                      <PricingBadge pricing={directory.pricing} size="sm" />
+                    {project.pricing && (
+                      <PricingBadge pricing={project.pricing} size="sm" />
                     )}
                   </div>
                 </div>
@@ -334,13 +338,13 @@ function DirectoryDetailPageContent() {
               <div className="flex flex-col items-end justify-between gap-4">
                 <div className="flex gap-2 items-center justify-center">
                   <SocialShare
-                    directoryId={directory.id}
-                    slug={directory.slug}
-                    title={directory.name}
-                    description={directory.tagline || directory.description}
+                    projectId={project.id}
+                    slug={project.slug}
+                    title={project.name}
+                    description={project.tagline || project.description}
                     hashtags={[
-                      directory.category
-                        ? directory.category.replace(/[^a-zA-Z0-9]/g, "")
+                      project.category
+                        ? project.category.replace(/[^a-zA-Z0-9]/g, "")
                         : "",
                       "AILaunchSpace",
                     ]}
@@ -363,14 +367,21 @@ function DirectoryDetailPageContent() {
                     onClick={handleVote}
                     disabled={isVoting || !isVotingAllowed()}
                     title={!isVotingAllowed() ? getVotingDisabledReason() : ""}
-                    className={`inline-flex items-center gap-1.5 px-3.5 py-4 rounded-xl min-w-20 text-md font-semibold transition duration-300 ease-in-out -translate-y-0.5
+                    className={`inline-flex items-center gap-1.5 px-3.5 py-4 rounded-lg min-w-20 text-md font-semibold transition duration-300 ease-in-out
                           ${
-                            directory.userVoted
-                              ? "bg-black text-white translate-0"
-                              : "bg-white text-black shadow-[0_4px_0_rgba(0,0,0,1)] border-2 border-black hover:shadow-[0_2px_0_rgba(0,0,0,1)] hover:translate-y-0"
+                            !isVotingAllowed()
+                              ? "bg-gray-400 text-white border-1 border-gray-300 pointer-events-none cursor-not-allowed opacity-60"
+                              : project.userVoted
+                              ? "bg-[#ED0D79] text-white translate-0"
+                              : "bg-white text-black border border-gray-200 hover:border-[#ED0D79] hover:outline hover:outline-4 hover:outline-[#ed0d7912]"
                           }
-                          ${isVoting || !isVotingAllowed() ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
-                          ${!isVotingAllowed() ? "grayscale" : ""}`}
+                          ${
+                            isVoting
+                              ? "cursor-default"
+                              : !isVotingAllowed()
+                              ? "cursor-not-allowed"
+                              : "cursor-pointer"
+                          }`}
                   >
                   <svg
                     width="24px"
@@ -379,17 +390,23 @@ function DirectoryDetailPageContent() {
                     viewBox="0 0 24 24"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
-                    color={directory.userVoted ? "#ffffff" : "#000000"}
+                    color={
+                      !isVotingAllowed() ? "#ffffff" : project.userVoted ? "#ffffff" : "#000000"
+                    }
                   >
                     <path
                       d="M16.4724 20H4.1C3.76863 20 3.5 19.7314 3.5 19.4V9.6C3.5 9.26863 3.76863 9 4.1 9H6.86762C7.57015 9 8.22116 8.6314 8.5826 8.02899L11.293 3.51161C11.8779 2.53688 13.2554 2.44422 13.9655 3.33186C14.3002 3.75025 14.4081 4.30635 14.2541 4.81956L13.2317 8.22759C13.1162 8.61256 13.4045 9 13.8064 9H18.3815C19.7002 9 20.658 10.254 20.311 11.5262L18.4019 18.5262C18.1646 19.3964 17.3743 20 16.4724 20Z"
-                      stroke={directory.userVoted ? "#ffffff" : "#000000"}
+                      stroke={
+                        !isVotingAllowed() ? "#ffffff" : project.userVoted ? "#ffffff" : "#000000"
+                      }
                       strokeWidth="1.5"
                       strokeLinecap="round"
                     ></path>
                     <path
                       d="M7 20L7 9"
-                      stroke={directory.userVoted ? "#ffffff" : "#000000"}
+                      stroke={
+                        !isVotingAllowed() ? "#ffffff" : project.userVoted ? "#ffffff" : "#000000"
+                      }
                       strokeWidth="1.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -399,7 +416,7 @@ function DirectoryDetailPageContent() {
                     <div className="w-4 h-4 border-2 border-gray-300 border-t-current rounded-full animate-spin"></div>
                   ) : (
                     <span className="text-sm font-semibold">
-                      {directory.upvotes}
+                      {project.upvotes}
                     </span>
                   )}
                   </button>
@@ -419,13 +436,13 @@ function DirectoryDetailPageContent() {
 
         {/* Floating Social Share - Only on larger screens */}
         <SocialShare
-          directoryId={directory.id}
-          slug={directory.slug}
-          title={`🚀 Discover ${directory.name} - Featured AI Project on AI Launch Space`}
-          description={directory.tagline || directory.description}
+          projectId={project.id}
+          slug={project.slug}
+          title={`🚀 Discover ${project.name} - Featured AI Project on AI Launch Space`}
+          description={project.tagline || project.description}
           hashtags={[
-            directory.category
-              ? directory.category.replace(/[^a-zA-Z0-9]/g, "")
+            project.category
+              ? project.category.replace(/[^a-zA-Z0-9]/g, "")
               : "",
             "AILaunchSpace",
           ]}
@@ -437,19 +454,19 @@ function DirectoryDetailPageContent() {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Screenshots */}
-            {directory.screenshots && directory.screenshots.length > 0 && (
+            {project.screenshots && project.screenshots.length > 0 && (
               <div className="card rounded-xl border border-base-300">
                 <div className="card-body">
                   <h2 className="text-xl font-bold mb-4">Screenshots</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {directory.screenshots.map((screenshot, index) => (
+                    {project.screenshots.map((screenshot, index) => (
                       <div
                         key={index}
                         className="aspect-video border border-base-300 rounded-lg overflow-hidden bg-base-50"
                       >
                         <Image
                           src={screenshot}
-                          alt={`${directory.name} screenshot ${index + 1}`}
+                          alt={`${project.name} screenshot ${index + 1}`}
                           width={400}
                           height={300}
                           className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
@@ -463,15 +480,15 @@ function DirectoryDetailPageContent() {
             )}
 
             {/* Full Description */}
-            {directory.full_description && (
+            {project.full_description && (
               <div className="card rounded-xl border border-base-300">
                 <div className="card-body">
                   <h2 className="text-xl font-bold mb-4">
-                    About {directory.name}
+                    About {project.name}
                   </h2>
                   <div className="prose max-w-none">
                     <p className="text-base-content/80 leading-relaxed whitespace-pre-line">
-                      {directory.full_description}
+                      {project.full_description}
                     </p>
                   </div>
                 </div>
@@ -480,55 +497,55 @@ function DirectoryDetailPageContent() {
 
 
             {/* Winner Embed Section - Only for makers */}
-            {directory.weekly_position && user && directory.submitted_by === user.id && (
+            {project.weekly_position && user && project.submitted_by === user.id && (
               <div className="card rounded-xl border border-base-300">
                 <div className="card-body">
                   <h2 className="text-xl font-bold mb-4">
                     🏆 Embed Your Winner Badge
                   </h2>
                   <p className="text-base-content/70 mb-6">
-                    Congratulations on winning {directory.weekly_position === 1 ? '1st' : directory.weekly_position === 2 ? '2nd' : '3rd'} place! 
+                    Congratulations on winning {project.weekly_position === 1 ? '1st' : project.weekly_position === 2 ? '2nd' : '3rd'} place! 
                     Add this badge to your website to showcase your achievement and get a dofollow backlink to AILaunch.space.
                   </p>
                   <WinnerEmbed 
-                    position={directory.weekly_position}
-                    directoryName={directory.name}
-                    directorySlug={directory.slug}
+                    position={project.weekly_position}
+                    projectName={project.name}
+                    projectSlug={project.slug}
                   />
                 </div>
               </div>
             )}
 
             {/* Video */}
-            {directory.video_url && (
+            {project.video_url && (
               <div className="card rounded-xl border border-base-300">
                 <div className="card-body">
                   <h2 className="text-xl font-bold mb-4">Demo Video</h2>
                   <div className="aspect-video">
                     <iframe
-                      src={directory.video_url}
+                      src={project.video_url}
                       className="w-full h-full rounded-lg"
                       allowFullScreen
-                      title={`${directory.name} demo video`}
+                      title={`${project.name} demo video`}
                     />
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Related Directories */}
-            {directory.relatedDirectories &&
-              directory.relatedDirectories.length > 0 && (
+            {/* Related Projects */}
+            {project.relatedProjects &&
+              project.relatedProjects.length > 0 && (
                 <div className="card rounded-xl border border-base-300">
                   <div className="card-body">
                     <h2 className="text-xl font-bold mb-4">
-                      Related Directories
+                      Related Projects
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {directory.relatedDirectories.map((related) => (
+                      {project.relatedProjects.map((related) => (
                         <Link
                           key={related.id}
-                          href={`/directory/${related.slug}`}
+                          href={`/project/${related.slug}`}
                           className="card rounded-xl card-compact bg-base-200 shadow-sm hover:shadow-md transition-shadow"
                         >
                           <div className="card-body">
@@ -564,16 +581,16 @@ function DirectoryDetailPageContent() {
 
           {/* Sidebar */}
           <div className="space-y-8">
-            {/* Directory Info */}
+            {/* Project Info */}
             <div className="card rounded-xl border border-base-300">
               <div className="card-body">
-                <h3 className="text-lg font-bold mb-4">Directory Details</h3>
+                <h3 className="text-lg font-bold mb-4">Project Details</h3>
                 <div className="space-y-3 text-sm">
-                  {directory.pricing && (
+                  {project.pricing && (
                     <div className="flex justify-between items-center">
                       <span className="text-base-content/60">Pricing:</span>
                       <PricingBadge
-                        pricing={directory.pricing}
+                        pricing={project.pricing}
                         clickable={false}
                       />
                     </div>
@@ -583,24 +600,24 @@ function DirectoryDetailPageContent() {
                     <span className="text-base-content/60">Status:</span>
                     <span
                       className={`badge ${
-                        directory.statusBadge === "past"
+                        project.statusBadge === "past"
                           ? "badge-ghost"
-                          : directory.statusBadge === "scheduled"
+                          : project.statusBadge === "scheduled"
                           ? "badge-warning"
                           : "badge-success"
                       } badge-sm`}
                     >
-                      {directory.statusBadge === "past" ? "Past" : 
-                       directory.statusBadge === "scheduled" ? "Scheduled" : 
+                      {project.statusBadge === "past" ? "Past" : 
+                       project.statusBadge === "scheduled" ? "Scheduled" : 
                        "Live"}
                     </span>
                   </div>
 
-                  {directory.plan && (
+                  {project.plan && (
                     <div className="flex justify-between">
                       <span className="text-base-content/60">Plan:</span>
                       <span className="font-medium capitalize">
-                        {directory.plan}
+                        {project.plan}
                       </span>
                     </div>
                   )}
@@ -608,19 +625,19 @@ function DirectoryDetailPageContent() {
                   <div className="flex justify-between">
                     <span className="text-base-content/60">Launch Date:</span>
                     <span className="font-medium">
-                      {formatDate(directory.launch_date)}
+                      {formatDate(project.launch_date)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-base-content/60">Views:</span>
-                    <span className="font-medium">{directory.views}</span>
+                    <span className="font-medium">{project.views}</span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Maker Info */}
-            {(directory.maker_name || directory.maker_twitter) && (
+            {(project.maker_name || project.maker_twitter) && (
               <div className="card rounded-xl border border-base-300">
                 <div className="card-body">
                   <h3 className="text-lg font-bold mb-4">
@@ -628,13 +645,13 @@ function DirectoryDetailPageContent() {
                     Maker
                   </h3>
                   <div className="space-y-2">
-                    {directory.maker_name && (
-                      <div className="font-medium">{directory.maker_name}</div>
+                    {project.maker_name && (
+                      <div className="font-medium">{project.maker_name}</div>
                     )}
-                    {directory.maker_twitter && (
+                    {project.maker_twitter && (
                       <div>
                         <a
-                          href={`https://twitter.com/${directory.maker_twitter.replace(
+                          href={`https://twitter.com/${project.maker_twitter.replace(
                             "@",
                             ""
                           )}`}
@@ -642,7 +659,7 @@ function DirectoryDetailPageContent() {
                           rel="noopener noreferrer"
                           className="link link-primary text-sm"
                         >
-                          {directory.maker_twitter}
+                          {project.maker_twitter}
                         </a>
                       </div>
                     )}
@@ -652,7 +669,7 @@ function DirectoryDetailPageContent() {
             )}
 
             {/* Competition Status */}
-            {directory.competitions && directory.competitions.length > 0 && (
+            {project.competitions && project.competitions.length > 0 && (
               <div className="card rounded-xl border border-base-300">
                 <div className="card-body">
                   <h3 className="text-lg font-bold mb-4">
@@ -660,7 +677,7 @@ function DirectoryDetailPageContent() {
                     Competitions
                   </h3>
                   <div className="space-y-3">
-                    {directory.competitions.map((competition) => (
+                    {project.competitions.map((competition) => (
                       <div
                         key={competition.competition_id}
                         className="border border-base-300 rounded-lg p-3"
@@ -703,19 +720,19 @@ function DirectoryDetailPageContent() {
   );
 }
 
-export default function DirectoryDetailPage() {
+export default function ProjectDetailPage() {
   return (
     <Suspense 
       fallback={
         <div className="min-h-screen bg-base-100 flex items-center justify-center">
           <div className="text-center">
             <span className="loading loading-spinner loading-lg"></span>
-            <p className="mt-4 text-base-content/70">Loading directory...</p>
+            <p className="mt-4 text-base-content/70">Loading AI project...</p>
           </div>
         </div>
       }
     >
-      <DirectoryDetailPageContent />
+      <ProjectDetailPageContent />
     </Suspense>
   );
 }

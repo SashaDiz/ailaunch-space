@@ -93,7 +93,7 @@ export const rateLimits = {
     windowMs: 60 * 60 * 1000, // 1 hour
   },
 
-  // Directory submission
+  // Project submission
   submission: {
     maxRequests: 3,
     windowMs: 60 * 60 * 1000, // 1 hour
@@ -244,8 +244,8 @@ export const validation = {
     return /^[0-9a-fA-F]{24}$/.test(id);
   },
 
-  // Validate and sanitize directory submission data
-  sanitizeDirectoryData(data) {
+  // Validate and sanitize project submission data
+  sanitizeProjectData(data) {
     return {
       name: this.sanitizeString(data.name, 100),
       short_description: this.sanitizeString(data.short_description, 160),

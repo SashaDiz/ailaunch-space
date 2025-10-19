@@ -218,6 +218,35 @@ select:focus-visible,
   box-shadow: 0 0 0 3px hsl(var(--p) / 0.1);
 }
 
+/* Custom radio button styles */
+.radio.radio-primary {
+  border-color: #ED0D79;
+}
+
+.radio.radio-primary:checked {
+  background-color: #ED0D79;
+  border-color: #ED0D79;
+}
+
+.radio.radio-primary:checked::before {
+  background-color: white;
+}
+
+/* Custom icon colors */
+.text-primary {
+  color: #ED0D79 !important;
+}
+
+/* Iconoir icons specifically */
+[class*="iconoir-"] {
+  color: #ED0D79 !important;
+}
+
+/* SVG icons with primary color */
+svg.text-primary {
+  color: #ED0D79 !important;
+}
+
 /* Hero section */
 .hero-gradient {
   background: linear-gradient(

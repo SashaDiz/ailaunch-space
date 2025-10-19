@@ -3,16 +3,16 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { OpenNewWindow, Plus, ThumbsUp } from "iconoir-react";
+import { OpenNewWindow, Plus, ThumbsUp, Crown } from "iconoir-react";
 import toast from "react-hot-toast";
 import { SocialShare } from "./SocialShare";
 import { CategoryBadge, PricingBadge } from "./CategoryBadge";
 import WinnerBadge from "./WinnerBadge";
 
-// Helper function to generate directory link with ref parameter and proper rel attribute
-const generateDirectoryLink = (directory) => {
+// Helper function to generate AI project link with ref parameter and proper rel attribute
+const generateProjectLink = (project) => {
   // Validate that website_url exists and is a valid URL
-  if (!directory.website_url || typeof directory.website_url !== 'string') {
+  if (!project.website_url || typeof project.website_url !== 'string') {
     return {
       url: '#',
       rel: "nofollow noopener noreferrer"
@@ -21,20 +21,20 @@ const generateDirectoryLink = (directory) => {
 
   try {
     // Add ref parameter as per CLAUDE.md spec
-    const url = new URL(directory.website_url);
+    const url = new URL(project.website_url);
     url.searchParams.set('ref', 'ailaunchspace');
     
     // Use the link_type field from database
     // - "dofollow": Premium plans, weekly winners, or manually upgraded
     // - "nofollow": Standard (FREE) plans by default
-    const isDofollow = directory.link_type === "dofollow";
+    const isDofollow = project.link_type === "dofollow";
     
     return {
       url: url.toString(),
       rel: isDofollow ? "noopener noreferrer" : "nofollow noopener noreferrer"
     };
   } catch (error) {
-    console.warn('Invalid URL for directory:', directory.name, directory.website_url);
+    console.warn('Invalid URL for AI project:', project.name, project.website_url);
     return {
       url: '#',
       rel: "nofollow noopener noreferrer"
@@ -43,18 +43,18 @@ const generateDirectoryLink = (directory) => {
 };
 
 export function ProductCard({
-  directory,
+  project,
   onVote,
   inactiveCta = false,
   viewMode = "list",
   showStatusBadge = false,
 }) {
   const [isVoting, setIsVoting] = useState(false);
-  const [currentVotes, setCurrentVotes] = useState(directory.upvotes);
-  const [userVoted, setUserVoted] = useState(directory.userVoted);
+  const [currentVotes, setCurrentVotes] = useState(project.upvotes);
+  const [userVoted, setUserVoted] = useState(project.userVoted);
 
-  // Generate directory link data once for use in multiple places
-  const directoryLink = generateDirectoryLink(directory);
+  // Generate AI project link data once for use in multiple places
+  const projectLink = generateProjectLink(project);
 
   // Helper function to check if voting is allowed
   const isVotingAllowed = () => {
@@ -62,10 +62,10 @@ export function ProductCard({
     if (inactiveCta) return false;
     
     // Only "live" submissions can receive votes
-    if (directory.status !== "live") return false;
+    if (project.status !== "live") return false;
     
     // Use the canVote field from API (which already handles all competition logic)
-    return directory.canVote === true;
+    return project.canVote === true;
   };
 
   // Helper function to get the reason why voting is disabled
@@ -74,32 +74,32 @@ export function ProductCard({
       return "Voting is not available for past launches";
     }
     
-    if (directory.status === "scheduled") {
+    if (project.status === "scheduled") {
       return "Voting will be available when this project launches";
     }
     
-    if (directory.status === "pending") {
+    if (project.status === "pending") {
       return "This submission is under review";
     }
     
-    if (directory.status === "draft") {
+    if (project.status === "draft") {
       return "Draft submissions cannot receive votes";
     }
     
-    if (directory.status !== "live") {
+    if (project.status !== "live") {
       return `Only live submissions can receive votes`;
     }
     
     // Use statusBadge from API to determine the reason
-    if (directory.statusBadge === "scheduled") {
+    if (project.statusBadge === "scheduled") {
       return "Voting will be available when the launch week starts";
     }
     
-    if (directory.statusBadge === "past") {
+    if (project.statusBadge === "past") {
       return "Voting period has ended for this launch";
     }
     
-    if (!directory.competitions || directory.competitions.length === 0) {
+    if (!project.competitions || project.competitions.length === 0) {
       return "Not part of any launch week";
     }
     
@@ -107,9 +107,9 @@ export function ProductCard({
   };
 
   const handleVisitWebsite = async () => {
-    // Track click analytics
+    // Track click analytics for AI project
     try {
-      await fetch(`/api/directories/${directory.slug}/click`, {
+      await fetch(`/api/projects/${project.slug}/click`, {
         method: "POST",
       });
     } catch (error) {
@@ -134,7 +134,7 @@ export function ProductCard({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          appId: directory.id,
+          appId: project.id,
           action,
         }),
       });
@@ -145,7 +145,7 @@ export function ProductCard({
         setUserVoted(data.data.userVoted);
         toast.success(userVoted ? "Vote removed!" : "Vote added!");
         onVote?.(
-          directory.id,
+          project.id,
           data.data.newVoteCount,
           data.data.userVoted
         );
@@ -170,7 +170,7 @@ export function ProductCard({
     if (e.target.closest("button") || e.target.closest('a[href^="http"]')) {
       return;
     }
-    window.location.href = `/directory/${directory.slug}`;
+    window.location.href = `/project/${project.slug}`;
   };
 
   // Grid view layout
@@ -178,18 +178,18 @@ export function ProductCard({
     return (
       <div className="block">
         <div
-          className="w-full bg-white rounded-2xl border border-gray-200 p-4 group cursor-pointer transition duration-300 ease-in-out hover:border-gray-900 hover:shadow-[0_6px_0_rgba(0,0,0,1)] hover:-translate-y-1.5"
+          className="w-full bg-white rounded-2xl border border-gray-200 p-4 group cursor-pointer transition duration-300 ease-in-out hover:border-[#ED0D79] hover:scale-[1.01]"
           onClick={handleCardClick}
         >
           {/* Top section: Logo and Vote Button */}
           <div className="flex items-center justify-between mb-3">
-            <div className="w-[64px] h-[64px] border rounded-2xl border-base-300 overflow-hidden flex-shrink-0">
+            <div className="w-[64px] h-[64px] border rounded-lg border-base-300 overflow-hidden flex-shrink-0">
               <Image
-                src={directory.logo_url}
-                alt={`${directory.name} logo`}
+                src={project.logo_url}
+                alt={`${project.name} logo`}
                 width={64}
                 height={64}
-                className="rounded-2xl object-cover w-full h-full"
+                className="rounded-lg object-cover w-full h-full"
                 style={{ width: "auto", height: "auto" }}
               />
             </div>
@@ -198,13 +198,13 @@ export function ProductCard({
               onClick={handleVote}
               disabled={isVoting || !isVotingAllowed()}
               title={!isVotingAllowed() ? getVotingDisabledReason() : ""}
-              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl min-w-16 text-sm font-semibold transition duration-300 ease-in-out -translate-y-0.5
+              className={`inline-flex items-center gap-1.5 px-3.5 py-4 rounded-lg min-w-20 text-md font-semibold transition duration-300 ease-in-out
                           ${
                             !isVotingAllowed()
-                              ? "bg-gray-200 text-gray-500 border-2 border-gray-300 cursor-not-allowed opacity-60"
+                              ? "bg-gray-400 text-white border-1 border-gray-300 pointer-events-none cursor-not-allowed opacity-60"
                               : userVoted
-                              ? "bg-black text-white translate-0"
-                              : "bg-white text-black shadow-[0_4px_0_rgba(0,0,0,1)] border-2 border-black hover:shadow-[0_2px_0_rgba(0,0,0,1)] hover:translate-y-0"
+                              ? "bg-[#ED0D79] text-white translate-0"
+                              : "bg-white text-black border border-gray-200 hover:border-[#ED0D79] hover:outline hover:outline-4 hover:outline-[#ed0d7912]"
                           }
                           ${
                             isVoting
@@ -215,17 +215,17 @@ export function ProductCard({
                           }`}
             >
               <ThumbsUp
-                width={20}
-                height={20}
+                width={24}
+                height={24}
                 strokeWidth={1.5}
                 color={
-                  !isVotingAllowed() ? "#9CA3AF" : userVoted ? "#ffffff" : "#000000"
+                  !isVotingAllowed() ? "#ffffff" : userVoted ? "#ffffff" : "#000000"
                 }
               />
               {isVoting ? (
-                <div className="w-3 h-3 border-2 border-gray-300 border-t-current rounded-full animate-spin"></div>
+                <div className="w-4 h-4 border-2 border-gray-300 border-t-current rounded-full animate-spin"></div>
               ) : (
-                <span className="text-xs font-semibold">{currentVotes}</span>
+                <span className="text-md leading-none font-semibold mt-0.5">{currentVotes}</span>
               )}
             </button>
           </div>
@@ -234,27 +234,30 @@ export function ProductCard({
           <div className="mb-3">
             <div className="flex items-center space-x-2 mb-1">
               <h3 className="text-lg font-semibold text-base-content">
-                {directory.name}
+                {project.name}
               </h3>
 
               {/* Winner Badge */}
-              <WinnerBadge position={directory.weekly_position} size="sm" />
+              <WinnerBadge position={project.weekly_position} size="sm" />
 
-              {directory.plan === "premium" && (
-                <span className="badge badge-primary badge-sm">Premium</span>
+              {project.plan === "premium" && (
+                <span className="inline-flex leading-none items-center gap-1 px-1 py-0.5 text-[11px] font-medium text-white rounded-sm" style={{backgroundColor: '#ED0D79'}}>
+                  <Crown className="w-4 h-4" strokeWidth={1.5} />
+                  <span className="mt-0.5">Premium</span>
+                </span>
               )}
 
               {/* Status Badge - Only show on private dashboard */}
-              {showStatusBadge && directory.statusBadge && (
+              {showStatusBadge && project.statusBadge && (
                 <span className={`badge badge-sm ${
-                  directory.statusBadge === "past" 
+                  project.statusBadge === "past" 
                     ? "badge-ghost" 
-                    : directory.statusBadge === "scheduled" 
+                    : project.statusBadge === "scheduled" 
                     ? "badge-warning" 
                     : "badge-success"
                 }`}>
-                  {directory.statusBadge === "past" ? "Past" : 
-                   directory.statusBadge === "scheduled" ? "Scheduled" : 
+                  {project.statusBadge === "past" ? "Past" : 
+                   project.statusBadge === "scheduled" ? "Scheduled" : 
                    "Live"}
                 </span>
               )}
@@ -263,27 +266,27 @@ export function ProductCard({
 
           {/* Description */}
           <p className="text-sm text-base-content/70 mb-3 line-clamp-3">
-            {directory.short_description}
+            {project.short_description}
           </p>
 
           {/* Bottom: Categories and Visit button */}
           <div className="flex items-center justify-between">
             <div className="flex flex-wrap gap-1">
               {/* Pricing Badge */}
-              {directory.pricing && (
-                <PricingBadge pricing={directory.pricing} size="xs" />
+              {project.pricing && (
+                <PricingBadge pricing={project.pricing} size="xs" />
               )}
 
               {/* Category Badges */}
-              {directory.categories.slice(0, 2).map((category) => (
+              {project.categories.slice(0, 2).map((category) => (
                 <CategoryBadge key={category} category={category} size="xs" />
               ))}
             </div>
 
             <a
-              href={directoryLink.url}
+              href={projectLink.url}
               target="_blank"
-              rel={directoryLink.rel}
+              rel={projectLink.rel}
               className="cursor-pointer inline-flex items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-2 py-2 text-gray-600 hover:bg-gray-100 transition"
               onClick={(e) => {
                 e.stopPropagation();
@@ -302,18 +305,18 @@ export function ProductCard({
   return (
     <div className="block mb-4">
       <div
-        className="w-full bg-white rounded-2xl border border-gray-200 flex flex-row items-center p-4 group cursor-pointer transition duration-300 ease-in-out hover:border-gray-900 hover:shadow-[0_6px_0_rgba(0,0,0,1)] hover:-translate-y-1.5"
+        className="w-full bg-white rounded-2xl border border-gray-200 flex flex-row items-center p-4 group cursor-pointer transition duration-300 ease-in-out hover:border-[#ED0D79] hover:scale-[1.01]"
         onClick={handleCardClick}
       >
         <div className="flex items-start space-x-3 flex-1">
           {/* Logo */}
-          <div className="w-[96px] h-[96px] border rounded-2xl border-base-300 overflow-hidden">
+          <div className="w-[96px] h-[96px] border rounded-lg border-base-300 overflow-hidden">
             <Image
-              src={directory.logo_url}
-              alt={`${directory.name} logo`}
+              src={project.logo_url}
+              alt={`${project.name} logo`}
               width={96}
               height={96}
-              className="rounded-2xl object-cover w-full h-full"
+              className="rounded-lg object-cover w-full h-full"
               style={{ width: "auto", height: "auto" }}
             />
           </div>
@@ -322,44 +325,47 @@ export function ProductCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-2 mb-1">
               <h3 className="text-lg font-semibold text-base-content">
-                {directory.name}
+                {project.name}
               </h3>
 
               {/* Winner Badge */}
-              <WinnerBadge position={directory.weekly_position} size="sm" />
+              <WinnerBadge position={project.weekly_position} size="sm" />
 
-              {directory.plan === "premium" && (
-                <span className="badge badge-primary badge-sm">Premium</span>
+              {project.plan === "premium" && (
+                <span className="inline-flex leading-none items-center gap-1 px-1 py-0.5 text-[11px] font-medium text-white rounded-sm" style={{backgroundColor: '#ED0D79'}}>
+                  <Crown className="w-4 h-4" strokeWidth={1.5} />
+                  <span className="mt-0.5">Premium</span>
+                </span>
               )}
 
               {/* Status Badge - Only show on private dashboard */}
-              {showStatusBadge && directory.statusBadge && (
+              {showStatusBadge && project.statusBadge && (
                 <span className={`badge badge-sm ${
-                  directory.statusBadge === "past" 
+                  project.statusBadge === "past" 
                     ? "badge-ghost" 
-                    : directory.statusBadge === "scheduled" 
+                    : project.statusBadge === "scheduled" 
                     ? "badge-warning" 
                     : "badge-success"
                 }`}>
-                  {directory.statusBadge === "past" ? "Past" : 
-                   directory.statusBadge === "scheduled" ? "Scheduled" : 
+                  {project.statusBadge === "past" ? "Past" : 
+                   project.statusBadge === "scheduled" ? "Scheduled" : 
                    "Live"}
                 </span>
               )}
             </div>
 
             <p className="text-sm text-base-content/70 mb-3 line-clamp-2">
-              {directory.short_description}
+              {project.short_description}
             </p>
 
             <div className="flex flex-wrap gap-1 mb-2">
               {/* Pricing Badge */}
-              {directory.pricing && (
-                <PricingBadge pricing={directory.pricing} size="xs" />
+              {project.pricing && (
+                <PricingBadge pricing={project.pricing} size="xs" />
               )}
 
               {/* Category Badges */}
-              {directory.categories.slice(0, 3).map((category) => (
+              {project.categories.slice(0, 3).map((category) => (
                 <CategoryBadge key={category} category={category} size="xs" />
               ))}
             </div>
@@ -369,9 +375,9 @@ export function ProductCard({
         {/* Vote Button */}
         <div className="flex flex-row items-center gap-4 ml-4">
           <a
-            href={directoryLink.url}
+            href={projectLink.url}
             target="_blank"
-            rel={directoryLink.rel}
+            rel={projectLink.rel}
             className="cursor-pointer inline-flex items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-2 py-2 text-gray-600 hover:bg-gray-100 transition"
             onClick={(e) => {
               e.stopPropagation();
@@ -384,13 +390,13 @@ export function ProductCard({
             onClick={handleVote}
             disabled={isVoting || !isVotingAllowed()}
             title={!isVotingAllowed() ? getVotingDisabledReason() : ""}
-            className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl min-w-20 text-md font-semibold transition duration-300 ease-in-out -translate-y-0.5
+            className={`inline-flex items-center gap-1.5 px-3.5 py-4 rounded-lg min-w-20 text-md font-semibold transition duration-300 ease-in-out
                         ${
                           !isVotingAllowed()
-                            ? "bg-gray-200 text-gray-500 border-2 border-gray-300 cursor-not-allowed opacity-60"
+                            ? "bg-gray-400 text-white pointer-events-none cursor-not-allowed opacity-60"
                             : userVoted
-                            ? "bg-black text-white translate-0"
-                            : "bg-white text-black shadow-[0_4px_0_rgba(0,0,0,1)] border-2 border-black hover:shadow-[0_2px_0_rgba(0,0,0,1)] hover:translate-y-0"
+                            ? "bg-[#ED0D79] text-white translate-0"
+                            : "bg-white text-black border border-gray-200 hover:border-[#ED0D79] hover:outline hover:outline-4 hover:outline-[#ed0d7912]"
                         }
                         ${
                           isVoting
@@ -400,39 +406,18 @@ export function ProductCard({
                             : "cursor-pointer"
                         }`}
           >
-            <svg
-              width="24px"
-              height="24px"
-              strokeWidth="1.5"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+            <ThumbsUp
+              width={24}
+              height={24}
+              strokeWidth={1.5}
               color={
-                !isVotingAllowed() ? "#9CA3AF" : userVoted ? "#ffffff" : "#000000"
+                !isVotingAllowed() ? "#ffffff" : userVoted ? "#ffffff" : "#000000"
               }
-            >
-              <path
-                d="M16.4724 20H4.1C3.76863 20 3.5 19.7314 3.5 19.4V9.6C3.5 9.26863 3.76863 9 4.1 9H6.86762C7.57015 9 8.22116 8.6314 8.5826 8.02899L11.293 3.51161C11.8779 2.53688 13.2554 2.44422 13.9655 3.33186C14.3002 3.75025 14.4081 4.30635 14.2541 4.81956L13.2317 8.22759C13.1162 8.61256 13.4045 9 13.8064 9H18.3815C19.7002 9 20.658 10.254 20.311 11.5262L18.4019 18.5262C18.1646 19.3964 17.3743 20 16.4724 20Z"
-                stroke={
-                  !isVotingAllowed() ? "#9CA3AF" : userVoted ? "#ffffff" : "#000000"
-                }
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              ></path>
-              <path
-                d="M7 20L7 9"
-                stroke={
-                  !isVotingAllowed() ? "#9CA3AF" : userVoted ? "#ffffff" : "#000000"
-                }
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              ></path>
-            </svg>
+            />
             {isVoting ? (
               <div className="w-4 h-4 border-2 border-gray-300 border-t-current rounded-full animate-spin"></div>
             ) : (
-              <span className="text-sm font-semibold">{currentVotes}</span>
+              <span className="text-md leading-none font-semibold mt-0.5">{currentVotes}</span>
             )}
           </button>
         </div>

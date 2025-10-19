@@ -19,16 +19,16 @@ import toast from "react-hot-toast";
 import WinnerBadge from "../../components/WinnerBadge";
 import { WinnerEmbedButton } from "../../components/WinnerEmbed";
 
-// Helper function to generate directory link with ref parameter and proper rel attribute
-const generateDirectoryLink = (directory) => {
+// Helper function to generate project link with ref parameter and proper rel attribute
+const generateProjectLink = (project) => {
   // Add ref parameter as per CLAUDE.md spec
-  const url = new URL(directory.website_url);
+  const url = new URL(project.website_url);
   url.searchParams.set('ref', 'ailaunchspace');
   
   // Use link_type field from database
   // - "dofollow": Premium plans, weekly winners, or manually upgraded
   // - "nofollow": Standard (FREE) plans by default
-  const isDofollow = directory.link_type === "dofollow";
+  const isDofollow = project.link_type === "dofollow";
   
   return {
     url: url.toString(),
@@ -36,20 +36,20 @@ const generateDirectoryLink = (directory) => {
   };
 };
 
-function DirectoryRow({ directory, onStatusUpdate }) {
+function ProjectRow({ project, onStatusUpdate }) {
   const [updating, setUpdating] = useState(false);
   const [togglingLinkType, setTogglingLinkType] = useState(false);
-  const [currentLinkType, setCurrentLinkType] = useState(directory.link_type || "nofollow");
+  const [currentLinkType, setCurrentLinkType] = useState(project.link_type || "nofollow");
   const [updatingWinnerBadge, setUpdatingWinnerBadge] = useState(false);
-  const [currentWinnerPosition, setCurrentWinnerPosition] = useState(directory.weekly_position || null);
+  const [currentWinnerPosition, setCurrentWinnerPosition] = useState(project.weekly_position || null);
 
-  // Generate directory link data once for use in multiple places
-  const directoryLink = generateDirectoryLink(directory);
+  // Generate project link data once for use in multiple places
+  const projectLink = generateProjectLink(project);
 
   const handleVisitWebsite = async () => {
     // Track click analytics
     try {
-      await fetch(`/api/directories/${directory.slug}/click`, {
+      await fetch(`/api/projects/${project.slug}/click`, {
         method: "POST",
       });
     } catch (error) {
@@ -94,13 +94,13 @@ function DirectoryRow({ directory, onStatusUpdate }) {
           }
         }
 
-        const response = await fetch("/api/admin?action=approve-directory", {
+        const response = await fetch("/api/admin?action=approve-project", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            directoryId: directory.id,
+            projectId: project.id,
             action,
             rejectionReason,
           }),
@@ -114,14 +114,14 @@ function DirectoryRow({ directory, onStatusUpdate }) {
               data.data.emailSent ? "Email notification sent." : ""
             }`
           );
-          onStatusUpdate(directory.id, newStatus);
+          onStatusUpdate(project.id, newStatus);
         } else {
           throw new Error(data.error || "Failed to update status");
         }
       } else {
         // For other status updates, use the regular endpoint
-        const response = await fetch(`/api/admin/directories/${directory.id}`, {
-          method: "PATCH",
+        const response = await fetch(`/api/admin?type=projects&id=${project.id}`, {
+          method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
@@ -129,15 +129,16 @@ function DirectoryRow({ directory, onStatusUpdate }) {
         });
 
         if (response.ok) {
-          toast.success(`Directory status updated to ${newStatus}`);
-          onStatusUpdate(directory.id, newStatus);
+          toast.success(`Project status updated to ${newStatus}`);
+          onStatusUpdate(project.id, newStatus);
         } else {
-          throw new Error("Failed to update status");
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to update status");
         }
       }
     } catch (error) {
       console.error("Status update error:", error);
-      toast.error(error.message || "Failed to update directory status");
+      toast.error(error.message || "Failed to update project status");
     } finally {
       setUpdating(false);
     }
@@ -153,14 +154,14 @@ function DirectoryRow({ directory, onStatusUpdate }) {
         },
         body: JSON.stringify({ 
           action: "toggle",
-          directoryId: directory.id 
+          projectId: project.id 
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        setCurrentLinkType(data.directory.link_type);
-        toast.success(`Link type changed to ${data.directory.link_type}`);
+        setCurrentLinkType(data.project.link_type);
+        toast.success(`Link type changed to ${data.project.link_type}`);
       } else {
         const error = await response.json();
         throw new Error(error.error || "Failed to toggle link type");
@@ -183,20 +184,20 @@ function DirectoryRow({ directory, onStatusUpdate }) {
         },
         body: JSON.stringify({ 
           action: "update",
-          directoryId: directory.id,
+          projectId: project.id,
           weekly_position: position
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        setCurrentWinnerPosition(data.directory.weekly_position);
+        setCurrentWinnerPosition(data.project.weekly_position);
         toast.success(
           position 
             ? `Winner badge updated to ${position}${position === 1 ? 'st' : position === 2 ? 'nd' : 'rd'} place` 
             : "Winner badge removed"
         );
-        onStatusUpdate(directory.id, directory.status); // Trigger refresh
+        onStatusUpdate(project.id, project.status); // Trigger refresh
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to update winner badge");
@@ -231,8 +232,8 @@ function DirectoryRow({ directory, onStatusUpdate }) {
           <div className="avatar">
             <div className="w-10 h-10 rounded-lg border border-base-300">
               <Image
-                src={directory.logo_url || "/placeholder-logo.png"}
-                alt={`${directory.name} logo`}
+                src={project.logo_url || "/placeholder-logo.png"}
+                alt={`${project.name} logo`}
                 width={40}
                 height={40}
                 className="rounded-lg object-cover"
@@ -241,21 +242,24 @@ function DirectoryRow({ directory, onStatusUpdate }) {
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="font-semibold">{directory.name}</span>
-              {directory.premium_badge && (
-                <Crown className="w-4 h-4 text-warning" />
+              <span className="font-semibold">{project.name}</span>
+              {project.premium_badge && (
+                <span className="inline-flex leading-none items-center gap-1 px-1 py-0.5 text-[11px] font-medium text-white rounded-sm" style={{backgroundColor: '#ED0D79'}}>
+                  <Crown className="w-4 h-4" strokeWidth={1.5} />
+                  <span className="mt-0.5">Premium</span>
+                </span>
               )}
             </div>
             <p className="text-sm text-base-content/60 truncate max-w-xs">
-              {directory.short_description}
+              {project.short_description}
             </p>
           </div>
         </div>
       </td>
-      <td>{getStatusBadge(directory.status)}</td>
+      <td>{getStatusBadge(project.status)}</td>
       <td>
         <div className="flex flex-col gap-1">
-          <span className="badge badge-outline badge-sm">{directory.plan}</span>
+          <span className="badge badge-outline badge-sm">{project.plan}</span>
           <button
             onClick={handleToggleLinkType}
             disabled={togglingLinkType}
@@ -268,11 +272,11 @@ function DirectoryRow({ directory, onStatusUpdate }) {
           >
             {currentLinkType === "dofollow" ? "✓ Dofollow" : "Nofollow"}
           </button>
-          {directory.dofollow_reason && (
+          {project.dofollow_reason && (
             <span className="text-xs text-base-content/60">
-              {directory.dofollow_reason === "weekly_winner" && "🏆 Winner"}
-              {directory.dofollow_reason === "manual_upgrade" && "✋ Manual"}
-              {directory.dofollow_reason === "premium_plan" && "💎 Premium"}
+              {project.dofollow_reason === "weekly_winner" && "🏆 Winner"}
+              {project.dofollow_reason === "manual_upgrade" && "✋ Manual"}
+              {project.dofollow_reason === "premium_plan" && "💎 Premium"}
             </span>
           )}
         </div>
@@ -329,8 +333,8 @@ function DirectoryRow({ directory, onStatusUpdate }) {
             {currentWinnerPosition && (
               <WinnerEmbedButton
                 position={currentWinnerPosition}
-                directoryName={directory.name}
-                directorySlug={directory.slug}
+                projectName={project.name}
+                projectSlug={project.slug}
                 className="btn-xs"
               />
             )}
@@ -343,19 +347,19 @@ function DirectoryRow({ directory, onStatusUpdate }) {
       </td>
       <td>
         <div className="text-sm">
-          <div>{directory.upvotes} votes</div>
-          <div className="text-base-content/60">{directory.views} views</div>
+          <div>{project.upvotes} votes</div>
+          <div className="text-base-content/60">{project.views} views</div>
         </div>
       </td>
       <td>
         <div className="text-sm text-base-content/60">
-          {formatDate(directory.created_at || directory.createdAt || directory.submitted_at)}
+          {formatDate(project.created_at || project.createdAt || project.submitted_at)}
         </div>
       </td>
       <td>
         <div className="flex items-center space-x-2">
           {/* Quick Actions */}
-          {directory.status === "pending" && (
+          {project.status === "pending" && (
             <>
               <button
                 onClick={() => handleStatusUpdate("live")}
@@ -382,9 +386,9 @@ function DirectoryRow({ directory, onStatusUpdate }) {
 
           {/* Quick External Link */}
           <Link
-            href={directoryLink.url}
+            href={projectLink.url}
             target="_blank"
-            rel={directoryLink.rel}
+            rel={projectLink.rel}
             className="btn btn-ghost btn-xs"
             title="Visit Website"
             onClick={handleVisitWebsite}
@@ -397,10 +401,10 @@ function DirectoryRow({ directory, onStatusUpdate }) {
   );
 }
 
-export default function AdminDirectoriesPage() {
+export default function AdminProjectsPage() {
   const { user, loading: authLoading } = useUser();
   const router = useRouter();
-  const [directories, setDirectories] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -417,7 +421,7 @@ export default function AdminDirectoriesPage() {
     if (authLoading) return;
 
     if (!user) {
-      router.push("/auth/signin?callbackUrl=/admin/directories");
+      router.push("/auth/signin?callbackUrl=/admin/projects");
       return;
     }
 
@@ -426,7 +430,7 @@ export default function AdminDirectoriesPage() {
 
   useEffect(() => {
     if (isAdmin) {
-      fetchDirectories();
+      fetchProjects();
     }
   }, [
     isAdmin,
@@ -452,12 +456,12 @@ export default function AdminDirectoriesPage() {
     }
   };
 
-  const fetchDirectories = async () => {
+  const fetchProjects = async () => {
     try {
       setLoading(true);
 
       const params = new URLSearchParams({
-        type: "directories",
+        type: "projects",
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
       });
@@ -471,23 +475,24 @@ export default function AdminDirectoriesPage() {
       );
       if (response.ok) {
         const data = await response.json();
-        setDirectories(data.data.directories || []);
+        setProjects(data.data.projects || []);
         setPagination(data.data.pagination || pagination);
       } else {
-        toast.error("Failed to load directories");
+        const errorData = await response.json();
+        toast.error(errorData.error || "Failed to load projects");
       }
     } catch (error) {
-      console.error("Failed to fetch directories:", error);
-      toast.error("Failed to load directories");
+      console.error("Failed to fetch projects:", error);
+      toast.error("Failed to load projects");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleStatusUpdate = (directoryId, newStatus) => {
-    setDirectories(
-      directories.map((dir) =>
-        dir.id === directoryId ? { ...dir, status: newStatus } : dir
+  const handleStatusUpdate = (projectId, newStatus) => {
+    setProjects(
+      projects.map((project) =>
+        project.id === projectId ? { ...project, status: newStatus } : project
       )
     );
   };
@@ -541,7 +546,7 @@ export default function AdminDirectoriesPage() {
                     type="text"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search directories..."
+                    placeholder="Search projects..."
                     className="input input-bordered w-full pl-10"
                   />
                 </div>
@@ -577,7 +582,7 @@ export default function AdminDirectoriesPage() {
               {/* Quick Actions */}
               <div className="form-control">
                 <button
-                  onClick={() => fetchDirectories()}
+                  onClick={() => fetchProjects()}
                   className="btn btn-primary"
                 >
                   <FilterAlt className="w-4 h-4 mr-2" />
@@ -595,20 +600,21 @@ export default function AdminDirectoriesPage() {
             <div className="p-6 border-b border-base-300">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-base-content/60">
-                  Showing {directories.length} of {pagination.totalCount}{" "}
-                  directories
+                  Showing {projects.length} of {pagination.totalCount}{" "}
+                  projects
                 </div>
+路由
                 <div className="flex items-center space-x-4 text-sm">
                   <span className="flex items-center">
                     <Clock className="w-4 h-4 mr-1 text-warning" />
                     {
-                      directories.filter((d) => d.status === "pending").length
+                      projects.filter((p) => p.status === "pending").length
                     }{" "}
                     pending
                   </span>
                   <span className="flex items-center">
                     <CheckCircle className="w-4 h-4 mr-1 text-success" />
-                    {directories.filter((d) => d.status === "live").length} live
+                    {projects.filter((p) => p.status === "live").length} live
                   </span>
                 </div>
               </div>
@@ -632,14 +638,14 @@ export default function AdminDirectoriesPage() {
                   ))}
                 </div>
               </div>
-            ) : directories.length > 0 ? (
+            ) : projects.length > 0 ? (
               <>
                 {/* Table */}
                 <div className="overflow-x-auto">
                   <table className="table table-zebra">
                     <thead>
                       <tr>
-                        <th>Directory</th>
+                        <th>Project</th>
                         <th>Status</th>
                         <th>Plan</th>
                         <th>Winner Badge</th>
@@ -649,10 +655,10 @@ export default function AdminDirectoriesPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {directories.map((directory) => (
-                        <DirectoryRow
-                          key={directory.id}
-                          directory={directory}
+                      {projects.map((project) => (
+                        <ProjectRow
+                          key={project.id}
+                          project={project}
                           onStatusUpdate={handleStatusUpdate}
                         />
                       ))}
@@ -711,7 +717,7 @@ export default function AdminDirectoriesPage() {
                   <Search className="w-8 h-8 text-base-content/30" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">
-                  No directories found
+                  No projects found
                 </h3>
                 <p className="text-base-content/60">
                   Try adjusting your search or filter criteria.

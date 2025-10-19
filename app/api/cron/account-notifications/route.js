@@ -42,8 +42,6 @@ export async function GET(request) {
       return createdAt >= oneHourAgo;
     });
 
-    console.log(`Found ${recentUsers.length} recent users to check for welcome emails`);
-
     for (const authUser of recentUsers) {
       try {
         // Check if we've already sent a welcome email
@@ -56,7 +54,6 @@ export async function GET(request) {
           .single();
 
         if (existingNotification.data) {
-          console.log(`Skipping ${authUser.email} - welcome email already sent`);
           continue;
         }
 
@@ -68,7 +65,6 @@ export async function GET(request) {
           .single();
 
         if (profileError) {
-          console.log(`Skipping ${authUser.email} - no profile found`);
           continue;
         }
 
@@ -81,7 +77,6 @@ export async function GET(request) {
         });
 
         results.notifications_sent++;
-        console.log(`📧 Welcome email sent to ${authUser.email}`);
 
       } catch (error) {
         console.error(`Failed to send welcome email to ${authUser.email}:`, error);
@@ -91,8 +86,6 @@ export async function GET(request) {
         });
       }
     }
-
-    console.log(`Account notification cron completed: ${results.notifications_sent} welcome emails sent`);
 
     return NextResponse.json({
       success: true,

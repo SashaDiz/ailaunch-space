@@ -3,22 +3,42 @@
 import React, { useState, useEffect, Suspense, useCallback } from "react";
 import { useUser } from "../hooks/useUser";
 import { useRouter, useSearchParams } from "next/navigation";
-import { NavArrowLeft, NavArrowRight, Xmark } from "iconoir-react";
+import { 
+  NavArrowLeft, 
+  NavArrowRight, 
+  Xmark,
+  Star,
+  Globe,
+  Medal,
+  Home,
+  Crown,
+  Trophy,
+  Link as LinkIcon,
+  Clock,
+  Megaphone,
+  Rocket
+} from "iconoir-react";
 import toast from "react-hot-toast";
 // Import Zod for validation
 import { z } from "zod";
 import dynamic from "next/dynamic";
 
 // Use dynamic imports to prevent webpack issues
-const CategorySelector = dynamic(() => import("../components/CategorySelector").then(mod => ({ default: mod.CategorySelector })), {
-  ssr: false,
-  loading: () => <div className="loading loading-spinner loading-sm"></div>
-});
+const CategorySelector = dynamic(
+  () => import("../components/CategorySelector"),
+  {
+    ssr: false,
+    loading: () => <div className="loading loading-spinner loading-sm"></div>
+  }
+);
 
-const ImageUpload = dynamic(() => import("../components/ImageUpload"), {
-  ssr: false,
-  loading: () => <div className="loading loading-spinner loading-sm"></div>
-});
+const ImageUpload = dynamic(
+  () => import("../components/ImageUpload"),
+  {
+    ssr: false,
+    loading: () => <div className="loading loading-spinner loading-sm"></div>
+  }
+);
 
 // Validation schemas for each step
 const PlanSelectionSchema = z.object({
@@ -28,8 +48,8 @@ const PlanSelectionSchema = z.object({
 });
 
 
-// Combined schema for all directory information (steps 2, 3, 4 merged)
-const DirectoryInfoSchema = z.object({
+// Combined schema for all AI project information (steps 2, 3, 4 merged)
+const ProjectInfoSchema = z.object({
   // Basic Info
   name: z
     .string()
@@ -85,31 +105,39 @@ const STEPS = [
 
 const PLANS = {
   standard: {
+    id: "standard",
     name: "Standard Launch",
     price: 0,
     currency: "USD",
+    description: "Perfect for new AI projects and startups",
+    icon: Globe,
     features: [
-      "Live on homepage for 7 days",
-      "Badge for top 3 ranking products",
-      "High authority backlink for top 3 winners",
-      "Standard launch queue",
-      "15 shared weekly slots",
-      "Community voting access",
+      { text: "Live on homepage for 7 days", icon: Home },
+      { text: "15 slots weekly (limited availability)", icon: Crown },
+      { text: "Badge for top 3 ranking products", icon: Trophy },
+      { text: "High authority lifetime backlink (only for Top 3 rankings)", icon: LinkIcon },
+      { text: "Standard launch queue", icon: Clock },
     ],
+    limitations: [],
     popular: false,
   },
   premium: {
+    id: "premium",
     name: "Premium Launch",
     price: 15,
     currency: "USD",
+    description: "Maximum exposure for established AI projects",
+    icon: Medal,
     features: [
-      "Live on homepage for 7 days",
-      "Badge for top 3 ranking products",
-      "Guaranteed high authority backlink",
-      "Skip the queue",
-      "25 total slots (15 shared + 10 premium-only)",
-      "Premium badge & featured placement",
+      { text: "Live on homepage for a week", icon: Home },
+      { text: "10 extra premium slots weekly", icon: Crown },
+      { text: "Badge for top 3 ranking products", icon: Trophy },
+      { text: "3+ Guaranteed high authority lifetime backlink", icon: LinkIcon },
+      { text: "Skip the queue", icon: Clock },
+      { text: "Social media promotion", icon: Megaphone },
+      { text: "Premium badge", icon: Star },
     ],
+    limitations: [],
     popular: true,
   },
 };
@@ -121,16 +149,20 @@ function StepIndicator({ currentStep, steps }) {
         {steps.map((step, index) => {
           // Calculate display step number based on position in filtered array
           const displayStepNumber = index + 1;
-          const isActive = step.id <= currentStep;
+          // Adjust the active check based on whether we're showing all steps or filtered steps
+          const isActive = steps.length === STEPS.length 
+            ? step.id <= currentStep 
+            : (step.id === 2 && currentStep >= 2) || (step.id === 3 && currentStep >= 3);
 
           return (
             <div key={step.id} className="flex items-center">
               <div
                 className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
                   isActive
-                    ? "bg-primary border-primary text-primary-content"
+                    ? "text-white"
                     : "border-base-300 text-base-content/60"
                 }`}
+                style={isActive ? { backgroundColor: '#ED0D79', borderColor: '#ED0D79' } : {}}
               >
                 {displayStepNumber}
               </div>
@@ -149,8 +181,21 @@ function StepIndicator({ currentStep, steps }) {
               {index < steps.length - 1 && (
                 <div
                   className={`hidden sm:block w-16 h-0.5 mx-4 ${
-                    step.id < currentStep ? "bg-primary" : "bg-base-300"
+                    steps.length === STEPS.length 
+                      ? step.id < currentStep 
+                      : (step.id === 2 && currentStep > 2) || (step.id === 3 && currentStep > 3)
+                      ? "" 
+                      : "bg-base-300"
                   }`}
+                  style={
+                    steps.length === STEPS.length 
+                      ? step.id < currentStep 
+                        ? { backgroundColor: '#ED0D79' }
+                        : {}
+                      : (step.id === 2 && currentStep > 2) || (step.id === 3 && currentStep > 3)
+                        ? { backgroundColor: '#ED0D79' }
+                        : {}
+                  }
                 />
               )}
             </div>
@@ -162,19 +207,20 @@ function StepIndicator({ currentStep, steps }) {
 }
 
 // Merged step combining Basic Info, Details, and Media
-function DirectoryInfoStep({ formData, setFormData, errors, checkingDuplicate, checkingName }) {
+function ProjectInfoStep({ formData, setFormData, errors, checkingDuplicate, checkingName }) {
   return (
     <div className="space-y-8">
       {/* Basic Information Section */}
       <div>
-        <h3 className="text-lg font-semibold mb-4 pb-2 border-b border-base-300">
+        <h3 className="text-lg font-semibold mb-6 pb-3 border-b-2 border-[#ED0D79]/20 text-base-content flex items-center gap-2">
+          <div className="w-1 h-6 bg-[#ED0D79] rounded-full"></div>
           Basic Information
         </h3>
         <div className="space-y-6">
           <div>
             <label className="form-control w-full">
               <div className="label">
-                <span className="label-text">AI Project Name *</span>
+                <span className="label-text font-semibold text-base-content">AI Project Name *</span>
                 {checkingName && (
                   <span className="label-text-alt text-info">
                     <span className="loading loading-spinner loading-xs mr-1"></span>
@@ -185,14 +231,22 @@ function DirectoryInfoStep({ formData, setFormData, errors, checkingDuplicate, c
               <input
                 type="text"
                 placeholder="e.g. AI Content Generator"
-                className={`input input-bordered w-full ${
-                  errors.name ? "input-error" : ""
+                className={`input input-bordered w-full transition-all duration-200 focus:border-[#ED0D79] focus:ring-2 focus:ring-[#ED0D79]/20 focus:outline-none ${
+                  errors.name ? "input-error border-error" : "border-base-300"
                 }`}
+                style={{
+                  boxShadow: errors.name ? '0 0 0 2px rgba(248, 113, 113, 0.2)' : 'none'
+                }}
                 value={formData.name || ""}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
               {errors.name && (
-                <div className="text-error text-sm mt-1">{errors.name}</div>
+                <div className="text-error text-sm mt-2 flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  {errors.name}
+                </div>
               )}
             </label>
           </div>
@@ -200,7 +254,7 @@ function DirectoryInfoStep({ formData, setFormData, errors, checkingDuplicate, c
           <div>
             <label className="form-control w-full">
               <div className="label">
-                <span className="label-text">Website URL *</span>
+                <span className="label-text font-semibold text-base-content">Website URL *</span>
                 {checkingDuplicate && (
                   <span className="label-text-alt text-info">
                     <span className="loading loading-spinner loading-xs mr-1"></span>
@@ -211,16 +265,24 @@ function DirectoryInfoStep({ formData, setFormData, errors, checkingDuplicate, c
               <input
                 type="url"
                 placeholder="https://your-ai-project.com"
-                className={`input input-bordered w-full ${
-                  errors.website_url ? "input-error" : ""
+                className={`input input-bordered w-full transition-all duration-200 focus:border-[#ED0D79] focus:ring-2 focus:ring-[#ED0D79]/20 focus:outline-none ${
+                  errors.website_url ? "input-error border-error" : "border-base-300"
                 }`}
+                style={{
+                  boxShadow: errors.website_url ? '0 0 0 2px rgba(248, 113, 113, 0.2)' : 'none'
+                }}
                 value={formData.website_url || ""}
                 onChange={(e) =>
                   setFormData({ ...formData, website_url: e.target.value })
                 }
               />
               {errors.website_url && (
-                <div className="text-error text-sm mt-1">{errors.website_url}</div>
+                <div className="text-error text-sm mt-2 flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  {errors.website_url}
+                </div>
               )}
             </label>
           </div>
@@ -228,16 +290,19 @@ function DirectoryInfoStep({ formData, setFormData, errors, checkingDuplicate, c
           <div>
             <label className="form-control w-full">
               <div className="label">
-                <span className="label-text">Short Title *</span>
-                <span className="label-text-alt text-base-content/60">
+                <span className="label-text font-semibold text-base-content">Short Title *</span>
+                <span className="label-text-alt text-base-content/60 font-medium">
                   {formData.short_description?.length || 0}/100
                 </span>
               </div>
               <input
                 type="text"
-                className={`input input-bordered w-full ${
-                  errors.short_description ? "input-error" : ""
+                className={`input input-bordered w-full transition-all duration-200 focus:border-[#ED0D79] focus:ring-2 focus:ring-[#ED0D79]/20 focus:outline-none ${
+                  errors.short_description ? "input-error border-error" : "border-base-300"
                 }`}
+                style={{
+                  boxShadow: errors.short_description ? '0 0 0 2px rgba(248, 113, 113, 0.2)' : 'none'
+                }}
                 placeholder="A catchy one-line title for your AI project"
                 maxLength={100}
                 value={formData.short_description || ""}
@@ -246,7 +311,10 @@ function DirectoryInfoStep({ formData, setFormData, errors, checkingDuplicate, c
                 }
               />
               {errors.short_description && (
-                <div className="text-error text-sm mt-1">
+                <div className="text-error text-sm mt-2 flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
                   {errors.short_description}
                 </div>
               )}
@@ -257,16 +325,16 @@ function DirectoryInfoStep({ formData, setFormData, errors, checkingDuplicate, c
           <div>
             <label className="form-control w-full">
               <div className="label">
-                <span className="label-text">Twitter/X Handle</span>
+                <span className="label-text font-semibold text-base-content">Twitter/X Handle</span>
               </div>
               <div className="flex">
-                <span className="flex items-center px-3 bg-base-200 border border-r-0 border-base-300 rounded-l-lg text-base-content/60">
+                <span className="flex items-center px-4 bg-base-200 border border-r-0 border-base-300 rounded-l-lg text-base-content/70 font-medium">
                   @
                 </span>
                 <input
                   type="text"
                   placeholder="username"
-                  className="input input-bordered w-full rounded-l-none"
+                  className="input input-bordered w-full rounded-l-none transition-all duration-200 focus:border-[#ED0D79] focus:ring-2 focus:ring-[#ED0D79]/20 focus:outline-none border-base-300"
                   value={formData.maker_twitter?.replace("@", "") || ""}
                   onChange={(e) =>
                     setFormData({
@@ -283,17 +351,18 @@ function DirectoryInfoStep({ formData, setFormData, errors, checkingDuplicate, c
 
       {/* Details Section */}
       <div>
-        <h3 className="text-lg font-semibold mb-4 pb-2 border-b border-base-300">
+        <h3 className="text-lg font-semibold mb-6 pb-3 border-b-2 border-[#ED0D79]/20 text-base-content flex items-center gap-2">
+          <div className="w-1 h-6 bg-[#ED0D79] rounded-full"></div>
           Additional Details
         </h3>
         <div className="space-y-6">
           <div>
             <label className="form-control w-full">
               <div className="label">
-                <span className="label-text">Full Description</span>
+                <span className="label-text font-semibold text-base-content">Full Description</span>
               </div>
               <textarea
-                className="textarea textarea-bordered h-32 w-full resize-none"
+                className="textarea textarea-bordered h-32 w-full resize-none transition-all duration-200 focus:border-[#ED0D79] focus:ring-2 focus:ring-[#ED0D79]/20 focus:outline-none border-base-300"
                 placeholder="Provide a detailed description of your AI project, its features, and what makes it unique..."
                 value={formData.full_description || ""}
                 onChange={(e) =>
@@ -320,11 +389,22 @@ function DirectoryInfoStep({ formData, setFormData, errors, checkingDuplicate, c
                 <div className="label">
                   <span className="label-text">Pricing Model</span>
                 </div>
-                <div className="flex gap-2 w-full">
+                <div className="relative inline-flex items-center bg-gray-100 rounded-lg p-1 w-full">
+                  <div 
+                    className="absolute top-1 bottom-1 w-1/3 bg-white rounded-md shadow-sm transition-transform duration-200 ease-in-out"
+                    style={{
+                      transform: formData.pricing === "Free" 
+                        ? "translateX(0)" 
+                        : formData.pricing === "Freemium" 
+                        ? "translateX(100%)" 
+                        : "translateX(200%)",
+                      backgroundColor: formData.pricing ? "#ED0D79" : "#ED0D79"
+                    }}
+                  />
                   {["Free", "Freemium", "Paid"].map((option) => (
                     <label
                       key={option}
-                      className="flex-1"
+                      className="relative flex-1 text-center cursor-pointer transition-colors duration-200"
                     >
                       <input
                         type="radio"
@@ -337,11 +417,14 @@ function DirectoryInfoStep({ formData, setFormData, errors, checkingDuplicate, c
                         className="sr-only"
                       />
                       <span
-                        className={`btn btn-sm w-full ${
+                        className={`block py-2 px-4 text-sm font-medium rounded-md transition-colors duration-200 ${
                           formData.pricing === option
-                            ? "btn-primary"
-                            : "btn-outline"
+                            ? "text-white"
+                            : "text-gray-700 hover:text-gray-900"
                         }`}
+                        style={{
+                          color: formData.pricing === option ? "#ffffff" : undefined
+                        }}
                       >
                         {option}
                       </span>
@@ -357,7 +440,8 @@ function DirectoryInfoStep({ formData, setFormData, errors, checkingDuplicate, c
 
       {/* Media Section */}
       <div>
-        <h3 className="text-lg font-semibold mb-4 pb-2 border-b border-base-300">
+        <h3 className="text-lg font-semibold mb-6 pb-3 border-b-2 border-[#ED0D79]/20 text-base-content flex items-center gap-2">
+          <div className="w-1 h-6 bg-[#ED0D79] rounded-full"></div>
           Media & Assets
         </h3>
         <div className="space-y-6">
@@ -406,7 +490,7 @@ function PlanStep({ formData, setFormData, errors = {}, isEditingDraft = false }
         )}
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-2 gap-6">
         {Object.entries(PLANS).map(([planKey, plan]) => (
           <div
             key={planKey}
@@ -417,12 +501,6 @@ function PlanStep({ formData, setFormData, errors = {}, isEditingDraft = false }
             } ${plan.popular ? "relative" : ""}`}
             onClick={() => setFormData({ ...formData, plan: planKey })}
           >
-            {plan.popular && (
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                <span className="badge badge-primary">Most Popular</span>
-              </div>
-            )}
-
             <div className="card-body">
               <div className="flex items-center mb-4">
                 <input
@@ -432,8 +510,15 @@ function PlanStep({ formData, setFormData, errors = {}, isEditingDraft = false }
                   checked={formData.plan === planKey}
                   onChange={() => setFormData({ ...formData, plan: planKey })}
                 />
-                <div>
-                  <h3 className="text-lg font-semibold">{plan.name}</h3>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-semibold">{plan.name}</h3>
+                    {plan.popular && (
+                      <span className="badge text-xs px-2 py-1" style={{ backgroundColor: '#ED0D79', color: 'white' }}>
+                        Most Popular
+                      </span>
+                    )}
+                  </div>
                   <div className="text-2xl font-bold">
                     {plan.price === 0 ? "Free" : `$${plan.price}`}
                     {plan.price > 0 && (
@@ -449,18 +534,11 @@ function PlanStep({ formData, setFormData, errors = {}, isEditingDraft = false }
               <ul className="space-y-2 text-sm">
                 {plan.features.map((feature, index) => (
                   <li key={index} className="flex items-start">
-                    <svg
-                      className="w-4 h-4 text-primary mt-0.5 mr-2 flex-shrink-0"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    {feature}
+                    {React.createElement(feature.icon, { 
+                      className: "w-4 h-4 text-primary mt-0.5 mr-2 flex-shrink-0",
+                      strokeWidth: 1.5
+                    })}
+                    <span>{feature.text}</span>
                   </li>
                 ))}
               </ul>
@@ -469,7 +547,7 @@ function PlanStep({ formData, setFormData, errors = {}, isEditingDraft = false }
         ))}
       </div>
 
-      <div className="alert alert-success">
+      <div className="alert" style={{ backgroundColor: 'rgba(255, 148, 42, 0.1)', color: 'black', boxShadow: 'none', border: 'none' }}>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           className="stroke-current shrink-0 h-6 w-6"
@@ -557,7 +635,7 @@ function WeekSelectionStep({ formData, setFormData, errors }) {
       
       // Show which slots are being used
       if (totalUsed < 15) {
-        return `${availableSlots}/${totalSlots} spots (${15 - totalUsed} shared + 10 premium)`;
+        return `${availableSlots}/${totalSlots} spots`;
       } else {
         return `${availableSlots}/${totalSlots} spots (premium only)`;
       }
@@ -571,7 +649,7 @@ function WeekSelectionStep({ formData, setFormData, errors }) {
       return "Full (upgrade to Premium for 10 extra slots)";
     }
 
-    return `${availableSlots}/${totalSlots} spots (shared)`;
+    return `${availableSlots}/${totalSlots} spots`;
   };
 
   const isWeekAvailable = (week) => {
@@ -602,29 +680,35 @@ function WeekSelectionStep({ formData, setFormData, errors }) {
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold mb-2">Choose Your Launch Week</h2>
-        <p className="text-base-content/70">
+        <h2 className="text-2xl font-bold mb-3 flex items-center justify-center gap-3">
+          <div className="w-2 h-8 bg-[#ED0D79] rounded-full"></div>
+          Choose Your Launch Week
+        </h2>
+        <p className="text-base-content/70 text-lg mb-4">
           {formData.plan === "premium"
             ? "Premium plans have access to all 25 weekly slots (15 shared + 10 premium-only)"
             : "Standard plans have access to 15 shared weekly slots"}
         </p>
         {formData.plan === "premium" && (
-          <div className="flex items-center justify-center gap-4 mt-3 text-xs">
+          <div className="flex items-center justify-center gap-6 mt-4 text-sm">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-2 bg-primary rounded"></div>
-              <span className="text-base-content/60">Shared slots (0-15)</span>
+              <div className="w-4 h-3 bg-[#ED0D79] rounded"></div>
+              <span className="text-base-content/70 font-medium">Shared slots (0-15)</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-2 bg-success rounded"></div>
-              <span className="text-base-content/60">Premium-only (15-25)</span>
+              <div className="w-4 h-3 bg-success rounded"></div>
+              <span className="text-base-content/70 font-medium">Premium-only (15-25)</span>
             </div>
           </div>
         )}
       </div>
 
       {errors.launch_week && (
-        <div className="alert alert-error">
-          <span>{errors.launch_week}</span>
+        <div className="alert alert-error border-2 border-error bg-error/10">
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+          <span className="font-medium">{errors.launch_week}</span>
         </div>
       )}
 
@@ -636,11 +720,11 @@ function WeekSelectionStep({ formData, setFormData, errors }) {
           return (
             <div
               key={week.competition_id}
-              className={`card cursor-pointer transition-all border-2 ${
+              className={`card cursor-pointer transition-all duration-200 border-2 ${
                 isSelected
-                  ? "border-primary bg-primary/5"
+                  ? "border-[#ED0D79] bg-[#ED0D79]/5 shadow-lg shadow-[#ED0D79]/10"
                   : available
-                  ? "border-base-300 hover:border-primary/50"
+                  ? "border-base-300 hover:border-[#ED0D79]/50 hover:shadow-md hover:shadow-[#ED0D79]/5"
                   : "border-base-300 opacity-50 cursor-not-allowed"
               }`}
               onClick={() => {
@@ -657,7 +741,10 @@ function WeekSelectionStep({ formData, setFormData, errors }) {
                   <input
                     type="radio"
                     name="launch_week"
-                    className="radio radio-primary mr-3"
+                    className="radio mr-3"
+                    style={{
+                      accentColor: '#ED0D79'
+                    }}
                     checked={isSelected}
                     disabled={!available}
                     onChange={() => {
@@ -670,10 +757,10 @@ function WeekSelectionStep({ formData, setFormData, errors }) {
                     }}
                   />
                   <div>
-                    <h3 className="font-semibold">
+                    <h3 className="font-bold text-lg">
                       Week {week.competition_id}
                     </h3>
-                    <p className="text-sm text-base-content/60">
+                    <p className="text-sm text-base-content/70 font-medium">
                       {formatWeekDate(week.start_date, week.end_date)}
                     </p>
                   </div>
@@ -685,11 +772,11 @@ function WeekSelectionStep({ formData, setFormData, errors }) {
                       Availability:
                     </span>
                     <span
-                      className={`text-sm font-medium ${
+                      className={`text-sm font-bold ${
                         available
                           ? formData.plan === "premium"
                             ? "text-success"
-                            : "text-info"
+                            : "text-[#ED0D79]"
                           : "text-error"
                       }`}
                     >
@@ -704,9 +791,10 @@ function WeekSelectionStep({ formData, setFormData, errors }) {
                       <div className="relative w-full h-2 bg-base-300 rounded-full overflow-hidden">
                         {/* Shared slots portion (0-15) */}
                         <div
-                          className="absolute left-0 top-0 h-full bg-primary transition-all"
+                          className="absolute left-0 top-0 h-full transition-all"
                           style={{
                             width: `${Math.min(60, (week.total_submissions || 0) / 25 * 100)}%`, // 15/25 = 60%
+                            backgroundColor: '#ED0D79'
                           }}
                         ></div>
                         {/* Premium-only portion (15-25) */}
@@ -724,9 +812,10 @@ function WeekSelectionStep({ formData, setFormData, errors }) {
                       // Standard: Show progress out of 15 shared slots
                       <div className="relative w-full h-2 bg-base-300 rounded-full overflow-hidden">
                         <div
-                          className="absolute left-0 top-0 h-full bg-primary transition-all"
+                          className="absolute left-0 top-0 h-full transition-all"
                           style={{
                             width: `${Math.min(100, (week.total_submissions || 0) / 15 * 100)}%`,
+                            backgroundColor: '#ED0D79'
                           }}
                         ></div>
                       </div>
@@ -748,7 +837,7 @@ function WeekSelectionStep({ formData, setFormData, errors }) {
 
                 {!available && (
                   <div className="mt-3">
-                    <span className="badge badge-error badge-sm">
+                    <span className="badge badge-error badge-sm font-medium">
                       Week Full
                     </span>
                   </div>
@@ -782,12 +871,12 @@ function WeekSelectionStep({ formData, setFormData, errors }) {
         </div>
       )}
 
-      <div className="alert alert-info">
+      <div className="alert border-2 border-[#ED0D79]/20 bg-[#ED0D79]/5">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
-          className="stroke-current shrink-0 w-6 h-6"
+          className="stroke-[#ED0D79] shrink-0 w-6 h-6"
         >
           <path
             strokeLinecap="round"
@@ -797,17 +886,19 @@ function WeekSelectionStep({ formData, setFormData, errors }) {
           ></path>
         </svg>
             <div>
-              <h3 className="font-bold">Launch Schedule</h3>
-              <div className="text-sm">
+              <h3 className="font-bold text-[#ED0D79]">Launch Schedule</h3>
+              <div className="text-sm text-base-content/80">
                 • AI projects launch every Monday at 12:00 AM PST
                 <br />
                 • Competition runs for the full week (Monday-Sunday)
                 <br />
                 • Winners are announced and receive dofollow backlinks
                 <br />•{" "}
-                {formData.plan === "premium"
-                  ? "Premium: Get dofollow backlink by default upon approval"
-                  : "Standard: Get nofollow backlink at launch, dofollow if you win (top 3)"}
+                <span className="font-medium">
+                  {formData.plan === "premium"
+                    ? "Premium: Get dofollow backlink by default upon approval"
+                    : "Standard: Get nofollow backlink at launch, dofollow if you win (top 3)"}
+                </span>
               </div>
             </div>
       </div>
@@ -818,23 +909,6 @@ function WeekSelectionStep({ formData, setFormData, errors }) {
 function SubmitPageContent() {
   const { user, loading } = useUser();
   const isLoaded = !loading;
-
-  // Add error boundary for webpack issues
-  const [hasError, setHasError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  useEffect(() => {
-    const handleError = (error) => {
-      console.error("Global error caught:", error);
-      if (error.message && error.message.includes("Cannot read properties of undefined")) {
-        setHasError(true);
-        setErrorMessage("Module loading error detected. Please refresh the page.");
-      }
-    };
-
-    window.addEventListener('error', handleError);
-    return () => window.removeEventListener('error', handleError);
-  }, []);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -849,11 +923,10 @@ function SubmitPageContent() {
   const [paymentPolling, setPaymentPolling] = useState(null); // Track payment polling state
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDraftMode, setIsDraftMode] = useState(false); // Distinguish draft from edit
-  const [editDirectoryId, setEditDirectoryId] = useState(null);
+  const [editProjectId, setEditProjectId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [checkingDuplicate, setCheckingDuplicate] = useState(false);
   const [checkingName, setCheckingName] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
 
 
   // Validate logo URL
@@ -949,7 +1022,7 @@ function SubmitPageContent() {
       const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
 
       const response = await fetch(
-        `/api/directories?check_duplicate=true&slug=${encodeURIComponent(slug)}`,
+        `/api/projects?check_duplicate=true&slug=${encodeURIComponent(slug)}`,
         { signal: controller.signal }
       );
       
@@ -961,7 +1034,7 @@ function SubmitPageContent() {
         if (result.exists) {
           setErrors(prev => ({
             ...prev,
-            name: `An AI project with this name already exists: "${result.existing_directory}"`,
+            name: `An AI project with this name already exists: "${result.existing_project}"`,
           }));
         } else {
           // Clear the name error if it exists
@@ -1005,7 +1078,7 @@ function SubmitPageContent() {
       const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
 
       const response = await fetch(
-        `/api/directories?check_duplicate=true&website_url=${encodeURIComponent(websiteUrl)}`,
+        `/api/projects?check_duplicate=true&website_url=${encodeURIComponent(websiteUrl)}`,
         { signal: controller.signal }
       );
       
@@ -1017,7 +1090,7 @@ function SubmitPageContent() {
         if (result.exists) {
           setErrors(prev => ({
             ...prev,
-            website_url: `This website has already been submitted as "${result.existing_directory}"`,
+            website_url: `This website has already been submitted as "${result.existing_project}"`,
           }));
         } else {
           // Clear the website_url error if it exists (but only duplicate errors)
@@ -1126,36 +1199,47 @@ function SubmitPageContent() {
     return () => clearTimeout(timeoutId);
   }, [formData.short_description]);
 
-  // Component initialization
-  useEffect(() => {
-    // Mark component as initialized after a short delay to prevent race conditions
-    const timer = setTimeout(() => {
-      setIsInitialized(true);
-    }, 100);
 
-    return () => clearTimeout(timer);
-  }, []);
+  // Handle plan selection from URL parameters
+  useEffect(() => {
+    if (!searchParams) return;
+    
+    const planParam = searchParams.get("plan");
+    if (planParam && (planParam === "standard" || planParam === "premium")) {
+      // Set the plan and skip to step 2 (project details)
+      setFormData(prev => ({
+        ...prev,
+        plan: planParam
+      }));
+      setCurrentStep(2); // Skip plan selection step
+      
+      // Show a toast to inform the user about the pre-selected plan
+      toast.success(`Selected ${planParam === "premium" ? "Premium" : "Standard"} plan. Please fill in your project details.`, {
+        duration: 4000,
+      });
+    }
+  }, [searchParams]);
 
   // Redirect to sign in if not authenticated
   useEffect(() => {
-    if (isLoaded && !user && isInitialized) {
+    if (isLoaded && !user) {
       // Store the current URL to redirect back after sign in
       const currentPath = window.location.pathname + window.location.search;
       sessionStorage.setItem('redirectAfterSignIn', currentPath);
       router.push('/auth/signin');
     }
-  }, [user, isLoaded, router, isInitialized]);
+  }, [user, isLoaded, router]);
 
   // Payment polling for automatic redirect when LemonJS fails
-  const startPaymentPolling = (directoryId) => {
-    console.log("Starting payment polling for directory:", directoryId);
-    setPaymentPolling({ directoryId, startTime: Date.now() });
+  const startPaymentPolling = (projectId) => {
+    console.log("Starting payment polling for AI project:", projectId);
+    setPaymentPolling({ projectId: projectId, startTime: Date.now() });
 
     // Store polling info in localStorage so it persists across page navigation
     localStorage.setItem(
       "payment_polling",
       JSON.stringify({
-        directoryId,
+        projectId,
         startTime: Date.now(),
       })
     );
@@ -1169,7 +1253,7 @@ function SubmitPageContent() {
 
       try {
         const response = await fetch(
-          `/api/payments?type=status&directoryId=${directoryId}`
+          `/api/payments?type=status&projectId=${projectId}`
         );
         if (response.ok) {
           const result = await response.json();
@@ -1189,7 +1273,7 @@ function SubmitPageContent() {
 
             // Instead of redirecting, trigger the success flow directly
             setTimeout(() => {
-              const successUrl = `${window.location.origin}/submit?payment=success&directoryId=${directoryId}`;
+              const successUrl = `${window.location.origin}/submit?payment=success&projectId=${projectId}`;
               window.location.href = successUrl;
             }, 2000);
           }
@@ -1232,8 +1316,8 @@ function SubmitPageContent() {
 
     if (edit === "true" && id) {
       setIsEditMode(true);
-      setEditDirectoryId(id);
-      loadDirectoryForEdit(id);
+      setEditProjectId(id);
+      loadProjectForEdit(id);
     } else if (draft) {
       // Handle resuming a draft
       loadDraftForEdit(draft);
@@ -1247,7 +1331,7 @@ function SubmitPageContent() {
     console.log("Clearing any stale payment polling state...");
     localStorage.removeItem("payment_polling");
     localStorage.removeItem("premium_form_data");
-    localStorage.removeItem("premium_directory_id");
+    localStorage.removeItem("premium_project_id");
     setPaymentPolling(null);
     
     try {
@@ -1268,7 +1352,7 @@ function SubmitPageContent() {
         
         // Set draft mode (not edit mode - this is a new submission from draft)
         setIsDraftMode(true);
-        setEditDirectoryId(draftData.id);
+        setEditProjectId(draftData.id);
         
         // Start at step 1 to allow plan change
         setCurrentStep(1);
@@ -1279,10 +1363,10 @@ function SubmitPageContent() {
       }
       
       // If no session storage, fetch from API
-      const response = await fetch(`/api/directories/${draftId}`);
+      const response = await fetch(`/api/projects/${draftId}`);
       if (response.ok) {
         const result = await response.json();
-        const draft = result.data.directory;
+        const draft = result.data.project;
         
         console.log("Draft loaded from API:", draft);
         
@@ -1294,7 +1378,7 @@ function SubmitPageContent() {
         });
         
         setIsDraftMode(true);
-        setEditDirectoryId(draft.id);
+        setEditProjectId(draft.id);
         setCurrentStep(1);
         
         toast.success("Draft loaded! You can modify and resubmit.");
@@ -1311,49 +1395,49 @@ function SubmitPageContent() {
     }
   };
 
-  const loadDirectoryForEdit = async (directoryId) => {
+  const loadProjectForEdit = async (projectId) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/directories/${directoryId}`);
+      const response = await fetch(`/api/projects/${projectId}`);
       if (response.ok) {
         const result = await response.json();
-        const directory = result.data.directory; // Fixed: accessing the nested directory object
+        const project = result.data.project; // Fixed: accessing the nested project object
 
-        console.log("Directory data loaded for edit:", directory);
+        console.log("Project data loaded for edit:", project);
 
-        // Check if directory can be edited
-        if (directory.status !== "scheduled") {
-          toast.error("Editing is only allowed for scheduled directories");
+        // Check if project can be edited
+        if (project.status !== "scheduled") {
+          toast.error("Editing is only allowed for scheduled projects");
           router.push("/dashboard");
           return;
         }
 
         // Populate form data with all available fields
         setFormData({
-          plan: directory.plan || "standard",
-          name: directory.name || "",
-          website_url: directory.website_url || "",
-          short_description: directory.short_description || "",
-          full_description: directory.full_description || "",
-          categories: directory.categories || [],
-          pricing: directory.pricing || "",
-          logo_url: directory.logo_url || "",
-          screenshots: directory.screenshots || ["", "", "", "", ""],
-          video_url: directory.video_url || "",
-          launch_week: directory.launch_week || "",
-          backlink_url: directory.backlink_url || "",
+          plan: project.plan || "standard",
+          name: project.name || "",
+          website_url: project.website_url || "",
+          short_description: project.short_description || "",
+          full_description: project.full_description || "",
+          categories: project.categories || [],
+          pricing: project.pricing || "",
+          logo_url: project.logo_url || "",
+          screenshots: project.screenshots || ["", "", "", "", ""],
+          video_url: project.video_url || "",
+          launch_week: project.launch_week || "",
+          backlink_url: project.backlink_url || "",
         });
 
         // Skip to step 2 (Basic Info) for editing
         setCurrentStep(2);
 
-        toast.success("Directory loaded for editing");
+        toast.success("Project loaded for editing");
       } else {
-        throw new Error("Failed to load directory");
+        throw new Error("Failed to load project");
       }
     } catch (error) {
-      console.error("Error loading directory for edit:", error);
-      toast.error("Failed to load directory for editing");
+      console.error("Error loading project for edit:", error);
+      toast.error("Failed to load project for editing");
       router.push("/dashboard");
     } finally {
       setIsLoading(false);
@@ -1366,13 +1450,13 @@ function SubmitPageContent() {
       const urlParams = new URLSearchParams(window.location.search);
       const payment = urlParams.get("payment");
       const step = urlParams.get("step");
-      const directoryId = urlParams.get("directoryId");
+      const projectId = urlParams.get("projectId");
 
-      console.log("URL params on load:", { payment, step, directoryId });
+      console.log("URL params on load:", { payment, step, projectId });
 
       // Check for pending premium payment in localStorage even without URL params
       const savedFormData = localStorage.getItem("premium_form_data");
-      const savedDirectoryId = localStorage.getItem("premium_directory_id");
+      const savedProjectId = localStorage.getItem("premium_project_id");
 
       // Check if there's active payment polling that should be resumed
       const paymentPolling = localStorage.getItem("payment_polling");
@@ -1391,7 +1475,7 @@ function SubmitPageContent() {
               const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
               
               const statusResponse = await fetch(
-                `/api/payments?type=status&directoryId=${pollingData.directoryId}`,
+                `/api/payments?type=status&projectId=${pollingData.projectId}`,
                 { signal: controller.signal }
               );
               
@@ -1403,11 +1487,11 @@ function SubmitPageContent() {
                   console.log("✅ Payment already completed! Redirecting...");
                   localStorage.removeItem("payment_polling");
                   localStorage.removeItem("premium_form_data");
-                  localStorage.removeItem("premium_directory_id");
+                  localStorage.removeItem("premium_project_id");
                   
                   toast.success("🎉 Payment confirmed! Your project has been submitted.");
                   setTimeout(() => {
-                    window.location.href = `/submit?payment=success&directoryId=${pollingData.directoryId}`;
+                    window.location.href = `/submit?payment=success&projectId=${pollingData.projectId}`;
                   }, 1500);
                   return; // Stop further processing
                 }
@@ -1418,51 +1502,51 @@ function SubmitPageContent() {
                 toast.error("Previous payment session expired. Please start a new submission.");
                 localStorage.removeItem("payment_polling");
                 localStorage.removeItem("premium_form_data");
-                localStorage.removeItem("premium_directory_id");
+                localStorage.removeItem("premium_project_id");
               } else {
                 console.error("Error checking payment status:", statusError);
                 // Clear stale data on error
                 localStorage.removeItem("payment_polling");
                 localStorage.removeItem("premium_form_data");
-                localStorage.removeItem("premium_directory_id");
+                localStorage.removeItem("premium_project_id");
               }
               return; // Don't resume polling on error
             }
             
             // If payment not confirmed yet, resume polling only if no error
             console.log("Payment not confirmed yet, resuming polling...");
-            startPaymentPolling(pollingData.directoryId);
+            startPaymentPolling(pollingData.projectId);
           } else {
             console.log("Payment polling expired (>10 minutes), clearing state");
             localStorage.removeItem("payment_polling");
             localStorage.removeItem("premium_form_data");
-            localStorage.removeItem("premium_directory_id");
+            localStorage.removeItem("premium_project_id");
           }
         } catch (error) {
           console.error("Error parsing payment polling data:", error);
           localStorage.removeItem("payment_polling");
           localStorage.removeItem("premium_form_data");
-          localStorage.removeItem("premium_directory_id");
+          localStorage.removeItem("premium_project_id");
         }
       }
 
-      if (savedFormData && savedDirectoryId && !payment && user) {
-        console.log("Found pending premium session:", { savedDirectoryId });
+      if (savedFormData && savedProjectId && !payment && user) {
+        console.log("Found pending premium session:", { savedProjectId });
 
-        // Verify this saved data belongs to the current user by checking if the directory exists and belongs to them
+        // Verify this saved data belongs to the current user by checking if the project exists and belongs to them
         try {
           const verifyResponse = await fetch(
-            `/api/directories/${savedDirectoryId}`
+            `/api/projects/${savedProjectId}`
           );
           if (verifyResponse.ok) {
             const verifyResult = await verifyResponse.json();
-            const directory = verifyResult.data;
+            const project = verifyResult.data;
 
-            // Check if this directory belongs to the current user and is actually premium
+            // Check if this project belongs to the current user and is actually premium
             if (
-              directory &&
-              directory.maker_email === user.email &&
-              directory.plan === "premium"
+              project &&
+              project.maker_email === user.email &&
+              project.plan === "premium"
             ) {
               toast.success(
                 "🎉 Welcome back! Your premium payment was successful. Please complete your AI project submission."
@@ -1475,28 +1559,28 @@ function SubmitPageContent() {
               // Clear invalid localStorage data
               console.log("Clearing invalid premium session data");
               localStorage.removeItem("premium_form_data");
-              localStorage.removeItem("premium_directory_id");
+              localStorage.removeItem("premium_project_id");
             }
           } else {
-            // Directory doesn't exist, clear localStorage
+            // Project doesn't exist, clear localStorage
             localStorage.removeItem("premium_form_data");
-            localStorage.removeItem("premium_directory_id");
+            localStorage.removeItem("premium_project_id");
           }
         } catch (error) {
           console.error("Error verifying premium session:", error);
           // Clear localStorage on error
           localStorage.removeItem("premium_form_data");
-          localStorage.removeItem("premium_directory_id");
+          localStorage.removeItem("premium_project_id");
         }
       }
 
-      if (payment === "success" && directoryId) {
-        // Payment successful - directory already created, just show success and redirect
+      if (payment === "success" && projectId) {
+        // Payment successful - project already created, just show success and redirect
         console.log("Processing successful payment return");
         
         // Clean up localStorage
         localStorage.removeItem("premium_form_data");
-        localStorage.removeItem("premium_directory_id");
+        localStorage.removeItem("premium_project_id");
         localStorage.removeItem("payment_polling");
 
         toast.success(
@@ -1515,34 +1599,34 @@ function SubmitPageContent() {
 
         // Clean up localStorage on cancellation
         localStorage.removeItem("premium_form_data");
-        localStorage.removeItem("premium_directory_id");
+        localStorage.removeItem("premium_project_id");
       }
 
       fetchCategories();
     };
 
-    if (user && isLoaded && isInitialized) {
+    if (user && isLoaded) {
       handlePaymentCheck();
     }
-  }, [user, isLoaded, isInitialized]);
+  }, [user, isLoaded]);
 
   // Clear old premium session data for regular users (safety net)
   useEffect(() => {
     if (user && isLoaded) {
       const urlParams = new URLSearchParams(window.location.search);
       const hasPaymentParams =
-        urlParams.get("payment") || urlParams.get("directoryId");
+        urlParams.get("payment") || urlParams.get("projectId");
 
       // If user visits without payment params, clear any old premium data after a delay
       if (!hasPaymentParams) {
         const timer = setTimeout(() => {
           const savedData = localStorage.getItem("premium_form_data");
-          const savedId = localStorage.getItem("premium_directory_id");
+          const savedId = localStorage.getItem("premium_project_id");
 
           if (savedData || savedId) {
             console.log("Clearing old premium session data");
             localStorage.removeItem("premium_form_data");
-            localStorage.removeItem("premium_directory_id");
+            localStorage.removeItem("premium_project_id");
             localStorage.removeItem("payment_polling");
           }
         }, 2000); // Wait 2 seconds to allow proper payment verification
@@ -1608,7 +1692,7 @@ function SubmitPageContent() {
 
         case 2:
           console.log("Validating step 2 with schema...");
-          DirectoryInfoSchema.parse(formData);
+          ProjectInfoSchema.parse(formData);
           console.log("✅ Step 2 validation passed");
           break;
 
@@ -1664,26 +1748,26 @@ function SubmitPageContent() {
         })
       );
 
-      // Create the full directory with all information
-      const directoryData = {
+      // Create the full project with all information
+      const projectData = {
         ...formData,
         plan: "premium",
       };
 
-      // Create the directory with complete data
-      const response = await fetch("/api/directories", {
+      // Create the project with complete data
+      const response = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(directoryData),
+        body: JSON.stringify(projectData),
       });
 
       const result = await response.json();
 
       if (response.ok) {
-        const directoryId = result.data.id;
+        const projectId = result.data.id;
 
-        // Store directory ID for recovery
-        localStorage.setItem("premium_directory_id", directoryId);
+        // Store project ID for recovery
+        localStorage.setItem("premium_project_id", projectId);
 
         // Create checkout session
         const checkoutResponse = await fetch("/api/payments", {
@@ -1691,8 +1775,8 @@ function SubmitPageContent() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             planType: "premium",
-            directoryId: directoryId,
-            directoryData: {
+            projectId: projectId,
+            projectData: {
               name: formData.name,
               slug: result.data.slug,
               description: formData.short_description,
@@ -1710,7 +1794,7 @@ function SubmitPageContent() {
           checkoutResult.data?.checkoutUrl
         ) {
           // The success URL is now handled by the API - user will be redirected back to submit page
-          const successUrl = `${window.location.origin}/submit?payment=success&directoryId=${directoryId}`;
+          const successUrl = `${window.location.origin}/submit?payment=success&projectId=${projectId}`;
           console.log(
             "Payment checkout created successfully:",
             checkoutResult.data
@@ -1722,7 +1806,7 @@ function SubmitPageContent() {
           console.log(
             "Starting payment polling and opening payment in new window..."
           );
-          startPaymentPolling(directoryId);
+          startPaymentPolling(projectId);
 
           toast.success("💳 Opening payment page in new window...", {
             duration: 5000,
@@ -1795,7 +1879,7 @@ function SubmitPageContent() {
           }
         }
       } else {
-        throw new Error(result.error || "Failed to create directory");
+        throw new Error(result.error || "Failed to create project");
       }
     } catch (error) {
       console.error("Premium payment error:", error);
@@ -1815,9 +1899,17 @@ function SubmitPageContent() {
 
   const handlePrev = () => {
     const minStep = isEditMode ? 2 : 1;
+    const planPreSelected = searchParams?.get("plan");
+    
+    // If plan was pre-selected from URL, don't allow going back to step 1
+    if (planPreSelected && currentStep === 2) {
+      // Redirect back to pricing page instead of going to step 1
+      router.push("/pricing");
+      return;
+    }
     
     // If on basic info step (2) and came from standard/premium plan, go back to step 1
-    if (currentStep === 2 && (formData.plan === "standard" || formData.plan === "premium")) {
+    if (currentStep === 2 && (formData.plan === "standard" || formData.plan === "premium") && !planPreSelected) {
       setCurrentStep(1);
       return;
     }
@@ -1832,16 +1924,16 @@ function SubmitPageContent() {
 
     setIsSubmitting(true);
     try {
-      if (isEditMode && editDirectoryId) {
-        // Edit mode - update existing directory (scheduled/published)
+      if (isEditMode && editProjectId) {
+        // Edit mode - update existing project (scheduled/published)
         const updateData = {
-          directoryId: editDirectoryId,
+          projectId: editProjectId,
           ...formData,
           // Preserve existing approval status (don't override)
           backlink_verified: null,
         };
 
-        const response = await fetch("/api/directories", {
+        const response = await fetch("/api/projects", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(updateData),
@@ -1850,16 +1942,16 @@ function SubmitPageContent() {
         const result = await response.json();
 
         if (response.ok) {
-          toast.success("Directory updated successfully! Your changes will be reviewed by our admin team.");
+          toast.success("Project updated successfully! Your changes will be reviewed by our admin team.");
           router.push(`/dashboard`);
         } else {
-          throw new Error(result.error || "Failed to update directory");
+          throw new Error(result.error || "Failed to update project");
         }
       } else if (formData.plan === "premium") {
         // Premium plan - trigger payment flow after filling all information
         await handlePremiumPayment();
       } else {
-        // Standard plan - create new directory directly
+        // Standard plan - create new project directly
         const submissionData = {
           ...formData,
           approved: false, // Default to unapproved as per spec
@@ -1868,7 +1960,7 @@ function SubmitPageContent() {
           dofollow_status: false, // Will be set to true after approval for Premium plans or top 3 winners
         };
 
-        const response = await fetch("/api/directories", {
+        const response = await fetch("/api/projects", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(submissionData),
@@ -1881,13 +1973,13 @@ function SubmitPageContent() {
           toast.success(
             result.data.message || "🎉 AI project submitted successfully! Your submission is now under review by our admin team and you'll be notified via email once approved."
           );
-          router.push(`/directory/${slug}?submitted=true&pending_approval=true`);
+          router.push(`/project/${slug}?submitted=true&pending_approval=true`);
         } else {
           // Handle specific error types with better messaging
           if (result.code === "WEBSITE_EXISTS") {
             toast.error(result.error);
             setErrors({
-              website_url: `Website already exists: ${result.existing_directory}`,
+              website_url: `Website already exists: ${result.existing_project}`,
             });
           } else if (result.code === "SLUG_EXISTS") {
             toast.error(result.error);
@@ -1927,7 +2019,7 @@ function SubmitPageContent() {
         );
       case 2:
         return (
-          <DirectoryInfoStep
+          <ProjectInfoStep
             formData={formData}
             setFormData={setFormData}
             errors={errors}
@@ -1948,14 +2040,14 @@ function SubmitPageContent() {
     }
   };
 
-  // Show loading state when checking authentication, initializing, or loading directory for edit
-  if (!isLoaded || !isInitialized || isLoading) {
+  // Show loading state when checking authentication or loading project for edit
+  if (!isLoaded || isLoading) {
     return (
       <div className="min-h-screen bg-base-100 flex items-center justify-center">
         <div className="text-center">
           <span className="loading loading-spinner loading-lg"></span>
           <p className="mt-4 text-base-content/70">
-            {isLoading ? "Loading directory for editing..." : "Initializing form..."}
+            {isLoading ? "Loading project for editing..." : "Loading..."}
           </p>
         </div>
       </div>
@@ -1967,42 +2059,6 @@ function SubmitPageContent() {
     return null;
   }
 
-  // Show error state if webpack error detected
-  if (hasError) {
-    return (
-      <div className="min-h-screen bg-base-100 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-6">
-          <div className="alert alert-error mb-4">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="stroke-current shrink-0 h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <div>
-              <h3 className="font-bold">Module Loading Error</h3>
-              <div className="text-sm">
-                {errorMessage}
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={() => window.location.reload()}
-            className="btn btn-primary"
-          >
-            Refresh Page
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-base-100">
@@ -2036,7 +2092,7 @@ function SubmitPageContent() {
                   2. Or close the payment window - this page will automatically update
                 </p>
                 <p className="text-xs text-blue-600 mt-2">
-                  Directory ID: {paymentPolling.directoryId} • Polling since:{" "}
+                  Project ID: {paymentPolling.projectId} • Polling since:{" "}
                   {new Date(paymentPolling.startTime).toLocaleTimeString()}
                 </p>
                 <div className="flex gap-2 mt-3">
@@ -2047,7 +2103,7 @@ function SubmitPageContent() {
                         const timeoutId = setTimeout(() => controller.abort(), 5000);
                         
                         const response = await fetch(
-                          `/api/payments?type=status&directoryId=${paymentPolling.directoryId}`,
+                          `/api/payments?type=status&projectId=${paymentPolling.projectId}`,
                           { signal: controller.signal }
                         );
                         
@@ -2059,7 +2115,7 @@ function SubmitPageContent() {
                             toast.success("✅ Payment confirmed! Redirecting...");
                             localStorage.removeItem("payment_polling");
                             setTimeout(() => {
-                              window.location.href = `/submit?payment=success&directoryId=${paymentPolling.directoryId}`;
+                              window.location.href = `/submit?payment=success&projectId=${paymentPolling.projectId}`;
                             }, 1000);
                           } else {
                             toast.error("Payment not yet confirmed. Please wait or try again.");
@@ -2083,7 +2139,7 @@ function SubmitPageContent() {
                       if (confirm("Are you sure you want to clear the payment polling state and start fresh? This won't cancel any completed payment.")) {
                         localStorage.removeItem("payment_polling");
                         localStorage.removeItem("premium_form_data");
-                        localStorage.removeItem("premium_directory_id");
+                        localStorage.removeItem("premium_project_id");
                         setPaymentPolling(null);
                         setFormData({ plan: "standard" });
                         setCurrentStep(1);
@@ -2106,9 +2162,33 @@ function SubmitPageContent() {
           steps={
             isEditMode 
               ? STEPS.filter((step) => step.id !== 1)
-              : STEPS
+              : searchParams?.get("plan") 
+                ? STEPS.filter((step) => step.id !== 1) // Skip plan selection when plan is pre-selected
+                : STEPS
           }
         />
+
+        {/* Pre-selected Plan Indicator */}
+        {searchParams?.get("plan") && (
+          <div className="mb-6 p-4 bg-primary/10 border border-primary/20 rounded-lg">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-primary text-primary-content rounded-full flex items-center justify-center">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-primary">
+                  {formData.plan === "premium" ? "Premium" : "Standard"} Plan Selected
+                </h3>
+                <p className="text-sm text-base-content/70">
+                  You've chosen the {formData.plan === "premium" ? "Premium" : "Standard"} launch plan. 
+                  {formData.plan === "premium" ? " You'll get guaranteed backlinks and skip the queue." : " You'll get standard launch benefits."}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Form Content */}
         <div className="card bg-base-100 shadow-xl border border-base-300">
@@ -2134,14 +2214,14 @@ function SubmitPageContent() {
                     className="btn btn-ghost"
                   >
                     <NavArrowLeft className="w-4 h-4 mr-1" />
-                    Previous
+                    {searchParams?.get("plan") && currentStep === 2 ? "Back to Pricing" : "Previous"}
                   </button>
                 )}
               </div>
 
               <div className="flex items-center space-x-3">
                 <span className="text-sm text-base-content/60">
-                  Step {currentStep} of {STEPS.length}
+                  Step {searchParams?.get("plan") ? currentStep - 1 : currentStep} of {searchParams?.get("plan") ? STEPS.length - 1 : STEPS.length}
                 </span>
 
                 {currentStep < STEPS.length ? (
@@ -2149,26 +2229,28 @@ function SubmitPageContent() {
                     type="button"
                     onClick={handleNext}
                     disabled={isSubmitting}
-                    className="btn btn-primary"
+                    className="bg-[#ED0D79] text-white rounded-lg px-6 py-3 font-semibold text-sm no-underline transition duration-300 hover:scale-105 flex items-center justify-center gap-2 disabled:hover:scale-100 disabled:opacity-70"
                   >
                     {isSubmitting && (
                       <span className="loading loading-spinner loading-sm"></span>
                     )}
                     {isSubmitting ? "Processing..." : "Next"}
-                    {!isSubmitting &&
-                      (currentStep !== 1 || formData.plan !== "premium") && (
-                        <NavArrowRight className="w-4 h-4 ml-1" />
-                      )}
+                    {!isSubmitting && <NavArrowRight className="w-4 h-4" />}
                   </button>
                 ) : (
                   <button
                     type="button"
                     onClick={handleSubmit}
                     disabled={isSubmitting}
-                    className="btn btn-primary"
+                    className="bg-[#ED0D79] text-white rounded-lg px-6 py-3 font-semibold text-sm no-underline transition duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
                   >
-                    {isSubmitting && (
+                    {isSubmitting ? (
                       <span className="loading loading-spinner loading-sm"></span>
+                    ) : (
+                      <Rocket 
+                        className="h-[18px] w-[18px]"
+                        strokeWidth={2}
+                      />
                     )}
                     {isSubmitting
                       ? isEditMode
@@ -2188,53 +2270,7 @@ function SubmitPageContent() {
           </div>
         </div>
 
-        {/* Approval Process Info */}
-        <div className="mt-8">
-          <div className="alert alert-info">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              className="stroke-current shrink-0 w-6 h-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              ></path>
-            </svg>
-            <div>
-              <h3 className="font-bold">Manual Approval Process</h3>
-              <div className="text-sm">
-                All AI project submissions require manual review and approval by our admin team.
-                <br />
-                • You'll receive an email notification once your project is approved
-                <br />
-                • Approval typically takes 24-48 hours during business days
-                <br />
-                • Premium plan benefits apply only after approval
-                <br />
-                • Approved projects will appear in the selected launch week
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Help Text */}
-        <div className="text-center mt-8">
-          <p className="text-sm text-base-content/60">
-            Need help? Check out our{" "}
-            <a href="/guidelines" className="link link-primary">
-              submission guidelines
-            </a>{" "}
-            or{" "}
-            <a href="/contact" className="link link-primary">
-              contact our team
-            </a>
-            .
-          </p>
-        </div>
       </div>
     </div>
   );

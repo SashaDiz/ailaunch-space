@@ -300,11 +300,11 @@ function FilterSidebar({
   );
 }
 
-function DirectoriesPageContent() {
+function ProjectsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const [directories, setDirectories] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(
@@ -331,12 +331,12 @@ function DirectoriesPageContent() {
   }, [searchParams]);
 
   useEffect(() => {
-    fetchDirectories();
+    fetchProjects();
   }, [selectedCategories, selectedPricing, sortBy, searchQuery]);
 
   // Update URL when filters change (but not on initial load)
   useEffect(() => {
-    if (directories.length > 0) {
+    if (projects.length > 0) {
       // Only after initial load
       handleFilterChange();
     }
@@ -354,7 +354,7 @@ function DirectoriesPageContent() {
     }
   };
 
-  const fetchDirectories = async (page = 1) => {
+  const fetchProjects = async (page = 1) => {
     try {
       setLoading(true);
 
@@ -377,17 +377,17 @@ function DirectoriesPageContent() {
         params.set("search", searchQuery.trim());
       }
 
-      const response = await fetch(`/api/directories?${params}`);
+      const response = await fetch(`/api/projects?${params}`);
       if (response.ok) {
         const data = await response.json();
-        setDirectories(data.data.directories || []);
+        setProjects(data.data.projects || []);
         setPagination(data.data.pagination || {});
       } else {
-        toast.error("Failed to load directories");
+        toast.error("Failed to load AI projects");
       }
     } catch (error) {
-      console.error("Failed to fetch directories:", error);
-      toast.error("Failed to load directories");
+      console.error("Failed to fetch AI projects:", error);
+      toast.error("Failed to load AI projects");
     } finally {
       setLoading(false);
     }
@@ -395,7 +395,7 @@ function DirectoriesPageContent() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    fetchDirectories(1);
+    fetchProjects(1);
     // Update URL
     const params = new URLSearchParams();
     if (searchQuery.trim()) params.set("search", searchQuery.trim());
@@ -404,13 +404,13 @@ function DirectoriesPageContent() {
     if (sortBy !== "upvotes") params.set("sort", sortBy);
 
     const newUrl = params.toString()
-      ? `/directories?${params}`
-      : "/directories";
+      ? `/projects?${params}`
+      : "/projects";
     router.push(newUrl, { shallow: true });
   };
 
   const handlePageChange = (newPage) => {
-    fetchDirectories(newPage);
+    fetchProjects(newPage);
   };
 
   const handleFilterChange = () => {
@@ -422,18 +422,18 @@ function DirectoriesPageContent() {
     if (sortBy !== "upvotes") params.set("sort", sortBy);
 
     const newUrl = params.toString()
-      ? `/directories?${params}`
-      : "/directories";
+      ? `/projects?${params}`
+      : "/projects";
     router.push(newUrl, { shallow: true });
   };
 
-  const handleDirectoryVote = (directoryId, newVoteCount, userVoted) => {
-    // Update the directory in the directories list
-    setDirectories((prevDirectories) =>
-      prevDirectories.map((directory) =>
-        directory.id === directoryId
-          ? { ...directory, upvotes: newVoteCount, userVoted }
-          : directory
+  const handleProjectVote = (projectId, newVoteCount, userVoted) => {
+    // Update the AI project in the projects list
+    setProjects((prevProjects) =>
+      prevProjects.map((project) =>
+        project.id === projectId
+          ? { ...project, upvotes: newVoteCount, userVoted }
+          : project
       )
     );
   };
@@ -560,14 +560,14 @@ function DirectoriesPageContent() {
               <div className="text-sm text-base-content/60">
                 {loading
                   ? "Loading..."
-                  : `${pagination.totalCount || 0} directories found`}
+                  : `${pagination.totalCount || 0} AI projects found`}
               </div>
               <div className="text-sm text-base-content/60">
                 Page {pagination.page || 1} of {pagination.totalPages || 1}
               </div>
             </div>
 
-            {/* Directory Grid/List */}
+            {/* AI Projects Grid/List */}
             {loading ? (
               <div
                 className={
@@ -600,7 +600,7 @@ function DirectoriesPageContent() {
                   </div>
                 ))}
               </div>
-            ) : directories.length > 0 ? (
+            ) : projects.length > 0 ? (
               <>
                 <div
                   className={
@@ -609,12 +609,12 @@ function DirectoriesPageContent() {
                       : "space-y-4"
                   }
                 >
-                  {directories.map((directory) => (
+                  {projects.map((project) => (
                     <ProductCard
-                      key={directory.id}
-                      directory={directory}
-                      onVote={handleDirectoryVote}
-                      inactiveCta={directory.status !== "live"}
+                      key={project.id}
+                      project={project}
+                      onVote={handleProjectVote}
+                      inactiveCta={project.status !== "live"}
                       viewMode={viewMode}
                     />
                   ))}
@@ -668,14 +668,14 @@ function DirectoriesPageContent() {
               <div className="text-center py-16">
                 <div className="text-base-content/60 mb-4">
                   <Search className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>No directories found matching your criteria.</p>
+                  <p>No AI projects found matching your criteria.</p>
                 </div>
                 <button
                   onClick={() => {
                     setSelectedCategories([]);
                     setSelectedPricing("all");
                     setSearchQuery("");
-                    fetchDirectories(1);
+                    fetchProjects(1);
                   }}
                   className="btn btn-outline"
                 >
@@ -691,7 +691,7 @@ function DirectoriesPageContent() {
 }
 
 // Loading fallback component
-function DirectoriesPageLoading() {
+function ProjectsPageLoading() {
   return (
     <div className="min-h-screen bg-base-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -706,10 +706,10 @@ function DirectoriesPageLoading() {
 }
 
 // Main export with Suspense boundary
-export default function DirectoriesPage() {
+export default function ProjectsPage() {
   return (
-    <Suspense fallback={<DirectoriesPageLoading />}>
-      <DirectoriesPageContent />
+    <Suspense fallback={<ProjectsPageLoading />}>
+      <ProjectsPageContent />
     </Suspense>
   );
 }

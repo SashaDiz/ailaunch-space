@@ -266,16 +266,16 @@ class NotificationManager {
    * Send weekly competition entry notification
    * @param {Object} params - Parameters
    */
-  async sendWeeklyCompetitionEntryNotification({ userId, userEmail, directory, competition }) {
+  async sendWeeklyCompetitionEntryNotification({ userId, userEmail, project, competition }) {
     return await this.sendNotification({
       userId,
       emailType: 'weekly_competition_entry',
       userEmail,
-      appId: directory.id,
+      appId: project.id,
       competitionId: competition.id,
       data: {
-        directoryName: directory.name,
-        slug: directory.slug,
+        projectName: project.name,
+        slug: project.slug,
         competitionWeek: competition.competition_id,
         endDate: new Date(competition.end_date).toLocaleDateString()
       }
@@ -286,15 +286,15 @@ class NotificationManager {
    * Send submission approval notification
    * @param {Object} params - Parameters
    */
-  async sendSubmissionApprovalNotification({ userId, userEmail, directory }) {
+  async sendSubmissionApprovalNotification({ userId, userEmail, project }) {
     return await this.sendNotification({
       userId,
       emailType: 'submission_approval',
       userEmail,
-      appId: directory.id,
+      appId: project.id,
       data: {
-        directoryName: directory.name,
-        slug: directory.slug
+        projectName: project.name,
+        slug: project.slug
       }
     });
   }
@@ -303,15 +303,15 @@ class NotificationManager {
    * Send submission decline notification
    * @param {Object} params - Parameters
    */
-  async sendSubmissionDeclineNotification({ userId, userEmail, directory, rejectionReason }) {
+  async sendSubmissionDeclineNotification({ userId, userEmail, project, rejectionReason }) {
     return await this.sendNotification({
       userId,
       emailType: 'submission_decline',
       userEmail,
-      appId: directory.id,
+      appId: project.id,
       data: {
-        directoryName: directory.name,
-        slug: directory.slug,
+        projectName: project.name,
+        slug: project.slug,
         rejectionReason
       }
     });
@@ -321,20 +321,20 @@ class NotificationManager {
    * Send competition winner notification
    * @param {Object} params - Parameters
    */
-  async sendCompetitionWinnerNotification({ userId, userEmail, directory, competition, position }) {
+  async sendCompetitionWinnerNotification({ userId, userEmail, project, competition, position }) {
     return await this.sendNotification({
       userId,
       emailType: 'competition_winners',
       userEmail,
-      appId: directory.id,
+      appId: project.id,
       competitionId: competition.id,
       data: {
-        directoryName: directory.name,
-        slug: directory.slug,
+        projectName: project.name,
+        slug: project.slug,
         position,
         competitionType: competition.type,
-        totalVotes: directory.upvotes,
-        totalViews: directory.views
+        totalVotes: project.upvotes,
+        totalViews: project.views
       }
     });
   }
@@ -343,15 +343,15 @@ class NotificationManager {
    * Send winner reminder notification
    * @param {Object} params - Parameters
    */
-  async sendWinnerReminderNotification({ userId, userEmail, directory, position }) {
+  async sendWinnerReminderNotification({ userId, userEmail, project, position }) {
     return await this.sendNotification({
       userId,
       emailType: 'winner_reminder',
       userEmail,
-      appId: directory.id,
+      appId: project.id,
       data: {
-        directoryName: directory.name,
-        slug: directory.slug,
+        projectName: project.name,
+        slug: project.slug,
         position
       }
     });

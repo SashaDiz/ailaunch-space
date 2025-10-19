@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUser } from "../hooks/useUser";
 import { useSupabase } from "./SupabaseProvider";
-import { Menu, NavArrowDown, PlusCircle } from "iconoir-react";
+import { Menu, NavArrowDown, PlusCircle, Xmark } from "iconoir-react";
 import Image from "next/image";
 import { gsap } from "gsap";
 
@@ -17,6 +17,7 @@ export function Header() {
   const [groupedCategories, setGroupedCategories] = useState({});
   const [isScrolled, setIsScrolled] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const plusIconRef = useRef(null);
 
   useEffect(() => {
@@ -41,6 +42,30 @@ export function Header() {
     // Cleanup
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Handle mobile menu toggle
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  // Close mobile menu when clicking outside or on a link
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMobileMenuOpen]);
 
   const fetchCategories = async () => {
     try {
@@ -131,7 +156,7 @@ export function Header() {
             <nav className="hidden lg:flex items-center space-x-1">
               <Link
                 href="/pricing"
-                className="px-3 py-2 text-sm font-medium text-base-content hover:text-primary transition-colors"
+                className="px-3 py-2 text-sm font-medium text-base-content hover:text-[#ED0D79] transition-colors"
               >
                 Pricing
               </Link>
@@ -147,10 +172,10 @@ export function Header() {
                   {/* Header */}
                   <div className="p-3 border-b border-base-300">
                     <Link
-                      href="/directories"
-                      className="flex items-center font-medium text-primary hover:text-primary/80"
+                      href="/projects"
+                      className="flex items-center font-medium text-sm text-[#ED0D79] hover:text-[#ED0D79}/80"
                     >
-                      <span className="w-2 h-2 bg-primary rounded-full mr-2"></span>
+                      <span className="w-2 h-2 bg-[#ED0D79] rounded-full mr-2"></span>
                       View all AI projects
                     </Link>
                   </div>
@@ -169,10 +194,10 @@ export function Header() {
                           {sphereCategories.map((category) => (
                             <Link
                               key={category.id || category.name}
-                              href={`/directories?category=${
+                              href={`/projects?category=${
                                 category.slug || category.name
                               }`}
-                              className="flex items-center px-6 py-2 text-sm text-base-content hover:bg-base-200 hover:text-primary transition-colors"
+                              className="flex items-center px-6 py-2 text-sm text-base-content hover:bg-base-200 hover:text-[#ED0D79] transition-colors"
                             >
                               <span
                                 className={`w-2 h-2 ${getCategoryDotColor(
@@ -212,10 +237,10 @@ export function Header() {
                 <div
                   tabIndex={0}
                   role="button"
-                  className="btn btn-ghost btn-sm p-1"
+                  className="cursor-pointer"
                 >
                   <div className="avatar">
-                    <div className="w-8 h-8 rounded-full border-2 border-base-300">
+                    <div className="w-12 h-12 rounded-full border-2 border-base-300 transition-all duration-200 hover:border-[#ED0D79] hover:scale-105">
                       {user.user_metadata?.avatar_url ? (
                         <Image
                           src={user.user_metadata.avatar_url}
@@ -225,7 +250,7 @@ export function Header() {
                           className="rounded-full"
                         />
                       ) : (
-                        <div className="bg-primary text-primary-content w-full h-full flex items-center justify-center text-xs font-medium">
+                        <div className="bg-[#ED0D79] text-white w-full h-full flex items-center justify-center text-xs font-medium">
                           {(user.user_metadata?.full_name?.[0] || user.email?.[0] || "U").toUpperCase()}
                         </div>
                       )}
@@ -281,39 +306,169 @@ export function Header() {
 
             {/* Mobile Menu Button */}
             <div className="lg:hidden">
-              <div className="dropdown dropdown-end">
-                <div
-                  tabIndex={0}
-                  role="button"
-                  className="btn btn-ghost btn-sm p-2"
-                >
+              <button
+                onClick={toggleMobileMenu}
+                className="btn btn-ghost btn-sm p-2"
+                aria-label="Open mobile menu"
+              >
+                {isMobileMenuOpen ? (
+                  <Xmark className="h-5 w-5" />
+                ) : (
                   <Menu className="h-5 w-5" />
-                </div>
-                <ul
-                  tabIndex={0}
-                  className="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-box w-56 border border-base-300 mt-2"
-                >
-                  <li>
-                    <Link href="/pricing">Pricing</Link>
-                  </li>
-                  <li>
-                    <Link href="/directories">Browse AI projects</Link>
-                  </li>
-                  <li>
-                    <Link href="/past-launches">Past Launches</Link>
-                  </li>
-                  <div className="divider my-1"></div>
-                  <li>
-                    <Link href="/submit" className="text-primary font-medium">
-                      Launch your AI project
-                    </Link>
-                  </li>
-                </ul>
-              </div>
+                )}
+              </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Full-Screen Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-[100] lg:hidden">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={closeMobileMenu}
+          />
+          
+          {/* Menu Content */}
+          <div className="fixed inset-0 bg-white overflow-y-auto">
+            {/* Header with Close Button */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <div className="flex items-center">
+                <Image
+                  src="/assets/logo.svg"
+                  alt="AI Launch Space"
+                  height={32}
+                  width={32}
+                  className="h-10 w-auto"
+                />
+              </div>
+              <button
+                onClick={closeMobileMenu}
+                className="btn btn-ghost btn-sm p-2"
+                aria-label="Close mobile menu"
+              >
+                <Xmark className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Navigation Content */}
+            <div className="p-6">
+              {/* Navigation Links */}
+              <div className="space-y-4 mb-8">
+                <Link
+                  href="/pricing"
+                  onClick={closeMobileMenu}
+                  className="block text-lg font-medium text-gray-900 hover:text-[#ED0D79] transition-colors"
+                >
+                  Pricing
+                </Link>
+                
+                <Link
+                  href="/projects"
+                  onClick={closeMobileMenu}
+                  className="block text-lg font-medium text-gray-900 hover:text-[#ED0D79] transition-colors"
+                >
+                  Browse AI Projects
+                </Link>
+              </div>
+
+              {/* Submit Button */}
+              <div className="mb-8">
+                <Link
+                  href="/submit"
+                  onClick={closeMobileMenu}
+                  className="flex items-center justify-center w-full bg-[#ED0D79] text-white rounded-lg px-6 py-4 font-semibold text-lg no-underline transition duration-300 hover:scale-105"
+                >
+                  <PlusCircle className="h-6 w-6 mr-2" strokeWidth={2} />
+                  Launch your AI project
+                </Link>
+              </div>
+
+              {/* User Section */}
+              {!loading && user && (
+                <div className="border-t border-gray-200 pt-6">
+                  <div className="flex items-center mb-4">
+                    <div className="avatar mr-3">
+                      <div className="w-12 h-12 rounded-full border-2 border-gray-300">
+                        {user.user_metadata?.avatar_url ? (
+                          <Image
+                            src={user.user_metadata.avatar_url}
+                            alt={user.user_metadata?.full_name || user.email || "User"}
+                            width={48}
+                            height={48}
+                            className="rounded-full"
+                          />
+                        ) : (
+                          <div className="bg-[#ED0D79] text-white w-full h-full flex items-center justify-center text-lg font-medium">
+                            {(user.user_metadata?.full_name?.[0] || user.email?.[0] || "U").toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {user.user_metadata?.full_name || "User"}
+                      </p>
+                      <p className="text-sm text-gray-500">{user.email}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Link
+                      href="/profile"
+                      onClick={closeMobileMenu}
+                      className="block py-2 text-base text-gray-700 hover:text-[#ED0D79] transition-colors"
+                    >
+                      My Profile
+                    </Link>
+                    <Link
+                      href="/dashboard"
+                      onClick={closeMobileMenu}
+                      className="block py-2 text-base text-gray-700 hover:text-[#ED0D79] transition-colors"
+                    >
+                      Dashboard
+                    </Link>
+                    <Link
+                      href="/settings"
+                      onClick={closeMobileMenu}
+                      className="block py-2 text-base text-gray-700 hover:text-[#ED0D79] transition-colors"
+                    >
+                      Account Settings
+                    </Link>
+                    <button
+                      onClick={async () => {
+                        await supabase.auth.signOut();
+                        closeMobileMenu();
+                        router.push("/");
+                        router.refresh();
+                      }}
+                      className="block py-2 text-base text-gray-700 hover:text-[#ED0D79] transition-colors"
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {!loading && !user && (
+                <div className="border-t border-gray-200 pt-6">
+                  <div className="space-y-4">
+                    <Link
+                      href="/auth/signin"
+                      onClick={closeMobileMenu}
+                      className="block w-full text-center py-3 px-6 border border-gray-300 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Sign in
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

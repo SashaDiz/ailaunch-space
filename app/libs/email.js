@@ -136,7 +136,7 @@ export const emailTemplates = {
 
   // Competition notifications
   weeklyCompetitionEntry: {
-    subject: (directoryName) => `🚀 ${directoryName} entered the weekly competition!`,
+    subject: (projectName) => `🚀 ${projectName} entered the weekly competition!`,
     html: (data) => `
       <!DOCTYPE html>
       <html>
@@ -159,7 +159,7 @@ export const emailTemplates = {
               
               <div style="text-align: center; margin-bottom: 30px;">
                 <h2 style="color: #1f2937; margin: 0 0 10px 0; font-size: 22px;">
-                  ${data.directoryName} is now competing!
+                  ${data.projectName} is now competing!
                 </h2>
                 <p style="color: #6b7280; margin: 0; font-size: 16px;">
                   Your project has been entered into this week's competition and is now live for voting.
@@ -191,7 +191,7 @@ export const emailTemplates = {
               </div>
 
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${process.env.NEXT_PUBLIC_APP_URL}/directory/${data.slug}" 
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}/project/${data.slug}" 
                    style="display: inline-block; background: #ED0D79; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
                   View Your Project
                 </a>
@@ -239,7 +239,7 @@ export const emailTemplates = {
               
               <div style="text-align: center; margin-bottom: 30px;">
                 <h2 style="color: #1f2937; margin: 0 0 10px 0; font-size: 22px;">
-                  ${data.directoryName} placed #${data.position}!
+                  ${data.projectName} placed #${data.position}!
                 </h2>
                 <p style="color: #6b7280; margin: 0; font-size: 16px;">
                   Congratulations on your outstanding performance in the ${data.competitionType} competition.
@@ -265,9 +265,9 @@ export const emailTemplates = {
               </div>
 
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${process.env.NEXT_PUBLIC_APP_URL}/directory/${data.slug}" 
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}/project/${data.slug}" 
                    style="display: inline-block; background: #ED0D79; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
-                  View Directory
+                  View Project
                 </a>
                 <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" 
                    style="display: inline-block; background: #6b7280; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">
@@ -289,7 +289,7 @@ export const emailTemplates = {
   },
 
   winnerReminder: {
-    subject: (directoryName) => `🔗 Don't forget: Add the winner badge to ${directoryName}`,
+    subject: (projectName) => `🔗 Don't forget: Add the winner badge to ${projectName}`,
     html: (data) => `
       <!DOCTYPE html>
       <html>
@@ -313,7 +313,7 @@ export const emailTemplates = {
               
               <div style="text-align: center; margin-bottom: 30px;">
                 <h2 style="color: #1f2937; margin: 0 0 10px 0; font-size: 22px;">
-                  ${data.directoryName} won #${data.position}!
+                  ${data.projectName} won #${data.position}!
                 </h2>
                 <p style="color: #6b7280; margin: 0; font-size: 16px;">
                   You've earned a dofollow backlink! Add the winner badge to your website to activate it.
@@ -342,7 +342,7 @@ export const emailTemplates = {
                    style="display: inline-block; background: #ED0D79; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
                   Get Embed Code
                 </a>
-                <a href="${process.env.NEXT_PUBLIC_APP_URL}/directory/${data.slug}" 
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}/project/${data.slug}" 
                    style="display: inline-block; background: #6b7280; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">
                   View Your Win
                 </a>
@@ -363,7 +363,7 @@ export const emailTemplates = {
 
   // Submission notifications
   submissionApproval: {
-    subject: (directoryName) => `🎉 ${directoryName} has been approved on AI Launch Space!`,
+    subject: (projectName) => `🎉 ${projectName} has been approved on AI Launch Space!`,
     html: (data) => `
       <!DOCTYPE html>
       <html>
@@ -386,7 +386,7 @@ export const emailTemplates = {
               
               <div style="text-align: center; margin-bottom: 30px;">
                 <h2 style="color: #1f2937; margin: 0 0 10px 0; font-size: 22px;">
-                  ${data.directoryName} is now live!
+                  ${data.projectName} is now live!
                 </h2>
                 <p style="color: #6b7280; margin: 0; font-size: 16px;">
                   Your project has been approved and is now visible on AI Launch Space.
@@ -404,7 +404,7 @@ export const emailTemplates = {
               </div>
 
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${process.env.NEXT_PUBLIC_APP_URL}/directory/${data.slug}" 
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}/project/${data.slug}" 
                    style="display: inline-block; background: #ED0D79; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
                   View Your Project
                 </a>
@@ -428,7 +428,7 @@ export const emailTemplates = {
   },
 
   submissionDecline: {
-    subject: (directoryName) => `Project submission update: ${directoryName}`,
+    subject: (projectName) => `Project submission update: ${projectName}`,
     html: (data) => `
       <!DOCTYPE html>
       <html>
@@ -451,7 +451,7 @@ export const emailTemplates = {
               
               <div style="text-align: center; margin-bottom: 30px;">
                 <h2 style="color: #1f2937; margin: 0 0 10px 0; font-size: 22px;">
-                  ${data.directoryName}
+                  ${data.projectName}
                 </h2>
                 <p style="color: #6b7280; margin: 0; font-size: 16px;">
                   We've reviewed your project submission and have some feedback.
@@ -532,7 +532,7 @@ export const emailTemplates = {
               <div style="background: #f3f4f6; border-radius: 8px; padding: 24px; margin: 30px 0;">
                 <h3 style="margin: 0 0 15px 0; color: #1f2937; font-size: 18px;">What you'll receive:</h3>
                 <ul style="margin: 0; padding-left: 20px; color: #4b5563;">
-                  <li style="margin-bottom: 8px;">📊 Weekly directory roundups and trending projects</li>
+                  <li style="margin-bottom: 8px;">📊 Weekly project roundups and trending projects</li>
                   <li style="margin-bottom: 8px;">🏆 Competition results and winner announcements</li>
                   <li style="margin-bottom: 8px;">🚀 Platform updates and new features</li>
                   <li style="margin-bottom: 8px;">💡 Launch tips and best practices from successful builders</li>
@@ -545,7 +545,7 @@ export const emailTemplates = {
                 <p style="margin: 0 0 20px 0; opacity: 0.9;">
                   You're now part of a growing community of ${data.source === 'footer' ? '500+' : 'innovative'} AI builders and entrepreneurs.
                 </p>
-                <a href="${process.env.NEXT_PUBLIC_APP_URL}/directories" 
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}/projects" 
                    style="display: inline-block; background: rgba(255,255,255,0.2); color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
                   Browse Projects
                 </a>
@@ -570,7 +570,7 @@ export const emailTemplates = {
                 <p style="color: #6b7280; font-size: 14px; margin: 0;">
                   <strong>What's Next?</strong><br>
                   Keep an eye on your inbox for our weekly digest every Monday. 
-                  We'll share the latest directory launches, competition results, and platform updates.
+                  We'll share the latest project launches, competition results, and platform updates.
                 </p>
               </div>
 
@@ -732,7 +732,7 @@ export const sendEmail = async (to, template, data, options = {}) => {
     }
 
     const subject = typeof emailTemplate.subject === 'function' 
-      ? emailTemplate.subject(data.directoryName, data.position, data.competitionType)
+      ? emailTemplate.subject(data.projectName, data.position, data.competitionType)
       : emailTemplate.subject;
 
     const html = emailTemplate.html(data);
@@ -776,25 +776,25 @@ export const notificationService = {
   },
 
   // Competition notifications
-  async weeklyCompetitionEntry(userEmail, directoryData) {
-    return await sendEmail(userEmail, 'weeklyCompetitionEntry', directoryData);
+  async weeklyCompetitionEntry(userEmail, projectData) {
+    return await sendEmail(userEmail, 'weeklyCompetitionEntry', projectData);
   },
 
   async competitionWinners(userEmail, competitionData) {
     return await sendEmail(userEmail, 'competitionWinners', competitionData);
   },
 
-  async winnerReminder(userEmail, directoryData) {
-    return await sendEmail(userEmail, 'winnerReminder', directoryData);
+  async winnerReminder(userEmail, projectData) {
+    return await sendEmail(userEmail, 'winnerReminder', projectData);
   },
 
   // Submission notifications
-  async submissionApproval(userEmail, directoryData) {
-    return await sendEmail(userEmail, 'submissionApproval', directoryData);
+  async submissionApproval(userEmail, projectData) {
+    return await sendEmail(userEmail, 'submissionApproval', projectData);
   },
 
-  async submissionDecline(userEmail, directoryData) {
-    return await sendEmail(userEmail, 'submissionDecline', directoryData);
+  async submissionDecline(userEmail, projectData) {
+    return await sendEmail(userEmail, 'submissionDecline', projectData);
   },
 
   // Newsletter notifications
@@ -818,12 +818,12 @@ export const notificationService = {
 
 // Legacy compatibility
 export const emailNotifications = {
-  async directoryApproved(userEmail, directoryData) {
-    return await notificationService.submissionApproval(userEmail, directoryData);
+  async projectApproved(userEmail, projectData) {
+    return await notificationService.submissionApproval(userEmail, projectData);
   },
 
-  async directoryRejected(userEmail, directoryData) {
-    return await notificationService.submissionDecline(userEmail, directoryData);
+  async projectRejected(userEmail, projectData) {
+    return await notificationService.submissionDecline(userEmail, projectData);
   },
 
   async competitionWinner(userEmail, competitionData) {

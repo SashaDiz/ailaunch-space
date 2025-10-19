@@ -158,42 +158,42 @@ export const webhookDispatcher = new WebhookDispatcher();
 
 // Convenience functions for common events
 export const webhookEvents = {
-  // Directory events
-  async directoryCreated(directoryData) {
-    return webhookDispatcher.dispatch('directory.created', {
-      directory: {
-        id: directoryData.id,
-        name: directoryData.name,
-        slug: directoryData.slug,
-        url: directoryData.website_url,
-        categories: directoryData.categories,
-        plan: directoryData.plan,
-        status: directoryData.status,
-        created_at: directoryData.createdAt
+  // Project events
+  async projectCreated(projectData) {
+    return webhookDispatcher.dispatch('project.created', {
+      project: {
+        id: projectData.id,
+        name: projectData.name,
+        slug: projectData.slug,
+        url: projectData.website_url,
+        categories: projectData.categories,
+        plan: projectData.plan,
+        status: projectData.status,
+        created_at: projectData.createdAt
       }
     });
   },
 
-  async directoryApproved(directoryData) {
-    return webhookDispatcher.dispatch('directory.approved', {
-      directory: {
-        id: directoryData.id,
-        name: directoryData.name,
-        slug: directoryData.slug,
-        url: directoryData.website_url,
-        categories: directoryData.categories,
-        plan: directoryData.plan,
-        approved_at: directoryData.publishedAt || new Date()
+  async projectApproved(projectData) {
+    return webhookDispatcher.dispatch('project.approved', {
+      project: {
+        id: projectData.id,
+        name: projectData.name,
+        slug: projectData.slug,
+        url: projectData.website_url,
+        categories: projectData.categories,
+        plan: projectData.plan,
+        approved_at: projectData.publishedAt || new Date()
       }
     });
   },
 
-  async directoryRejected(directoryData, reason) {
-    return webhookDispatcher.dispatch('directory.rejected', {
-      directory: {
-        id: directoryData.id,
-        name: directoryData.name,
-        slug: directoryData.slug,
+  async projectRejected(projectData, reason) {
+    return webhookDispatcher.dispatch('project.rejected', {
+      project: {
+        id: projectData.id,
+        name: projectData.name,
+        slug: projectData.slug,
         rejection_reason: reason
       }
     });
@@ -203,7 +203,7 @@ export const webhookEvents = {
   async voteCast(voteData) {
     return webhookDispatcher.dispatch('vote.cast', {
       vote: {
-        directory_id: voteData.appId,
+        project_id: voteData.appId,
         user_id: voteData.userId,
         action: voteData.action,
         timestamp: new Date()
@@ -221,7 +221,7 @@ export const webhookEvents = {
         end_date: competitionData.end_date
       },
       winners: winners.map(winner => ({
-        directory_id: winner.id,
+        project_id: winner.id,
         name: winner.name,
         slug: winner.slug,
         votes: winner.upvotes,
@@ -247,24 +247,24 @@ export const integrations = {
   // Slack integration
   formatSlackMessage(eventType, data) {
     const messages = {
-      'directory.created': {
-        text: `🚀 New AI Project Submitted: ${data.directory.name}`,
+      'project.created': {
+        text: `🚀 New AI Project Submitted: ${data.project.name}`,
         attachments: [{
           color: 'good',
           fields: [
-            { title: 'Name', value: data.directory.name, short: true },
-            { title: 'Plan', value: data.directory.plan, short: true },
-            { title: 'URL', value: data.directory.url, short: false }
+            { title: 'Name', value: data.project.name, short: true },
+            { title: 'Plan', value: data.project.plan, short: true },
+            { title: 'URL', value: data.project.url, short: false }
           ]
         }]
       },
-      'directory.approved': {
-        text: `✅ AI Project Approved: ${data.directory.name}`,
+      'project.approved': {
+        text: `✅ AI Project Approved: ${data.project.name}`,
         attachments: [{
           color: 'good',
           fields: [
-            { title: 'Name', value: data.directory.name, short: true },
-            { title: 'Plan', value: data.directory.plan, short: true }
+            { title: 'Name', value: data.project.name, short: true },
+            { title: 'Plan', value: data.project.plan, short: true }
           ]
         }]
       },
@@ -289,15 +289,15 @@ export const integrations = {
   // Discord integration
   formatDiscordMessage(eventType, data) {
     const messages = {
-      'directory.created': {
+      'project.created': {
         embeds: [{
           title: '🚀 New AI Project Submitted',
-          description: data.directory.name,
+          description: data.project.name,
           color: 0x00ff00,
           fields: [
-            { name: 'Plan', value: data.directory.plan, inline: true },
-            { name: 'Categories', value: data.directory.categories?.join(', ') || 'None', inline: true },
-            { name: 'URL', value: data.directory.url }
+            { name: 'Plan', value: data.project.plan, inline: true },
+            { name: 'Categories', value: data.project.categories?.join(', ') || 'None', inline: true },
+            { name: 'URL', value: data.project.url }
           ],
           timestamp: new Date().toISOString()
         }]

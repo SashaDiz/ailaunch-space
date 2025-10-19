@@ -38,8 +38,6 @@ export async function GET(request) {
       // We'll check if they've been reminded recently by looking at email_notifications
     });
 
-    console.log(`Found ${winnersNeedingReminders.length} winners needing reminders`);
-
     for (const winner of winnersNeedingReminders) {
       try {
         // Check if we've already sent a reminder in the last 24 hours
@@ -52,14 +50,12 @@ export async function GET(request) {
         });
 
         if (recentReminder) {
-          console.log(`Skipping ${winner.name} - reminder already sent recently`);
           continue;
         }
 
         // Get user data
         const user = await db.findOne("users", { id: winner.submitted_by });
         if (!user || !user.email) {
-          console.log(`Skipping ${winner.name} - no user email found`);
           continue;
         }
 
@@ -67,7 +63,7 @@ export async function GET(request) {
         await notificationManager.sendWinnerReminderNotification({
           userId: user.id,
           userEmail: user.email,
-          directory: {
+          project: {
             id: winner.id,
             name: winner.name,
             slug: winner.slug
@@ -76,7 +72,6 @@ export async function GET(request) {
         });
 
         results.reminders_sent++;
-        console.log(`📧 Winner reminder sent to ${user.email} for ${winner.name}`);
 
       } catch (error) {
         console.error(`Failed to send reminder for ${winner.name}:`, error);
@@ -86,8 +81,6 @@ export async function GET(request) {
         });
       }
     }
-
-    console.log(`Winner reminder cron completed: ${results.reminders_sent} reminders sent`);
 
     return NextResponse.json({
       success: true,

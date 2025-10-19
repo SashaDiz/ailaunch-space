@@ -11,8 +11,8 @@ import toast from "react-hot-toast";
  */
 export default function WinnerEmbed({ 
   position, 
-  directoryName, 
-  directorySlug,
+  projectName, 
+  projectSlug,
   className = "" 
 }) {
   const [copied, setCopied] = useState(false);
@@ -129,8 +129,8 @@ export function WinnerEmbedModal({
   isOpen, 
   onClose, 
   position, 
-  directoryName, 
-  directorySlug 
+  projectName, 
+  projectSlug 
 }) {
   if (!isOpen) return null;
 
@@ -141,7 +141,7 @@ export function WinnerEmbedModal({
           {/* Header */}
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-900">
-              Embed Badge for {directoryName}
+              Embed Badge for {projectName}
             </h2>
             <button
               onClick={onClose}
@@ -156,8 +156,8 @@ export function WinnerEmbedModal({
           {/* Embed Component */}
           <WinnerEmbed 
             position={position} 
-            directoryName={directoryName} 
-            directorySlug={directorySlug} 
+            projectName={projectName} 
+            projectSlug={projectSlug} 
           />
         </div>
       </div>
@@ -171,8 +171,8 @@ export function WinnerEmbedModal({
  */
 export function WinnerEmbedButton({ 
   position, 
-  directoryName, 
-  directorySlug, 
+  projectName, 
+  projectSlug, 
   className = "" 
 }) {
   const [showModal, setShowModal] = useState(false);
@@ -198,8 +198,8 @@ export function WinnerEmbedButton({
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         position={position}
-        directoryName={directoryName}
-        directorySlug={directorySlug}
+        projectName={projectName}
+        projectSlug={projectSlug}
       />
     </>
   );

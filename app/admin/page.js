@@ -46,8 +46,8 @@ export default function AdminPage() {
   const { user, loading: authLoading } = useUser();
   const router = useRouter();
   const [stats, setStats] = useState({
-    totalDirectories: 0,
-    pendingDirectories: 0,
+    totalProjects: 0,
+    pendingProjects: 0,
     totalVotes: 0,
   });
   const [loading, setLoading] = useState(true);
@@ -95,8 +95,8 @@ export default function AdminPage() {
         console.error("Failed to load admin statistics");
         // Set default stats on error
         setStats({
-          totalDirectories: 0,
-          pendingDirectories: 0,
+          totalProjects: 0,
+          pendingProjects: 0,
           totalVotes: 0,
         });
       }
@@ -104,8 +104,8 @@ export default function AdminPage() {
       console.error("Failed to fetch admin stats:", error);
       // Set default stats on error
       setStats({
-        totalDirectories: 0,
-        pendingDirectories: 0,
+        totalProjects: 0,
+        pendingProjects: 0,
         totalVotes: 0,
       });
     } finally {
@@ -174,14 +174,14 @@ export default function AdminPage() {
                 <StatCard
                   icon={Folder}
                   title="Total Submissions"
-                  value={stats.totalDirectories || 0}
+                  value={stats.totalProjects || 0}
                   description="All submitted AI projects"
                   color="primary"
                 />
                 <StatCard
                   icon={Clock}
                   title="Pending Review"
-                  value={stats.pendingDirectories || 0}
+                  value={stats.pendingProjects || 0}
                   description="Awaiting approval"
                   color="warning"
                 />
@@ -208,9 +208,9 @@ export default function AdminPage() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <h3 className="text-lg font-semibold">Project Submissions</h3>
-                          {stats.pendingDirectories > 0 && (
+                          {stats.pendingProjects > 0 && (
                             <span className="badge badge-warning badge-sm">
-                              {stats.pendingDirectories} pending
+                              {stats.pendingProjects} pending
                             </span>
                           )}
                         </div>
@@ -218,11 +218,11 @@ export default function AdminPage() {
                           Review submitted AI projects, approve or reject submissions, and manage dofollow backlinks for competition winners.
                         </p>
                         <Link
-                          href="/admin/directories"
+                          href="/admin/projects"
                           className="btn btn-primary btn-sm"
                         >
-                          {stats.pendingDirectories > 0 
-                            ? `Review ${stats.pendingDirectories} Pending` 
+                          {stats.pendingProjects > 0 
+                            ? `Review ${stats.pendingProjects} Pending` 
                             : "Manage Submissions"
                           }
                         </Link>
@@ -245,7 +245,7 @@ export default function AdminPage() {
                           Select and manage weekly competition winners, assign 1st, 2nd, and 3rd place badges, and verify backlink placements for dofollow links.
                         </p>
                         <Link
-                          href="/admin/directories?tab=winners"
+                          href="/admin/projects?tab=winners"
                           className="btn btn-warning btn-sm"
                         >
                           Manage Winners

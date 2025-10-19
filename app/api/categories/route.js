@@ -131,7 +131,7 @@ async function getPricing(includeCount) {
 
   let pricingWithCount = pricingOptions;
 
-  // If includeCount is requested, add directory count for each pricing option
+  // If includeCount is requested, add project count for each pricing option
   if (includeCount) {
     pricingWithCount = await Promise.all(
       pricingOptions.map(async (pricing) => {

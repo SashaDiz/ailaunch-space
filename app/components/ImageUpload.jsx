@@ -122,10 +122,10 @@ export default function ImageUpload({
   return (
     <div className="form-control w-full">
       <div className="label">
-        <span className="label-text">
+        <span className="label-text font-semibold text-base-content">
           {label} {required && <span className="text-error">*</span>}
         </span>
-        <span className="label-text-alt text-base-content/60">
+        <span className="label-text-alt text-base-content/60 font-medium">
           Max {maxSize}MB • PNG, JPG, WebP
         </span>
       </div>
@@ -192,10 +192,10 @@ export default function ImageUpload({
         <div
           className={`relative border-2 border-dashed rounded-lg transition-all ${
             dragActive
-              ? "border-primary bg-primary/5"
+              ? "border-[#ED0D79] bg-[#ED0D79]/5"
               : error
               ? "border-error"
-              : "border-base-300 hover:border-primary/50"
+              : "border-base-300 hover:border-[#ED0D79]/50"
           } ${uploading ? "opacity-50 pointer-events-none" : "cursor-pointer"}`}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
@@ -214,8 +214,8 @@ export default function ImageUpload({
 
           <div className="flex flex-col items-center justify-center p-8 text-center">
             <CloudUpload
-              className={`w-12 h-12 mb-4 ${
-                dragActive ? "text-primary" : "text-base-content/40"
+              className={`w-8 h-8 mb-4 ${
+                dragActive ? "text-[#ED0D79]" : "text-base-content/40"
               }`}
             />
 
@@ -234,7 +234,8 @@ export default function ImageUpload({
                 <p className="text-sm text-base-content/60 mb-3">or</p>
                 <button
                   type="button"
-                  className="btn btn-sm btn-primary"
+                  className="btn btn-sm text-white transition-all duration-200 hover:opacity-90"
+                  style={{ backgroundColor: '#ED0D79', boxShadow: 'none' }}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleClick();
@@ -255,12 +256,17 @@ export default function ImageUpload({
         
         <div>
           <label className="label">
-            <span className="label-text text-sm">Paste image URL</span>
+            <span className="label-text font-semibold text-base-content">Paste image URL</span>
           </label>
           <input
             type="url"
             placeholder="https://example.com/logo.png"
-            className={`input input-bordered w-full ${error ? "input-error" : ""}`}
+            className={`input input-bordered w-full transition-all duration-200 focus:border-[#ED0D79] focus:ring-2 focus:ring-[#ED0D79]/20 focus:outline-none ${
+              error ? "input-error border-error" : "border-base-300"
+            }`}
+            style={{
+              boxShadow: error ? '0 0 0 2px rgba(248, 113, 113, 0.2)' : 'none'
+            }}
             value={preview}
             onChange={(e) => {
               const url = e.target.value;
@@ -288,8 +294,11 @@ export default function ImageUpload({
       </div>
 
       {error && (
-        <div className="label">
-          <span className="label-text-alt text-error">{error}</span>
+        <div className="text-error text-sm mt-2 flex items-center gap-1">
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+          {error}
         </div>
       )}
     </div>

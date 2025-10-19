@@ -371,7 +371,7 @@ export default function SettingsPage() {
                   <div className="flex items-center justify-between p-3 border border-base-300 rounded-lg">
                     <div>
                       <h4 className="font-medium">Weekly Digest</h4>
-                      <p className="text-sm text-base-content/60">Weekly summary of Directory Hunt activity</p>
+                      <p className="text-sm text-base-content/60">Weekly summary of AI Launch Space activity</p>
                     </div>
                     <input
                       type="checkbox"
@@ -564,7 +564,7 @@ export default function SettingsPage() {
               including:
             </p>
             <ul className="list-disc list-inside mb-4 text-sm space-y-1">
-              <li>All your submitted directories</li>
+              <li>All your submitted projects</li>
               <li>Your votes and interactions</li>
               <li>Your profile information</li>
               <li>All associated data</li>

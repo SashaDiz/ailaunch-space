@@ -15,8 +15,8 @@ import backlinksListLogo from "/public/assets/backlinkslist-logo.svg";
 import { Rocket } from "iconoir-react";
 
 
-function DirectoryCard({ directory, onVote }) {
-  return <ProductCard directory={directory} onVote={onVote} />;
+function ProjectCard({ project, onVote }) {
+  return <ProductCard project={project} onVote={onVote} />;
 }
 
 function RightSidePanel() {
@@ -65,7 +65,7 @@ function RightSidePanel() {
 }
 
 export default function HomePage() {
-  const [directories, setDirectories] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [competition, setCompetition] = useState(null);
   const [isClient, setIsClient] = useState(false);
@@ -74,10 +74,10 @@ export default function HomePage() {
   const heroRef = useRef(null);
   const mainContentRef = useRef(null);
   const sidebarRef = useRef(null);
-  const directoriesRef = useRef(null);
+  const projectsRef = useRef(null);
   const featuredRef = useRef(null);
 
-  // Fetch directories and competition data on mount
+  // Fetch projects and competition data on mount
   useEffect(() => {
     fetchData();
   }, []);
@@ -146,10 +146,10 @@ export default function HomePage() {
       ); // Start 0.6s before previous animation ends
   }, [isClient]);
 
-  // Animate directories when they change
+  // Animate projects when they change
   useEffect(() => {
-    if (isClient && directoriesRef.current && !loading && directories.length > 0) {
-      const cards = directoriesRef.current.children;
+    if (isClient && projectsRef.current && !loading && projects.length > 0) {
+      const cards = projectsRef.current.children;
       gsap.fromTo(
         cards,
         {
@@ -167,18 +167,18 @@ export default function HomePage() {
         }
       );
     }
-  }, [isClient, directories, loading]);
+  }, [isClient, projects, loading]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch directories for current weekly competition
-      const directoriesResponse = await fetch(
-        `/api/directories?competition=weekly&limit=15&sort=upvotes`
+      // Fetch projects for current weekly competition
+      const projectsResponse = await fetch(
+        `/api/projects?competition=weekly&limit=15&sort=upvotes`
       );
-      if (directoriesResponse.ok) {
-        const directoriesData = await directoriesResponse.json();
-        setDirectories(directoriesData.data.directories || []);
+      if (projectsResponse.ok) {
+        const projectsData = await projectsResponse.json();
+        setProjects(projectsData.data.projects || []);
       }
 
       // Fetch current competition data
@@ -195,7 +195,7 @@ export default function HomePage() {
     } catch (error) {
       console.error("Failed to fetch homepage data:", error);
       // Fallback to empty state
-      setDirectories([]);
+      setProjects([]);
       setCompetition(null);
     } finally {
       setLoading(false);
@@ -203,7 +203,7 @@ export default function HomePage() {
   };
 
   const handleVote = async () => {
-    // The actual voting is handled in the DirectoryCard component
+    // The actual voting is handled in the ProjectCard component
     // This function is kept for compatibility
   };
 
@@ -240,7 +240,7 @@ export default function HomePage() {
                 {/* Stats */}
                 <div className="p-2 px-4 rounded-xl bg-gray-100 text-center">
                   <p className="text-sm font-semibold text-base-content/60">
-                    {directories.length} / 15 Apps
+                    {projects.length} / 15 Apps
                   </p>
                 </div>
               </div>
@@ -248,7 +248,7 @@ export default function HomePage() {
               <CountdownTimer competitionData={competition} />
             </div>
 
-            {/* Directory Listings */}
+            {/* Project Listings */}
             {loading ? (
               <div className="space-y-4">
                 {[...Array(5)].map((_, i) => (
@@ -268,12 +268,12 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
-            ) : directories.length > 0 ? (
-              <div ref={directoriesRef} className="space-y-4">
-                {directories.map((directory) => (
-                  <DirectoryCard
-                    key={directory.id}
-                    directory={directory}
+            ) : projects.length > 0 ? (
+              <div ref={projectsRef} className="space-y-4">
+                {projects.map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
                     onVote={handleVote}
                   />
                 ))}

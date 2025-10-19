@@ -84,7 +84,7 @@ export const paymentPlans = {
     price: 0,
     variantId: null, // Free plan
     features: [
-      "Basic directory listing",
+      "Basic project listing",
       "30 days on homepage",
       "Community support",
       "Standard submission queue"
@@ -128,7 +128,7 @@ export const paymentPlans = {
 export async function createCheckoutSession({
   planType,
   customerEmail,
-  directoryData,
+  projectData,
   successUrl,
   cancelUrl,
   userId
@@ -168,11 +168,11 @@ export async function createCheckoutSession({
         },
         checkout_data: {
           email: validEmail, // Pre-fill email on checkout form
-          name: directoryData.name || "",
+          name: projectData.name || "",
           custom: {
             user_id: userId,
-            directory_name: directoryData.name,
-            directory_slug: directoryData.slug || '',
+            project_name: projectData.name,
+            project_slug: projectData.slug || '',
             plan_type: planType,
             user_email: validEmail, // Also store in custom data as backup
           }

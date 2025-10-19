@@ -123,7 +123,7 @@ export function NewsletterSignup({
           <h3 className="font-semibold text-lg leading-none text-white">Stay Updated</h3>
         </div>
         <p className="text-white/70 text-sm mb-4">
-          Get weekly updates on new directories, competition results, and
+          Get weekly updates on new projects, competition results, and
           platform news.
         </p>
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -174,7 +174,7 @@ export function NewsletterSignup({
             </h3>
             <p className="text-white/70 text-sm">
               {description ||
-                "Get the latest directory updates and platform news"}
+                "Get the latest project updates and platform news"}
             </p>
           </div>
         </div>
@@ -184,7 +184,7 @@ export function NewsletterSignup({
             <ul className="space-y-2 text-sm text-white/70">
               <li className="flex items-center">
                 <div className="w-2 h-2 bg-primary rounded-full mr-3"></div>
-                Weekly directory roundups
+                Weekly project roundups
               </li>
               <li className="flex items-center">
                 <div className="w-2 h-2 bg-primary rounded-full mr-3"></div>
@@ -290,7 +290,7 @@ export function NewsletterPopup({
             </div>
             <h2 className="text-2xl font-bold mb-2">Don't Miss Out!</h2>
             <p className="text-white/70">
-              Join 500+ directory builders getting weekly updates on the latest
+              Join 500+ project builders getting weekly updates on the latest
               launches, competition results, and platform features.
             </p>
           </div>

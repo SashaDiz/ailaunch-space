@@ -177,7 +177,6 @@ async function createUpcomingWeeklyCompetitions() {
           end_date: weekEnd.toISOString(),
         });
         
-        console.log(`✅ Created competition: ${competitionId}`);
       } catch (error) {
         console.error(`Failed to create competition ${competitionId}:`, error);
       }
@@ -211,15 +210,14 @@ async function activateStartedCompetitions(now) {
         }
       );
       
-      // Activate any scheduled directories for this competition
-      const activatedDirs = await activateScheduledDirectories(competition.competition_id);
+      // Activate any scheduled projects for this competition
+      const activatedProjects = await activateScheduledProjects(competition.competition_id);
       
       activated.push({
         competition_id: competition.competition_id,
-        activated_directories: activatedDirs,
+        activated_projects: activatedProjects,
       });
       
-      console.log(`✅ Activated competition: ${competition.competition_id}`);
     }
   } catch (error) {
     console.error('Error activating competitions:', error);
@@ -229,8 +227,8 @@ async function activateStartedCompetitions(now) {
   return activated;
 }
 
-// Activate scheduled directories for a competition
-async function activateScheduledDirectories(competitionId) {
+// Activate scheduled projects for a competition
+async function activateScheduledProjects(competitionId) {
   try {
     // Find the competition by competition_id
     const competition = await db.findOne('competitions', {
@@ -238,17 +236,16 @@ async function activateScheduledDirectories(competitionId) {
     });
     
     if (!competition) {
-      console.log(`Competition not found: ${competitionId}`);
       return 0;
     }
     
-    // Find scheduled directories for this competition
-    const scheduledDirs = await db.find('apps', {
+    // Find scheduled projects for this competition
+    const scheduledProjects = await db.find('apps', {
       weekly_competition_id: competition.id,
       status: 'scheduled',
     });
     
-    if (scheduledDirs.length === 0) {
+    if (scheduledProjects.length === 0) {
       return 0;
     }
     
@@ -268,11 +265,10 @@ async function activateScheduledDirectories(competitionId) {
       }
     );
     
-    console.log(`✅ Activated ${scheduledDirs.length} directories for ${competitionId}`);
     return scheduledDirs.length;
     
   } catch (error) {
-    console.error(`Error activating directories for ${competitionId}:`, error);
+    console.error(`Error activating projects for ${competitionId}:`, error);
     return 0;
   }
 }
@@ -290,7 +286,7 @@ async function completeExpiredCompetitions(now) {
     });
     
     for (const competition of competitionsToComplete) {
-      // Award winners and update directories
+      // Award winners and update projects
       const winners = await awardWinners(competition);
       
       // Mark competition as completed
@@ -316,7 +312,6 @@ async function completeExpiredCompetitions(now) {
         })),
       });
       
-      console.log(`✅ Completed competition: ${competition.competition_id}`);
     }
   } catch (error) {
     console.error('Error completing competitions:', error);
@@ -329,8 +324,12 @@ async function completeExpiredCompetitions(now) {
 // Award winners for a completed competition
 async function awardWinners(competition) {
   try {
-    // Get all live directories in this competition, sorted by upvotes, then premium badge
-    const directories = await db.find(
+    // Get all live projects in this competition, sorted by upvotes, then premium badge
+    // TODO: Implement advanced scoring algorithm
+    // - Calculate weekly_score based on upvotes, views, clicks, and time factors
+    // - Use weekly_score for ranking instead of simple upvotes
+    // - Add engagement velocity and recency bonuses
+    const projects = await db.find(
       'apps',
       {
         weekly_competition_id: competition.id,
@@ -341,20 +340,19 @@ async function awardWinners(competition) {
       }
     );
     
-    if (directories.length === 0) {
-      console.log(`No directories found for competition ${competition.competition_id}`);
+    if (projects.length === 0) {
       return [];
     }
     
     // Award top 3
-    const winners = directories.slice(0, 3);
+    const winners = projects.slice(0, 3);
     const results = [];
     
     for (let i = 0; i < winners.length; i++) {
       const winner = winners[i];
       const position = i + 1;
       
-      // Update directory with winner status
+      // Update project with winner status
       await db.updateOne(
         'apps',
         { id: winner.id },
@@ -376,8 +374,6 @@ async function awardWinners(competition) {
         position,
       });
       
-      console.log(`🏆 Position ${position}: ${winner.name} (${winner.upvotes} upvotes)`);
-
       // Send winner notification
       try {
         const user = await db.findOne('users', { id: winner.submitted_by });
@@ -385,11 +381,10 @@ async function awardWinners(competition) {
           await notificationManager.sendCompetitionWinnerNotification({
             userId: user.id,
             userEmail: user.email,
-            directory: winner,
+            project: winner,
             competition: competition,
             position: position
           });
-          console.log(`📧 Winner notification sent to ${user.email}`);
         }
       } catch (notificationError) {
         console.error(`Failed to send winner notification for ${winner.name}:`, notificationError);
@@ -397,7 +392,7 @@ async function awardWinners(competition) {
     }
     
     // Remove non-winners from weekly display
-    if (directories.length > 3) {
+    if (projects.length > 3) {
       await db.updateMany(
         'apps',
         {

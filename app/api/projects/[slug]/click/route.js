@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "../../../../libs/database.js";
 
-// POST /api/directories/[slug]/click - Track click on external project link
+// POST /api/projects/[slug]/click - Track click on external project link
 export async function POST(request, { params }) {
   try {
     const { slug } = await params;
@@ -13,23 +13,23 @@ export async function POST(request, { params }) {
       );
     }
 
-    // Find directory by slug first, then by ID if slug doesn't work
-    let directory = await db.findOne("apps", { slug });
+    // Find project by slug first, then by ID if slug doesn't work
+    let project = await db.findOne("apps", { slug });
     
     // If not found by slug, try by ID (for backward compatibility)
-    if (!directory) {
-      directory = await db.findOne("apps", { id: slug });
+    if (!project) {
+      project = await db.findOne("apps", { id: slug });
     }
 
-    if (!directory) {
+    if (!project) {
       return NextResponse.json(
-        { error: "Directory not found", code: "NOT_FOUND" },
+        { error: "Project not found", code: "NOT_FOUND" },
         { status: 404 }
       );
     }
 
-    // Check if the directory has a website URL
-    if (!directory.website_url) {
+    // Check if the project has a website URL
+    if (!project.website_url) {
       return NextResponse.json(
         { error: "No website URL to track", code: "NO_WEBSITE_URL" },
         { status: 400 }
@@ -39,7 +39,7 @@ export async function POST(request, { params }) {
     // Increment click count and total engagement
     await db.updateOne(
       "apps",
-      { id: directory.id },
+      { id: project.id },
       {
         $inc: { 
           clicks: 1,
@@ -49,18 +49,18 @@ export async function POST(request, { params }) {
       }
     );
 
-    // Get updated directory to return current counts
-    const updatedDirectory = await db.findOne("apps", { id: directory.id });
+    // Get updated project to return current counts
+    const updatedProject = await db.findOne("apps", { id: project.id });
 
     return NextResponse.json({
       success: true,
       data: {
-        directory: {
-          id: updatedDirectory.id,
-          slug: updatedDirectory.slug,
-          clicks: updatedDirectory.clicks,
-          total_engagement: updatedDirectory.total_engagement,
-          website_url: updatedDirectory.website_url,
+        project: {
+          id: updatedProject.id,
+          slug: updatedProject.slug,
+          clicks: updatedProject.clicks,
+          total_engagement: updatedProject.total_engagement,
+          website_url: updatedProject.website_url,
         },
         message: "Click tracked successfully",
       },
@@ -75,7 +75,7 @@ export async function POST(request, { params }) {
   }
 }
 
-// GET /api/directories/[slug]/click - Get click statistics (optional)
+// GET /api/projects/[slug]/click - Get click statistics (optional)
 export async function GET(request, { params }) {
   try {
     const { slug } = await params;
@@ -87,17 +87,17 @@ export async function GET(request, { params }) {
       );
     }
 
-    // Find directory by slug first, then by ID if slug doesn't work
-    let directory = await db.findOne("apps", { slug });
+    // Find project by slug first, then by ID if slug doesn't work
+    let project = await db.findOne("apps", { slug });
     
     // If not found by slug, try by ID (for backward compatibility)
-    if (!directory) {
-      directory = await db.findOne("apps", { id: slug });
+    if (!project) {
+      project = await db.findOne("apps", { id: slug });
     }
 
-    if (!directory) {
+    if (!project) {
       return NextResponse.json(
-        { error: "Directory not found", code: "NOT_FOUND" },
+        { error: "Project not found", code: "NOT_FOUND" },
         { status: 404 }
       );
     }
@@ -105,14 +105,14 @@ export async function GET(request, { params }) {
     return NextResponse.json({
       success: true,
       data: {
-        directory: {
-          id: directory.id,
-          slug: directory.slug,
-          clicks: directory.clicks || 0,
-          views: directory.views || 0,
-          upvotes: directory.upvotes || 0,
-          total_engagement: directory.total_engagement || 0,
-          website_url: directory.website_url,
+        project: {
+          id: project.id,
+          slug: project.slug,
+          clicks: project.clicks || 0,
+          views: project.views || 0,
+          upvotes: project.upvotes || 0,
+          total_engagement: project.total_engagement || 0,
+          website_url: project.website_url,
         },
       },
     });

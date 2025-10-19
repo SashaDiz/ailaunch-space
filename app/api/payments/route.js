@@ -20,11 +20,11 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { planType, directoryId, directoryData, customerEmail } = body;
+    const { planType, projectId, projectData, customerEmail } = body;
 
     console.log('Payment API - Creating checkout session:', {
       planType,
-      directoryId,
+      projectId,
       userId: session.user.id,
       userEmail: session.user.email,
       customerEmailFromForm: customerEmail,
@@ -32,10 +32,10 @@ export async function POST(request) {
     });
 
     // Validate required fields
-    if (!planType || !directoryId) {
+    if (!planType || !projectId) {
       return NextResponse.json(
         { 
-          error: "Missing required fields: planType and directoryId are required",
+          error: "Missing required fields: planType and projectId are required",
           code: "MISSING_FIELDS"
         },
         { status: 400 }
@@ -66,26 +66,26 @@ export async function POST(request) {
       );
     }
 
-    // Verify the directory exists and belongs to the user
-    const directory = await db.findOne("apps", { 
-      id: directoryId 
+    // Verify the project exists and belongs to the user
+    const project = await db.findOne("apps", { 
+      id: projectId 
     });
 
-    if (!directory) {
+    if (!project) {
       return NextResponse.json(
         { 
-          error: "Directory not found",
-          code: "DIRECTORY_NOT_FOUND"
+          error: "Project not found",
+          code: "PROJECT_NOT_FOUND"
         },
         { status: 404 }
       );
     }
 
     // Verify ownership
-    if (directory.submitted_by !== session.user.id) {
+    if (project.submitted_by !== session.user.id) {
       return NextResponse.json(
         { 
-          error: "You don't have permission to process payment for this directory",
+          error: "You don't have permission to process payment for this project",
           code: "FORBIDDEN"
         },
         { status: 403 }
@@ -94,7 +94,7 @@ export async function POST(request) {
 
     // Create success and cancel URLs
     const baseUrl = process.env.NEXT_PUBLIC_URL || `${request.headers.get('x-forwarded-proto') || 'http'}://${request.headers.get('host')}`;
-    const successUrl = `${baseUrl}/submit?payment=success&directoryId=${directoryId}`;
+    const successUrl = `${baseUrl}/submit?payment=success&projectId=${projectId}`;
     const cancelUrl = `${baseUrl}/submit?payment=cancelled&step=1`;
 
     console.log('Payment URLs configured:', {
@@ -110,11 +110,11 @@ export async function POST(request) {
       const checkout = await createCheckoutSession({
         planType,
         customerEmail: emailToUse, // Use the validated email
-        directoryData: {
-          name: directoryData?.name || directory.name,
-          slug: directoryData?.slug || directory.slug,
-          description: directoryData?.description || directory.short_description,
-          website_url: directoryData?.website_url || directory.website_url,
+        projectData: {
+          name: projectData?.name || project.name,
+          slug: projectData?.slug || project.slug,
+          description: projectData?.description || project.short_description,
+          website_url: projectData?.website_url || project.website_url,
         },
         successUrl,
         cancelUrl,
@@ -126,10 +126,10 @@ export async function POST(request) {
         hasUrl: !!checkout.url
       });
 
-      // Update directory with checkout session info
+      // Update project with checkout session info
       await db.updateOne(
         "apps",
-        { id: directoryId },
+        { id: projectId },
         {
           $set: {
             checkout_session_id: checkout.checkoutId,
@@ -201,20 +201,20 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type");
-    const directoryId = searchParams.get("directoryId");
+    const projectId = searchParams.get("projectId");
 
-    if (type === "status" && directoryId) {
-      // Check payment status for a directory
-      const directory = await db.findOne("apps", { 
-        id: directoryId,
+    if (type === "status" && projectId) {
+      // Check payment status for a project
+      const project = await db.findOne("apps", { 
+        id: projectId,
         submitted_by: session.user.id 
       });
 
-      if (!directory) {
+      if (!project) {
         return NextResponse.json(
           { 
-            error: "Directory not found",
-            code: "DIRECTORY_NOT_FOUND"
+            error: "Project not found",
+            code: "PROJECT_NOT_FOUND"
           },
           { status: 404 }
         );
@@ -222,11 +222,11 @@ export async function GET(request) {
 
       return NextResponse.json({
         success: true,
-        directoryId,
-        paymentStatus: directory.payment_status || false,
-        checkoutSessionId: directory.checkout_session_id || null,
-        paymentDate: directory.payment_date || null,
-        orderId: directory.order_id || null
+        projectId,
+        paymentStatus: project.payment_status || false,
+        checkoutSessionId: project.checkout_session_id || null,
+        paymentDate: project.payment_date || null,
+        orderId: project.order_id || null
       });
     }
 

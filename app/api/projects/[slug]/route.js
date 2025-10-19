@@ -3,7 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { db } from "../../../libs/database.js";
 
-// GET /api/directories/[slug] - Get directory by slug or ID
+// GET /api/projects/[slug] - Get project by slug or ID
 export async function GET(request, { params }) {
   try {
     const { slug } = await params;
@@ -15,17 +15,17 @@ export async function GET(request, { params }) {
       );
     }
 
-    // Find directory by slug first, then by ID if slug doesn't work
-    let directory = await db.findOne("apps", { slug });
+    // Find project by slug first, then by ID if slug doesn't work
+    let project = await db.findOne("apps", { slug });
     
     // If not found by slug, try by ID (for backward compatibility)
-    if (!directory) {
-      directory = await db.findOne("apps", { id: slug });
+    if (!project) {
+      project = await db.findOne("apps", { id: slug });
     }
 
-    if (!directory) {
+    if (!project) {
       return NextResponse.json(
-        { error: "Directory not found", code: "NOT_FOUND" },
+        { error: "Project not found", code: "NOT_FOUND" },
         { status: 404 }
       );
     }
@@ -47,22 +47,22 @@ export async function GET(request, { params }) {
     const { data: { user } } = await supabase.auth.getUser();
 
     // Check access: владелец может видеть всегда, остальные - только если проект уже начался
-    const isOwner = user && directory.submitted_by === user.id;
+    const isOwner = user && project.submitted_by === user.id;
     
     if (!isOwner) {
       // Для не-владельцев: проверяем статус и даты
       // 1. Проект должен быть "live" (не draft/pending)
-      if (directory.status !== "live") {
+      if (project.status !== "live") {
         return NextResponse.json(
-          { error: "Directory not found or access denied", code: "NOT_FOUND" },
+          { error: "Project not found or access denied", code: "NOT_FOUND" },
           { status: 404 }
         );
       }
       
       // 2. Если у проекта есть конкурс, проверяем что он уже начался (не Scheduled)
-      if (directory.weekly_competition_id) {
+      if (project.weekly_competition_id) {
         const competition = await db.findOne("competitions", {
-          id: directory.weekly_competition_id,
+          id: project.weekly_competition_id,
         });
         
         if (competition) {
@@ -72,7 +72,7 @@ export async function GET(request, { params }) {
           // Если конкурс ещё не начался - доступ запрещён (проект в статусе "Scheduled")
           if (now < startDate) {
             return NextResponse.json(
-              { error: "Directory not found or access denied", code: "NOT_FOUND" },
+              { error: "Project not found or access denied", code: "NOT_FOUND" },
               { status: 404 }
             );
           }
@@ -84,7 +84,7 @@ export async function GET(request, { params }) {
     if (!isOwner) {
       await db.updateOne(
         "apps",
-        { id: directory.id },
+        { id: project.id },
         {
           $inc: { views: 1 },
           $set: { updated_at: new Date() },
@@ -98,18 +98,18 @@ export async function GET(request, { params }) {
     if (user?.id) {
       const vote = await db.findOne("votes", {
         user_id: user.id,
-        app_id: directory.id,
+        app_id: project.id,
       });
       userVoted = !!vote;
     }
 
-    // Get related directories (same categories)
+    // Get related projects (same categories)
     // Use $overlaps for array-to-array comparison in Supabase
-    const relatedDirectories = await db.find(
+    const relatedProjects = await db.find(
       "apps",
       {
-        categories: { $overlaps: directory.categories },
-        id: { $ne: directory.id },
+        categories: { $overlaps: project.categories },
+        id: { $ne: project.id },
         status: "live",
       },
       {
@@ -118,10 +118,10 @@ export async function GET(request, { params }) {
       }
     );
 
-    // Get current competition for this directory and determine status
-    const competitions = directory.weekly_competition_id
+    // Get current competition for this project and determine status
+    const competitions = project.weekly_competition_id
       ? await db.find("competitions", {
-          id: directory.weekly_competition_id, // Query by UUID
+          id: project.weekly_competition_id, // Query by UUID
         })
       : [];
     
@@ -155,11 +155,11 @@ export async function GET(request, { params }) {
     }
 
     // Format response
-    const directoryWithMetadata = {
-      ...directory,
+    const projectWithMetadata = {
+      ...project,
       userVoted,
-      views: directory.views, // View count already incremented in database
-      relatedDirectories: relatedDirectories,
+      views: project.views, // View count already incremented in database
+      relatedProjects: relatedProjects,
       competitions: competitions,
       statusBadge: statusBadge, // "scheduled", "live", "past" - виден только владельцу в dashboard
       canVote: canVote, // можно ли голосовать за этот проект
@@ -169,12 +169,12 @@ export async function GET(request, { params }) {
     return NextResponse.json({
       success: true,
       data: {
-        directory: directoryWithMetadata,
+        project: projectWithMetadata,
       },
     });
 
   } catch (error) {
-    console.error("Directory detail API error:", error);
+    console.error("Project detail API error:", error);
     return NextResponse.json(
       { error: "Internal server error", code: "INTERNAL_ERROR" },
       { status: 500 }
@@ -182,7 +182,7 @@ export async function GET(request, { params }) {
   }
 }
 
-// PATCH /api/directories/[slug] - Update directory (for owner/admin)
+// PATCH /api/projects/[slug] - Update project (for owner/admin)
 export async function PATCH(request, { params }) {
   try {
     const { slug } = params;
@@ -209,7 +209,7 @@ export async function PATCH(request, { params }) {
     delete updates.views;
     delete updates.createdAt;
 
-    // Find and update directory
+    // Find and update project
     const result = await db.updateOne(
       "apps",
       { slug },
@@ -218,24 +218,24 @@ export async function PATCH(request, { params }) {
 
     if (result.matchedCount === 0) {
       return NextResponse.json(
-        { error: "Directory not found", code: "NOT_FOUND" },
+        { error: "Project not found", code: "NOT_FOUND" },
         { status: 404 }
       );
     }
 
-    // Get updated directory
-    const updatedDirectory = await db.findOne("apps", { slug });
+    // Get updated project
+    const updatedProject = await db.findOne("apps", { slug });
 
     return NextResponse.json({
       success: true,
       data: {
-        directory: updatedDirectory,
-        message: "Directory updated successfully",
+        project: updatedProject,
+        message: "Project updated successfully",
       },
     });
 
   } catch (error) {
-    console.error("Directory update API error:", error);
+    console.error("Project update API error:", error);
     return NextResponse.json(
       { error: "Internal server error", code: "INTERNAL_ERROR" },
       { status: 500 }

@@ -27,7 +27,7 @@ export async function POST(request) {
         { 
           error: "Authentication required. Please sign in to vote.", 
           code: "UNAUTHORIZED",
-          message: "You must be logged in to vote for directories."
+          message: "You must be logged in to vote for projects."
         },
         { status: 401 }
       );
@@ -62,7 +62,7 @@ export async function POST(request) {
     const app = await db.findOne("apps", { id: appId });
     if (!app) {
       return NextResponse.json(
-        { error: "Directory not found", code: "NOT_FOUND" },
+        { error: "Project not found", code: "NOT_FOUND" },
         { status: 404 }
       );
     }

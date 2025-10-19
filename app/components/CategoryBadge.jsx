@@ -39,15 +39,15 @@ export function CategoryBadge({ category, clickable = true, size = "sm" }) {
   };
 
   const colorScheme = getCategoryColor(category);
-  const baseClasses = `inline-flex items-center px-2 py-1.5 leading-none text-xs font-normal rounded-lg ${colorScheme.bg} ${colorScheme.text} ${colorScheme.hover} transition-colors`;
+  const baseClasses = `inline-flex items-center px-2 py-1 leading-none text-xs font-normal rounded-lg ${colorScheme.bg} ${colorScheme.text} ${colorScheme.hover} transition-colors`;
   
   const sizeClasses = {
-    xs: "px-2 py-1.5 text-xs",
-    sm: "px-2.5 py-1.5 text-xs", 
-    md: "px-3 py-2 text-sm"
+    xs: "px-2 py-1 text-xs",
+    sm: "px-2.5 py-1 text-xs", 
+    md: "px-3 py-1.5 text-sm"
   };
 
-  const classes = `${baseClasses.replace("px-3 py-2 text-xs", sizeClasses[size])}`;
+  const classes = `${baseClasses.replace("px-3 py-1.5 text-xs", sizeClasses[size])}`;
 
   // Map category names to slugs for consistent filtering
   const categorySlugMap = {
@@ -141,7 +141,7 @@ export function CategoryBadge({ category, clickable = true, size = "sm" }) {
 
   return (
     <Link 
-      href={`/directories?category=${encodeURIComponent(categoryParam)}`}
+      href={`/projects?category=${encodeURIComponent(categoryParam)}`}
       className={`${classes} cursor-pointer`}
       onClick={(e) => e.stopPropagation()}
     >
@@ -151,15 +151,15 @@ export function CategoryBadge({ category, clickable = true, size = "sm" }) {
 }
 
 export function PricingBadge({ pricing, clickable = true, size = "sm" }) {
-  const baseClasses = `inline-flex items-center px-2 py-1.5 text-xs font-normal rounded-lg bg-gray-100 text-gray-900 hover:bg-gray-200 transition-colors`;
+  const baseClasses = `inline-flex items-center px-2 py-1 text-xs font-normal rounded-lg bg-gray-100 text-gray-900 hover:bg-gray-200 transition-colors`;
   
   const sizeClasses = {
-    xs: "px-2 py-1.5 text-xs",
-    sm: "px-2.5 py-1.5 text-xs", 
-    md: "px-3 py-2 text-sm"
+    xs: "px-2 py-1 text-xs",
+    sm: "px-2.5 py-1 text-xs", 
+    md: "px-3 py-1.5 text-sm"
   };
 
-  const classes = `${baseClasses.replace("px-2 py-1.5 text-xs", sizeClasses[size])}`;
+  const classes = `${baseClasses.replace("px-2 py-1 text-xs", sizeClasses[size])}`;
 
   // Map pricing values to consistent format
   const pricingMap = {
@@ -183,7 +183,7 @@ export function PricingBadge({ pricing, clickable = true, size = "sm" }) {
 
   return (
     <Link 
-      href={`/directories?pricing=${pricingParam}`}
+      href={`/projects?pricing=${pricingParam}`}
       className={`${classes} cursor-pointer`}
       onClick={(e) => e.stopPropagation()}
     >

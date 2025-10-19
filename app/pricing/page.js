@@ -3,15 +3,16 @@
 import React from "react";
 import Link from "next/link";
 import {
-  Check,
   Star,
-  Group,
-  Plus,
-  ShieldCheck,
   Globe,
   Medal,
-  BadgeCheck,
-  Flash,
+  Home,
+  Crown,
+  Trophy,
+  Link as LinkIcon,
+  Clock,
+  Megaphone,
+  Rocket,
 } from "iconoir-react";
 
 const plans = [
@@ -23,13 +24,11 @@ const plans = [
     description: "Perfect for new AI projects and startups",
     icon: Globe,
     features: [
-      "Live on homepage for 7 days",
-      "Badge for top 3 ranking products",
-      "High authority backlink for top 3 winners",
-      "Standard launch queue",
-      "15 slots available per week",
-      "Community voting access",
-      "Permanent AI project entry",
+      { text: "Live on homepage for 7 days", icon: Home },
+      { text: "15 slots weekly (limited availability)", icon: Crown },
+      { text: "Badge for top 3 ranking products", icon: Trophy },
+      { text: "High authority lifetime backlink (only for Top 3 rankings)", icon: LinkIcon },
+      { text: "Standard launch queue", icon: Clock },
     ],
     limitations: [],
     popular: false,
@@ -44,152 +43,67 @@ const plans = [
     description: "Maximum exposure for established AI projects",
     icon: Medal,
     features: [
-      "Live on homepage for 7 days",
-      "Badge for top 3 ranking products",
-      "Guaranteed high authority backlink",
-      "Skip the queue",
-      "10 dedicated weekly slots",
-      "Priority support",
-      "Premium badge & featured placement",
+      { text: "Live on homepage for a week", icon: Home },
+      { text: "10 extra premium slots weekly", icon: Crown },
+      { text: "Badge for top 3 ranking products", icon: Trophy },
+      { text: "3+ Guaranteed high authority lifetime backlink", icon: LinkIcon },
+      { text: "Skip the queue", icon: Clock },
+      { text: "Social media promotion", icon: Megaphone },
+      { text: "Premium badge", icon: Star },
     ],
     limitations: [],
     popular: true,
-    cta: "Choose Premium",
+    cta: "Premium Launch",
     ctaClass: "btn-primary",
-  },
-];
-
-const features = [
-  {
-    icon: Plus,
-    title: "High Authority Backlinks",
-    description:
-      "Get valuable backlinks from our DR22+ domain to boost your SEO ranking and organic traffic.",
-  },
-  {
-    icon: Group,
-    title: "Engaged Community",
-    description:
-      "Reach thousands of makers, entrepreneurs, and AI enthusiasts actively looking for new AI tools.",
-  },
-  {
-    icon: BadgeCheck,
-    title: "Competition System",
-    description:
-      "Compete in weekly contests for additional exposure and recognition badges.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Quality Assurance",
-    description:
-      "Our curated platform ensures your AI project reaches a quality audience interested in AI innovations.",
-  },
-];
-
-const faqs = [
-  {
-    question:
-      "What makes AI Launch Space different from other launch platforms?",
-    answer:
-      "We specifically focus on AI projects, providing a targeted audience of people interested in AI tools and innovations. Our weekly competition system gives you opportunities for exposure, and our DR22+ domain provides valuable SEO benefits.",
-  },
-  {
-    question: "How do the guaranteed backlinks work?",
-    answer:
-      "Standard plan AI projects get nofollow backlinks by default, with the opportunity to earn dofollow links by winning top 3 in weekly competitions. Premium plan ($15) receives guaranteed dofollow backlinks immediately upon approval. Both plans can earn badges for top 3 ranking products regardless of the plan chosen.",
-  },
-  {
-    question: "Can I change my plan after submitting?",
-    answer:
-      "Yes! You can upgrade your plan within 7 days of submission. Contact our support team and we'll help you upgrade and apply the additional benefits retroactively.",
-  },
-  {
-    question: "What happens during the approval process?",
-    answer:
-      "We review all submissions to ensure quality and relevance. Standard submissions typically take 24-48 hours, while Premium submissions skip the queue and are processed within 2-4 hours.",
-  },
-  {
-    question: "Do you offer refunds?",
-    answer:
-      "We offer a 30-day money-back guarantee for Premium plans if you're not satisfied with the results. Since the Standard plan is free, no refunds are applicable.",
-  },
-  {
-    question: "How long will my AI project stay featured?",
-    answer:
-      "Your AI project will appear on our homepage for 7 days, but it remains permanently searchable in our AI project database. Top 3 winners from weekly competitions receive badges and dofollow backlinks regardless of their chosen plan.",
   },
 ];
 
 function PricingCard({ plan, index }) {
   return (
     <div
-      className={`card bg-base-100 shadow-xl border transition-all hover:shadow-2xl ${
+      className={`card bg-white border transition-all ${
         plan.popular
-          ? "border-primary border-2 transform scale-105"
-          : "border-base-300"
+          ? "border-pink-500 border-2"
+          : "border-gray-200"
       }`}
     >
-      {plan.popular && (
-        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-          <div className="badge badge-primary badge-lg px-4 py-3">
-            <Star className="w-4 h-4 mr-1" />
-            Most Popular
-          </div>
-        </div>
-      )}
-
-      <div className="card-body p-8">
+      <div className="card-body p-8 flex flex-col h-full">
         <div className="text-center mb-6">
-          <div className="mb-4">
-            <div
-              className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center ${
-                plan.popular
-                  ? "bg-primary text-primary-content"
-                  : "bg-base-200 text-base-content"
-              }`}
-            >
-              {React.createElement(plan.icon, { className: "w-8 h-8" })}
-            </div>
-          </div>
+          <h3 className="text-2xl font-bold mb-4 text-black">{plan.name}</h3>
 
-          <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-
-          <div className="mb-4">
-            <span className="text-4xl font-bold">
+          <div className="mb-6">
+            <span className="text-4xl font-bold text-black">
               {plan.price === 0 ? "Free" : `$${plan.price}`}
             </span>
             {plan.price > 0 && (
-              <span className="text-base-content/60 ml-2">one-time</span>
+              <span className="text-gray-500 ml-2 text-lg">/ launch</span>
             )}
           </div>
-
-          <p className="text-base-content/70">{plan.description}</p>
         </div>
 
-        <div className="space-y-4 mb-8">
-          <h4 className="font-semibold text-success flex items-center">
-            <Check className="w-4 h-4 mr-2" />
-            What's included:
-          </h4>
+        <div className="space-y-4 mb-8 flex-grow">
           <ul className="space-y-3">
             {plan.features.map((feature, idx) => (
               <li key={idx} className="flex items-start">
-                <Check className="w-4 h-4 text-success mr-3 mt-0.5 flex-shrink-0" />
-                <span className="text-sm">{feature}</span>
+                {React.createElement(feature.icon, { 
+                  className: "w-4 h-4 text-black mr-3 mt-0.5 flex-shrink-0",
+                  strokeWidth: 1.5
+                })}
+                <span className="text-base text-black">{feature.text}</span>
               </li>
             ))}
           </ul>
 
           {plan.limitations.length > 0 && (
-            <div className="mt-6 pt-4 border-t border-base-300">
-              <h4 className="font-medium text-base-content/70 text-sm mb-3">
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <h4 className="font-medium text-gray-500 text-base mb-3">
                 Limitations:
               </h4>
               <ul className="space-y-2">
                 {plan.limitations.map((limitation, idx) => (
                   <li key={idx} className="flex items-start">
-                    <span className="w-2 h-2 bg-base-content/30 rounded-full mr-3 mt-2 flex-shrink-0"></span>
-                    <span className="text-sm text-base-content/60">
+                    <span className="w-2 h-2 bg-gray-300 rounded-full mr-3 mt-2 flex-shrink-0"></span>
+                    <span className="text-base text-gray-500">
                       {limitation}
                     </span>
                   </li>
@@ -199,8 +113,12 @@ function PricingCard({ plan, index }) {
           )}
         </div>
 
-        <Link href="/submit" className="w-full">
-          <button className={`btn w-full ${plan.ctaClass} btn-lg`}>
+        <Link href={`/submit?plan=${plan.id}`} className="w-full mt-auto">
+          <button className={`btn w-full btn-lg ${
+            plan.popular 
+              ? "bg-pink-500 hover:bg-pink-600 text-white border-pink-500" 
+              : "bg-white hover:bg-gray-50 text-black border-gray-300"
+          }`}>
             {plan.cta}
           </button>
         </Link>
@@ -209,55 +127,30 @@ function PricingCard({ plan, index }) {
   );
 }
 
-function FeatureCard({ feature }) {
-  return (
-    <div className="card bg-base-100 shadow-sm border border-base-300">
-      <div className="card-body p-6 text-center">
-        <div className="mb-4">
-          <div className="w-12 h-12 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-            {React.createElement(feature.icon, {
-              className: "w-6 h-6 text-primary",
-            })}
-          </div>
-        </div>
-        <h3 className="font-semibold mb-3">{feature.title}</h3>
-        <p className="text-sm text-base-content/70">{feature.description}</p>
-      </div>
-    </div>
-  );
-}
-
-function FAQItem({ faq, index }) {
-  return (
-    <div className="collapse collapse-plus bg-base-100 border border-base-300">
-      <input type="radio" name="faq-accordion" defaultChecked={index === 0} />
-      <div className="collapse-title text-lg font-medium">{faq.question}</div>
-      <div className="collapse-content">
-        <p className="text-base-content/70">{faq.answer}</p>
-      </div>
-    </div>
-  );
-}
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-base-100">
+    <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <div className="bg-gradient-to-b from-base-200/50 to-base-100 py-16">
+      <div className="bg-white py-8 pt-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl lg:text-5xl font-bold mb-6">
-            Simple, Transparent Pricing
+          <div className="mb-8">
+            <Link href="/submit" className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-black hover:bg-gray-50 transition-colors">
+              <Rocket className="w-4 h-4 mr-2" />
+              Launch your directory
+            </Link>
+          </div>
+          <h1 className="text-4xl lg:text-5xl font-bold mb-6 text-black">
+            Choose Your Launch Plan
           </h1>
-          <p className="text-xl text-base-content/70 max-w-2xl mx-auto">
-            Choose the perfect plan to launch your AI project to thousands of
-            engaged users. All plans include permanent listing and competition
-            entry.
+          <p className="text-lg font-normal text-gray-700 max-w-2xl mx-auto">
+            Choose the right launch type to unlock your project's full potential. All launches take place at 12:00 AM PST.
           </p>
         </div>
       </div>
 
       {/* Pricing Cards */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="max-w-5xl mx-auto px-4 py-4">
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {plans.map((plan, index) => (
             <PricingCard key={plan.id} plan={plan} index={index} />
@@ -265,105 +158,6 @@ export default function PricingPage() {
         </div>
       </div>
 
-      {/* Features Section */}
-      <div className="bg-base-200/30 py-16">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">
-              Why Choose AI Launch Space?
-            </h2>
-            <p className="text-lg text-base-content/70 max-w-2xl mx-auto">
-              We provide more than just a listing - we offer a complete launch
-              experience designed specifically for AI builders.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, index) => (
-              <FeatureCard key={index} feature={feature} />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Social Proof */}
-      <div className="py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl font-bold mb-8">
-            Trusted by AI Builders
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8 text-center">
-            <div>
-              <div className="text-3xl font-bold text-primary mb-2">500+</div>
-              <div className="text-base-content/70">AI Projects Launched</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-primary mb-2">DR22+</div>
-              <div className="text-base-content/70">Domain Authority</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-primary mb-2">10K+</div>
-              <div className="text-base-content/70">Monthly Visitors</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* FAQ Section */}
-      <div className="bg-base-200/30 py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">
-              Frequently Asked Questions
-            </h2>
-            <p className="text-lg text-base-content/70">
-              Everything you need to know about launching your AI project.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            {faqs.map((faq, index) => (
-              <FAQItem key={index} faq={faq} index={index} />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* CTA Section */}
-      <div className="py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold mb-4">
-            Ready to Launch Your AI Project?
-          </h2>
-          <p className="text-lg text-base-content/70 mb-8 max-w-2xl mx-auto">
-            Join hundreds of AI builders who have successfully launched
-            their projects and grown their audience with AI Launch Space.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
-            <Link href="/submit" className="btn btn-primary btn-lg">
-              <Flash className="w-5 h-5 mr-2" />
-              Launch Your AI Project
-            </Link>
-            <Link href="/directories" className="btn btn-outline btn-lg">
-              Browse Examples
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* Contact Section */}
-      <div className="bg-base-200/30 py-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h3 className="text-xl font-semibold mb-4">Need Help Choosing?</h3>
-          <p className="text-base-content/70 mb-6">
-            Our team is here to help you select the best plan for your
-            AI project's goals.
-          </p>
-          <a href="mailto:hello@ailaunchspace.com" className="btn btn-outline">
-            Contact Our Team
-          </a>
-        </div>
-      </div>
     </div>
   );
 }

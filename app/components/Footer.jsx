@@ -39,7 +39,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
-                  href="/directories"
+                  href="/projects"
                   className="text-white/70 hover:text-[#ED0D79] transition-colors"
                 >
                   Browse AI Projects
@@ -59,14 +59,6 @@ export function Footer() {
                   className="text-white/70 hover:text-[#ED0D79] transition-colors"
                 >
                   Pricing
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/past-launches"
-                  className="text-white/70 hover:text-[#ED0D79] transition-colors"
-                >
-                  Past Launches
                 </Link>
               </li>
             </ul>

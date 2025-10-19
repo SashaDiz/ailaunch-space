@@ -18,7 +18,7 @@ async function checkUserAuth() {
   return { session: { user: session.user } };
 }
 
-// GET /api/user?type=directories|stats
+// GET /api/user?type=projects|stats
 export async function GET(request) {
   try {
     const authCheck = await checkUserAuth();
@@ -28,13 +28,13 @@ export async function GET(request) {
     const type = searchParams.get("type");
 
     switch (type) {
-      case "directories":
-        return await getUserDirectories(authCheck.session, searchParams);
+      case "projects":
+        return await getUserProjects(authCheck.session, searchParams);
       case "stats":
         return await getUserStats(authCheck.session, searchParams);
       default:
         return NextResponse.json(
-          { error: "Invalid type parameter. Use: directories, stats" },
+          { error: "Invalid type parameter. Use: projects, stats" },
           { status: 400 }
         );
     }
@@ -48,7 +48,7 @@ export async function GET(request) {
 }
 
 // Helper functions
-async function getUserDirectories(session, searchParams) {
+async function getUserProjects(session, searchParams) {
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "10");
   const status = searchParams.get("status");
@@ -61,7 +61,7 @@ async function getUserDirectories(session, searchParams) {
 
   const skip = (page - 1) * limit;
   
-  const [directories, total] = await Promise.all([
+  const [projects, total] = await Promise.all([
     db.find("apps", filter, {
       skip,
       limit,
@@ -70,16 +70,16 @@ async function getUserDirectories(session, searchParams) {
     db.count("apps", filter),
   ]);
 
-  // Add competition status and status badges to directories
+  // Add competition status and status badges to projects
   const now = new Date();
-  const directoriesWithStatus = await Promise.all(
-    directories.map(async (dir) => {
+  const projectsWithStatus = await Promise.all(
+    projects.map(async (project) => {
       let statusBadge = "live"; // Default badge
       let canVote = false;
       
-      if (dir.weekly_competition_id) {
+      if (project.weekly_competition_id) {
         const competition = await db.findOne("competitions", {
-          id: dir.weekly_competition_id,
+          id: project.weekly_competition_id,
         });
         
         if (competition) {
@@ -104,7 +104,7 @@ async function getUserDirectories(session, searchParams) {
       }
       
       return {
-        ...dir,
+        ...project,
         statusBadge: statusBadge,
         canVote: canVote,
       };
@@ -114,7 +114,7 @@ async function getUserDirectories(session, searchParams) {
   return NextResponse.json({
     success: true,
     data: {
-      directories: directoriesWithStatus,
+      projects: projectsWithStatus,
       pagination: {
         page,
         limit,
@@ -128,61 +128,61 @@ async function getUserDirectories(session, searchParams) {
 async function getUserStats(session, searchParams) {
   const userId = session.user.id;
 
-  // Get user's directories for calculations
-  const directories = await db.find("apps", { submitted_by: userId });
+  // Get user's projects for calculations
+  const projects = await db.find("apps", { submitted_by: userId });
 
   // Get user data for votes cast
   const userData = await db.findOne("users", { id: userId });
 
   // Calculate stats
-  const totalDirectories = directories.length;
-  const totalVotesReceived = directories.reduce(
-    (sum, dir) => sum + (dir.upvotes || 0),
+  const totalProjects = projects.length;
+  const totalVotesReceived = projects.reduce(
+    (sum, project) => sum + (project.upvotes || 0),
     0
   );
   const totalVotesCast = userData?.total_votes || 0; // Votes cast by this user
-  const totalViews = directories.reduce(
-    (sum, dir) => sum + (dir.views || 0),
+  const totalViews = projects.reduce(
+    (sum, project) => sum + (project.views || 0),
     0
   );
-  const totalClicks = directories.reduce(
-    (sum, dir) => sum + (dir.clicks || 0),
+  const totalClicks = projects.reduce(
+    (sum, project) => sum + (project.clicks || 0),
     0
   );
 
   // Find best rankings
-  const weeklyPositions = directories
-    .filter((dir) => dir.weekly_position)
-    .map((dir) => dir.weekly_position);
+  const weeklyPositions = projects
+    .filter((project) => project.weekly_position)
+    .map((project) => project.weekly_position);
 
   const bestWeeklyRank =
     weeklyPositions.length > 0 ? Math.min(...weeklyPositions) : null;
   const overallBestRank = bestWeeklyRank;
 
   // Count winners
-  const weeklyWins = directories.filter((dir) => dir.weekly_winner).length;
+  const weeklyWins = projects.filter((project) => project.weekly_winner).length;
 
   // Count by status
-  const liveDirectories = directories.filter(
-    (dir) => dir.status === "live"
+  const liveProjects = projects.filter(
+    (project) => project.status === "live"
   ).length;
-  const scheduledDirectories = directories.filter(
-    (dir) => dir.status === "scheduled"
+  const scheduledProjects = projects.filter(
+    (project) => project.status === "scheduled"
   ).length;
-  const pendingDirectories = directories.filter(
-    (dir) => dir.status === "pending"
+  const pendingProjects = projects.filter(
+    (project) => project.status === "pending"
   ).length;
 
   // Get dofollow links count
-  const totalDofollow = directories.reduce(
-    (sum, dir) => sum + (dir.dofollow_links_earned || 0),
+  const totalDofollow = projects.reduce(
+    (sum, project) => sum + (project.dofollow_links_earned || 0),
     0
   );
 
   return NextResponse.json({
     success: true,
     data: {
-      totalDirectories,
+      totalProjects,
       totalVotesReceived,
       totalVotesCast,
       totalViews,
@@ -190,15 +190,15 @@ async function getUserStats(session, searchParams) {
       bestRank: overallBestRank,
       bestWeeklyRank,
       weeklyWins,
-      liveDirectories,
-      scheduledDirectories,
-      pendingDirectories,
+      liveProjects,
+      scheduledProjects,
+      pendingProjects,
       totalEngagement: totalVotesReceived + totalViews + totalClicks,
       totalDofollow,
       // Additional stats for compatibility
-      totalSubmissions: totalDirectories,
+      totalSubmissions: totalProjects,
       totalVotes: totalVotesCast, // This represents votes cast by user
-      approvedSubmissions: liveDirectories,
+      approvedSubmissions: liveProjects,
     },
   });
 }
@@ -230,7 +230,7 @@ export async function DELETE(request) {
       // Continue with deletion even if notification fails
     }
 
-    // Delete user's directories/apps
+    // Delete user's projects/apps
     await db.deleteMany("apps", { submitted_by: userId });
 
     // Delete user's votes

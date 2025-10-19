@@ -42,12 +42,12 @@ export const UserSchema = z.object({
   lastLoginAt: z.date().optional(),
 });
 
-// Directory/App Schema
+// Project/App Schema
 export const AppSchema = z.object({
   id: z.string().optional(),
   
   // Basic Information
-  name: z.string().min(1, "Directory name is required").max(100),
+  name: z.string().min(1, "Project name is required").max(100),
   slug: z.string().regex(/^[a-z0-9-]+$/, "Invalid slug format"),
   short_description: z
     .string()
@@ -132,6 +132,11 @@ export const AppSchema = z.object({
   total_engagement: z.number().default(0),
 
   // Ranking and Competition
+  // TODO: Implement ranking system
+  // - weekly_ranking: Position in weekly competition (1, 2, 3, etc.)
+  // - overall_ranking: Position across all projects on platform
+  // - ranking_score: Calculated score for overall rankings
+  // - weekly_score: Calculated score for weekly competition
   weekly_ranking: z.number().optional(),
   overall_ranking: z.number().optional(),
   ranking_score: z.number().default(0),
@@ -159,8 +164,8 @@ export const AppSchema = z.object({
   meta_description: z.string().max(160).optional(),
 });
 
-// Directory Submission Validation Schemas
-export const DirectorySubmissionSchema = z.object({
+// Project Submission Validation Schemas
+export const ProjectSubmissionSchema = z.object({
   // Step 1: Plan Selection
   plan: z.enum(["standard", "premium"], {
     required_error: "Please select a plan",
@@ -169,8 +174,8 @@ export const DirectorySubmissionSchema = z.object({
   // Step 2: Basic Info
   name: z
     .string()
-    .min(1, "Directory name is required")
-    .max(100, "Directory name must be 100 characters or less"),
+    .min(1, "Project name is required")
+    .max(100, "Project name must be 100 characters or less"),
   website_url: z.string().url("Please enter a valid website URL"),
   short_description: z
     .string()
@@ -205,30 +210,30 @@ export const DirectorySubmissionSchema = z.object({
 });
 
 // Validation schema for individual steps
-export const PlanSelectionSchema = DirectorySubmissionSchema.pick({
+export const PlanSelectionSchema = ProjectSubmissionSchema.pick({
   plan: true,
 });
 
-export const BasicInfoSchema = DirectorySubmissionSchema.pick({
+export const BasicInfoSchema = ProjectSubmissionSchema.pick({
   name: true,
   website_url: true,
   short_description: true,
   maker_twitter: true,
 });
 
-export const DetailsSchema = DirectorySubmissionSchema.pick({
+export const DetailsSchema = ProjectSubmissionSchema.pick({
   full_description: true,
   categories: true,
   pricing: true,
   video_url: true,
 });
 
-export const MediaSchema = DirectorySubmissionSchema.pick({
+export const MediaSchema = ProjectSubmissionSchema.pick({
   logo_url: true,
   screenshots: true,
 });
 
-export const LaunchWeekSchema = DirectorySubmissionSchema.pick({
+export const LaunchWeekSchema = ProjectSubmissionSchema.pick({
   launch_week: true,
 });
 
@@ -456,14 +461,14 @@ export const NewsletterSchema = z.object({
   unsubscribedAt: z.date().optional(),
 });
 
-// Backlink Schema (for tracking directory backlinks)
+// Backlink Schema (for tracking project backlinks)
 export const BacklinkSchema = z.object({
   id: z.string().optional(),
   app_id: z.string(),
   
   // Link details
   source_url: z.string().url(), // AI Launch Space URL
-  target_url: z.string().url(), // Directory's URL
+  target_url: z.string().url(), // Project's URL
   anchor_text: z.string().optional(),
   link_type: z.enum(["homepage", "top3", "premium"]),
   

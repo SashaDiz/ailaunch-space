@@ -1,24 +1,24 @@
 /**
  * Link Type Manager
- * Handles dofollow/nofollow link status for directory submissions
+ * Handles dofollow/nofollow link status for project submissions
  */
 
 import { db } from "./database.js";
 
 /**
  * Toggle link type between dofollow and nofollow
- * @param {string} directoryId - The directory ID
+ * @param {string} projectId - The project ID
  * @param {string} adminId - The admin user ID making the change
- * @returns {Promise<Object>} Updated directory
+ * @returns {Promise<Object>} Updated project
  */
-export async function toggleLinkType(directoryId, adminId) {
-  const directory = await db.findOne("apps", { id: directoryId });
+export async function toggleLinkType(projectId, adminId) {
+  const project = await db.findOne("apps", { id: projectId });
   
-  if (!directory) {
-    throw new Error("Directory not found");
+  if (!project) {
+    throw new Error("Project not found");
   }
 
-  const newLinkType = directory.link_type === "dofollow" ? "nofollow" : "dofollow";
+  const newLinkType = project.link_type === "dofollow" ? "nofollow" : "dofollow";
   const isUpgrading = newLinkType === "dofollow";
 
   const updateData = {
@@ -37,29 +37,29 @@ export async function toggleLinkType(directoryId, adminId) {
     updateData.dofollow_awarded_at = null;
   }
 
-  await db.updateOne("apps", { id: directoryId }, { $set: updateData });
+  await db.updateOne("apps", { id: projectId }, { $set: updateData });
 
   // Log the action
-  await logLinkTypeChange(directoryId, directory.link_type, newLinkType, adminId, "manual");
+  await logLinkTypeChange(projectId, project.link_type, newLinkType, adminId, "manual");
 
-  return { ...directory, ...updateData };
+  return { ...project, ...updateData };
 }
 
 /**
- * Manually upgrade a directory to dofollow
- * @param {string} directoryId - The directory ID
+ * Manually upgrade a project to dofollow
+ * @param {string} projectId - The project ID
  * @param {string} adminId - The admin user ID making the change
- * @returns {Promise<Object>} Updated directory
+ * @returns {Promise<Object>} Updated project
  */
-export async function upgradeToDofollow(directoryId, adminId) {
-  const directory = await db.findOne("apps", { id: directoryId });
+export async function upgradeToDofollow(projectId, adminId) {
+  const project = await db.findOne("apps", { id: projectId });
   
-  if (!directory) {
-    throw new Error("Directory not found");
+  if (!project) {
+    throw new Error("Project not found");
   }
 
-  if (directory.link_type === "dofollow") {
-    return directory; // Already dofollow
+  if (project.link_type === "dofollow") {
+    return project; // Already dofollow
   }
 
   const updateData = {
@@ -70,29 +70,29 @@ export async function upgradeToDofollow(directoryId, adminId) {
     // updated_at is handled by DB triggers
   };
 
-  await db.updateOne("apps", { id: directoryId }, { $set: updateData });
+  await db.updateOne("apps", { id: projectId }, { $set: updateData });
 
   // Log the action
-  await logLinkTypeChange(directoryId, "nofollow", "dofollow", adminId, "manual_upgrade");
+  await logLinkTypeChange(projectId, "nofollow", "dofollow", adminId, "manual_upgrade");
 
-  return { ...directory, ...updateData };
+  return { ...project, ...updateData };
 }
 
 /**
- * Manually downgrade a directory to nofollow
- * @param {string} directoryId - The directory ID
+ * Manually downgrade a project to nofollow
+ * @param {string} projectId - The project ID
  * @param {string} adminId - The admin user ID making the change
- * @returns {Promise<Object>} Updated directory
+ * @returns {Promise<Object>} Updated project
  */
-export async function downgradeToNofollow(directoryId, adminId) {
-  const directory = await db.findOne("apps", { id: directoryId });
+export async function downgradeToNofollow(projectId, adminId) {
+  const project = await db.findOne("apps", { id: projectId });
   
-  if (!directory) {
-    throw new Error("Directory not found");
+  if (!project) {
+    throw new Error("Project not found");
   }
 
-  if (directory.link_type === "nofollow") {
-    return directory; // Already nofollow
+  if (project.link_type === "nofollow") {
+    return project; // Already nofollow
   }
 
   const updateData = {
@@ -104,7 +104,7 @@ export async function downgradeToNofollow(directoryId, adminId) {
   // Remove dofollow tracking fields
   await db.updateOne(
     "apps", 
-    { id: directoryId }, 
+    { id: projectId }, 
     { 
       $set: updateData,
       $unset: {
@@ -115,15 +115,15 @@ export async function downgradeToNofollow(directoryId, adminId) {
   );
 
   // Log the action
-  await logLinkTypeChange(directoryId, "dofollow", "nofollow", adminId, "manual_downgrade");
+  await logLinkTypeChange(projectId, "dofollow", "nofollow", adminId, "manual_downgrade");
 
-  return { ...directory, ...updateData };
+  return { ...project, ...updateData };
 }
 
 /**
  * Award dofollow links to weekly competition winners
  * @param {string} competitionId - The competition ID (e.g., "2024-W01")
- * @returns {Promise<Array>} Array of updated directories
+ * @returns {Promise<Array>} Array of updated projects
  */
 export async function awardDofollowToWeeklyWinners(competitionId) {
   // Get the competition
@@ -151,12 +151,12 @@ export async function awardDofollowToWeeklyWinners(competitionId) {
     return [];
   }
 
-  const updatedDirectories = [];
+  const updatedProjects = [];
 
   // Award dofollow to each winner
   for (let i = 0; i < topThree.length; i++) {
     const position = i + 1; // 1, 2, or 3
-    const directory = topThree[i];
+    const project = topThree[i];
 
     const updateData = {
       link_type: "dofollow",
@@ -168,18 +168,18 @@ export async function awardDofollowToWeeklyWinners(competitionId) {
       // updated_at is handled by DB triggers
     };
 
-    await db.updateOne("apps", { id: directory.id }, { $set: updateData });
+    await db.updateOne("apps", { id: project.id }, { $set: updateData });
 
     // Log the action
     await logLinkTypeChange(
-      directory.id,
+      project.id,
       "nofollow",
       "dofollow",
       "system",
       `weekly_winner_position_${position}`
     );
 
-    updatedDirectories.push({ ...directory, ...updateData });
+    updatedProjects.push({ ...project, ...updateData });
   }
 
   // Update competition with winner IDs
@@ -200,7 +200,7 @@ export async function awardDofollowToWeeklyWinners(competitionId) {
 
   console.log(`Awarded dofollow to ${topThree.length} winners for competition ${competitionId}`);
   
-  return updatedDirectories;
+  return updatedProjects;
 }
 
 /**
@@ -208,7 +208,7 @@ export async function awardDofollowToWeeklyWinners(competitionId) {
  * @returns {Promise<Object>} Link type statistics
  */
 export async function getLinkTypeStats() {
-  const [totalDirectories, dofollowCount, nofollowCount, weeklyWinners, manualUpgrades, premiumDofollow] = await Promise.all([
+  const [totalProjects, dofollowCount, nofollowCount, weeklyWinners, manualUpgrades, premiumDofollow] = await Promise.all([
     db.count("apps", { status: "live" }),
     db.count("apps", { status: "live", link_type: "dofollow" }),
     db.count("apps", { status: "live", link_type: "nofollow" }),
@@ -218,7 +218,7 @@ export async function getLinkTypeStats() {
   ]);
 
   return {
-    total: totalDirectories,
+    total: totalProjects,
     dofollow: dofollowCount,
     nofollow: nofollowCount,
     breakdown: {
@@ -227,24 +227,24 @@ export async function getLinkTypeStats() {
       premium_plans: premiumDofollow,
     },
     percentages: {
-      dofollow: totalDirectories > 0 ? ((dofollowCount / totalDirectories) * 100).toFixed(2) : 0,
-      nofollow: totalDirectories > 0 ? ((nofollowCount / totalDirectories) * 100).toFixed(2) : 0,
+      dofollow: totalProjects > 0 ? ((dofollowCount / totalProjects) * 100).toFixed(2) : 0,
+      nofollow: totalProjects > 0 ? ((nofollowCount / totalProjects) * 100).toFixed(2) : 0,
     },
   };
 }
 
 /**
  * Log link type changes for audit trail
- * @param {string} directoryId
+ * @param {string} projectId
  * @param {string} fromType
  * @param {string} toType
  * @param {string} changedBy - User ID or "system"
  * @param {string} reason
  */
-async function logLinkTypeChange(directoryId, fromType, toType, changedBy, reason) {
+async function logLinkTypeChange(projectId, fromType, toType, changedBy, reason) {
   try {
     await db.insertOne("link_type_changes", {
-      directory_id: directoryId,
+      project_id: projectId,
       from_type: fromType,
       to_type: toType,
       changed_by: changedBy,
@@ -258,23 +258,23 @@ async function logLinkTypeChange(directoryId, fromType, toType, changedBy, reaso
 }
 
 /**
- * Get link type change history for a directory
- * @param {string} directoryId
+ * Get link type change history for a project
+ * @param {string} projectId
  * @returns {Promise<Array>} Change history
  */
-export async function getLinkTypeHistory(directoryId) {
-  return await db.find("link_type_changes", { directory_id: directoryId })
+export async function getLinkTypeHistory(projectId) {
+  return await db.find("link_type_changes", { project_id: projectId })
     .sort({ timestamp: -1 })
     .toArray();
 }
 
 /**
- * Check if a directory is eligible for dofollow
- * @param {Object} directory - The directory object
+ * Check if a project is eligible for dofollow
+ * @param {Object} project - The project object
  * @returns {Object} Eligibility status and reason
  */
-export function checkDofollowEligibility(directory) {
-  if (directory.plan === "premium") {
+export function checkDofollowEligibility(project) {
+  if (project.plan === "premium") {
     return {
       eligible: true,
       reason: "Premium plan - automatic dofollow",
@@ -282,15 +282,15 @@ export function checkDofollowEligibility(directory) {
     };
   }
 
-  if (directory.weekly_winner) {
+  if (project.weekly_winner) {
     return {
       eligible: true,
-      reason: `Weekly winner (Position ${directory.weekly_position})`,
+      reason: `Weekly winner (Position ${project.weekly_position})`,
       requiresAction: false,
     };
   }
 
-  if (directory.link_type === "dofollow" && directory.dofollow_reason === "manual_upgrade") {
+  if (project.link_type === "dofollow" && project.dofollow_reason === "manual_upgrade") {
     return {
       eligible: true,
       reason: "Manually upgraded by admin",
@@ -307,7 +307,7 @@ export function checkDofollowEligibility(directory) {
 
 /**
  * Bulk update link types (useful for migrations or corrections)
- * @param {Array} updates - Array of {directoryId, linkType}
+ * @param {Array} updates - Array of {projectId, linkType}
  * @param {string} adminId
  * @returns {Promise<Object>} Update results
  */
@@ -321,15 +321,15 @@ export async function bulkUpdateLinkTypes(updates, adminId) {
   for (const update of updates) {
     try {
       if (update.linkType === "dofollow") {
-        await upgradeToDofollow(update.directoryId, adminId);
+        await upgradeToDofollow(update.projectId, adminId);
       } else {
-        await downgradeToNofollow(update.directoryId, adminId);
+        await downgradeToNofollow(update.projectId, adminId);
       }
       results.successful++;
     } catch (error) {
       results.failed++;
       results.errors.push({
-        directoryId: update.directoryId,
+        projectId: update.projectId,
         error: error.message,
       });
     }

@@ -156,13 +156,14 @@ export function CategorySelector({
           {selectedCategories.map((category) => (
             <span
               key={category}
-              className="inline-flex items-center gap-1 px-3 py-1 bg-primary text-primary-content text-sm rounded-full"
+              className="inline-flex items-center gap-1 px-3 py-1 text-white text-sm rounded-full transition-all duration-200 hover:opacity-90"
+              style={{ backgroundColor: '#ED0D79' }}
             >
               {category}
               <button
                 type="button"
                 onClick={() => removeCategory(category)}
-                className="hover:bg-primary-content/20 rounded-full p-0.5"
+                className="hover:bg-white/20 rounded-full p-0.5 transition-colors duration-200"
                 aria-label={`Remove ${category}`}
               >
                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -181,7 +182,7 @@ export function CategorySelector({
           onClick={() => setIsOpen(!isOpen)}
           className={`w-full px-4 py-3 text-left border rounded-lg bg-base-100 hover:bg-base-200 transition-colors ${
             error ? "border-error" : "border-base-300"
-          } ${isOpen ? "border-primary" : ""}`}
+          } ${isOpen ? "border-[#ED0D79] ring-2 ring-[#ED0D79]/20" : ""}`}
         >
           <span className={selectedCategories.length === 0 ? "text-base-content/60" : ""}>
             {selectedCategories.length === 0 
@@ -211,7 +212,7 @@ export function CategorySelector({
                 placeholder="Search categories..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-base-300 rounded-md bg-base-100 text-base-content placeholder-base-content/60 focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-3 py-2 border border-base-300 rounded-md bg-base-100 text-base-content placeholder-base-content/60 focus:outline-none focus:ring-2 focus:ring-[#ED0D79]/20 focus:border-[#ED0D79]"
               />
             </div>
 
@@ -243,16 +244,16 @@ export function CategorySelector({
                             disabled={isDisabled}
                             className={`w-full px-6 py-2 text-left text-sm hover:bg-base-200 transition-colors ${
                               isSelected 
-                                ? "bg-primary/10 text-primary font-medium" 
+                                ? "bg-[#ED0D79]/10 text-[#ED0D79] font-medium" 
                                 : isDisabled 
                                   ? "text-base-content/40 cursor-not-allowed"
-                                  : "text-base-content hover:text-primary"
+                                  : "text-base-content hover:text-[#ED0D79]"
                             }`}
                           >
                             <div className="flex items-center justify-between">
                               <span>{category}</span>
                               {isSelected && (
-                                <svg className="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 20 20">
+                                <svg className="w-4 h-4 text-[#ED0D79]" fill="currentColor" viewBox="0 0 20 20">
                                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                 </svg>
                               )}

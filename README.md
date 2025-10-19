@@ -15,6 +15,11 @@ A weekly competition platform for AI projects where AI builders can submit their
 - **Responsive Design** - Mobile-friendly with TailwindCSS + daisyUI
 - **SEO Optimization** - Sitemap, meta tags, and backlink management
 
+### Future Features (TODO)
+- **Advanced Ranking System** - Sophisticated scoring algorithms for weekly and overall rankings
+- **Leaderboards** - All-time and category-specific project rankings
+- **Dynamic Scoring** - Weighted scoring based on engagement, time, and user behavior
+
 ### Launch Plans
 
 #### Standard Launch (FREE)
@@ -81,15 +86,15 @@ This application implements **defense-in-depth security** with three layers of p
 
 3. **Database Row Level Security (RLS)**
    - PostgreSQL RLS policies enforce data access rules
-   - Users can only submit/update their own directories
-   - Users can only vote once per directory
+   - Users can only submit/update their own projects
+   - Users can only vote once per project
    - Cannot be bypassed from application code
 
 ### Authenticated Actions
 
 ✅ **Authenticated users can:**
 - Submit AI projects to launches (FREE or Premium)
-- Vote for directories
+- Vote for projects
 - Update their own submissions
 - View their dashboard
 
@@ -369,10 +374,10 @@ const { data: { user } } = await supabase.auth.getUser(token);
 ### Core Endpoints
 
 #### AI Projects
-- `GET /api/directories` - List all approved AI projects
-- `POST /api/directories` - Submit new AI project
-- `GET /api/directories/[slug]` - Get specific AI project
-- `PUT /api/directories/update` - Update AI project
+- `GET /api/projects` - List all approved AI projects
+- `POST /api/projects` - Submit new AI project
+- `GET /api/projects/[slug]` - Get specific AI project
+- `PUT /api/projects/update` - Update AI project
 
 #### File Upload
 - `POST /api/upload` - Upload images to Supabase S3 storage
@@ -386,7 +391,7 @@ const { data: { user } } = await supabase.auth.getUser(token);
 
 #### User
 - `GET /api/user/route` - Get current user
-- `GET /api/user/directories` - Get user's AI projects
+- `GET /api/user?type=projects` - Get user's AI projects
 
 #### Admin
 - `GET /api/admin` - List all submissions (admin only)
@@ -549,7 +554,7 @@ ailaunchspace/
 │   │   │   ├── account-notifications/  # Welcome email catch-up
 │   │   │   ├── competitions/           # Competition lifecycle
 │   │   │   └── winner-reminders/       # Winner badge reminders
-│   │   ├── directories/    # Directory CRUD
+│   │   ├── projects/       # Project CRUD
 │   │   ├── newsletter/     # Newsletter subscriptions
 │   │   ├── notifications/  # Email notifications
 │   │   ├── user/           # User data
@@ -565,8 +570,8 @@ ailaunchspace/
 │   │   └── callback/      # OAuth callback
 │   ├── admin/             # Admin pages
 │   ├── dashboard/         # User dashboard
-│   ├── directories/       # Browse AI projects
-│   ├── directory/[slug]/  # AI project detail
+│   ├── projects/          # Browse AI projects
+│   ├── project/[slug]/    # AI project detail
 │   ├── submit/            # Submit form
 │   ├── hooks/             # React hooks
 │   │   └── useUser.js     # Auth hook
@@ -664,7 +669,7 @@ pnpm webhook:simulate
 3. Enable test mode in LemonSqueezy
 4. Make a test payment using card: `4242 4242 4242 4242`
 5. Watch console logs for webhook processing
-6. Verify directory upgraded in database
+6. Verify project upgraded in database
 
 ## 🚀 Deployment
 
@@ -775,7 +780,7 @@ pnpm webhook:simulate
 
 ### Standard Launch Flow
 1. User submits AI project (chooses "Standard Launch")
-2. Directory created with `status: "pending"` and `scheduled_launch: true`
+2. Project created with `status: "pending"` and `scheduled_launch: true`
 3. Competition slot count incremented immediately
 4. Admin approves → Goes live with nofollow link
 5. Lives on homepage for 7 days
@@ -784,11 +789,11 @@ pnpm webhook:simulate
 
 ### Premium Launch Flow
 1. User fills out complete submission form (chooses "Premium Launch")
-2. Directory created as **draft** with `status: "draft"` and `scheduled_launch: false`
+2. Project created as **draft** with `status: "draft"` and `scheduled_launch: false`
 3. Draft does NOT count toward competition slots yet
 4. User proceeds to payment ($15 via LemonSqueezy)
 5. **If payment succeeds:**
-   - Webhook updates directory: `status: "pending"`, `scheduled_launch: true`, `payment_status: true`
+   - Webhook updates project: `status: "pending"`, `scheduled_launch: true`, `payment_status: true`
    - Competition slot count incremented
    - Enters admin approval queue
    - Upon approval → **Guaranteed dofollow backlink by default**

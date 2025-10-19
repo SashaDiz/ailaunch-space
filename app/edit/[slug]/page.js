@@ -10,11 +10,11 @@ import toast from "react-hot-toast";
 import CategorySelector from "../../components/CategorySelector";
 import ImageUpload from "../../components/ImageUpload";
 
-export default function EditDirectoryPage() {
+export default function EditProjectPage() {
   const router = useRouter();
   const params = useParams();
   const { user, loading } = useUser();
-  const [directory, setDirectory] = useState(null);
+  const [project, setProject] = useState(null);
   const [formData, setFormData] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,67 +29,67 @@ export default function EditDirectoryPage() {
     }
 
     if (user && params.slug) {
-      loadDirectory();
+      loadProject();
     }
   }, [user, loading, params.slug, router]);
 
 
-  const loadDirectory = async () => {
+  const loadProject = async () => {
     setIsLoading(true);
     try {
-      // First, check if the directory belongs to the user
-      const userDirsResponse = await fetch("/api/user?type=directories", {
+      // First, check if the project belongs to the user
+      const userProjectsResponse = await fetch("/api/user?type=projects", {
         method: "GET",
         credentials: "include",
       });
 
-      if (userDirsResponse.ok) {
-        const userDirsData = await userDirsResponse.json();
-        const userDirectory = userDirsData.data.directories.find(
-          (dir) => dir.slug === params.slug
+      if (userProjectsResponse.ok) {
+        const userProjectsData = await userProjectsResponse.json();
+        const userProject = userProjectsData.data.projects.find(
+          (project) => project.slug === params.slug
         );
 
-        if (!userDirectory) {
+        if (!userProject) {
           toast.error(
-            "Directory not found or you don't have permission to edit it"
+            "Project not found or you don't have permission to edit it"
           );
           router.push("/dashboard");
           return;
         }
 
         // Check if editing is allowed
-        if (userDirectory.status !== "scheduled") {
-          toast.error("Editing is only allowed for scheduled directories");
+        if (userProject.status !== "scheduled") {
+          toast.error("Editing is only allowed for scheduled projects");
           router.push("/dashboard");
           return;
         }
 
-        // Load full directory data
-        const response = await fetch(`/api/directories/${params.slug}`);
+        // Load full project data
+        const response = await fetch(`/api/projects/${params.slug}`);
         if (response.ok) {
           const result = await response.json();
-          const fullDirectory = result.data.directory;
+          const fullProject = result.data.project;
 
-          setDirectory(fullDirectory);
+          setProject(fullProject);
           setFormData({
-            name: fullDirectory.name || "",
-            website_url: fullDirectory.website_url || "",
-            short_description: fullDirectory.short_description || "",
-            full_description: fullDirectory.full_description || "",
-            categories: fullDirectory.categories || [],
-            pricing: fullDirectory.pricing || "",
-            logo_url: fullDirectory.logo_url || "",
-            screenshots: fullDirectory.screenshots || ["", "", "", "", ""],
-            backlink_url: fullDirectory.backlink_url || "",
+            name: fullProject.name || "",
+            website_url: fullProject.website_url || "",
+            short_description: fullProject.short_description || "",
+            full_description: fullProject.full_description || "",
+            categories: fullProject.categories || [],
+            pricing: fullProject.pricing || "",
+            logo_url: fullProject.logo_url || "",
+            screenshots: fullProject.screenshots || ["", "", "", "", ""],
+            backlink_url: fullProject.backlink_url || "",
           });
 
-          console.log("AI project loaded for editing:", fullDirectory);
+          console.log("AI project loaded for editing:", fullProject);
           toast.success("AI project loaded successfully");
         } else {
-          throw new Error("Failed to load directory details");
+          throw new Error("Failed to load project details");
         }
       } else {
-        throw new Error("Failed to verify directory ownership");
+        throw new Error("Failed to verify project ownership");
       }
     } catch (error) {
       console.error("Error loading AI project:", error);
@@ -120,7 +120,7 @@ export default function EditDirectoryPage() {
     const newErrors = {};
 
     if (!formData.name?.trim()) {
-      newErrors.name = "Directory name is required";
+      newErrors.name = "Project name is required";
     }
 
     if (!formData.website_url?.trim()) {
@@ -169,11 +169,11 @@ export default function EditDirectoryPage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/directories", {
+      const response = await fetch("/api/projects", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          directoryId: params.slug,
+          projectId: params.slug,
           ...formData,
         }),
       });
@@ -199,7 +199,7 @@ export default function EditDirectoryPage() {
       <div className="min-h-screen bg-base-100 flex items-center justify-center">
         <div className="text-center">
           <span className="loading loading-spinner loading-lg"></span>
-          <p className="mt-4 text-base-content/70">Loading directory...</p>
+          <p className="mt-4 text-base-content/70">Loading project...</p>
         </div>
       </div>
     );
@@ -209,13 +209,13 @@ export default function EditDirectoryPage() {
     return null; // Redirecting...
   }
 
-  if (!directory) {
+  if (!project) {
     return (
       <div className="min-h-screen bg-base-100 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-2">Directory not found</h2>
+          <h2 className="text-2xl font-bold mb-2">Project not found</h2>
           <p className="text-base-content/70 mb-4">
-            The directory you're trying to edit doesn't exist or you don't have
+            The project you're trying to edit doesn't exist or you don't have
             permission to edit it.
           </p>
           <Link href="/dashboard" className="btn btn-primary">
@@ -238,11 +238,11 @@ export default function EditDirectoryPage() {
             </Link>
           </div>
           <div className="flex items-center space-x-4 mb-4">
-            {directory.logo_url && (
+            {project.logo_url && (
               <div className="w-16 h-16 rounded-xl overflow-hidden border border-gray-200">
                 <Image
-                  src={directory.logo_url}
-                  alt={`${directory.name} logo`}
+                  src={project.logo_url}
+                  alt={`${project.name} logo`}
                   width={64}
                   height={64}
                   className="w-full h-full object-cover"
@@ -267,7 +267,7 @@ export default function EditDirectoryPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">Directory Name *</span>
+                    <span className="label-text">Project Name *</span>
                   </label>
                   <input
                     type="text"
@@ -276,7 +276,7 @@ export default function EditDirectoryPage() {
                     }`}
                     value={formData.name || ""}
                     onChange={(e) => handleInputChange("name", e.target.value)}
-                    placeholder="e.g. AI Tools Directory"
+                    placeholder="e.g. AI Tools Project"
                   />
                   {errors.name && (
                     <label className="label">
@@ -300,7 +300,7 @@ export default function EditDirectoryPage() {
                     onChange={(e) =>
                       handleInputChange("website_url", e.target.value)
                     }
-                    placeholder="https://your-directory.com"
+                    placeholder="https://your-project.com"
                   />
                   {errors.website_url && (
                     <label className="label">

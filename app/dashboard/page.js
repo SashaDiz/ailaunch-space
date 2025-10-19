@@ -43,15 +43,15 @@ function StatsCard({ icon: Icon, title, value, description, className = "" }) {
   );
 }
 
-function DirectoryCard({ directory, onResumeDraft }) {
-  const getStatusBadge = (directory, isDraft) => {
-    if (isDraft || directory.status === "draft") {
+function ProjectCard({ project, onResumeDraft }) {
+  const getStatusBadge = (project, isDraft) => {
+    if (isDraft || project.status === "draft") {
       return <span className="badge badge-ghost badge-sm">Draft</span>;
     }
     
     // Use statusBadge for competition-related status (past, scheduled, live)
-    if (directory.statusBadge) {
-      switch (directory.statusBadge) {
+    if (project.statusBadge) {
+      switch (project.statusBadge) {
         case "past":
           return <span className="badge badge-neutral badge-sm">Past</span>;
         case "scheduled":
@@ -62,7 +62,7 @@ function DirectoryCard({ directory, onResumeDraft }) {
     }
     
     // Fallback to regular status for non-competition statuses
-    switch (directory.status) {
+    switch (project.status) {
       case "live":
         return <span className="badge badge-success badge-sm">Live</span>;
       case "pending":
@@ -80,7 +80,7 @@ function DirectoryCard({ directory, onResumeDraft }) {
       case "draft":
         return <span className="badge badge-ghost badge-sm">Draft</span>;
       default:
-        return <span className="badge badge-neutral badge-sm">{directory.status}</span>;
+        return <span className="badge badge-neutral badge-sm">{project.status}</span>;
     }
   };
 
@@ -103,27 +103,27 @@ function DirectoryCard({ directory, onResumeDraft }) {
     }
     
     // Don't navigate for drafts - they should use "Resume Draft" button
-    if (directory.is_draft || directory.status === "draft") {
+    if (project.is_draft || project.status === "draft") {
       return;
     }
     
-    window.location.href = `/directory/${directory.slug}`;
+    window.location.href = `/project/${project.slug}`;
   };
 
   const handleEditClick = () => {
-    // Check if editing is allowed for this directory
-    if (directory.status !== "scheduled") {
-      toast.error("Editing is only allowed for scheduled directories");
+    // Check if editing is allowed for this AI project
+    if (project.status !== "scheduled") {
+      toast.error("Editing is only allowed for scheduled AI projects");
       return;
     }
 
     // Redirect to dedicated edit page
-    window.location.href = `/edit/${directory.slug}`;
+    window.location.href = `/edit/${project.slug}`;
   };
   
   const handleResumeDraft = () => {
     if (onResumeDraft) {
-      onResumeDraft(directory);
+      onResumeDraft(project);
     }
   };
   
@@ -133,7 +133,7 @@ function DirectoryCard({ directory, onResumeDraft }) {
     }
     
     try {
-      const response = await fetch(`/api/directories?id=${directory.id}`, {
+      const response = await fetch(`/api/projects?id=${project.id}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -172,8 +172,8 @@ function DirectoryCard({ directory, onResumeDraft }) {
           <div className="flex items-center space-x-3">
             <div className="w-16 h-16 border rounded-2xl border-gray-300 overflow-hidden flex-shrink-0">
               <Image
-                src={directory.logo_url}
-                alt={`${directory.name} logo`}
+                src={project.logo_url}
+                alt={`${project.name} logo`}
                 width={64}
                 height={64}
                 className="rounded-2xl object-cover w-full h-full"
@@ -182,29 +182,32 @@ function DirectoryCard({ directory, onResumeDraft }) {
             <div>
               <div className="flex items-center space-x-2 mb-1">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  {directory.name}
+                  {project.name}
                 </h3>
                 
                 {/* Winner Badge */}
-                <WinnerBadge position={directory.weekly_position} size="sm" />
+                <WinnerBadge position={project.weekly_position} size="sm" />
                 
                 {/* Embed Button for Winners */}
-                {directory.weekly_position && (
+                {project.weekly_position && (
                   <WinnerEmbedButton
-                    position={directory.weekly_position}
-                    directoryName={directory.name}
-                    directorySlug={directory.slug}
+                    position={project.weekly_position}
+                    projectName={project.name}
+                    projectSlug={project.slug}
                     className="btn-xs"
                   />
                 )}
                 
-                {directory.premium_badge && (
-                  <Crown className="w-4 h-4 text-amber-500" />
+                {project.premium_badge && (
+                  <span className="inline-flex leading-none items-center gap-1 px-1 py-0.5 text-[11px] font-medium text-white rounded-sm" style={{backgroundColor: '#ED0D79'}}>
+                    <Crown className="w-4 h-4" strokeWidth={1.5} />
+                    <span className="mt-0.5">Premium</span>
+                  </span>
                 )}
-                {getStatusBadge(directory, directory.is_draft)}
+                {getStatusBadge(project, project.is_draft)}
               </div>
               <p className="text-sm text-gray-600">
-                Launched {formatDate(directory.launch_date)}
+                Launched {formatDate(project.launch_date)}
               </p>
             </div>
           </div>
@@ -222,10 +225,10 @@ function DirectoryCard({ directory, onResumeDraft }) {
               tabIndex={0}
               className="dropdown-content menu p-2 shadow-lg bg-white rounded-xl w-52 border border-gray-200"
             >
-              {!directory.is_draft && directory.status !== "draft" && (
+              {!project.is_draft && project.status !== "draft" && (
                 <li>
                   <Link
-                    href={`/directory/${directory.slug}`}
+                    href={`/project/${project.slug}`}
                     className="hover:bg-gray-50"
                   >
                     <OpenNewWindow className="w-4 h-4" />
@@ -233,7 +236,7 @@ function DirectoryCard({ directory, onResumeDraft }) {
                   </Link>
                 </li>
               )}
-              {(directory.is_draft || directory.status === "draft") && (
+              {(project.is_draft || project.status === "draft") && (
                 <>
                   <li>
                     <button
@@ -255,7 +258,7 @@ function DirectoryCard({ directory, onResumeDraft }) {
                   </li>
                 </>
               )}
-              {!directory.is_draft && directory.status === "scheduled" && (
+              {!project.is_draft && project.status === "scheduled" && (
                 <li>
                   <button
                     className="hover:bg-gray-50"
@@ -272,7 +275,7 @@ function DirectoryCard({ directory, onResumeDraft }) {
 
         {/* Description */}
         <p className="text-sm text-gray-700 mb-4 line-clamp-2">
-          {directory.short_description}
+          {project.short_description}
         </p>
 
         {/* Stats Grid */}
@@ -281,7 +284,7 @@ function DirectoryCard({ directory, onResumeDraft }) {
             <div className="flex items-center justify-center text-blue-600 mb-1">
               <Plus className="w-4 h-4 mr-1" />
               <span className="font-semibold text-gray-900">
-                {formatNumber(directory.upvotes || 0)}
+                {formatNumber(project.upvotes || 0)}
               </span>
             </div>
             <p className="text-xs text-gray-500">Votes</p>
@@ -290,7 +293,7 @@ function DirectoryCard({ directory, onResumeDraft }) {
             <div className="flex items-center justify-center text-green-600 mb-1">
               <Eye className="w-4 h-4 mr-1" />
               <span className="font-semibold text-gray-900">
-                {formatNumber(directory.views || 0)}
+                {formatNumber(project.views || 0)}
               </span>
             </div>
             <p className="text-xs text-gray-500">Views</p>
@@ -299,7 +302,7 @@ function DirectoryCard({ directory, onResumeDraft }) {
             <div className="flex items-center justify-center text-purple-600 mb-1">
               <OpenNewWindow className="w-4 h-4 mr-1" />
               <span className="font-semibold text-gray-900">
-                {formatNumber(directory.clicks || 0)}
+                {formatNumber(project.clicks || 0)}
               </span>
             </div>
             <p className="text-xs text-gray-500">Clicks</p>
@@ -307,7 +310,7 @@ function DirectoryCard({ directory, onResumeDraft }) {
         </div>
 
         {/* Draft Actions - Only for drafts */}
-        {(directory.is_draft || directory.status === "draft") && (
+        {(project.is_draft || project.status === "draft") && (
           <div className="pt-4 border-t border-gray-200">
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
               <div className="flex items-start space-x-3">
@@ -329,7 +332,7 @@ function DirectoryCard({ directory, onResumeDraft }) {
                     Draft saved
                   </p>
                   <p className="text-xs text-amber-700 mt-1">
-                    {directory.plan === "premium"
+                    {project.plan === "premium"
                       ? "Complete payment to submit your premium launch and get guaranteed dofollow backlinks."
                       : "This submission is saved as a draft. Complete it to launch your project."}
                   </p>
@@ -353,15 +356,15 @@ function DirectoryCard({ directory, onResumeDraft }) {
           </div>
         )}
 
-        {/* Competition Rankings - Only for live directories */}
-        {directory.status === "live" && (
+        {/* Competition Rankings - Only for live projects */}
+        {project.status === "live" && (
           <div className="pt-4 border-t border-gray-200">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Competition Rank:</span>
               <div className="flex items-center space-x-2">
-                {directory.weekly_position ? (
+                {project.weekly_position ? (
                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    W#{directory.weekly_position}
+                    W#{project.weekly_position}
                   </span>
                 ) : (
                   <span className="text-sm text-gray-400">Competing...</span>
@@ -379,18 +382,18 @@ function DashboardContent() {
   const { user, loading: authLoading } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [directories, setDirectories] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(
     searchParams.get("tab") || "overview"
   );
 
-  const handleResumeDraft = (directory) => {
+  const handleResumeDraft = (project) => {
     // Redirect to submit page with draft data pre-filled
     // Store draft data in sessionStorage so submit page can load it
-    sessionStorage.setItem("resumeDraft", JSON.stringify(directory));
-    router.push("/submit?draft=" + directory.id);
+    sessionStorage.setItem("resumeDraft", JSON.stringify(project));
+    router.push("/submit?draft=" + project.id);
   };
 
   const formatNumber = (num) => {
@@ -428,18 +431,18 @@ function DashboardContent() {
     try {
       setLoading(true);
 
-      // Fetch user's directories
-      const directoriesResponse = await fetch("/api/user?type=directories", {
+      // Fetch user's projects
+      const projectsResponse = await fetch("/api/user?type=projects", {
         method: "GET",
         credentials: "include",
       });
-      if (directoriesResponse.ok) {
-        const directoriesData = await directoriesResponse.json();
+      if (projectsResponse.ok) {
+        const projectsData = await projectsResponse.json();
         console.log(
-          "User directories received:",
-          directoriesData.data.directories
+          "User projects received:",
+          projectsData.data.projects
         );
-        setDirectories(directoriesData.data.directories || []);
+        setProjects(projectsData.data.projects || []);
       }
 
       // Fetch user stats
@@ -561,7 +564,7 @@ function DashboardContent() {
               <StatsCard
                 icon={Group}
                 title="Total AI Projects"
-                value={directories.length}
+                value={projects.length}
                 description="Submissions to date"
               />
               <StatsCard
@@ -593,12 +596,12 @@ function DashboardContent() {
                 </p>
               </div>
 
-              {directories.length > 0 ? (
+              {projects.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {directories.map((directory) => (
-                    <DirectoryCard 
-                      key={directory.id} 
-                      directory={directory} 
+                  {projects.map((project) => (
+                    <ProjectCard 
+                      key={project.id} 
+                      project={project} 
                       onResumeDraft={handleResumeDraft}
                     />
                   ))}
@@ -621,7 +624,7 @@ function DashboardContent() {
                       <Plus className="w-4 h-4 mr-2" />
                       Submit Your First AI Project
                     </Link>
-                    <Link href="/directories" className="btn btn-outline">
+                    <Link href="/projects" className="btn btn-outline">
                       Browse Examples
                     </Link>
                   </div>

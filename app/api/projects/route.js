@@ -4,9 +4,9 @@ import { cookies } from "next/headers";
 import { getSupabaseAdmin } from "../../libs/supabase.js";
 import { db } from "../../libs/database.js";
 import { webhookEvents } from "../../libs/webhooks.js";
-// import { DirectorySubmissionSchema } from "../../libs/models/schemas";
+// import { ProjectSubmissionSchema } from "../../libs/models/schemas";
 
-// GET /api/directories - Get directories with filtering and sorting
+// GET /api/projects - Get AI projects with filtering and sorting
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -24,7 +24,7 @@ export async function GET(request) {
         if (existingSlug) {
           return NextResponse.json({
             exists: true,
-            existing_directory: existingSlug.name,
+            existing_project: existingSlug.name,
           });
         }
         
@@ -74,7 +74,7 @@ export async function GET(request) {
       if (duplicateWebsite) {
         return NextResponse.json({
           exists: true,
-          existing_directory: duplicateWebsite.name,
+          existing_project: duplicateWebsite.name,
         });
       }
       
@@ -204,7 +204,7 @@ export async function GET(request) {
         return NextResponse.json({
           success: true,
           data: {
-            directories: [],
+            projects: [],
             pagination: {
               page,
               limit,
@@ -226,7 +226,7 @@ export async function GET(request) {
       }
     }
     
-    // Для Browse страницы (/directories) показываем все live проекты
+    // Для Browse страницы (/projects) показываем все live проекты
     // независимо от того, в каком они статусе (Scheduled/Live/Past)
     // Фильтрация по датам будет на фронтенде для определения бейджей
 
@@ -255,8 +255,8 @@ export async function GET(request) {
     const totalCount = await db.count("apps", filter);
     const totalPages = Math.ceil(totalCount / limit);
 
-    // Fetch directories with sorting
-    const directories = await db.find(
+    // Fetch AI projects with sorting
+    const projects = await db.find(
       "apps", 
       filter,
       {
@@ -285,8 +285,8 @@ export async function GET(request) {
     // Use getUser() instead of getSession() for security
     const { data: { user } } = await supabase.auth.getUser();
     
-    if (user?.id && directories.length > 0) {
-      const appIds = directories.map(dir => dir.id);
+    if (user?.id && projects.length > 0) {
+      const appIds = projects.map(project => project.id);
       const votes = await db.find("votes", {
         user_id: user.id,
         app_id: { $in: appIds },
@@ -298,17 +298,17 @@ export async function GET(request) {
       }, {});
     }
 
-    // Get competition data for each directory and determine status badges
-    const directoriesWithCompetitions = await Promise.all(
-      directories.map(async (dir) => {
+    // Get competition data for each AI project and determine status badges
+    const projectsWithCompetitions = await Promise.all(
+      projects.map(async (project) => {
         let competitions = [];
         let competitionStatus = "unknown";
         let statusBadge = "live"; // Default badge
         let canVote = false; // Можно ли голосовать
         
-        if (dir.weekly_competition_id) {
+        if (project.weekly_competition_id) {
           competitions = await db.find("competitions", {
-            id: dir.weekly_competition_id,
+            id: project.weekly_competition_id,
           });
           
           if (competitions.length > 0) {
@@ -338,8 +338,8 @@ export async function GET(request) {
         }
         
         return {
-          ...dir,
-          userVoted: userVotes[dir.id] || false,
+          ...project,
+          userVoted: userVotes[project.id] || false,
           competitions: competitions,
           competitionStatus: competitionStatus,
           statusBadge: statusBadge, // "scheduled", "live", "past"
@@ -351,7 +351,7 @@ export async function GET(request) {
     return NextResponse.json({
       success: true,
       data: {
-        directories: directoriesWithCompetitions,
+        projects: projectsWithCompetitions,
         pagination: {
           page,
           limit,
@@ -372,7 +372,7 @@ export async function GET(request) {
     });
 
   } catch (error) {
-    console.error("Directories API error:", {
+    console.error("AI Projects API error:", {
       message: error.message,
       stack: error.stack,
       name: error.name,
@@ -390,7 +390,7 @@ export async function GET(request) {
   }
 }
 
-// POST /api/directories - Create a new directory (submission)
+// POST /api/projects - Create a new AI project (submission)
 export async function POST(request) {
   try {
     // Check authentication with proper cookie-based session
@@ -434,7 +434,7 @@ export async function POST(request) {
     const sbCookies = allCookies.filter(c => c.name.includes('sb'));
     
     // Debug logging
-    console.log('POST /api/directories - Session check:', {
+    console.log('POST /api/projects - Session check:', {
       hasSession: !!user,
       hasUser: !!user,
       userId: user?.id,
@@ -463,14 +463,14 @@ export async function POST(request) {
       );
     }
     
-    console.log('Directories API - User authenticated successfully:', {
+    console.log('Projects API - User authenticated successfully:', {
       userId: user.id,
       email: user.email
     });
 
     const body = await request.json();
     
-    console.log('Directory submission - Request body:', {
+    console.log('AI project submission - Request body:', {
       plan: body.plan,
       launch_week: body.launch_week,
       name: body.name,
@@ -573,7 +573,7 @@ export async function POST(request) {
         });
         
         // Return the existing draft ID so we can update it instead of creating new
-        // This will be handled in the directory creation logic below
+        // This will be handled in the project creation logic below
       } else {
         console.error('Slug already exists:', slug);
         return NextResponse.json(
@@ -624,13 +624,13 @@ export async function POST(request) {
           isDraft: duplicateWebsite.is_draft
         });
         
-        // Will be handled in the directory creation logic below
+        // Will be handled in the project creation logic below
       } else {
         return NextResponse.json(
           { 
             error: `This website (${body.website_url}) has already been submitted as "${duplicateWebsite.name}"`, 
             code: "WEBSITE_EXISTS",
-            existing_directory: duplicateWebsite.name,
+            existing_project: duplicateWebsite.name,
           },
           { status: 400 }
         );
@@ -736,8 +736,8 @@ export async function POST(request) {
                             (existingDraft.plan === "premium" && existingDraft.payment_status === false)) &&
                            existingDraft.submitted_by === user.id;
 
-    // Create directory object
-    const directoryData = {
+    // Create AI project object
+    const projectData = {
       // Basic info
       name: body.name,
       slug,
@@ -814,6 +814,11 @@ export async function POST(request) {
       total_engagement: 0,
       
       // Rankings
+      // TODO: Implement advanced ranking system
+      // - Calculate ranking_score based on engagement metrics
+      // - Calculate weekly_score for competition rankings
+      // - Assign weekly_ranking and overall_ranking positions
+      // - Create leaderboard functionality
       weekly_ranking: null,
       overall_ranking: null,
       ranking_score: 0,
@@ -842,48 +847,48 @@ export async function POST(request) {
       // Update existing draft
       console.log('Updating existing draft:', {
         id: existingDraft.id,
-        name: directoryData.name,
-        slug: directoryData.slug,
-        plan: directoryData.plan,
-        status: directoryData.status,
-        is_draft: directoryData.is_draft
+        name: projectData.name,
+        slug: projectData.slug,
+        plan: projectData.plan,
+        status: projectData.status,
+        is_draft: projectData.is_draft
       });
       
       await db.updateOne(
         "apps",
         { id: existingDraft.id },
-        { $set: { ...directoryData, updated_at: new Date() } }
+        { $set: { ...projectData, updated_at: new Date() } }
       );
       
       result = { insertedId: existingDraft.id };
     } else {
-      // Insert new directory
-      console.log('Inserting new directory:', {
-        name: directoryData.name,
-        slug: directoryData.slug,
-        plan: directoryData.plan,
-        status: directoryData.status,
-        is_draft: directoryData.is_draft,
-        payment_status: directoryData.payment_status
+      // Insert new AI project
+      console.log('Inserting new AI project:', {
+        name: projectData.name,
+        slug: projectData.slug,
+        plan: projectData.plan,
+        status: projectData.status,
+        is_draft: projectData.is_draft,
+        payment_status: projectData.payment_status
       });
       
-      result = await db.insertOne("apps", directoryData);
+      result = await db.insertOne("apps", projectData);
     }
     
-    console.log('Directory created successfully:', {
+    console.log('AI project created successfully:', {
       id: result.insertedId.toString(),
       slug
     });
     
-    // Dispatch webhook event for new directory
+    // Dispatch webhook event for new AI project
     try {
-      await webhookEvents.directoryCreated({
-        ...directoryData,
+      await webhookEvents.projectCreated({
+        ...projectData,
         id: result.insertedId
       });
     } catch (webhookError) {
       console.error("Webhook dispatch failed:", webhookError);
-      // Don't fail the directory submission if webhook fails
+      // Don't fail the AI project submission if webhook fails
     }
     
     // Update user submission count
@@ -940,8 +945,8 @@ export async function POST(request) {
         data: {
           id: result.insertedId.toString(),
           slug,
-          status: directoryData.status,
-          is_draft: directoryData.is_draft,
+          status: projectData.status,
+          is_draft: projectData.is_draft,
           message: body.plan === "premium"
             ? isUpdatingDraft 
               ? "Draft updated successfully! Complete payment to submit your premium launch."
@@ -949,12 +954,12 @@ export async function POST(request) {
             : isUpdatingDraft
               ? `AI project updated and scheduled for launch week ${body.launch_week}!`
               : `AI project scheduled for launch week ${body.launch_week}. You'll receive a nofollow link when it launches. Top 3 winners get dofollow links + badges!`,
-          launch_date: directoryData.launch_date,
+          launch_date: projectData.launch_date,
         },
     });
 
   } catch (error) {
-    console.error("Directory submission error:", error);
+    console.error("AI project submission error:", error);
     console.error("Error stack:", error.stack);
     return NextResponse.json(
       { error: "Internal server error", code: "INTERNAL_ERROR", message: error.message },
@@ -963,7 +968,7 @@ export async function POST(request) {
   }
 }
 
-// PUT /api/directories - Update a directory
+// PUT /api/projects - Update an AI project
 export async function PUT(request) {
   try {
     // Check authentication with proper cookie-based session
@@ -992,9 +997,9 @@ export async function PUT(request) {
     }
 
     const body = await request.json();
-    const { directoryId, ...updateFields } = body;
+    const { projectId, ...updateFields } = body;
     
-    if (!directoryId) {
+    if (!projectId) {
       return NextResponse.json(
         { error: "AI Project ID is required", code: "MISSING_ID" },
         { status: 400 }
@@ -1002,12 +1007,12 @@ export async function PUT(request) {
     }
     
     // Verify the AI project exists and belongs to the user
-    const existingDirectory = await db.findOne("apps", {
-      id: directoryId,
+    const existingProject = await db.findOne("apps", {
+      id: projectId,
       submitted_by: user.id
     });
 
-    if (!existingDirectory) {
+    if (!existingProject) {
       return NextResponse.json(
         { error: "AI Project not found", code: "NOT_FOUND" },
         { status: 404 }
@@ -1066,17 +1071,17 @@ export async function PUT(request) {
     if (updateFields.payment_status !== undefined) updateData.payment_status = updateFields.payment_status;
     if (updateFields.dofollow_status !== undefined) updateData.dofollow_status = updateFields.dofollow_status;
 
-    // For premium directories, ensure they're properly set up
-    if (existingDirectory.plan === "premium" && existingDirectory.payment_status === "paid") {
-      updateData.status = "live"; // Premium directories go live immediately
+    // For premium AI projects, ensure they're properly set up
+    if (existingProject.plan === "premium" && existingProject.payment_status === "paid") {
+      updateData.status = "live"; // Premium AI projects go live immediately
       updateData.published_at = new Date();
       updateData.launched_at = new Date();
     }
 
-    // Update the directory
+    // Update the AI project
     const result = await db.updateOne(
       "apps",
-      { id: directoryId },
+      { id: projectId },
       { $set: updateData }
     );
 
@@ -1088,14 +1093,14 @@ export async function PUT(request) {
     }
 
     // Get updated AI project
-    const updatedDirectory = await db.findOne("apps", { id: directoryId });
+    const updatedProject = await db.findOne("apps", { id: projectId });
 
     return NextResponse.json({
       success: true,
       data: {
-        id: updatedDirectory.id,
-        slug: updatedDirectory.slug,
-        status: updatedDirectory.status,
+        id: updatedProject.id,
+        slug: updatedProject.slug,
+        status: updatedProject.status,
         message: "AI project updated successfully!",
       },
     });
@@ -1109,7 +1114,7 @@ export async function PUT(request) {
   }
 }
 
-// DELETE /api/directories - Delete a directory (only drafts can be deleted by users)
+// DELETE /api/projects - Delete an AI project (only drafts can be deleted by users)
 export async function DELETE(request) {
   try {
     // Check authentication with proper cookie-based session
@@ -1138,38 +1143,38 @@ export async function DELETE(request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const directoryId = searchParams.get("id");
+    const projectId = searchParams.get("id");
     
-    if (!directoryId) {
+    if (!projectId) {
       return NextResponse.json(
-        { error: "Directory ID is required", code: "MISSING_ID" },
+        { error: "AI Project ID is required", code: "MISSING_ID" },
         { status: 400 }
       );
     }
     
-    // Verify the directory exists and belongs to the user
-    const existingDirectory = await db.findOne("apps", {
-      id: directoryId,
+    // Verify the AI project exists and belongs to the user
+    const existingProject = await db.findOne("apps", {
+      id: projectId,
       submitted_by: user.id
     });
 
-    if (!existingDirectory) {
+    if (!existingProject) {
       return NextResponse.json(
-        { error: "Directory not found", code: "NOT_FOUND" },
+        { error: "AI Project not found", code: "NOT_FOUND" },
         { status: 404 }
       );
     }
 
     // Only allow deletion of drafts
-    if (!existingDirectory.is_draft && existingDirectory.status !== "draft") {
+    if (!existingProject.is_draft && existingProject.status !== "draft") {
       return NextResponse.json(
         { error: "Only drafts can be deleted", code: "INVALID_STATUS" },
         { status: 400 }
       );
     }
 
-    // Delete the directory
-    await db.deleteOne("apps", { id: directoryId });
+    // Delete the AI project
+    await db.deleteOne("apps", { id: projectId });
 
     return NextResponse.json({
       success: true,
@@ -1177,7 +1182,7 @@ export async function DELETE(request) {
     });
 
   } catch (error) {
-    console.error("Directory deletion error:", error);
+    console.error("AI project deletion error:", error);
     return NextResponse.json(
       { error: "Internal server error", code: "INTERNAL_ERROR" },
       { status: 500 }

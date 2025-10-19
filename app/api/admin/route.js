@@ -54,7 +54,7 @@ async function checkAdminAuth() {
   return { session: { user } };
 }
 
-// GET /api/admin?type=directories|competitions|stats|link-type|completable-competitions&...
+// GET /api/admin?type=projects|competitions|stats|link-type|completable-competitions&...
 export async function GET(request) {
   try {
     const authCheck = await checkAdminAuth();
@@ -73,8 +73,8 @@ export async function GET(request) {
     }
 
     switch (type) {
-      case "directories":
-        return await getDirectories(searchParams);
+      case "projects":
+        return await getProjects(searchParams);
       case "competitions":
         return await getCompetitions(searchParams);
       case "stats":
@@ -85,7 +85,7 @@ export async function GET(request) {
         return await getCompletableCompetitions();
       default:
         return NextResponse.json(
-          { error: "Invalid type parameter. Use: directories, competitions, stats, link-type, completable-competitions" },
+          { error: "Invalid type parameter. Use: projects, competitions, stats, link-type, completable-competitions" },
           { status: 400 }
         );
     }
@@ -98,7 +98,7 @@ export async function GET(request) {
   }
 }
 
-// PUT /api/admin?type=directories&id=...
+// PUT /api/admin?type=projects&id=...
 export async function PUT(request) {
   try {
     const authCheck = await checkAdminAuth();
@@ -109,8 +109,8 @@ export async function PUT(request) {
     const id = searchParams.get("id");
 
     switch (type) {
-      case "directories":
-        return await updateDirectory(id, request);
+      case "projects":
+        return await updateProject(id, request);
       case "competitions":
         return await updateCompetition(id, request);
       default:
@@ -138,8 +138,8 @@ export async function POST(request) {
     const action = searchParams.get("action");
 
     switch (action) {
-      case "approve-directory":
-        return await approveDirectory(request, authCheck.session);
+      case "approve-project":
+        return await approveProject(request, authCheck.session);
       case "complete-competition":
         return await completeCompetition(request);
       case "link-type":
@@ -148,7 +148,7 @@ export async function POST(request) {
         return await updateWinnerBadge(request, authCheck.session);
       default:
         return NextResponse.json(
-          { error: "Invalid action parameter. Use: approve-directory, complete-competition, link-type, winner-badge" },
+          { error: "Invalid action parameter. Use: approve-project, complete-competition, link-type, winner-badge" },
           { status: 400 }
         );
     }
@@ -161,7 +161,7 @@ export async function POST(request) {
   }
 }
 
-// DELETE /api/admin?type=directories&id=...
+// DELETE /api/admin?type=projects&id=...
 export async function DELETE(request) {
   try {
     const authCheck = await checkAdminAuth();
@@ -172,8 +172,8 @@ export async function DELETE(request) {
     const id = searchParams.get("id");
 
     switch (type) {
-      case "directories":
-        return await deleteDirectory(id);
+      case "projects":
+        return await deleteProject(id);
       default:
         return NextResponse.json(
           { error: "Invalid type parameter" },
@@ -190,7 +190,7 @@ export async function DELETE(request) {
 }
 
 // Helper functions
-async function getDirectories(searchParams) {
+async function getProjects(searchParams) {
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "25");
   const status = searchParams.get("status");
@@ -217,7 +217,7 @@ async function getDirectories(searchParams) {
 
   const skip = (page - 1) * limit;
   
-  const [directories, total] = await Promise.all([
+  const [projects, total] = await Promise.all([
     db.find("apps", filter, {
       skip,
       limit,
@@ -229,7 +229,7 @@ async function getDirectories(searchParams) {
   return NextResponse.json({
     success: true,
     data: {
-      directories,
+      projects,
       pagination: {
         page,
         limit,
@@ -256,8 +256,8 @@ async function getStats(searchParams) {
   try {
     // Simple counts without complex aggregations
     const [
-      totalDirectories,
-      pendingDirectories,
+      totalProjects,
+      pendingProjects,
       allVotes,
     ] = await Promise.all([
       db.count("apps").catch(err => {
@@ -278,8 +278,8 @@ async function getStats(searchParams) {
     return NextResponse.json({
       success: true,
       data: {
-        totalDirectories,
-        pendingDirectories,
+        totalProjects,
+        pendingProjects,
         totalVotes: allVotes,
       },
     });
@@ -289,18 +289,18 @@ async function getStats(searchParams) {
     return NextResponse.json({
       success: true,
       data: {
-        totalDirectories: 0,
-        pendingDirectories: 0,
+        totalProjects: 0,
+        pendingProjects: 0,
         totalVotes: 0,
       },
     });
   }
 }
 
-async function updateDirectory(id, request) {
+async function updateProject(id, request) {
   if (!id || typeof id !== 'string') {
     return NextResponse.json(
-      { error: "Invalid directory ID" },
+      { error: "Invalid project ID" },
       { status: 400 }
     );
   }
@@ -325,14 +325,14 @@ async function updateDirectory(id, request) {
 
   if (result.matchedCount === 0) {
     return NextResponse.json(
-      { error: "Directory not found" },
+      { error: "Project not found" },
       { status: 404 }
     );
   }
 
   return NextResponse.json({
     success: true,
-    message: "Directory updated successfully",
+    message: "Project updated successfully",
   });
 }
 
@@ -365,10 +365,10 @@ async function updateCompetition(id, request) {
   });
 }
 
-async function deleteDirectory(id) {
+async function deleteProject(id) {
   if (!id || typeof id !== 'string') {
     return NextResponse.json(
-      { error: "Invalid directory ID" },
+      { error: "Invalid project ID" },
       { status: 400 }
     );
   }
@@ -377,26 +377,26 @@ async function deleteDirectory(id) {
 
   if (result.deletedCount === 0) {
     return NextResponse.json(
-      { error: "Directory not found" },
+      { error: "Project not found" },
       { status: 404 }
     );
   }
 
   return NextResponse.json({
     success: true,
-    message: "Directory deleted successfully",
+    message: "Project deleted successfully",
   });
 }
 
-// Approve or reject a directory submission
-async function approveDirectory(request, session) {
+// Approve or reject a project submission
+async function approveProject(request, session) {
   const body = await request.json();
-  const { directoryId, action, rejectionReason } = body;
+  const { projectId, action, rejectionReason } = body;
 
   // Validate input
-  if (!directoryId || !action) {
+  if (!projectId || !action) {
     return NextResponse.json(
-      { error: "directoryId and action are required", code: "INVALID_INPUT" },
+      { error: "projectId and action are required", code: "INVALID_INPUT" },
       { status: 400 }
     );
   }
@@ -415,45 +415,45 @@ async function approveDirectory(request, session) {
     );
   }
 
-  // Fetch the directory
-  const directory = await db.findOne("apps", { id: directoryId });
+  // Fetch the project
+  const project = await db.findOne("apps", { id: projectId });
 
-  if (!directory) {
+  if (!project) {
     return NextResponse.json(
-      { error: "Directory not found", code: "NOT_FOUND" },
+      { error: "Project not found", code: "NOT_FOUND" },
       { status: 404 }
     );
   }
 
   // Get user email for notifications
-  const user = await db.findOne("users", { id: directory.submitted_by });
-  const userEmail = user?.email || directory.contact_email;
+  const user = await db.findOne("users", { id: project.submitted_by });
+  const userEmail = user?.email || project.contact_email;
 
   if (action === 'approve') {
-    // Check the competition status to determine directory status
-    let directoryStatus = 'live'; // Default to live if no competition
+    // Check the competition status to determine project status
+    let projectStatus = 'live'; // Default to live if no competition
     let shouldPublishNow = true;
     
-    if (directory.weekly_competition_id) {
-      const competition = await db.findOne("competitions", { id: directory.weekly_competition_id });
+    if (project.weekly_competition_id) {
+      const competition = await db.findOne("competitions", { id: project.weekly_competition_id });
       
       if (competition) {
-        // If competition is upcoming, set directory to scheduled
-        // If competition is active, set directory to live
-        // If competition is completed/cancelled, set directory to live (fallback)
+        // If competition is upcoming, set project to scheduled
+        // If competition is active, set project to live
+        // If competition is completed/cancelled, set project to live (fallback)
         if (competition.status === 'upcoming') {
-          directoryStatus = 'scheduled';
+          projectStatus = 'scheduled';
           shouldPublishNow = false;
         } else if (competition.status === 'active') {
-          directoryStatus = 'live';
+          projectStatus = 'live';
           shouldPublishNow = true;
         }
       }
     }
     
-    // Approve the directory
+    // Approve the project
     const updateData = {
-      status: directoryStatus,
+      status: projectStatus,
       approved: true,
       // updated_at is handled by DB triggers
     };
@@ -467,7 +467,7 @@ async function approveDirectory(request, session) {
     }
 
     // If premium plan, set dofollow status
-    if (directory.plan === 'premium') {
+    if (project.plan === 'premium') {
       updateData.dofollow_status = true;
       updateData.link_type = 'dofollow';
       updateData.dofollow_reason = 'premium_plan';
@@ -476,13 +476,13 @@ async function approveDirectory(request, session) {
 
     const result = await db.updateOne(
       "apps",
-      { id: directoryId },
+      { id: projectId },
       { $set: updateData }
     );
 
     if (result.matchedCount === 0) {
       return NextResponse.json(
-        { error: "Failed to update directory", code: "UPDATE_FAILED" },
+        { error: "Failed to update project", code: "UPDATE_FAILED" },
         { status: 500 }
       );
     }
@@ -493,10 +493,10 @@ async function approveDirectory(request, session) {
         await notificationManager.sendSubmissionApprovalNotification({
           userId: user.id,
           userEmail: userEmail,
-          directory: {
-            id: directory.id,
-            name: directory.name,
-            slug: directory.slug
+          project: {
+            id: project.id,
+            name: project.name,
+            slug: project.slug
           }
         });
       }
@@ -506,9 +506,9 @@ async function approveDirectory(request, session) {
       // Fallback to legacy email system
       try {
         if (userEmail) {
-          await emailNotifications.directoryApproved(userEmail, {
-            directoryName: directory.name,
-            slug: directory.slug,
+          await emailNotifications.projectApproved(userEmail, {
+            projectName: project.name,
+            slug: project.slug,
           });
         }
       } catch (emailError) {
@@ -516,28 +516,28 @@ async function approveDirectory(request, session) {
       }
     }
 
-    // Trigger webhook for approved directory
+    // Trigger webhook for approved project
     try {
-      await webhookEvents.directoryApproved(directory);
+      await webhookEvents.projectApproved(project);
     } catch (webhookError) {
       console.error("Failed to trigger webhook:", webhookError);
     }
 
     return NextResponse.json({
       success: true,
-      message: directoryStatus === 'scheduled' 
-        ? "Directory approved and scheduled for launch" 
-        : "Directory approved and is now live",
+      message: projectStatus === 'scheduled' 
+        ? "Project approved and scheduled for launch" 
+        : "Project approved and is now live",
       data: {
-        directoryId,
-        status: directoryStatus,
+        projectId,
+        status: projectStatus,
         emailSent: !!userEmail,
-        scheduledForLaunch: directoryStatus === 'scheduled',
+        scheduledForLaunch: projectStatus === 'scheduled',
       },
     });
 
   } else if (action === 'reject') {
-    // Reject the directory
+    // Reject the project
     const updateData = {
       status: 'rejected',
       approved: false,
@@ -547,13 +547,13 @@ async function approveDirectory(request, session) {
 
     const result = await db.updateOne(
       "apps",
-      { id: directoryId },
+      { id: projectId },
       { $set: updateData }
     );
 
     if (result.matchedCount === 0) {
       return NextResponse.json(
-        { error: "Failed to update directory", code: "UPDATE_FAILED" },
+        { error: "Failed to update project", code: "UPDATE_FAILED" },
         { status: 500 }
       );
     }
@@ -564,10 +564,10 @@ async function approveDirectory(request, session) {
         await notificationManager.sendSubmissionDeclineNotification({
           userId: user.id,
           userEmail: userEmail,
-          directory: {
-            id: directory.id,
-            name: directory.name,
-            slug: directory.slug
+          project: {
+            id: project.id,
+            name: project.name,
+            slug: project.slug
           },
           rejectionReason: rejectionReason
         });
@@ -578,8 +578,8 @@ async function approveDirectory(request, session) {
       // Fallback to legacy email system
       try {
         if (userEmail) {
-          await emailNotifications.directoryRejected(userEmail, {
-            directoryName: directory.name,
+          await emailNotifications.projectRejected(userEmail, {
+            projectName: project.name,
             rejectionReason: rejectionReason,
           });
         }
@@ -588,18 +588,18 @@ async function approveDirectory(request, session) {
       }
     }
 
-    // Trigger webhook for rejected directory
+    // Trigger webhook for rejected project
     try {
-      await webhookEvents.directoryRejected(directory, rejectionReason);
+      await webhookEvents.projectRejected(project, rejectionReason);
     } catch (webhookError) {
       console.error("Failed to trigger webhook:", webhookError);
     }
 
     return NextResponse.json({
       success: true,
-      message: "Directory rejected successfully",
+      message: "Project rejected successfully",
       data: {
-        directoryId,
+        projectId,
         status: 'rejected',
         rejectionReason,
         emailSent: !!userEmail,
@@ -705,7 +705,7 @@ async function getCompletableCompetitions() {
 // Get link type information
 async function getLinkTypeInfo(searchParams) {
   const action = searchParams.get("action");
-  const directoryId = searchParams.get("directoryId");
+  const projectId = searchParams.get("projectId");
 
   // Get link type statistics
   if (action === "stats") {
@@ -713,19 +713,19 @@ async function getLinkTypeInfo(searchParams) {
     return NextResponse.json({ success: true, stats });
   }
 
-  // Get link type history for a directory
-  if (action === "history" && directoryId) {
-    const history = await getLinkTypeHistory(directoryId);
+  // Get link type history for a project
+  if (action === "history" && projectId) {
+    const history = await getLinkTypeHistory(projectId);
     return NextResponse.json({ success: true, history });
   }
 
-  return NextResponse.json({ error: "Invalid action or missing directoryId" }, { status: 400 });
+  return NextResponse.json({ error: "Invalid action or missing projectId" }, { status: 400 });
 }
 
-// Update link type for directories
+// Update link type for projects
 async function updateLinkType(request, session) {
   const body = await request.json();
-  const { action, directoryId, linkType, directoryIds } = body;
+  const { action, projectId, linkType, projectIds } = body;
 
   if (!action) {
     return NextResponse.json({ error: "Action is required" }, { status: 400 });
@@ -735,51 +735,51 @@ async function updateLinkType(request, session) {
 
   switch (action) {
     case "toggle":
-      if (!directoryId) {
+      if (!projectId) {
         return NextResponse.json(
-          { error: "directoryId is required" },
+          { error: "projectId is required" },
           { status: 400 }
         );
       }
-      result = await toggleLinkType(directoryId, session.user.id);
+      result = await toggleLinkType(projectId, session.user.id);
       return NextResponse.json({
         success: true,
         message: `Link type changed to ${result.link_type}`,
-        directory: result,
+        project: result,
       });
 
     case "upgrade":
-      if (!directoryId) {
+      if (!projectId) {
         return NextResponse.json(
-          { error: "directoryId is required" },
+          { error: "projectId is required" },
           { status: 400 }
         );
       }
-      result = await upgradeToDofollow(directoryId, session.user.id);
+      result = await upgradeToDofollow(projectId, session.user.id);
       return NextResponse.json({
         success: true,
         message: "Upgraded to dofollow",
-        directory: result,
+        project: result,
       });
 
     case "downgrade":
-      if (!directoryId) {
+      if (!projectId) {
         return NextResponse.json(
-          { error: "directoryId is required" },
+          { error: "projectId is required" },
           { status: 400 }
         );
       }
-      result = await downgradeToNofollow(directoryId, session.user.id);
+      result = await downgradeToNofollow(projectId, session.user.id);
       return NextResponse.json({
         success: true,
         message: "Downgraded to nofollow",
-        directory: result,
+        project: result,
       });
 
     case "bulk":
-      if (!directoryIds || !Array.isArray(directoryIds)) {
+      if (!projectIds || !Array.isArray(projectIds)) {
         return NextResponse.json(
-          { error: "directoryIds array is required" },
+          { error: "projectIds array is required" },
           { status: 400 }
         );
       }
@@ -790,8 +790,8 @@ async function updateLinkType(request, session) {
         );
       }
 
-      const updates = directoryIds.map(id => ({
-        directoryId: id,
+      const updates = projectIds.map(id => ({
+        projectId: id,
         linkType: linkType,
       }));
 
@@ -807,15 +807,15 @@ async function updateLinkType(request, session) {
   }
 }
 
-// Update winner badge for a directory
+// Update winner badge for a project
 async function updateWinnerBadge(request, session) {
   try {
     const body = await request.json();
-    const { action, directoryId, weekly_position } = body;
+    const { action, projectId, weekly_position } = body;
 
-    if (!directoryId) {
+    if (!projectId) {
       return NextResponse.json(
-        { error: "directoryId is required" },
+        { error: "projectId is required" },
         { status: 400 }
       );
     }
@@ -828,16 +828,16 @@ async function updateWinnerBadge(request, session) {
       );
     }
 
-    // Get the directory to verify it exists
-    const directory = await db.findOne("apps", { id: directoryId });
-    if (!directory) {
+    // Get the project to verify it exists
+    const project = await db.findOne("apps", { id: projectId });
+    if (!project) {
       return NextResponse.json(
-        { error: "Directory not found" },
+        { error: "Project not found" },
         { status: 404 }
       );
     }
 
-    // Update the directory with new winner position
+    // Update the project with new winner position
     const updateData = {
       weekly_position: weekly_position,
       updated_at: new Date()
@@ -851,26 +851,29 @@ async function updateWinnerBadge(request, session) {
       updateData.dofollow_awarded_at = new Date();
     } else if (weekly_position === null) {
       // If removing winner badge, keep link type but update reason
-      if (directory.dofollow_reason === "weekly_winner") {
+      if (project.dofollow_reason === "weekly_winner") {
         updateData.dofollow_reason = "manual_upgrade";
       }
     }
 
-    const updatedDirectory = await db.updateOne("apps", { id: directoryId }, updateData);
+    const result = await db.updateOne("apps", { id: projectId }, { $set: updateData });
 
-    if (!updatedDirectory) {
+    if (result.matchedCount === 0) {
       return NextResponse.json(
-        { error: "Failed to update directory" },
+        { error: "Failed to update project" },
         { status: 500 }
       );
     }
+
+    // Fetch the updated project to return
+    const updatedProject = await db.findOne("apps", { id: projectId });
 
     return NextResponse.json({
       success: true,
       message: weekly_position 
         ? `Winner badge updated to ${weekly_position}${weekly_position === 1 ? 'st' : weekly_position === 2 ? 'nd' : 'rd'} place`
         : "Winner badge removed",
-      directory: updatedDirectory,
+      project: updatedProject,
     });
 
   } catch (error) {

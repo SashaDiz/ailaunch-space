@@ -89,17 +89,23 @@ export async function GET(request) {
     if (available === "true") {
       const now = new Date();
       
+      // Clean up any problematic competitions first
+      await cleanupProblematicCompetitions();
+      
       // Create upcoming weeks if they don't exist
       await createUpcomingWeeks();
       
-      // Get upcoming weekly competitions (including current week if it's not over)
-      // Users can submit to any week that hasn't ended yet (active or upcoming)
+      // Get the next Monday that hasn't started yet (future weeks only)
+      const nextMonday = getNextMondayStart();
+      
+      // Get upcoming weekly competitions (only future weeks)
+      // Users can only submit to weeks that start in the future
       const upcomingWeeks = await db.find(
         "competitions",
         {
           type: "weekly",
           status: { $in: ["active", "upcoming"] },
-          end_date: { $gt: now }, // Week hasn't ended yet
+          start_date: { $gte: nextMonday }, // Week starts in the future
         },
         {
           sort: { start_date: 1 }, // Earliest first
@@ -216,30 +222,73 @@ function getNextMondayStart() {
   return nextMonday;
 }
 
+// Helper function to get ISO week number
+function getISOWeekNumber(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+// Helper function to cleanup problematic competitions
+async function cleanupProblematicCompetitions() {
+  const now = new Date();
+  const nextMonday = getNextMondayStart();
+  
+  try {
+    // Find competitions that are marked as active/upcoming but have already passed
+    const problematicCompetitions = await db.find("competitions", {
+      type: "weekly",
+      status: { $in: ["active", "upcoming"] },
+      end_date: { $lt: now } // Competition has already ended
+    });
+    
+    if (problematicCompetitions.length > 0) {
+      console.log(`Found ${problematicCompetitions.length} problematic competitions to clean up`);
+      
+      // Mark them as completed
+      await db.updateMany(
+        "competitions",
+        {
+          id: { $in: problematicCompetitions.map(c => c.id) }
+        },
+        {
+          $set: {
+            status: "completed"
+          }
+        }
+      );
+      
+      console.log("Cleaned up problematic competitions");
+    }
+  } catch (error) {
+    console.error("Error cleaning up problematic competitions:", error);
+  }
+}
+
 // Helper function to create upcoming weekly competitions
 // Ensures there are always at least 5 months (20 weeks) of available launch weeks
 async function createUpcomingWeeks() {
   const now = new Date();
   const weeksToEnsure = 20; // Always maintain 5 months (20 weeks) of available launch weeks
   
-  // Check how many upcoming/active weeks already exist
+  // Get the next Monday that hasn't started yet (future weeks only)
+  const nextMonday = getNextMondayStart();
+  
+  // Check how many upcoming/active weeks already exist that start in the future
   const existingUpcomingWeeks = await db.count("competitions", {
     type: "weekly",
     status: { $in: ["active", "upcoming"] },
-    start_date: { $gte: now }
+    start_date: { $gte: nextMonday } // Only count weeks that start from next Monday onwards
   });
-  
-  console.log(`Found ${existingUpcomingWeeks} existing upcoming weeks`);
   
   // Calculate how many weeks we need to create
   const weeksToCreate = Math.max(weeksToEnsure - existingUpcomingWeeks, 0);
   
   if (weeksToCreate === 0) {
-    console.log('Sufficient upcoming weeks already exist');
     return;
   }
-  
-  console.log(`Creating ${weeksToCreate} new upcoming weeks`);
   
   // Find the latest week in the database to continue from there
   const latestWeek = await db.findOne("competitions", {
@@ -248,27 +297,33 @@ async function createUpcomingWeeks() {
     sort: { start_date: -1 }
   });
   
+  // Calculate starting week offset from next Monday
   let startFromWeek = 0;
   if (latestWeek) {
-    // Calculate how many weeks from next Monday the latest week is
-    const nextMonday = getNextMondayStart();
-    const weeksDiff = Math.floor((new Date(latestWeek.start_date) - nextMonday) / (7 * 24 * 60 * 60 * 1000));
-    startFromWeek = weeksDiff + 1;
+    const latestWeekStart = new Date(latestWeek.start_date);
+    if (latestWeekStart >= nextMonday) {
+      // Latest week is in the future, start from the week after it
+      const weeksDiff = Math.floor((latestWeekStart - nextMonday) / (7 * 24 * 60 * 60 * 1000));
+      startFromWeek = weeksDiff + 1;
+    }
   }
   
   for (let i = startFromWeek; i < startFromWeek + weeksToCreate; i++) {
-    const weekStart = new Date(getNextMondayStart());
+    const weekStart = new Date(nextMonday);
     weekStart.setDate(weekStart.getDate() + (i * 7));
+    
+    // Ensure the week starts in the future
+    if (weekStart <= now) {
+      continue; // Skip weeks that are not in the future
+    }
     
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
     weekEnd.setHours(7, 59, 59, 999); // End at 11:59:59 PM Sunday PST (7:59 AM Monday UTC)
     
-    // Generate week number and competition ID
+    // Generate week number using ISO week numbering for consistency
     const year = weekStart.getFullYear();
-    const startOfYear = new Date(year, 0, 1);
-    const days = Math.floor((weekStart - startOfYear) / (24 * 60 * 60 * 1000));
-    const weekNumber = Math.ceil((days + startOfYear.getDay() + 1) / 7);
+    const weekNumber = getISOWeekNumber(weekStart);
     const competitionId = `${year}-W${String(weekNumber).padStart(2, "0")}`;
     
     // Check if competition already exists
@@ -299,7 +354,6 @@ async function createUpcomingWeeks() {
       };
       
       await db.insertOne("competitions", weeklyCompetition);
-      console.log(`Created weekly competition: ${competitionId}`);
     }
   }
 }
@@ -360,37 +414,33 @@ async function updateExpiredCompetitions() {
       }
     );
 
-    // CRITICAL: Activate directories when their launch week becomes active
+    // CRITICAL: Activate projects when their launch week becomes active
     for (const competition of newlyActivatedCompetitions) {
-      await activateDirectoriesForCompetition(competition); // Pass the entire competition object
+      await activateProjectsForCompetition(competition); // Pass the entire competition object
     }
     
-    console.log("Competition statuses updated");
   } catch (error) {
     console.error("Failed to update competition statuses:", error);
   }
 }
 
-// Process expired competition (award winners and update directories)
+// Process expired competition (award winners and update projects)
 async function processExpiredCompetition(competition) {
   try {
-    console.log(`Auto-processing expired competition: ${competition.competition_id}`);
-    
-    // Get all directories in this competition sorted by votes, then premium badge
-    const directories = await db.find("apps", {
+    // Get all projects in this competition sorted by votes, then premium badge
+    const projects = await db.find("apps", {
       weekly_competition_id: competition.id, // UUID reference
       status: "live"
     }, {
       sort: { upvotes: -1, premium_badge: -1, created_at: -1 }
     });
     
-    if (directories.length === 0) {
-      console.log(`No directories found for competition ${competition.competition_id}`);
+    if (projects.length === 0) {
       return;
     }
     
     // Award winners (top 3)
-    const winners = directories.slice(0, 3);
+    const winners = projects.slice(0, 3);
     const winnerIds = winners.map(d => d.id);
     
     // Award winner badges and dofollow links
@@ -405,8 +455,6 @@ async function processExpiredCompetition(competition) {
       });
       
       if (!existing) {
-        console.log(`Auto-awarding position ${position} to ${winner.name}`);
-        
         await db.updateOne("apps",
           { id: winner.id },
           {
@@ -422,7 +470,7 @@ async function processExpiredCompetition(competition) {
       }
     }
     
-    // Remove directories from weekly display
+    // Remove projects from weekly display
     await db.updateMany("apps",
       { 
         weekly_competition_id: competition.id, // UUID reference
@@ -437,31 +485,25 @@ async function processExpiredCompetition(competition) {
       }
     )
     
-    console.log('Expired competition processed automatically', { competitionId: competition.competition_id });
-    
   } catch (error) {
     console.error('Failed to process expired competition:', { competitionId: competition.competition_id, error });
   }
 }
 
-// Function to activate scheduled directories when their launch week starts
-async function activateDirectoriesForCompetition(competition) {
+// Function to activate scheduled projects when their launch week starts
+async function activateProjectsForCompetition(competition) {
   try {
-    console.log(`Activating scheduled directories for competition: ${competition.competition_id}`);
-    
-    // Find all scheduled directories for this weekly competition
-    const scheduledDirectories = await db.find("apps", {
+    // Find all scheduled projects for this weekly competition
+    const scheduledProjects = await db.find("apps", {
       weekly_competition_id: competition.id, // UUID reference
       status: "scheduled"
     });
     
-    console.log(`Found ${scheduledDirectories.length} scheduled directories for ${competition.competition_id}`);
-    
-    if (scheduledDirectories.length === 0) {
+    if (scheduledProjects.length === 0) {
       return;
     }
     
-    // Activate directories: scheduled -> live
+    // Activate projects: scheduled -> live
     const result = await db.updateMany("apps",
       { 
         weekly_competition_id: competition.id, // UUID reference
@@ -477,9 +519,7 @@ async function activateDirectoriesForCompetition(competition) {
       }
     );
     
-    console.log(`✅ Activated ${result.modifiedCount} directories for competition ${competition.competition_id}`);
-    
   } catch (error) {
-    console.error('Failed to activate directories for competition:', { competitionId: competition.competition_id, error });
+    console.error('Failed to activate projects for competition:', { competitionId: competition.competition_id, error });
   }
 }
