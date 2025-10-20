@@ -19,7 +19,7 @@ export default function PrivacyPage() {
             
             <h2 className="text-2xl font-semibold mb-4">1. Introduction</h2>
             <p className="text-base-content/70 mb-4">
-              At AI Launch Space ("we," "our," or "us"), we are committed to protecting your privacy and personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform and services.
+              At AI Launch Space ("we," "our," or "us"), we are committed to protecting your privacy and personal information. AI Launch Space is a discovery and launch platform connecting creators with early adopters. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform and services.
             </p>
             <p className="text-base-content/70 mb-4">
               By using our Platform, you consent to the data practices described in this Privacy Policy. If you do not agree with the terms of this Privacy Policy, please do not access or use the Platform.

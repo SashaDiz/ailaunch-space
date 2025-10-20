@@ -26,13 +26,13 @@ export default function TermsPage() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">2. Description of Service</h2>
             <p className="text-base-content/70 mb-4">
-              AI Launch Space is a platform that allows users to submit and discover AI projects, tools, and applications. Our services include:
+              AI Launch Space is a discovery and launch platform connecting creators with early adopters. Inspired by Product Hunt and Uneed.best, it features a curated directory where entrepreneurs, developers, and makers showcase digital products, SaaS tools, and creative projects. Our services include:
             </p>
             <ul className="list-disc list-inside space-y-2 text-base-content/70 mb-4">
               <li>Project submission and listing services</li>
               <li>Weekly competitions and voting systems</li>
               <li>Premium submission services with enhanced features</li>
-              <li>Backlink and SEO services for approved projects</li>
+              <li>Community exposure and feedback systems</li>
               <li>Newsletter and communication services</li>
               <li>Analytics and performance tracking</li>
             </ul>
@@ -72,7 +72,7 @@ export default function TermsPage() {
             </p>
             <ul className="list-disc list-inside space-y-2 text-base-content/70 mb-4">
               <li><strong>Standard Plan (Free):</strong> Basic project listing with community voting eligibility</li>
-              <li><strong>Premium Plan ($15):</strong> Enhanced features including priority placement, guaranteed backlinks, and premium badge</li>
+              <li><strong>Premium Plan ($15):</strong> Enhanced features including priority placement, extended homepage exposure, premium badge, and enhanced social media promotion</li>
             </ul>
 
             <h3 className="text-xl font-semibold mb-3">4.3 Content Moderation</h3>
@@ -97,7 +97,31 @@ export default function TermsPage() {
 
             <h3 className="text-xl font-semibold mb-3">5.2 Refund Policy</h3>
             <p className="text-base-content/70 mb-4">
-              All payments for premium services are final. Refunds may be considered on a case-by-case basis for technical issues that prevent service delivery.
+              We offer refunds for premium services under the following circumstances:
+            </p>
+            <ul className="list-disc list-inside space-y-2 text-base-content/70 mb-4">
+              <li><strong>Technical Issues:</strong> If we are unable to deliver the promised premium services due to technical problems on our end</li>
+              <li><strong>Service Non-Delivery:</strong> If your premium submission is not processed or published within 48 hours of the scheduled launch date (for immediate launches) or within 48 hours of the scheduled date (for future launches)</li>
+              <li><strong>Duplicate Payment:</strong> If you are accidentally charged multiple times for the same service</li>
+              <li><strong>Service Cancellation:</strong> If you request cancellation before your submission is processed and published on the scheduled launch date</li>
+            </ul>
+            <p className="text-base-content/70 mb-4">
+              <strong>Refund Exclusions:</strong> We do not provide refunds for:
+            </p>
+            <ul className="list-disc list-inside space-y-2 text-base-content/70 mb-4">
+              <li>Change of mind after service delivery</li>
+              <li>Dissatisfaction with voting results or community response</li>
+              <li>Project rejection due to content policy violations</li>
+              <li>Technical issues on your end (broken links, inaccessible websites, etc.)</li>
+              <li>Requests made more than 7 days after payment</li>
+              <li>Change of mind about scheduled launch dates (you can reschedule but not get a refund)</li>
+            </ul>
+            <p className="text-base-content/70 mb-4">
+              <strong>Refund Process:</strong> To request a refund, contact us at{" "}
+              <a href="mailto:support@ailaunchspace.com" className="link link-primary">
+                support@ailaunchspace.com
+              </a>
+              {" "}with your payment details and reason for the refund request. Refunds will be processed within 5-10 business days and returned to your original payment method.
             </p>
 
             <h3 className="text-xl font-semibold mb-3">5.3 Payment Processing</h3>
