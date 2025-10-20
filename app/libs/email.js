@@ -214,6 +214,90 @@ export const emailTemplates = {
     `
   },
 
+  // Competition notifications (batch for multiple projects)
+  weeklyCompetitionEntryBatch: {
+    subject: () => `🚀 Your projects entered this week's competition!`,
+    html: (data) => `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>Competition Entry Confirmed</title>
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8fafc;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
+                  ALS
+                </div>
+                <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: 700;">
+                  Competition Entries Confirmed! 🚀
+                </h1>
+              </div>
+              
+              <div style="text-align: center; margin-bottom: 20px;">
+                <p style="color: #6b7280; margin: 0; font-size: 16px;">
+                  Your projects have been entered into this week's competition and are now live for voting.
+                </p>
+              </div>
+
+              <div style="background: linear-gradient(135deg, #10b981, #059669); color: white; border-radius: 12px; padding: 24px; margin: 30px 0; text-align: center;">
+                <h3 style="margin: 0 0 15px 0; font-size: 20px;">Competition Details</h3>
+                <div style="display: flex; justify-content: space-around; text-align: center;">
+                  <div>
+                    <div style="font-size: 24px; font-weight: bold;">${data.competitionWeek}</div>
+                    <div style="font-size: 14px; opacity: 0.9;">Competition Week</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 24px; font-weight: bold;">${data.endDate}</div>
+                    <div style="font-size: 14px; opacity: 0.9;">Ends</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin: 20px 0;">
+                <h3 style="margin: 0 0 10px 0; color: #1f2937; font-size: 18px;">Your Projects</h3>
+                <ul style="margin: 0; padding-left: 20px; color: #4b5563;">
+                  ${Array.isArray(data.projects) ? data.projects.map(p => `
+                    <li style="margin-bottom: 10px;">
+                      <a href="${process.env.NEXT_PUBLIC_APP_URL}/project/${p.slug}" style="color: #ED0D79; text-decoration: none; font-weight: 600;">${p.name}</a>
+                    </li>
+                  `).join('') : ''}
+                </ul>
+              </div>
+
+              <div style="background: #f3f4f6; border-radius: 8px; padding: 24px; margin: 30px 0;">
+                <h3 style="margin: 0 0 15px 0; color: #1f2937; font-size: 18px;">How to promote your launches:</h3>
+                <ul style="margin: 0; padding-left: 20px; color: #4b5563;">
+                  <li style="margin-bottom: 8px;">Share your projects on social media</li>
+                  <li style="margin-bottom: 8px;">Ask friends and colleagues to vote</li>
+                  <li style="margin-bottom: 8px;">Post in relevant communities</li>
+                  <li>Engage with other participants</li>
+                </ul>
+              </div>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" 
+                   style="display: inline-block; background: #6b7280; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                  Track Performance
+                </a>
+              </div>
+
+              <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; text-align: center;">
+                <p style="color: #6b7280; font-size: 14px; margin: 0;">
+                  Good luck with your launches!<br>
+                  The AI Launch Space Team
+                </p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `
+  },
+
   competitionWinners: {
     subject: (competitionType, position) => `🏆 Congratulations! You placed #${position} in the ${competitionType} competition!`,
     html: (data) => `
@@ -778,6 +862,10 @@ export const notificationService = {
   // Competition notifications
   async weeklyCompetitionEntry(userEmail, projectData) {
     return await sendEmail(userEmail, 'weeklyCompetitionEntry', projectData);
+  },
+
+  async weeklyCompetitionEntryBatch(userEmail, data) {
+    return await sendEmail(userEmail, 'weeklyCompetitionEntryBatch', data);
   },
 
   async competitionWinners(userEmail, competitionData) {

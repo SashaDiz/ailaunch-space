@@ -11,9 +11,11 @@ import { notificationManager } from "../../../libs/notification-service.js";
 
 export async function GET(request) {
   try {
-    // Verify cron secret to prevent unauthorized access
+    // Verify cron execution: allow either Vercel Scheduled Function header or Bearer secret
+    const isVercelCron = request.headers.get('x-vercel-cron') === '1';
     const authHeader = request.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    const hasBearer = authHeader === `Bearer ${process.env.CRON_SECRET}`;
+    if (!isVercelCron && !hasBearer) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -249,8 +251,8 @@ async function activateScheduledProjects(competitionId) {
       return 0;
     }
     
-    // Activate them
-    const result = await db.updateMany(
+      // Activate them
+      const result = await db.updateMany(
       'apps',
       {
         weekly_competition_id: competition.id,
@@ -265,7 +267,48 @@ async function activateScheduledProjects(competitionId) {
       }
     );
     
-    return scheduledDirs.length;
+    // Group entry notifications per user: send one email listing all their projects
+    try {
+      const userIdToProjects = new Map();
+      for (const project of scheduledProjects) {
+        const userId = project.submitted_by;
+        if (!userId) continue;
+        if (!userIdToProjects.has(userId)) userIdToProjects.set(userId, []);
+        userIdToProjects.get(userId).push(project);
+      }
+
+      for (const [userId, projectsForUser] of userIdToProjects.entries()) {
+        try {
+          const user = await db.findOne('users', { id: userId });
+          if (user && user.email) {
+            // If only one project, keep single template for better subject line
+            if (projectsForUser.length === 1) {
+              await notificationManager.sendWeeklyCompetitionEntryNotification({
+                userId: user.id,
+                userEmail: user.email,
+                project: projectsForUser[0],
+                competition,
+              });
+            } else {
+              await notificationManager.sendWeeklyCompetitionEntryBatch({
+                userId: user.id,
+                userEmail: user.email,
+                projects: projectsForUser,
+                competition,
+              });
+            }
+          }
+        } catch (notifyErr) {
+          console.error(`Failed to send grouped entry notification for user ${userId}:`, notifyErr);
+        }
+      }
+    } catch (batchNotifyErr) {
+      console.error('Error sending grouped entry notifications for activated projects:', batchNotifyErr);
+    }
+
+    // Prefer modifiedCount when available; otherwise fall back to number of scheduled projects
+    const modifiedCount = typeof result?.modifiedCount === 'number' ? result.modifiedCount : scheduledProjects.length;
+    return modifiedCount;
     
   } catch (error) {
     console.error(`Error activating projects for ${competitionId}:`, error);

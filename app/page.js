@@ -222,11 +222,10 @@ export default function HomePage() {
             className="text-center pt-8 pb-8 max-w-xl mr-auto"
           >
             <h1 className="text-5xl leading-tight font-semibold text-gray-900 mb-4 text-left">
-              Launch Your AI Project &amp;&nbsp;Get a&nbsp;DR22+ Backlink
+              Launch Your AI Project &amp;&nbsp;Get Discovered
             </h1>
             <p className="text-lg font-normal text-gray-900 text-left mb-6 max-w-xl">
-              Submit your AI project and get a&nbsp;DR22&nbsp;backlink, early
-              exposure, and&nbsp;reach other AI builders and innovators.
+              Submit your AI project and get early exposure, reach other AI builders and innovators, and showcase your innovation to the community.
             </p>
           </section>
 

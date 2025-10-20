@@ -283,6 +283,25 @@ class NotificationManager {
   }
 
   /**
+   * Send weekly competition entry notification for multiple projects (grouped per user)
+   * Uses the same preference key 'weekly_competition_entry'
+   */
+  async sendWeeklyCompetitionEntryBatch({ userId, userEmail, projects, competition }) {
+    return await this.sendNotification({
+      userId,
+      emailType: 'weekly_competition_entry',
+      userEmail,
+      competitionId: competition.id,
+      data: {
+        projects: projects.map(p => ({ id: p.id, name: p.name, slug: p.slug })),
+        competitionWeek: competition.competition_id,
+        endDate: new Date(competition.end_date).toLocaleDateString()
+      },
+      metadata: { batched: true, projectCount: projects.length }
+    });
+  }
+
+  /**
    * Send submission approval notification
    * @param {Object} params - Parameters
    */

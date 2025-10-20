@@ -6,9 +6,11 @@ import { notificationManager } from "../../../libs/notification-service.js";
 // It runs daily to remind winners about their dofollow link opportunity
 export async function GET(request) {
   try {
-    // Verify cron secret to prevent unauthorized access
+    // Verify cron execution: allow either Vercel Scheduled Function header or Bearer secret
+    const isVercelCron = request.headers.get('x-vercel-cron') === '1';
     const authHeader = request.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    const hasBearer = authHeader === `Bearer ${process.env.CRON_SECRET}`;
+    if (!isVercelCron && !hasBearer) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
