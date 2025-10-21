@@ -17,6 +17,11 @@ export default function TermsPage() {
               Last updated: October 2025
             </p>
             
+            <h2 className="text-2xl font-semibold mb-4">Legal Entity</h2>
+            <p className="text-base-content/70 mb-4">
+              AI Launch Space is operated by Aleksandr Borisov, an individual entrepreneur registered in Georgia (Registration No. 011-90274).
+            </p>
+
             <h2 className="text-2xl font-semibold mb-4">1. Agreement to Terms</h2>
             <p className="text-base-content/70 mb-4">
               By accessing and using AI Launch Space ("the Platform"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
@@ -92,7 +97,7 @@ export default function TermsPage() {
             <h2 className="text-2xl font-semibold mb-4">5. Payment Terms</h2>
             <h3 className="text-xl font-semibold mb-3">5.1 Premium Services</h3>
             <p className="text-base-content/70 mb-4">
-              Premium plan submissions require payment of $15 USD before processing. Payment is processed securely through Lemon Squeezy, our payment processor.
+              Premium plan submissions require payment of $15 USD before processing. Payment is processed securely through our payment processor.
             </p>
 
             <h3 className="text-xl font-semibold mb-3">5.2 Refund Policy</h3>

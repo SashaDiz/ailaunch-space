@@ -6,7 +6,7 @@ import { Footer } from "./components/Footer";
 
 export const metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')),
-  title: "AI Launch Space - Weekly Competition Platform for AI Projects & Get DR22+ Backlinks",
+  title: "AI Launch Space - Weekly Competition Platform for AI Projects",
   description: "Submit your AI project to the weekly competition and get high authority backlinks. Join the community of successful AI builders and innovators.",
   keywords: ["AI", "artificial intelligence", "AI tools", "AI launch", "backlinks", "SEO", "AI projects", "product hunt for AI", "AI directory", "machine learning"],
   authors: [{ name: "AI Launch Space" }],
@@ -21,7 +21,7 @@ export const metadata = {
     type: "website",
     locale: "en_US",
     url: process.env.NEXT_PUBLIC_APP_URL || "https://ailaunch.space",
-    title: "AI Launch Space - Weekly Competition Platform for AI Projects & Get DR22+ Backlinks",
+    title: "AI Launch Space - Weekly Competition Platform for AI Projects",
     description: "Submit your AI project to the weekly competition and get high authority backlinks.",
     siteName: "AI Launch Space",
     images: [
@@ -35,7 +35,7 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "AI Launch Space - Weekly Competition Platform for AI Projects & Get DR22+ Backlinks",
+    title: "AI Launch Space - Weekly Competition Platform for AI Projects",
     description: "Submit your AI project to the weekly competition and get high authority backlinks.",
     images: ["/og-image.png"],
     creator: "@ailaunchspace",
