@@ -181,17 +181,33 @@ export function ProductCard({
           className="w-full bg-white rounded-2xl border border-gray-200 p-4 group cursor-pointer transition duration-300 ease-in-out hover:border-[#ED0D79] hover:scale-[1.01]"
           onClick={handleCardClick}
         >
-          {/* Top section: Logo and Vote Button */}
+          {/* Top section: Logo with badges and Vote Button */}
           <div className="flex items-center justify-between mb-3">
-            <div className="w-[64px] h-[64px] border rounded-lg border-base-300 overflow-hidden flex-shrink-0">
-              <Image
-                src={project.logo_url}
-                alt={`${project.name} logo`}
-                width={64}
-                height={64}
-                className="rounded-lg object-cover w-full h-full"
-                style={{ width: "auto", height: "auto" }}
-              />
+            <div className="flex items-center space-x-2">
+              <div className="w-[64px] h-[64px] border rounded-lg border-base-300 overflow-hidden flex-shrink-0">
+                <Image
+                  src={project.logo_url}
+                  alt={`${project.name} logo`}
+                  width={64}
+                  height={64}
+                  className="rounded-lg object-cover w-full h-full"
+                  style={{ width: "auto", height: "auto" }}
+                />
+              </div>
+              
+              {/* Badges next to logo */}
+              <div className="flex flex-col space-y-1">
+                {/* Winner Badge */}
+                <WinnerBadge position={project.weekly_position} size="sm" />
+
+                {/* Premium Badge */}
+                {project.plan === "premium" && (
+                  <span className="inline-flex leading-none items-center gap-1 px-1 py-0.5 text-[11px] font-medium text-white rounded-sm" style={{backgroundColor: '#ED0D79'}}>
+                    <Crown className="w-4 h-4" strokeWidth={1.5} />
+                    <span className="mt-0.5">Premium</span>
+                  </span>
+                )}
+              </div>
             </div>
 
             <button
@@ -230,22 +246,12 @@ export function ProductCard({
             </button>
           </div>
 
-          {/* Title and badges */}
+          {/* Title */}
           <div className="mb-3">
             <div className="flex items-center space-x-2 mb-1">
               <h3 className="text-lg font-semibold text-base-content">
                 {project.name}
               </h3>
-
-              {/* Winner Badge */}
-              <WinnerBadge position={project.weekly_position} size="sm" />
-
-              {project.plan === "premium" && (
-                <span className="inline-flex leading-none items-center gap-1 px-1 py-0.5 text-[11px] font-medium text-white rounded-sm" style={{backgroundColor: '#ED0D79'}}>
-                  <Crown className="w-4 h-4" strokeWidth={1.5} />
-                  <span className="mt-0.5">Premium</span>
-                </span>
-              )}
 
               {/* Status Badge - Only show on private dashboard */}
               {showStatusBadge && project.statusBadge && (
@@ -310,7 +316,7 @@ export function ProductCard({
       >
         <div className="flex items-start space-x-3 flex-1">
           {/* Logo */}
-          <div className="w-[96px] h-[96px] border rounded-lg border-base-300 overflow-hidden">
+          <div className="w-[96px] h-[96px] border rounded-lg border-base-300 overflow-hidden flex-shrink-0">
             <Image
               src={project.logo_url}
               alt={`${project.name} logo`}
@@ -328,15 +334,19 @@ export function ProductCard({
                 {project.name}
               </h3>
 
-              {/* Winner Badge */}
-              <WinnerBadge position={project.weekly_position} size="sm" />
+              {/* Badges next to title */}
+              <div className="flex items-center space-x-1">
+                {/* Winner Badge */}
+                <WinnerBadge position={project.weekly_position} size="sm" />
 
-              {project.plan === "premium" && (
-                <span className="inline-flex leading-none items-center gap-1 px-1 py-0.5 text-[11px] font-medium text-white rounded-sm" style={{backgroundColor: '#ED0D79'}}>
-                  <Crown className="w-4 h-4" strokeWidth={1.5} />
-                  <span className="mt-0.5">Premium</span>
-                </span>
-              )}
+                {/* Premium Badge */}
+                {project.plan === "premium" && (
+                  <span className="inline-flex leading-none items-center gap-1 px-1 py-0.5 text-[11px] font-medium text-white rounded-sm" style={{backgroundColor: '#ED0D79'}}>
+                    <Crown className="w-4 h-4" strokeWidth={1.5} />
+                    <span className="mt-0.5">Premium</span>
+                  </span>
+                )}
+              </div>
 
               {/* Status Badge - Only show on private dashboard */}
               {showStatusBadge && project.statusBadge && (

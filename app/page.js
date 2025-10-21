@@ -10,8 +10,9 @@ import SponsorCard from "./components/SponsorCard";
 import CountdownTimer from "./components/CountdownTimer";
 
 // Import assets
-import johnIcon from "/public/assets/john.svg";
-import backlinksListLogo from "/public/assets/backlinkslist-logo.svg";
+import alexIcon from "/public/assets/alex-icon.png";
+import codefastLogo from "/public/assets/codefa.st.png";
+import datafastLogo from "/public/assets/datafa.st.png";
 import { Rocket } from "iconoir-react";
 
 
@@ -24,34 +25,40 @@ function RightSidePanel() {
     <div className="right-side w-full md:max-w-96 md:w-full md:sticky md:top-16 mt-10 md:mt-0">
       <aside className="space-y-8 py-8 md:py-8">
         <div className="flex flex-col items-start gap-4">
-          <h2 className="text-md font-medium text-gray-900 uppercase">
-            AI Builder Resources
-          </h2>
           <GuidePromoCard
-            imageSrc={johnIcon}
-            name="John Rush"
-            subtitle="Creator of MarsX (uniting AI, NoCode, and Code)"
-            title="Want to build your own AI project?"
-            description="Learn everything you need to launch successful AI tools and get traction in the growing AI market."
-            buttonText="Get AI Launch Guide Now"
-            buttonLink="https://johnrush.me/directory-guide/"
+            imageSrc={alexIcon}
+            name="Alexander Borisov"
+            subtitle="Creator of AI Launch Space"
+            title="Hey there!"
+            description="I’m an aspiring solopreneur building my first startups with AI. 🚀
+Follow my journey as I share lessons, wins, and experiments along the way!"
+            buttonText="Follow me on X"
+            buttonLink="https://x.com/alexanderOsso"
           />
         </div>
         <div className="flex flex-col items-start gap-4">
           <h2 className="text-md font-medium text-gray-900 uppercase">
-            Our partners
+            Secret weapons
           </h2>
           <div className="flex flex-col gap-4 w-full">
             <SponsorCard
               sponsor={{
-                logo: backlinksListLogo,
-                name: "Backlinks List",
+                logo: codefastLogo,
+                name: "Codefa.st",
                 description:
-                  "One platform for Stripe payments, auth, CRM, email + help desk. Perfect for SaaS + memberships. Try free.",
-                url: "https://backlinkslist.com",
+                  "This course by Marc Lou helped me to build this launchpad. I strongly recommend it for begginers.",
+                url: "https://codefa.st/?via=ailaunch",
               }}
             />
-            <SponsorCard />
+            <SponsorCard
+              sponsor={{
+                logo: datafastLogo,
+                name: "Datafa.st",
+                description:
+                  "Beautiful and useful analytics tool for your projects. Great for tracking your growth and performance.",
+                url: "https://datafa.st/?via=ailaunch",
+              }}
+            />
           </div>
         </div>
         <div className="flex flex-col items-center gap-4">

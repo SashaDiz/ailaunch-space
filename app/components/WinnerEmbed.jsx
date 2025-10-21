@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Copy, CheckCircle } from "iconoir-react";
 import toast from "react-hot-toast";
 
@@ -9,11 +10,11 @@ import toast from "react-hot-toast";
  * Displays embed code for winners with dofollow backlink
  * Based on the provided design with AI Launch Space branding
  */
-export default function WinnerEmbed({ 
-  position, 
-  projectName, 
+export default function WinnerEmbed({
+  position,
+  projectName,
   projectSlug,
-  className = "" 
+  className = ""
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -34,8 +35,14 @@ export default function WinnerEmbed({
     }
   };
 
-  const embedCode = `<a href="https://ailaunch.space/" target="_blank" rel="noopener noreferrer">
-<img src="https://unicorn-images.b-cdn.net/227cf7e3-96b4-4970-b438-ddc370c5178a" alt="${getPositionText(position)}" width="225" height="52" />
+  const embedCode = `<a href="https://ailaunch.space/" target="_blank" rel="noopener noreferrer" style="text-decoration: none; display: inline-block;">
+<div style="width: 225px; height: 52px; display: flex; align-items: center; justify-content: flex-start; background: white; gap: 8px; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 16px 8px 8px; font-family: system-ui, -apple-system, sans-serif;">
+  <img src="https://ailaunch.space/assets/ailaunch-embed.svg" alt="#${position} AI Product on AILaunch.space" width="42" height="42" style="flex-shrink: 0;" />
+  <div style="display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; font-size: 14px; font-weight: 500; line-height: 1.2; color: #111827;">
+    #${position} AI Product of the Week
+    <span style="color: #ED0D79; font-size: 12px;">AILaunch.space</span>
+  </div>
+</div>
 </a>`;
 
   const handleCopyCode = async () => {
@@ -51,34 +58,36 @@ export default function WinnerEmbed({
   };
 
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
+    <div className={`bg-white rounded-2xl border border-gray-200 p-6 ${className}`}>
       {/* Header */}
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+      <div className="mb-6">
+        <h3 className="text-xl font-bold text-gray-900 mb-2">
           Featured on AILaunch.space
         </h3>
-        <p className="text-sm text-gray-600">
+        <p className="text-gray-600">
           Place the downloaded badge on your website with a link back to AILaunch.space.
         </p>
       </div>
 
       {/* Instructions */}
-      <div className="mb-4">
-        <p className="text-sm text-gray-700 mb-2">
+      <div className="mb-6">
+        <p className="text-gray-700 font-medium mb-3">
           Here's the recommended HTML code:
         </p>
       </div>
 
       {/* Code Block */}
-      <div className="relative">
-        <pre className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm font-mono text-gray-800 overflow-x-auto">
-          <code>{embedCode}</code>
-        </pre>
-        
+      <div className="relative mb-6">
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm font-mono text-gray-800 overflow-x-auto">
+          <pre className="whitespace-pre overflow-x-auto">
+            <code>{embedCode}</code>
+          </pre>
+        </div>
+
         {/* Copy Button */}
         <button
           onClick={handleCopyCode}
-          className="absolute top-2 right-2 p-2 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+          className="absolute top-3 right-3 p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-[#ED0D79] transition-colors duration-200 shadow-sm"
           title="Copy embed code"
         >
           {copied ? (
@@ -90,31 +99,60 @@ export default function WinnerEmbed({
       </div>
 
       {/* Badge Preview */}
-      <div className="mt-4 pt-4 border-t border-gray-200">
-        <p className="text-sm text-gray-600 mb-3">Badge example:</p>
-        <div className="inline-block">
-          <a 
-            href="https://ailaunch.space/" 
-            target="_blank" 
+      <div className="mb-6 pt-6 border-t border-gray-200">
+        <p className="text-gray-700 font-medium mb-4">Badge preview:</p>
+        <div className="inline-block p-4 bg-gray-50 rounded-xl border border-gray-200">
+          <a
+            href="https://ailaunch.space/"
+            target="_blank"
             rel="noopener noreferrer"
-            className="inline-block"
+            style={{ textDecoration: 'none', display: 'inline-block' }}
           >
-            <img 
-              src="https://unicorn-images.b-cdn.net/227cf7e3-96b4-4970-b438-ddc370c5178a" 
-              alt={getPositionText(position)} 
-              width="225" 
-              height="52"
-              className="border border-gray-300 rounded-lg"
-            />
+            <div 
+              style={{
+                width: '225px',
+                height: '52px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+                background: 'white',
+                gap: '8px',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                padding: '8px 16px 8px 8px',
+                fontFamily: 'system-ui, -apple-system, sans-serif'
+              }}
+            >
+              <img
+                src="https://ailaunch.space/assets/ailaunch-embed.svg"
+                alt={`#${position} AI Product on AILaunch.space`}
+                width="42"
+                height="42"
+                style={{ flexShrink: 0 }}
+              />
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                justifyContent: 'flex-start',
+                fontSize: '14px',
+                fontWeight: '500',
+                lineHeight: '1.2',
+                color: '#111827'
+              }}>
+                #{position} AI Product of the Week
+                <span style={{ color: '#ED0D79', fontSize: '12px' }}>AILaunch.space</span>
+              </div>
+            </div>
           </a>
         </div>
       </div>
 
       {/* Additional Info */}
-      <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-        <p className="text-xs text-blue-800">
-          <strong>Note:</strong> This embed includes a dofollow backlink to AILaunch.space. 
-          Make sure to place it on your website to receive the SEO benefits.
+      <div className="p-4 bg-[#ED0D79]/5 border border-[#ED0D79]/20 rounded-xl">
+        <p className="text-sm text-[#ED0D79] font-medium">
+          <strong>💡 Pro Tip:</strong> This embed includes a dofollow backlink to AILaunch.space.
+          Make sure to place it on your website to receive the SEO benefits and boost your domain authority.
         </p>
       </div>
     </div>
@@ -125,27 +163,73 @@ export default function WinnerEmbed({
  * WinnerEmbedModal Component
  * Modal version of the embed component for popup display
  */
-export function WinnerEmbedModal({ 
-  isOpen, 
-  onClose, 
-  position, 
-  projectName, 
-  projectSlug 
+export function WinnerEmbedModal({
+  isOpen,
+  onClose,
+  position,
+  projectName,
+  projectSlug
 }) {
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
+  // Handle mounting for SSR compatibility
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  // Prevent body scroll when modal is open and handle keyboard events
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen, onClose]);
+
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  if (!isOpen || !mounted) return null;
+
+  const modalContent = (
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300"
+      onClick={handleBackdropClick}
+    >
+      <div
+        className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 animate-in zoom-in-95 duration-300"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-8">
           {/* Header */}
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-900">
-              Embed Badge for {projectName}
-            </h2>
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">
+                Embed Badge for {projectName}
+              </h2>
+              <p className="text-gray-600 text-sm">
+                Share your achievement with a dofollow backlink
+              </p>
+            </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors duration-200"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -154,26 +238,28 @@ export function WinnerEmbedModal({
           </div>
 
           {/* Embed Component */}
-          <WinnerEmbed 
-            position={position} 
-            projectName={projectName} 
-            projectSlug={projectSlug} 
+          <WinnerEmbed
+            position={position}
+            projectName={projectName}
+            projectSlug={projectSlug}
           />
         </div>
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
 
 /**
  * WinnerEmbedButton Component
  * Button to trigger the embed modal
  */
-export function WinnerEmbedButton({ 
-  position, 
-  projectName, 
-  projectSlug, 
-  className = "" 
+export function WinnerEmbedButton({
+  position,
+  projectName,
+  projectSlug,
+  className = ""
 }) {
   const [showModal, setShowModal] = useState(false);
 
@@ -185,10 +271,10 @@ export function WinnerEmbedButton({
     <>
       <button
         onClick={() => setShowModal(true)}
-        className={`btn btn-outline btn-sm ${className}`}
+        className={`inline-flex items-center gap-1.5 px-3 py-2 bg-white text-gray-700 font-semibold rounded-lg border border-gray-200 hover:border-[#ED0D79] hover:bg-gray-50 transition duration-300 ease-in-out hover:scale-[1.02] shadow-sm text-sm ${className}`}
         title="Get embed code for your website"
       >
-        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
         </svg>
         Embed

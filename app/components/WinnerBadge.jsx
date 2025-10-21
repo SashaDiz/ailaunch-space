@@ -1,15 +1,16 @@
 "use client";
 
 import React from "react";
+import { Medal1st, Medal } from "iconoir-react";
 
 /**
  * WinnerBadge Component
- * Displays winner badges for 1st, 2nd, and 3rd place based on the provided design
+ * Displays winner badges for 1st, 2nd, and 3rd place with traditional medal colors
  * 
  * Design specifications:
- * - 1st place: Black background, white text, white crown outline
- * - 2nd place: Light gray background, dark gray text, dark gray crown outline  
- * - 3rd place: Light gray background, dark gray text, dark gray crown outline
+ * - 1st place: Gold background, dark gold text, dark gold crown outline
+ * - 2nd place: Silver background, dark silver text, dark silver crown outline  
+ * - 3rd place: Bronze background, dark bronze text, dark bronze crown outline
  */
 export default function WinnerBadge({ position, size = "sm", className = "" }) {
   if (!position || position < 1 || position > 3) {
@@ -20,18 +21,24 @@ export default function WinnerBadge({ position, size = "sm", className = "" }) {
     switch (position) {
       case 1:
         return {
-          background: "bg-black",
-          textColor: "text-white",
-          crownColor: "text-white",
-          border: "border-black"
+          background: "bg-yellow-400",
+          textColor: "text-yellow-900",
+          crownColor: "text-yellow-900",
+          border: "border-yellow-500"
         };
       case 2:
-      case 3:
         return {
           background: "bg-gray-300",
-          textColor: "text-gray-900",
-          crownColor: "text-gray-900",
-          border: "border-gray-300"
+          textColor: "text-gray-800",
+          crownColor: "text-gray-800",
+          border: "border-gray-400"
+        };
+      case 3:
+        return {
+          background: "bg-orange-400",
+          textColor: "text-orange-900",
+          crownColor: "text-orange-900",
+          border: "border-orange-500"
         };
       default:
         return null;
@@ -43,13 +50,13 @@ export default function WinnerBadge({ position, size = "sm", className = "" }) {
       case "xs":
         return "px-2 py-1 text-xs";
       case "sm":
-        return "px-3 py-1.5 text-sm";
+        return "px-2 py-1 text-xs";
       case "md":
-        return "px-4 py-2 text-base";
+        return "px-2.5 py-1.5 text-sm";
       case "lg":
-        return "px-5 py-2.5 text-lg";
-      default:
         return "px-3 py-1.5 text-sm";
+      default:
+        return "px-2 py-1 text-xs";
     }
   };
 
@@ -62,7 +69,7 @@ export default function WinnerBadge({ position, size = "sm", className = "" }) {
   return (
     <div 
       className={`
-        inline-flex items-center gap-2 rounded-lg border font-medium
+        inline-flex items-center gap-1 rounded-md border font-medium
         ${styles.background} 
         ${styles.textColor} 
         ${styles.border}
@@ -72,21 +79,20 @@ export default function WinnerBadge({ position, size = "sm", className = "" }) {
       role="img"
       aria-label={`${positionText} winner badge`}
     >
-      {/* Crown Icon */}
-      <svg 
-        className={`w-4 h-4 ${styles.crownColor}`} 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="2" 
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-      >
-        <path 
-          strokeLinecap="round" 
-          strokeLinejoin="round" 
-          d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" 
+      {/* Medal Icon */}
+      {position === 1 ? (
+        <Medal1st 
+          className={`w-4 h-4 ${styles.crownColor}`}
+          strokeWidth="2"
+          aria-hidden="true"
         />
-      </svg>
+      ) : (
+        <Medal 
+          className={`w-4 h-4 ${styles.crownColor}`}
+          strokeWidth="2"
+          aria-hidden="true"
+        />
+      )}
       
       {/* Position Text */}
       <span className="font-semibold">
@@ -131,14 +137,18 @@ export function WinnerBadgeIcon({ position, size = "sm", className = "" }) {
     switch (position) {
       case 1:
         return {
-          background: "bg-black",
-          crownColor: "text-white"
+          background: "bg-yellow-400",
+          crownColor: "text-yellow-900"
         };
       case 2:
-      case 3:
         return {
           background: "bg-gray-300",
-          crownColor: "text-gray-900"
+          crownColor: "text-gray-800"
+        };
+      case 3:
+        return {
+          background: "bg-orange-400",
+          crownColor: "text-orange-900"
         };
       default:
         return null;
@@ -176,20 +186,19 @@ export function WinnerBadgeIcon({ position, size = "sm", className = "" }) {
       role="img"
       aria-label={`${position === 1 ? "1st" : position === 2 ? "2nd" : "3rd"} place winner`}
     >
-      <svg 
-        className={`${styles.crownColor} ${size === "xs" ? "w-3 h-3" : size === "sm" ? "w-4 h-4" : size === "md" ? "w-5 h-5" : "w-6 h-6"}`} 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="2" 
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-      >
-        <path 
-          strokeLinecap="round" 
-          strokeLinejoin="round" 
-          d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" 
+      {position === 1 ? (
+        <Medal1st 
+          className={`${styles.crownColor} ${size === "xs" ? "w-3 h-3" : size === "sm" ? "w-4 h-4" : size === "md" ? "w-5 h-5" : "w-6 h-6"}`}
+          strokeWidth="2"
+          aria-hidden="true"
         />
-      </svg>
+      ) : (
+        <Medal 
+          className={`${styles.crownColor} ${size === "xs" ? "w-3 h-3" : size === "sm" ? "w-4 h-4" : size === "md" ? "w-5 h-5" : "w-6 h-6"}`}
+          strokeWidth="2"
+          aria-hidden="true"
+        />
+      )}
     </div>
   );
 }

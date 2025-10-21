@@ -121,11 +121,14 @@ function FilterSidebar({
   };
 
   return (
-    <div className="bg-base-100 border border-base-300 rounded-lg p-4 space-y-6 max-h-screen overflow-y-auto">
+    <div className="bg-white border border-gray-200 rounded-2xl p-6 space-y-6 max-h-screen overflow-y-auto">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold flex items-center">Filters</h3>
+        <h3 className="text-lg font-semibold text-gray-900 flex items-center">Filters</h3>
         {onClose && (
-          <button onClick={onClose} className="btn btn-ghost btn-xs">
+          <button 
+            onClick={onClose} 
+            className="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"
+          >
             <Xmark className="w-4 h-4" />
           </button>
         )}
@@ -134,13 +137,13 @@ function FilterSidebar({
       {/* Categories */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h4 className="font-medium text-sm text-base-content/80">
+          <h4 className="font-medium text-sm text-gray-700">
             Categories
           </h4>
           {selectedCategories.length > 0 && (
             <button
               onClick={clearAllCategories}
-              className="text-xs text-primary hover:text-primary/80"
+              className="text-xs text-[#ED0D79] hover:text-[#ED0D79]/80 font-medium"
             >
               Clear all
             </button>
@@ -148,8 +151,8 @@ function FilterSidebar({
         </div>
         
         {selectedCategories.length > 0 && (
-          <div className="mb-3 p-2 bg-primary/10 rounded-lg">
-            <div className="text-xs text-primary font-medium mb-1">
+          <div className="mb-3 p-3 bg-[#ED0D79]/10 rounded-lg border border-[#ED0D79]/20">
+            <div className="text-xs text-[#ED0D79] font-medium mb-2">
               {selectedCategories.length} selected
             </div>
             <div className="flex flex-wrap gap-1">
@@ -160,12 +163,12 @@ function FilterSidebar({
                 return (
                   <span
                     key={categorySlug}
-                    className="badge badge-primary badge-xs"
+                    className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-white bg-[#ED0D79] rounded-md"
                   >
                     {category?.name || categorySlug}
                     <button
                       onClick={() => handleCategoryToggle(categorySlug)}
-                      className="ml-1 hover:bg-primary/20 rounded-full w-3 h-3 flex items-center justify-center"
+                      className="ml-1 hover:bg-white/20 rounded-full w-3 h-3 flex items-center justify-center text-xs"
                     >
                       ×
                     </button>
@@ -177,12 +180,12 @@ function FilterSidebar({
         )}
 
         {/* Grouped Categories with Scroll */}
-        <div className="max-h-80 overflow-y-auto border border-base-300 rounded-lg">
+        <div className="max-h-[400px] overflow-y-auto border border-gray-200 rounded-lg">
           {Object.keys(groupedCategories).length > 0 ? (
             Object.entries(groupedCategories).map(([sphere, sphereCategories]) => (
-              <div key={sphere} className="border-b border-base-300 last:border-b-0">
+              <div key={sphere} className="border-b border-gray-200 last:border-b-0">
                 {/* Sphere Header */}
-                <div className="px-3 py-2 bg-base-200 text-xs font-medium text-base-content/70 sticky top-0 z-10">
+                <div className="px-3 py-2 bg-gray-50 text-xs font-medium text-gray-600 sticky top-0 z-10">
                   {sphere}
                 </div>
                 
@@ -191,18 +194,18 @@ function FilterSidebar({
                   {sphereCategories.map((category) => (
                     <label
                       key={category.slug}
-                      className="flex items-center space-x-2 cursor-pointer hover:bg-base-200 rounded-md p-2 mx-1"
+                      className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 rounded-md p-3 mx-1 transition-colors"
                     >
                       <input
                         type="checkbox"
-                        className="checkbox checkbox-primary checkbox-sm"
+                        className="w-4 h-4 text-[#ED0D79] bg-gray-100 border-gray-300 rounded focus:ring-[#ED0D79] focus:ring-2"
                         checked={selectedCategories.includes(category.slug)}
                         onChange={() => handleCategoryToggle(category.slug)}
                       />
                       <span className={`w-2 h-2 ${getCategoryDotColor(category.name)} rounded-full flex-shrink-0`}></span>
-                      <span className="text-sm flex-1 truncate">{category.name}</span>
+                      <span className="text-sm text-gray-700 flex-1 truncate">{category.name}</span>
                       {category.app_count > 0 && (
-                        <span className="badge badge-ghost badge-xs flex-shrink-0">
+                        <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-md flex-shrink-0">
                           {category.app_count}
                         </span>
                       )}
@@ -217,18 +220,18 @@ function FilterSidebar({
               {categories.map((category) => (
                 <label
                   key={category.slug}
-                  className="flex items-center space-x-2 cursor-pointer hover:bg-base-200 rounded-md p-2"
+                  className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 rounded-md p-3 transition-colors"
                 >
                   <input
                     type="checkbox"
-                    className="checkbox checkbox-primary checkbox-sm"
+                    className="w-4 h-4 text-[#ED0D79] bg-gray-100 border-gray-300 rounded focus:ring-[#ED0D79] focus:ring-2"
                     checked={selectedCategories.includes(category.slug)}
                     onChange={() => handleCategoryToggle(category.slug)}
                   />
                   <span className={`w-2 h-2 ${getCategoryDotColor(category.name)} rounded-full flex-shrink-0`}></span>
-                  <span className="text-sm flex-1 truncate">{category.name}</span>
+                  <span className="text-sm text-gray-700 flex-1 truncate">{category.name}</span>
                   {category.app_count > 0 && (
-                    <span className="badge badge-ghost badge-xs flex-shrink-0">
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-md flex-shrink-0">
                       {category.app_count}
                     </span>
                   )}
@@ -241,42 +244,40 @@ function FilterSidebar({
 
       {/* Pricing */}
       <div>
-        <h4 className="font-medium mb-3 text-sm text-base-content/80">
+        <h4 className="font-medium mb-3 text-sm text-gray-700">
           Pricing
         </h4>
-        
-        {/* All Pricing Option */}
-        <div className="mb-3">
-          <label className="flex items-center space-x-2 cursor-pointer hover:bg-base-200 rounded-md p-2 -m-2">
-            <input
-              type="radio"
-              name="pricing"
-              className="radio radio-primary radio-sm"
-              checked={selectedPricing === "all"}
-              onChange={() => setSelectedPricing("all")}
-            />
-            <span className="text-sm font-medium">All Pricing</span>
-          </label>
-        </div>
 
         {/* Pricing Options with Scroll */}
-        <div className="max-h-32 overflow-y-auto border border-base-300 rounded-lg">
+        <div className="overflow-y-auto border border-gray-200 rounded-lg">
           <div className="p-2">
+            {/* All Pricing Option */}
+            <label className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 rounded-md p-3 transition-colors">
+              <input
+                type="radio"
+                name="pricing"
+                className="w-4 h-4 text-[#ED0D79] bg-gray-100 border-gray-300 focus:ring-[#ED0D79] focus:ring-2"
+                checked={selectedPricing === "all"}
+                onChange={() => setSelectedPricing("all")}
+              />
+              <span className="text-sm font-medium text-gray-700">All Pricing</span>
+            </label>
+            
             {pricingOptions.map((pricing) => (
               <label
                 key={pricing.value}
-                className="flex items-center space-x-2 cursor-pointer hover:bg-base-200 rounded-md p-2"
+                className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 rounded-md p-3 transition-colors"
               >
                 <input
                   type="radio"
                   name="pricing"
-                  className="radio radio-primary radio-sm"
+                  className="w-4 h-4 text-[#ED0D79] bg-gray-100 border-gray-300 focus:ring-[#ED0D79] focus:ring-2"
                   checked={selectedPricing === pricing.value}
                   onChange={() => setSelectedPricing(pricing.value)}
                 />
-                <span className="text-sm flex-1 truncate">{pricing.label}</span>
+                <span className="text-sm text-gray-700 flex-1 truncate">{pricing.label}</span>
                 {pricing.app_count > 0 && (
-                  <span className="badge badge-ghost badge-xs flex-shrink-0">
+                  <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-md flex-shrink-0">
                     {pricing.app_count}
                   </span>
                 )}
@@ -292,7 +293,7 @@ function FilterSidebar({
           setSelectedCategories([]);
           setSelectedPricing("all");
         }}
-        className="btn btn-outline btn-sm w-full"
+        className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors"
       >
         Clear All Filters
       </button>
@@ -439,14 +440,14 @@ function ProjectsPageContent() {
   };
 
   return (
-    <div className="min-h-screen bg-base-100">
+    <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl lg:text-4xl font-bold mb-4">
+          <h1 className="text-3xl lg:text-4xl font-semibold text-gray-900 mb-4">
             Browse AI Projects
           </h1>
-          <p className="text-lg text-base-content/70 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Discover curated AI projects from our community of makers and
             entrepreneurs.
           </p>
@@ -458,13 +459,13 @@ function ProjectsPageContent() {
             {/* Search Bar */}
             <form onSubmit={handleSearch} className="flex-1 max-w-md w-full">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-base-content/50" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search AI projects..."
-                  className="input input-bordered w-full pl-10 bg-base-200/50"
+                  className="w-full pl-10 pr-4 py-3 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-[#ED0D79] focus:border-[#ED0D79] transition-colors"
                 />
               </div>
             </form>
@@ -476,7 +477,7 @@ function ProjectsPageContent() {
                 <div
                   tabIndex={0}
                   role="button"
-                  className="btn btn-outline btn-sm"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-[#ED0D79] focus:border-[#ED0D79] transition-colors"
                 >
                   {React.createElement(
                     SORT_OPTIONS.find((opt) => opt.value === sortBy)?.icon ||
@@ -488,14 +489,14 @@ function ProjectsPageContent() {
                 </div>
                 <ul
                   tabIndex={0}
-                  className="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-box w-56 border border-base-300 mt-1"
+                  className="dropdown-content menu p-2 shadow-lg bg-white rounded-lg w-56 border border-gray-200 mt-1"
                 >
                   {SORT_OPTIONS.map((option) => (
                     <li key={option.value}>
                       <button
                         onClick={() => setSortBy(option.value)}
-                        className={`flex items-center ${
-                          sortBy === option.value ? "active" : ""
+                        className={`flex items-center px-3 py-2 text-sm hover:bg-gray-50 rounded-md transition-colors ${
+                          sortBy === option.value ? "bg-[#ED0D79]/10 text-[#ED0D79]" : "text-gray-700"
                         }`}
                       >
                         {React.createElement(option.icon, {
@@ -509,13 +510,15 @@ function ProjectsPageContent() {
               </div>
 
               {/* View Mode Toggle */}
-              <div className="hidden sm:flex btn-group">
+              <div className="hidden sm:flex border border-gray-300 rounded-lg overflow-hidden">
                 {VIEW_MODES.map((mode) => (
                   <button
                     key={mode.value}
                     onClick={() => setViewMode(mode.value)}
-                    className={`btn btn-sm ${
-                      viewMode === mode.value ? "btn-active" : "btn-outline"
+                    className={`px-3 py-2 text-sm font-medium transition-colors ${
+                      viewMode === mode.value 
+                        ? "bg-[#ED0D79] text-white" 
+                        : "bg-white text-gray-700 hover:bg-gray-50"
                     }`}
                   >
                     {React.createElement(mode.icon, { className: "w-4 h-4" })}
@@ -526,9 +529,10 @@ function ProjectsPageContent() {
               {/* Filter Toggle (Mobile) */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="btn btn-outline btn-sm lg:hidden"
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-[#ED0D79] focus:border-[#ED0D79] transition-colors lg:hidden"
               >
-                <FilterAlt className="w-4 h-4" />
+                <FilterAlt className="w-4 h-4 mr-2" />
+                Filters
               </button>
             </div>
           </div>
@@ -557,12 +561,12 @@ function ProjectsPageContent() {
           <div className="lg:col-span-3">
             {/* Results Header */}
             <div className="flex items-center justify-between mb-6">
-              <div className="text-sm text-base-content/60">
+              <div className="text-sm text-gray-600">
                 {loading
                   ? "Loading..."
                   : `${pagination.totalCount || 0} AI projects found`}
               </div>
-              <div className="text-sm text-base-content/60">
+              <div className="text-sm text-gray-600">
                 Page {pagination.page || 1} of {pagination.totalPages || 1}
               </div>
             </div>
@@ -579,22 +583,20 @@ function ProjectsPageContent() {
                 {[...Array(6)].map((_, i) => (
                   <div
                     key={i}
-                    className="card bg-base-100 shadow-sm border border-base-300"
+                    className="bg-white rounded-2xl border border-gray-200 p-4"
                   >
-                    <div className="card-body p-4">
-                      <div className="animate-pulse">
-                        <div className="flex items-center space-x-3 mb-3">
-                          <div className="skeleton w-12 h-12 rounded-lg"></div>
-                          <div className="space-y-2">
-                            <div className="skeleton h-4 w-32"></div>
-                            <div className="skeleton h-3 w-24"></div>
-                          </div>
+                    <div className="animate-pulse">
+                      <div className="flex items-center space-x-3 mb-3">
+                        <div className="skeleton w-12 h-12 rounded-lg"></div>
+                        <div className="space-y-2">
+                          <div className="skeleton h-4 w-32"></div>
+                          <div className="skeleton h-3 w-24"></div>
                         </div>
-                        <div className="skeleton h-12 w-full mb-3"></div>
-                        <div className="flex space-x-1">
-                          <div className="skeleton h-5 w-16"></div>
-                          <div className="skeleton h-5 w-20"></div>
-                        </div>
+                      </div>
+                      <div className="skeleton h-12 w-full mb-3"></div>
+                      <div className="flex space-x-1">
+                        <div className="skeleton h-5 w-16"></div>
+                        <div className="skeleton h-5 w-20"></div>
                       </div>
                     </div>
                   </div>
@@ -623,11 +625,11 @@ function ProjectsPageContent() {
                 {/* Pagination */}
                 {pagination.totalPages > 1 && (
                   <div className="flex justify-center mt-8">
-                    <div className="join">
+                    <div className="flex items-center space-x-2">
                       <button
                         onClick={() => handlePageChange(pagination.page - 1)}
                         disabled={!pagination.hasPrev}
-                        className="join-item btn btn-outline"
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
                         Previous
                       </button>
@@ -641,10 +643,10 @@ function ProjectsPageContent() {
                             <button
                               key={`page-${pageNum}`}
                               onClick={() => handlePageChange(pageNum)}
-                              className={`join-item btn ${
+                              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                                 pageNum === pagination.page
-                                  ? "btn-active"
-                                  : "btn-outline"
+                                  ? "bg-[#ED0D79] text-white"
+                                  : "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
                               }`}
                             >
                               {pageNum}
@@ -656,7 +658,7 @@ function ProjectsPageContent() {
                       <button
                         onClick={() => handlePageChange(pagination.page + 1)}
                         disabled={!pagination.hasNext}
-                        className="join-item btn btn-outline"
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
                         Next
                       </button>
@@ -666,7 +668,7 @@ function ProjectsPageContent() {
               </>
             ) : (
               <div className="text-center py-16">
-                <div className="text-base-content/60 mb-4">
+                <div className="text-gray-500 mb-4">
                   <Search className="w-12 h-12 mx-auto mb-2 opacity-50" />
                   <p>No AI projects found matching your criteria.</p>
                 </div>
@@ -677,7 +679,7 @@ function ProjectsPageContent() {
                     setSearchQuery("");
                     fetchProjects(1);
                   }}
-                  className="btn btn-outline"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Clear All Filters
                 </button>
@@ -693,13 +695,13 @@ function ProjectsPageContent() {
 // Loading fallback component
 function ProjectsPageLoading() {
   return (
-    <div className="min-h-screen bg-base-100">
+    <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center mb-8">
           <div className="skeleton h-10 w-64 mx-auto mb-4"></div>
           <div className="skeleton h-6 w-96 mx-auto"></div>
         </div>
-        <div className="animate-pulse">Loading...</div>
+        <div className="animate-pulse text-gray-500">Loading...</div>
       </div>
     </div>
   );

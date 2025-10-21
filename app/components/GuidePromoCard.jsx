@@ -13,7 +13,7 @@ const GuidePromoCard = ({
 }) => (
   <div className="rounded-2xl border border-gray-200 p-6 max-w-xl bg-white">
     <div className="flex items-center mb-4">
-      <Image src={imageSrc} alt={name} width={64} height={64} className="w-16 h-16 object-cover mr-4" />
+      <Image src={imageSrc} alt={name} width={64} height={64} className="w-16 h-16 object-cover mr-4 rounded-lg" />
       <div>
         <div className="font-medium text-lg leading-none mb-1">{name}</div>
         <div className="text-gray-700 text-sm">{subtitle}</div>

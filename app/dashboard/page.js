@@ -15,6 +15,7 @@ import {
   Group,
   StatsReport,
   Xmark,
+  ThumbsUp,
 } from "iconoir-react";
 import toast from "react-hot-toast";
 import WinnerBadge from "../components/WinnerBadge";
@@ -23,19 +24,53 @@ import { WinnerEmbedButton } from "../components/WinnerEmbed";
 function StatsCard({ icon: Icon, title, value, description, className = "" }) {
   return (
     <div
-      className={`card bg-base-100 shadow-sm border border-base-300 ${className}`}
+      className={`bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:border-[#ED0D79] transition duration-300 ease-in-out ${className}`}
     >
-      <div className="card-body p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-base-content/60 text-sm">{title}</p>
-            <h3 className="text-2xl font-bold">{value}</h3>
-            {description && (
-              <p className="text-xs text-base-content/50">{description}</p>
-            )}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-gray-600 text-sm font-medium">{title}</p>
+          <h3 className="text-2xl font-bold text-gray-900 mt-1">{value}</h3>
+          {description && (
+            <p className="text-xs text-gray-500 mt-1">{description}</p>
+          )}
+        </div>
+        <div className="w-12 h-12 bg-[#ED0D79]/10 rounded-xl flex items-center justify-center">
+          <Icon className="w-6 h-6 text-[#ED0D79]" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WinnerReminder({ winningProjects }) {
+  if (!winningProjects || winningProjects.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mb-8">
+      <div className="p-4 bg-[#FCEEF2] border border-[#F7DDE6] rounded-xl">
+        <div className="flex items-start space-x-3">
+          <div className="flex-shrink-0">
+            <svg 
+              className="w-5 h-5 text-[#D63384] mt-0.5" 
+              fill="currentColor" 
+              viewBox="0 0 20 20"
+            >
+              <path 
+                fillRule="evenodd" 
+                d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" 
+                clipRule="evenodd" 
+              />
+            </svg>
           </div>
-          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-            <Icon className="w-6 h-6 text-primary" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-[#D63384]">
+              <strong>Pro Tip:</strong> {winningProjects.length === 1 
+                ? `Your project "${winningProjects[0].name}" won a competition! ` 
+                : `You have ${winningProjects.length} winning projects! `} 
+              Make sure to place the embed badge on your website to receive SEO benefits and boost your domain authority with the dofollow backlink.
+            </p>
           </div>
         </div>
       </div>
@@ -162,53 +197,36 @@ function ProjectCard({ project, onResumeDraft }) {
   };
 
   return (
-    <div className="block">
+    <div className="block h-full">
       <div
-        className="w-full bg-white rounded-2xl border border-gray-200 p-6 group cursor-pointer transition duration-300 ease-in-out hover:border-gray-900 hover:shadow-[0_6px_0_rgba(0,0,0,1)] hover:-translate-y-1.5"
+        className="w-full h-full bg-white rounded-2xl border border-gray-200 p-4 group cursor-pointer transition duration-300 ease-in-out hover:border-[#ED0D79] hover:scale-[1.01] flex flex-col"
         onClick={handleCardClick}
       >
-        {/* Header: Logo, Title, and Actions */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-16 h-16 border rounded-2xl border-gray-300 overflow-hidden flex-shrink-0">
+        {/* Top section: Logo with badges and Actions */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-2">
+            <div className="w-[64px] h-[64px] border rounded-lg border-gray-300 overflow-hidden flex-shrink-0">
               <Image
                 src={project.logo_url}
                 alt={`${project.name} logo`}
                 width={64}
                 height={64}
-                className="rounded-2xl object-cover w-full h-full"
+                className="rounded-lg object-cover w-full h-full"
               />
             </div>
-            <div>
-              <div className="flex items-center space-x-2 mb-1">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  {project.name}
-                </h3>
-                
-                {/* Winner Badge */}
-                <WinnerBadge position={project.weekly_position} size="sm" />
-                
-                {/* Embed Button for Winners */}
-                {project.weekly_position && (
-                  <WinnerEmbedButton
-                    position={project.weekly_position}
-                    projectName={project.name}
-                    projectSlug={project.slug}
-                    className="btn-xs"
-                  />
-                )}
-                
-                {project.premium_badge && (
-                  <span className="inline-flex leading-none items-center gap-1 px-1 py-0.5 text-[11px] font-medium text-white rounded-sm" style={{backgroundColor: '#ED0D79'}}>
-                    <Crown className="w-4 h-4" strokeWidth={1.5} />
-                    <span className="mt-0.5">Premium</span>
-                  </span>
-                )}
-                {getStatusBadge(project, project.is_draft)}
-              </div>
-              <p className="text-sm text-gray-600">
-                Launched {formatDate(project.launch_date)}
-              </p>
+            
+            {/* Badges next to logo */}
+            <div className="flex flex-col space-y-1">
+              {/* Winner Badge */}
+              <WinnerBadge position={project.weekly_position} size="sm" />
+
+              {/* Premium Badge */}
+              {project.premium_badge && (
+                <span className="inline-flex leading-none items-center gap-1 px-1 py-0.5 text-[11px] font-medium text-white rounded-sm" style={{backgroundColor: '#ED0D79'}}>
+                  <Crown className="w-4 h-4" strokeWidth={1.5} />
+                  <span className="mt-0.5">Premium</span>
+                </span>
+              )}
             </div>
           </div>
 
@@ -217,7 +235,7 @@ function ProjectCard({ project, onResumeDraft }) {
             <div
               tabIndex={0}
               role="button"
-              className="btn btn-ghost btn-sm hover:bg-gray-100"
+              className="btn btn-ghost btn-sm hover:bg-gray-100 rounded-lg"
             >
               <EditPencil className="w-4 h-4" />
             </div>
@@ -273,16 +291,28 @@ function ProjectCard({ project, onResumeDraft }) {
           </div>
         </div>
 
+        {/* Title */}
+        <div className="mb-3">
+          <div className="flex items-center space-x-2 mb-1">
+            <h3 className="text-lg font-semibold text-gray-900">
+              {project.name}
+            </h3>
+          </div>
+          <p className="text-sm text-gray-600">
+            Launched {formatDate(project.launch_date)}
+          </p>
+        </div>
+
         {/* Description */}
-        <p className="text-sm text-gray-700 mb-4 line-clamp-2">
+        <p className="text-sm text-gray-700 mb-3 line-clamp-3 flex-grow">
           {project.short_description}
         </p>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-3 gap-4 mb-3">
           <div className="text-center">
-            <div className="flex items-center justify-center text-blue-600 mb-1">
-              <Plus className="w-4 h-4 mr-1" />
+            <div className="flex items-center justify-center text-[#ED0D79] mb-1">
+              <ThumbsUp className="w-4 h-4 mr-1" />
               <span className="font-semibold text-gray-900">
                 {formatNumber(project.upvotes || 0)}
               </span>
@@ -290,7 +320,7 @@ function ProjectCard({ project, onResumeDraft }) {
             <p className="text-xs text-gray-500">Votes</p>
           </div>
           <div className="text-center">
-            <div className="flex items-center justify-center text-green-600 mb-1">
+            <div className="flex items-center justify-center text-[#ED0D79] mb-1">
               <Eye className="w-4 h-4 mr-1" />
               <span className="font-semibold text-gray-900">
                 {formatNumber(project.views || 0)}
@@ -299,7 +329,7 @@ function ProjectCard({ project, onResumeDraft }) {
             <p className="text-xs text-gray-500">Views</p>
           </div>
           <div className="text-center">
-            <div className="flex items-center justify-center text-purple-600 mb-1">
+            <div className="flex items-center justify-center text-[#ED0D79] mb-1">
               <OpenNewWindow className="w-4 h-4 mr-1" />
               <span className="font-semibold text-gray-900">
                 {formatNumber(project.clicks || 0)}
@@ -311,12 +341,12 @@ function ProjectCard({ project, onResumeDraft }) {
 
         {/* Draft Actions - Only for drafts */}
         {(project.is_draft || project.status === "draft") && (
-          <div className="pt-4 border-t border-gray-200">
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <div className="pt-3 border-t border-gray-200">
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
               <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0">
                   <svg
-                    className="w-5 h-5 text-amber-600"
+                    className="w-4 h-4 text-amber-600 mt-0.5"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -336,16 +366,16 @@ function ProjectCard({ project, onResumeDraft }) {
                       ? "Complete payment to submit your premium launch and get guaranteed dofollow backlinks."
                       : "This submission is saved as a draft. Complete it to launch your project."}
                   </p>
-                  <div className="mt-3 flex space-x-2">
+                  <div className="mt-2 flex space-x-2">
                     <button
                       onClick={handleResumeDraft}
-                      className="btn btn-sm btn-primary"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#ED0D79] text-white font-semibold rounded-lg hover:bg-[#ED0D79]/90 transition duration-300 ease-in-out hover:scale-[1.02] shadow-sm text-sm"
                     >
                       Resume Draft
                     </button>
                     <button
                       onClick={handleDeleteDraft}
-                      className="btn btn-sm btn-ghost btn-error"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-red-600 font-semibold rounded-lg border border-red-200 hover:border-red-300 hover:bg-red-50 transition duration-300 ease-in-out hover:scale-[1.02] shadow-sm text-sm"
                     >
                       Delete
                     </button>
@@ -356,20 +386,22 @@ function ProjectCard({ project, onResumeDraft }) {
           </div>
         )}
 
-        {/* Competition Rankings - Only for live projects */}
-        {project.status === "live" && (
-          <div className="pt-4 border-t border-gray-200">
+        {/* Bottom Actions - Embed button and status badge */}
+        {(project.weekly_position || (!project.is_draft && project.status !== "draft")) && (
+          <div className="pt-3 border-t border-gray-200">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Competition Rank:</span>
-              <div className="flex items-center space-x-2">
-                {project.weekly_position ? (
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    W#{project.weekly_position}
-                  </span>
-                ) : (
-                  <span className="text-sm text-gray-400">Competing...</span>
-                )}
-              </div>
+              {/* Embed Button - Bottom Left (only for winners) */}
+              {project.weekly_position && (
+                <WinnerEmbedButton
+                  position={project.weekly_position}
+                  projectName={project.name}
+                  projectSlug={project.slug}
+                  className="btn-xs"
+                />
+              )}
+              
+              {/* Status Badge - Bottom Right */}
+              {getStatusBadge(project, project.is_draft)}
             </div>
           </div>
         )}
@@ -465,7 +497,7 @@ function DashboardContent() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-base-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <span className="loading loading-spinner loading-lg"></span>
       </div>
     );
@@ -476,22 +508,22 @@ function DashboardContent() {
   }
 
   return (
-    <div className="min-h-screen bg-base-100">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold mb-2">
+              <h1 className="text-3xl font-bold mb-2 text-gray-900">
                 Welcome back, {user?.user_metadata?.name?.split(" ")[0] || user?.email?.split("@")[0] || "Creator"}!
               </h1>
-              <p className="text-base-content/70">
+              <p className="text-gray-600">
                 Manage your AI projects and track your launch performance.
               </p>
             </div>
             <div className="mt-4 sm:mt-0">
-              <Link href="/submit" className="btn btn-primary">
-                <Plus className="w-4 h-4 mr-2" />
+              <Link href="/submit" className="inline-flex items-center gap-2 px-6 py-3 bg-[#ED0D79] text-white font-semibold rounded-lg hover:bg-[#ED0D79]/90 transition duration-300 ease-in-out hover:scale-[1.02] shadow-sm">
+                <Plus className="w-4 h-4" />
                 Submit New AI Project
               </Link>
             </div>
@@ -499,14 +531,14 @@ function DashboardContent() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="border-b border-base-300 mb-8">
+        <div className="border-b border-gray-200 mb-8">
           <nav className="-mb-px flex space-x-8">
             <button
               onClick={() => setActiveTab("overview")}
               className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === "overview"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-base-content/60 hover:text-base-content hover:border-base-300"
+                  ? "border-[#ED0D79] text-[#ED0D79]"
+                  : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
               }`}
             >
               <StatsReport className="w-4 h-4 mr-2 inline" />
@@ -514,6 +546,11 @@ function DashboardContent() {
             </button>
           </nav>
         </div>
+
+        {/* Winner Reminder */}
+        <WinnerReminder 
+          winningProjects={projects.filter(project => project.weekly_position && project.weekly_position >= 1 && project.weekly_position <= 3)} 
+        />
 
         {/* Tab Content */}
         {loading ? (
@@ -523,14 +560,12 @@ function DashboardContent() {
               {[...Array(4)].map((_, i) => (
                 <div
                   key={i}
-                  className="card bg-base-100 shadow-sm border border-base-300"
+                  className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm"
                 >
-                  <div className="card-body p-6">
-                    <div className="animate-pulse">
-                      <div className="skeleton h-4 w-20 mb-2"></div>
-                      <div className="skeleton h-8 w-16 mb-2"></div>
-                      <div className="skeleton h-3 w-24"></div>
-                    </div>
+                  <div className="animate-pulse">
+                    <div className="skeleton h-4 w-20 mb-2"></div>
+                    <div className="skeleton h-8 w-16 mb-2"></div>
+                    <div className="skeleton h-3 w-24"></div>
                   </div>
                 </div>
               ))}
@@ -539,19 +574,17 @@ function DashboardContent() {
               {[...Array(3)].map((_, i) => (
                 <div
                   key={i}
-                  className="card bg-base-100 shadow-sm border border-base-300"
+                  className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm"
                 >
-                  <div className="card-body p-6">
-                    <div className="animate-pulse space-y-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="skeleton w-12 h-12 rounded-lg"></div>
-                        <div className="space-y-2">
-                          <div className="skeleton h-4 w-32"></div>
-                          <div className="skeleton h-3 w-24"></div>
-                        </div>
+                  <div className="animate-pulse space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="skeleton w-12 h-12 rounded-lg"></div>
+                      <div className="space-y-2">
+                        <div className="skeleton h-4 w-32"></div>
+                        <div className="skeleton h-3 w-24"></div>
                       </div>
-                      <div className="skeleton h-12 w-full"></div>
                     </div>
+                    <div className="skeleton h-12 w-full"></div>
                   </div>
                 </div>
               ))}
@@ -568,7 +601,7 @@ function DashboardContent() {
                 description="Submissions to date"
               />
               <StatsCard
-                icon={Plus}
+                icon={ThumbsUp}
                 title="Total Votes"
                 value={formatNumber(stats.totalVotesReceived || 0)}
                 description="Across all AI projects"
@@ -590,14 +623,14 @@ function DashboardContent() {
             {/* AI Projects Section */}
             <div>
               <div className="mb-6">
-                <h2 className="text-2xl font-bold">Your AI Projects</h2>
-                <p className="text-base-content/60">
+                <h2 className="text-2xl font-bold text-gray-900">Your AI Projects</h2>
+                <p className="text-gray-600">
                   Manage and track your submitted AI projects
                 </p>
               </div>
 
               {projects.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
                   {projects.map((project) => (
                     <ProjectCard 
                       key={project.id} 
@@ -609,22 +642,22 @@ function DashboardContent() {
               ) : (
                 // Empty State
                 <div className="text-center py-16">
-                  <div className="w-24 h-24 mx-auto bg-base-200 rounded-full flex items-center justify-center mb-6">
-                    <Plus className="w-12 h-12 text-base-content/30" />
+                  <div className="w-24 h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                    <Plus className="w-12 h-12 text-gray-400" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">
+                  <h3 className="text-xl font-semibold mb-2 text-gray-900">
                     No AI projects yet
                   </h3>
-                  <p className="text-base-content/60 mb-6 max-w-md mx-auto">
+                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
                     Ready to launch your first AI project? Submit it now and
                     start building your audience and getting valuable backlinks.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
-                    <Link href="/submit" className="btn btn-primary">
-                      <Plus className="w-4 h-4 mr-2" />
+                    <Link href="/submit" className="inline-flex items-center gap-2 px-6 py-3 bg-[#ED0D79] text-white font-semibold rounded-lg hover:bg-[#ED0D79]/90 transition duration-300 ease-in-out hover:scale-[1.02] shadow-sm">
+                      <Plus className="w-4 h-4" />
                       Submit Your First AI Project
                     </Link>
-                    <Link href="/projects" className="btn btn-outline">
+                    <Link href="/projects" className="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-700 font-semibold rounded-lg border border-gray-200 hover:border-[#ED0D79] hover:bg-gray-50 transition duration-300 ease-in-out hover:scale-[1.02] shadow-sm">
                       Browse Examples
                     </Link>
                   </div>
@@ -641,7 +674,7 @@ function DashboardContent() {
 export default function DashboardPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-base-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <span className="loading loading-spinner loading-lg"></span>
       </div>
     }>

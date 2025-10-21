@@ -1,5 +1,6 @@
 import React from "react";
 import Image from "next/image";
+import { ArrowUpRight } from "iconoir-react";
 
 export default function SponsorCard({
   sponsor,
@@ -12,7 +13,8 @@ export default function SponsorCard({
       rel="noopener noreferrer"
       className="w-full"
     >
-      <div className="flex items-center gap-4 border rounded-2xl p-5 w-full bg-white transition duration-300 hover:border-gray-900 cursor-pointer">
+      <div className="relative flex items-start gap-4 border rounded-2xl p-5 w-full bg-white transition duration-300 hover:border-[#ED0D79] cursor-pointer group">
+
         <div className="flex-shrink-0">
           <Image
             src={sponsor.logo}
@@ -30,6 +32,11 @@ export default function SponsorCard({
             {sponsor.description}
           </div>
         </div>
+        
+        {/* Arrow icon that appears on hover */}
+        <ArrowUpRight 
+          className="absolute top-3 right-3 w-5 h-5 text-[#ED0D79] opacity-0 translate-x-0 translate-y-0 group-hover:opacity-100 group-hover:translate-x-1 group-hover:translate-y-[-4px] transition-all duration-300 ease-out"
+        />
       </div>
     </a>
   ) : (
