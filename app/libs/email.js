@@ -583,6 +583,458 @@ export const emailTemplates = {
     `
   },
 
+  // Submission received notification
+  submissionReceived: {
+    subject: (projectName) => `📋 ${projectName} submission received - Under review`,
+    html: (data) => `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>Submission Received</title>
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8fafc;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
+                  ALS
+                </div>
+                <div style="font-size: 48px; margin-bottom: 10px;">📋</div>
+                <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: 700;">
+                  Submission Received!
+                </h1>
+              </div>
+              
+              <div style="text-align: center; margin-bottom: 30px;">
+                <h2 style="color: #1f2937; margin: 0 0 10px 0; font-size: 22px;">
+                  ${data.projectName} is under review
+                </h2>
+                <p style="color: #6b7280; margin: 0; font-size: 16px;">
+                  Thank you for submitting your AI project! Our team is now reviewing your submission.
+                </p>
+              </div>
+
+              <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 20px; margin: 30px 0;">
+                <h3 style="margin: 0 0 10px 0; color: #0c4a6e; font-size: 16px;">What happens next?</h3>
+                <ul style="margin: 0; padding-left: 20px; color: #0c4a6e; font-size: 14px;">
+                  <li style="margin-bottom: 8px;">Our team will review your submission within 24-48 hours</li>
+                  <li style="margin-bottom: 8px;">You'll receive an email once your project is approved or if we need changes</li>
+                  <li style="margin-bottom: 8px;">If approved, your project will go live and enter the weekly competition</li>
+                  <li>You can track your submission status in your dashboard</li>
+                </ul>
+              </div>
+
+              <div style="background: #f3f4f6; border-radius: 8px; padding: 24px; margin: 30px 0;">
+                <h3 style="margin: 0 0 15px 0; color: #1f2937; font-size: 18px;">While you wait:</h3>
+                <ul style="margin: 0; padding-left: 20px; color: #4b5563;">
+                  <li style="margin-bottom: 8px;">Share your project with friends and get feedback</li>
+                  <li style="margin-bottom: 8px;">Prepare your launch strategy for when it goes live</li>
+                  <li style="margin-bottom: 8px;">Explore other AI projects on the platform</li>
+                  <li>Join our community discussions</li>
+                </ul>
+              </div>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" 
+                   style="display: inline-block; background: #ED0D79; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
+                  View Dashboard
+                </a>
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}/projects" 
+                   style="display: inline-block; background: #6b7280; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                  Browse Projects
+                </a>
+              </div>
+
+              <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; text-align: center;">
+                <p style="color: #6b7280; font-size: 14px; margin: 0;">
+                  Questions? Contact us at hello@ailaunch.space<br>
+                  The AI Launch Space Team
+                </p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `
+  },
+
+  // Launch week reminder notification
+  launchWeekReminder: {
+    subject: (projectName) => `🚀 ${projectName} is launching this week - Time to promote!`,
+    html: (data) => `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>Launch Week Reminder</title>
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8fafc;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
+                  ALS
+                </div>
+                <div style="font-size: 48px; margin-bottom: 10px;">🚀</div>
+                <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: 700;">
+                  Launch Week Starts Now!
+                </h1>
+              </div>
+              
+              <div style="text-align: center; margin-bottom: 30px;">
+                <h2 style="color: #1f2937; margin: 0 0 10px 0; font-size: 22px;">
+                  ${data.projectName} is competing this week
+                </h2>
+                <p style="color: #6b7280; margin: 0; font-size: 16px;">
+                  Your project is now live and competing for votes! This is your chance to make it to the top 3.
+                </p>
+              </div>
+
+              <div style="background: linear-gradient(135deg, #10b981, #059669); color: white; border-radius: 12px; padding: 24px; margin: 30px 0; text-align: center;">
+                <h3 style="margin: 0 0 15px 0; font-size: 20px;">Competition Details</h3>
+                <div style="display: flex; justify-content: space-around; text-align: center;">
+                  <div>
+                    <div style="font-size: 24px; font-weight: bold;">${data.competitionWeek}</div>
+                    <div style="font-size: 14px; opacity: 0.9;">Competition Week</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 24px; font-weight: bold;">${data.endDate}</div>
+                    <div style="font-size: 14px; opacity: 0.9;">Ends</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; margin: 30px 0;">
+                <h3 style="margin: 0 0 10px 0; color: #92400e; font-size: 16px;">Action Required:</h3>
+                <p style="margin: 0; color: #92400e; font-size: 14px;">
+                  <strong>Start promoting your launch now!</strong> The more people who discover and vote for your project, the better your chances of winning.
+                </p>
+              </div>
+
+              <div style="background: #f3f4f6; border-radius: 8px; padding: 24px; margin: 30px 0;">
+                <h3 style="margin: 0 0 15px 0; color: #1f2937; font-size: 18px;">How to promote your launch:</h3>
+                <ul style="margin: 0; padding-left: 20px; color: #4b5563;">
+                  <li style="margin-bottom: 8px;">Share on social media (Twitter, LinkedIn, Facebook)</li>
+                  <li style="margin-bottom: 8px;">Post in relevant communities and forums</li>
+                  <li style="margin-bottom: 8px;">Email your network and ask for votes</li>
+                  <li style="margin-bottom: 8px;">Create engaging content about your project</li>
+                  <li>Engage with other participants and voters</li>
+                </ul>
+              </div>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}/project/${data.slug}" 
+                   style="display: inline-block; background: #ED0D79; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
+                  View Your Project
+                </a>
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" 
+                   style="display: inline-block; background: #6b7280; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                  Track Performance
+                </a>
+              </div>
+
+              <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; text-align: center;">
+                <p style="color: #6b7280; font-size: 14px; margin: 0;">
+                  Good luck with your launch!<br>
+                  The AI Launch Space Team
+                </p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `
+  },
+
+  // Competition week start notification (promo email)
+  competitionWeekStart: {
+    subject: () => `🏆 New competition week started - Discover premium AI launches!`,
+    html: (data) => `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>New Competition Week</title>
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8fafc;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
+                  ALS
+                </div>
+                <div style="font-size: 48px; margin-bottom: 10px;">🏆</div>
+                <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: 700;">
+                  New Competition Week!
+                </h1>
+              </div>
+              
+              <div style="text-align: center; margin-bottom: 30px;">
+                <h2 style="color: #1f2937; margin: 0 0 10px 0; font-size: 22px;">
+                  Week ${data.competitionWeek} is now live
+                </h2>
+                <p style="color: #6b7280; margin: 0; font-size: 16px;">
+                  Discover amazing new AI projects and vote for your favorites. Premium launches are featured this week!
+                </p>
+              </div>
+
+              <div style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; border-radius: 12px; padding: 24px; margin: 30px 0; text-align: center;">
+                <h3 style="margin: 0 0 15px 0; font-size: 20px;">Featured Premium Launches</h3>
+                <div style="display: flex; justify-content: space-around; text-align: center;">
+                  <div>
+                    <div style="font-size: 24px; font-weight: bold;">${data.premiumCount}</div>
+                    <div style="font-size: 14px; opacity: 0.9;">Premium Projects</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 24px; font-weight: bold;">${data.totalCount}</div>
+                    <div style="font-size: 14px; opacity: 0.9;">Total Projects</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin: 20px 0;">
+                <h3 style="margin: 0 0 15px 0; color: #1f2937; font-size: 18px;">Featured Projects This Week:</h3>
+                <div style="background: #f9fafb; border-radius: 8px; padding: 20px;">
+                  ${data.featuredProjects && data.featuredProjects.length > 0 ? data.featuredProjects.map(project => `
+                    <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e5e7eb;">
+                      <h4 style="margin: 0 0 5px 0; color: #1f2937; font-size: 16px;">
+                        <a href="${process.env.NEXT_PUBLIC_APP_URL}/project/${project.slug}" style="color: #ED0D79; text-decoration: none;">${project.name}</a>
+                        ${project.premium_badge ? '<span style="background: #8b5cf6; color: white; padding: 2px 6px; border-radius: 4px; font-size: 12px; margin-left: 8px;">PREMIUM</span>' : ''}
+                      </h4>
+                      <p style="margin: 0; color: #6b7280; font-size: 14px;">${project.short_description}</p>
+                    </div>
+                  `).join('') : '<p style="color: #6b7280; font-size: 14px; margin: 0;">Check out the latest projects on our platform!</p>'}
+                </div>
+              </div>
+
+              <div style="background: #f3f4f6; border-radius: 8px; padding: 24px; margin: 30px 0;">
+                <h3 style="margin: 0 0 15px 0; color: #1f2937; font-size: 18px;">How to participate:</h3>
+                <ul style="margin: 0; padding-left: 20px; color: #4b5563;">
+                  <li style="margin-bottom: 8px;">Vote for your favorite AI projects</li>
+                  <li style="margin-bottom: 8px;">Share projects you love on social media</li>
+                  <li style="margin-bottom: 8px;">Submit your own AI project for next week</li>
+                  <li>Join the community discussions</li>
+                </ul>
+              </div>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}/projects" 
+                   style="display: inline-block; background: #ED0D79; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
+                  Browse All Projects
+                </a>
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}/submit" 
+                   style="display: inline-block; background: #6b7280; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                  Submit Your Project
+                </a>
+              </div>
+
+              <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; text-align: center;">
+                <p style="color: #6b7280; font-size: 14px; margin: 0;">
+                  Happy voting and good luck to all participants!<br>
+                  The AI Launch Space Team
+                </p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `
+  },
+
+  // Competition week end notification (winner shoutout)
+  competitionWeekEnd: {
+    subject: () => `🎉 Competition Week ${data.competitionWeek} Results - Meet the Winners!`,
+    html: (data) => `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>Competition Results</title>
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8fafc;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
+                  ALS
+                </div>
+                <div style="font-size: 48px; margin-bottom: 10px;">🎉</div>
+                <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: 700;">
+                  Competition Results!
+                </h1>
+              </div>
+              
+              <div style="text-align: center; margin-bottom: 30px;">
+                <h2 style="color: #1f2937; margin: 0 0 10px 0; font-size: 22px;">
+                  Week ${data.competitionWeek} Winners
+                </h2>
+                <p style="color: #6b7280; margin: 0; font-size: 16px;">
+                  Congratulations to this week's top performers! Check out the amazing AI projects that won.
+                </p>
+              </div>
+
+              <div style="background: linear-gradient(135deg, #f59e0b, #f97316); color: white; border-radius: 12px; padding: 24px; margin: 30px 0; text-align: center;">
+                <h3 style="margin: 0 0 15px 0; font-size: 20px;">This Week's Champions</h3>
+                <div style="display: flex; justify-content: space-around; text-align: center;">
+                  <div>
+                    <div style="font-size: 24px; font-weight: bold;">${data.totalVotes}</div>
+                    <div style="font-size: 14px; opacity: 0.9;">Total Votes</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 24px; font-weight: bold;">${data.totalProjects}</div>
+                    <div style="font-size: 14px; opacity: 0.9;">Projects</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 24px; font-weight: bold;">${data.winners.length}</div>
+                    <div style="font-size: 14px; opacity: 0.9;">Winners</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin: 20px 0;">
+                <h3 style="margin: 0 0 15px 0; color: #1f2937; font-size: 18px;">🏆 Winners This Week:</h3>
+                <div style="background: #f9fafb; border-radius: 8px; padding: 20px;">
+                  ${data.winners && data.winners.length > 0 ? data.winners.map((winner, index) => `
+                    <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+                      <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <div style="background: ${index === 0 ? '#fbbf24' : index === 1 ? '#9ca3af' : '#cd7f32'}; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 12px;">
+                          ${index + 1}
+                        </div>
+                        <h4 style="margin: 0; color: #1f2937; font-size: 18px;">
+                          <a href="${process.env.NEXT_PUBLIC_APP_URL}/project/${winner.slug}" style="color: #ED0D79; text-decoration: none;">${winner.name}</a>
+                        </h4>
+                      </div>
+                      <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 14px;">${winner.short_description}</p>
+                      <div style="display: flex; gap: 15px; font-size: 12px; color: #9ca3af;">
+                        <span>👆 ${winner.upvotes} votes</span>
+                        <span>👁️ ${winner.views} views</span>
+                        ${winner.premium_badge ? '<span style="background: #8b5cf6; color: white; padding: 2px 6px; border-radius: 4px;">PREMIUM</span>' : ''}
+                      </div>
+                    </div>
+                  `).join('') : '<p style="color: #6b7280; font-size: 14px; margin: 0;">No winners this week.</p>'}
+                </div>
+              </div>
+
+              <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 20px; margin: 30px 0;">
+                <h3 style="margin: 0 0 10px 0; color: #0c4a6e; font-size: 16px;">What's Next?</h3>
+                <p style="margin: 0; color: #0c4a6e; font-size: 14px;">
+                  <strong>New competition starts Monday!</strong> Submit your AI project for next week's competition and compete for the top 3 positions.
+                </p>
+              </div>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}/projects" 
+                   style="display: inline-block; background: #ED0D79; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
+                  View All Projects
+                </a>
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}/submit" 
+                   style="display: inline-block; background: #6b7280; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                  Submit for Next Week
+                </a>
+              </div>
+
+              <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; text-align: center;">
+                <p style="color: #6b7280; font-size: 14px; margin: 0;">
+                  Thank you for participating!<br>
+                  The AI Launch Space Team
+                </p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `
+  },
+
+  // Winner backlink reminder notification
+  winnerBacklinkReminder: {
+    subject: (projectName) => `🔗 Final reminder: Add winner badge to ${projectName} for dofollow link`,
+    html: (data) => `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>Final Backlink Reminder</title>
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8fafc;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
+                  ALS
+                </div>
+                <div style="font-size: 48px; margin-bottom: 10px;">🔗</div>
+                <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: 700;">
+                  Final Reminder!
+                </h1>
+              </div>
+              
+              <div style="text-align: center; margin-bottom: 30px;">
+                <h2 style="color: #1f2937; margin: 0 0 10px 0; font-size: 22px;">
+                  ${data.projectName} won #${data.position}!
+                </h2>
+                <p style="color: #6b7280; margin: 0; font-size: 16px;">
+                  This is your final reminder to add the winner badge to your website to activate your dofollow backlink.
+                </p>
+              </div>
+
+              <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 20px; margin: 30px 0;">
+                <h3 style="margin: 0 0 10px 0; color: #dc2626; font-size: 16px;">⏰ Time is running out!</h3>
+                <p style="margin: 0; color: #dc2626; font-size: 14px;">
+                  <strong>You have ${data.daysLeft} days left</strong> to add the winner badge. After that, the dofollow link will expire and you'll lose this valuable SEO benefit.
+                </p>
+              </div>
+
+              <div style="background: #f3f4f6; border-radius: 8px; padding: 24px; margin: 30px 0;">
+                <h3 style="margin: 0 0 15px 0; color: #1f2937; font-size: 18px;">Quick setup steps:</h3>
+                <ol style="margin: 0; padding-left: 20px; color: #4b5563;">
+                  <li style="margin-bottom: 8px;">Go to your dashboard</li>
+                  <li style="margin-bottom: 8px;">Copy the winner badge embed code</li>
+                  <li style="margin-bottom: 8px;">Add it to your website's HTML</li>
+                  <li>Your dofollow link will be activated within 24 hours</li>
+                </ol>
+              </div>
+
+              <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 20px; margin: 30px 0;">
+                <h3 style="margin: 0 0 10px 0; color: #0c4a6e; font-size: 16px;">Why this matters:</h3>
+                <ul style="margin: 0; padding-left: 20px; color: #0c4a6e; font-size: 14px;">
+                  <li style="margin-bottom: 8px;">Dofollow backlinks boost your website's SEO</li>
+                  <li style="margin-bottom: 8px;">AI Launch Space has high domain authority</li>
+                  <li style="margin-bottom: 8px;">This is a one-time opportunity</li>
+                  <li>Share your achievement with your audience</li>
+                </ul>
+              </div>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" 
+                   style="display: inline-block; background: #ef4444; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
+                  Get Badge Code Now
+                </a>
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}/project/${data.slug}" 
+                   style="display: inline-block; background: #6b7280; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                  View Your Win
+                </a>
+              </div>
+
+              <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; text-align: center;">
+                <p style="color: #6b7280; font-size: 14px; margin: 0;">
+                  Need help? Contact us immediately at hello@ailaunch.space<br>
+                  The AI Launch Space Team
+                </p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `
+  },
+
   // Newsletter notifications
   newsletterWelcome: {
     subject: () => `Welcome to AI Launch Space Newsletter! 🎉`,
@@ -877,12 +1329,35 @@ export const notificationService = {
   },
 
   // Submission notifications
+  async submissionReceived(userEmail, projectData) {
+    return await sendEmail(userEmail, 'submissionReceived', projectData);
+  },
+
   async submissionApproval(userEmail, projectData) {
     return await sendEmail(userEmail, 'submissionApproval', projectData);
   },
 
   async submissionDecline(userEmail, projectData) {
     return await sendEmail(userEmail, 'submissionDecline', projectData);
+  },
+
+  // Launch week reminder notifications
+  async launchWeekReminder(userEmail, projectData) {
+    return await sendEmail(userEmail, 'launchWeekReminder', projectData);
+  },
+
+  // Competition notifications
+  async competitionWeekStart(userEmail, competitionData) {
+    return await sendEmail(userEmail, 'competitionWeekStart', competitionData);
+  },
+
+  async competitionWeekEnd(userEmail, competitionData) {
+    return await sendEmail(userEmail, 'competitionWeekEnd', competitionData);
+  },
+
+  // Winner backlink reminder notifications
+  async winnerBacklinkReminder(userEmail, projectData) {
+    return await sendEmail(userEmail, 'winnerBacklinkReminder', projectData);
   },
 
   // Newsletter notifications

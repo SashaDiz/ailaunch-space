@@ -35,6 +35,7 @@ class NotificationManager {
       const mandatoryNotifications = [
         'account_creation',
         'account_deletion', 
+        'submission_received',
         'submission_approval',
         'submission_decline'
       ];
@@ -188,10 +189,15 @@ class NotificationManager {
       'account_creation': 'accountCreation',
       'account_deletion': 'accountDeletion',
       'weekly_competition_entry': 'weeklyCompetitionEntry',
+      'submission_received': 'submissionReceived',
       'submission_approval': 'submissionApproval',
       'submission_decline': 'submissionDecline',
+      'launch_week_reminder': 'launchWeekReminder',
+      'competition_week_start': 'competitionWeekStart',
+      'competition_week_end': 'competitionWeekEnd',
       'competition_winners': 'competitionWinners',
-      'winner_reminder': 'winnerReminder'
+      'winner_reminder': 'winnerReminder',
+      'winner_backlink_reminder': 'winnerBacklinkReminder'
     };
 
     const serviceMethod = serviceMap[emailType];
@@ -210,10 +216,15 @@ class NotificationManager {
       account_creation: true, // Mandatory - always enabled
       account_deletion: true, // Mandatory - always enabled
       weekly_competition_entry: true,
+      submission_received: true, // Mandatory - always enabled
       submission_approval: true, // Mandatory - always enabled
       submission_decline: true, // Mandatory - always enabled
+      launch_week_reminder: true,
+      competition_week_start: false,
+      competition_week_end: false,
       competition_winners: true,
       winner_reminder: true,
+      winner_backlink_reminder: true,
       weekly_digest: false,
       marketing_emails: false
     };
@@ -226,6 +237,7 @@ class NotificationManager {
     return [
       'account_creation',
       'account_deletion',
+      'submission_received',
       'submission_approval',
       'submission_decline'
     ];
@@ -302,6 +314,23 @@ class NotificationManager {
   }
 
   /**
+   * Send submission received notification
+   * @param {Object} params - Parameters
+   */
+  async sendSubmissionReceivedNotification({ userId, userEmail, project }) {
+    return await this.sendNotification({
+      userId,
+      emailType: 'submission_received',
+      userEmail,
+      appId: project.id,
+      data: {
+        projectName: project.name,
+        slug: project.slug
+      }
+    });
+  }
+
+  /**
    * Send submission approval notification
    * @param {Object} params - Parameters
    */
@@ -359,6 +388,64 @@ class NotificationManager {
   }
 
   /**
+   * Send launch week reminder notification
+   * @param {Object} params - Parameters
+   */
+  async sendLaunchWeekReminderNotification({ userId, userEmail, project, competition }) {
+    return await this.sendNotification({
+      userId,
+      emailType: 'launch_week_reminder',
+      userEmail,
+      appId: project.id,
+      competitionId: competition.id,
+      data: {
+        projectName: project.name,
+        slug: project.slug,
+        competitionWeek: competition.competition_id,
+        endDate: new Date(competition.end_date).toLocaleDateString()
+      }
+    });
+  }
+
+  /**
+   * Send competition week start notification
+   * @param {Object} params - Parameters
+   */
+  async sendCompetitionWeekStartNotification({ userEmail, competition, featuredProjects }) {
+    return await this.sendNotification({
+      userId: null, // This is a newsletter-style notification
+      emailType: 'competition_week_start',
+      userEmail,
+      competitionId: competition.id,
+      data: {
+        competitionWeek: competition.competition_id,
+        premiumCount: featuredProjects.filter(p => p.premium_badge).length,
+        totalCount: featuredProjects.length,
+        featuredProjects: featuredProjects.slice(0, 5) // Show top 5 projects
+      }
+    });
+  }
+
+  /**
+   * Send competition week end notification
+   * @param {Object} params - Parameters
+   */
+  async sendCompetitionWeekEndNotification({ userEmail, competition, winners, totalVotes, totalProjects }) {
+    return await this.sendNotification({
+      userId: null, // This is a newsletter-style notification
+      emailType: 'competition_week_end',
+      userEmail,
+      competitionId: competition.id,
+      data: {
+        competitionWeek: competition.competition_id,
+        winners,
+        totalVotes,
+        totalProjects
+      }
+    });
+  }
+
+  /**
    * Send winner reminder notification
    * @param {Object} params - Parameters
    */
@@ -372,6 +459,25 @@ class NotificationManager {
         projectName: project.name,
         slug: project.slug,
         position
+      }
+    });
+  }
+
+  /**
+   * Send winner backlink reminder notification
+   * @param {Object} params - Parameters
+   */
+  async sendWinnerBacklinkReminderNotification({ userId, userEmail, project, position, daysLeft }) {
+    return await this.sendNotification({
+      userId,
+      emailType: 'winner_backlink_reminder',
+      userEmail,
+      appId: project.id,
+      data: {
+        projectName: project.name,
+        slug: project.slug,
+        position,
+        daysLeft
       }
     });
   }

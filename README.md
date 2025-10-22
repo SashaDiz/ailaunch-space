@@ -427,11 +427,32 @@ const { data: { user } } = await supabase.auth.getUser(token);
   - **Schedule**: Runs every hour (configured in `vercel.json`)
   - **Manual trigger**: `curl -H "Authorization: Bearer YOUR_CRON_SECRET" https://yourdomain.com/api/cron/competitions`
 
+- `GET /api/cron/competition-week-start` - Send competition week start notifications
+  - Sends promo emails to newsletter subscribers when new competition week starts
+  - Features premium launches and competition details
+  - **Authentication**: Requires `Authorization: Bearer CRON_SECRET` header
+  - **Schedule**: Runs when new competition week starts
+  - **Manual trigger**: `curl -H "Authorization: Bearer YOUR_CRON_SECRET" https://yourdomain.com/api/cron/competition-week-start`
+
+- `GET /api/cron/competition-week-end` - Send competition week end notifications
+  - Sends winner shoutout emails to newsletter subscribers when competition week ends
+  - Features competition results and winners
+  - **Authentication**: Requires `Authorization: Bearer CRON_SECRET` header
+  - **Schedule**: Runs when competition week ends
+  - **Manual trigger**: `curl -H "Authorization: Bearer YOUR_CRON_SECRET" https://yourdomain.com/api/cron/competition-week-end`
+
 - `GET /api/cron/winner-reminders` - Send daily reminders to competition winners
   - Reminds winners to add badges to their websites
   - **Authentication**: Requires `Authorization: Bearer CRON_SECRET` header
   - **Schedule**: Runs daily at 9 AM UTC
   - **Manual trigger**: `curl -H "Authorization: Bearer YOUR_CRON_SECRET" https://yourdomain.com/api/cron/winner-reminders`
+
+- `GET /api/cron/winner-backlink-reminders` - Send final reminders for expiring dofollow links
+  - Sends urgent reminders to winners with expiring backlinks
+  - Calculates days remaining before link expiration
+  - **Authentication**: Requires `Authorization: Bearer CRON_SECRET` header
+  - **Schedule**: Runs daily
+  - **Manual trigger**: `curl -H "Authorization: Bearer YOUR_CRON_SECRET" https://yourdomain.com/api/cron/winner-backlink-reminders`
 
 - `GET /api/cron/account-notifications` - Send welcome emails for new accounts
   - Catches up on missed welcome emails
@@ -503,34 +524,144 @@ The platform uses 12 PostgreSQL tables with Row Level Security (RLS) enabled:
 ## 📧 Email Notification System
 
 ### Overview
-The platform includes a comprehensive email notification system that provides automated notifications for various user actions and events, with user preference management and comprehensive tracking.
+The platform includes a comprehensive email notification system that provides automated notifications for various user actions and events, with user preference management and comprehensive tracking. Built with Resend for email delivery.
 
 ### Notification Types
-1. **Account Notifications**
-   - Account creation welcome email
-   - Account deletion confirmation
 
-2. **Submission Notifications**
-   - Project approval notifications
-   - Project rejection notifications with feedback
+#### 1. Submission Notifications
 
-3. **Competition Notifications**
-   - Weekly competition entry confirmation
-   - Competition winner announcements
-   - Winner badge reminders for dofollow links
+**Submission Received**
+- **Trigger**: When a user submits a project
+- **Template**: `submissionReceived`
+- **Purpose**: Confirms submission and sets expectations
+- **Mandatory**: Yes (cannot be disabled)
 
-4. **Optional Notifications** (Future Features)
-   - Weekly digest
-   - Marketing emails
+**Submission Approved**
+- **Trigger**: When an admin approves a project
+- **Template**: `submissionApproval`
+- **Purpose**: Notifies user their project is now live
+- **Mandatory**: Yes (cannot be disabled)
+
+**Submission Declined**
+- **Trigger**: When an admin rejects a project
+- **Template**: `submissionDecline`
+- **Purpose**: Notifies user with rejection reason
+- **Mandatory**: Yes (cannot be disabled)
+- **Includes**: Rejection reason (e.g., "It's only AI projects allowed to launch")
+
+#### 2. Competition Notifications
+
+**Launch Week Reminder**
+- **Trigger**: When a project enters the launching week
+- **Template**: `launchWeekReminder`
+- **Purpose**: Reminds users to promote their launches
+- **Data**: Competition details, promotion tips
+
+**Competition Week Start**
+- **Trigger**: When a new competition week starts
+- **Template**: `competitionWeekStart`
+- **Purpose**: Promo email featuring premium launches
+- **Recipients**: Newsletter subscribers
+- **Data**: Featured projects, premium count, total count
+
+**Competition Week End**
+- **Trigger**: When a competition week ends
+- **Template**: `competitionWeekEnd`
+- **Purpose**: Promo email shouting out winners
+- **Recipients**: Newsletter subscribers
+- **Data**: Winners, total votes, total projects
+
+**Competition Winners**
+- **Trigger**: When a user's project wins
+- **Template**: `competitionWinners`
+- **Purpose**: Notifies winners of their achievement
+- **Data**: Position, votes, views
+
+#### 3. Winner Backlink Notifications
+
+**Winner Reminder**
+- **Trigger**: Daily cron job for winners who haven't added badges
+- **Template**: `winnerReminder`
+- **Purpose**: Reminds winners to add winner badge
+- **Data**: Project details, position
+
+**Winner Backlink Reminder (Final)**
+- **Trigger**: Daily cron job for winners with expiring backlinks
+- **Template**: `winnerBacklinkReminder`
+- **Purpose**: Final reminder before dofollow link expires
+- **Data**: Days left, urgency messaging
 
 ### User Preferences
-Users can manage their notification preferences in the Settings page (`/settings`). Each notification type can be individually enabled/disabled.
+Users can manage their notification preferences in the Settings page (`/settings`). Each notification type can be individually enabled/disabled except for mandatory notifications:
+
+**Mandatory Notifications (Cannot be disabled):**
+- Account creation
+- Account deletion
+- Submission received
+- Submission approval
+- Submission decline
+
+**Optional Notifications:**
+- Weekly competition entry
+- Launch week reminder
+- Competition week start
+- Competition week end
+- Competition winners
+- Winner reminder
+- Winner backlink reminder
+- Weekly digest
+- Marketing emails
 
 ### Architecture
 - **Email Templates** (`app/libs/email.js`) - Beautiful, responsive HTML email templates with consistent branding
 - **Notification Service** (`app/libs/notification-service.js`) - Comprehensive notification management with user preference checking
 - **Database Tracking** - All emails tracked in `email_notifications` table with delivery status
 - **Resend Integration** - Professional email delivery with tracking and error handling
+
+### Cron Jobs
+
+**Competition Management** (`/api/cron/competitions`)
+- Runs daily at midnight UTC
+- Creates upcoming competitions
+- Activates started competitions
+- Completes ended competitions
+- Awards winners
+- Sends launch week reminders
+
+**Competition Week Start** (`/api/cron/competition-week-start`)
+- Runs when new competition week starts
+- Sends promo emails to newsletter subscribers
+- Features premium launches
+
+**Competition Week End** (`/api/cron/competition-week-end`)
+- Runs when competition week ends
+- Sends winner shoutout emails to newsletter subscribers
+- Features competition results
+
+**Winner Reminders** (`/api/cron/winner-reminders`)
+- Runs daily
+- Sends reminders to winners who haven't added badges
+- Prevents duplicate reminders
+
+**Winner Backlink Reminders** (`/api/cron/winner-backlink-reminders`)
+- Runs daily
+- Sends final reminders for expiring dofollow links
+- Calculates days remaining
+
+### Resend Integration
+
+**Setup Requirements:**
+1. **API Key**: Set `RESEND_API_KEY` in environment variables
+2. **From Address**: Configured as `AI Launch Space <noreply@ailaunch.space>`
+3. **Development Mode**: Uses `onboarding@resend.dev` for testing
+
+**Do You Need Resend Webhooks?**
+- **Short Answer: No, webhooks are not required for basic functionality.**
+- The current system works without webhooks because:
+  - Email delivery is handled automatically
+  - Built-in error handling in the notification service
+  - All notifications are tracked in the database
+  - Failed notifications can be retried manually
 
 ### Integration Points
 The notification system is integrated into:
@@ -553,7 +684,10 @@ ailaunchspace/
 │   │   ├── cron/           # Automated cron jobs
 │   │   │   ├── account-notifications/  # Welcome email catch-up
 │   │   │   ├── competitions/           # Competition lifecycle
-│   │   │   └── winner-reminders/       # Winner badge reminders
+│   │   │   ├── competition-week-start/ # Competition week start notifications
+│   │   │   ├── competition-week-end/   # Competition week end notifications
+│   │   │   ├── winner-reminders/       # Winner badge reminders
+│   │   │   └── winner-backlink-reminders/ # Winner backlink expiration reminders
 │   │   ├── projects/       # Project CRUD
 │   │   ├── newsletter/     # Newsletter subscriptions
 │   │   ├── notifications/  # Email notifications

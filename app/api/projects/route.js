@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { getSupabaseAdmin } from "../../libs/supabase.js";
 import { db } from "../../libs/database.js";
 import { webhookEvents } from "../../libs/webhooks.js";
+import { notificationManager } from "../../libs/notification-service.js";
 // import { ProjectSubmissionSchema } from "../../libs/models/schemas";
 
 // GET /api/projects - Get AI projects with filtering and sorting
@@ -1008,6 +1009,23 @@ export async function POST(request) {
       console.log('Skipping competition count increment for premium plan - will be counted after payment confirmation');
     }
 
+    // Send submission received notification
+    try {
+      if (user && user.email) {
+        await notificationManager.sendSubmissionReceivedNotification({
+          userId: user.id,
+          userEmail: user.email,
+          project: {
+            id: result.insertedId,
+            name: projectData.name,
+            slug: projectData.slug
+          }
+        });
+      }
+    } catch (notificationError) {
+      console.error("Failed to send submission received notification:", notificationError);
+      // Don't fail the submission if notification fails
+    }
 
     return NextResponse.json({
       success: true,

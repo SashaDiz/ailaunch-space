@@ -281,6 +281,20 @@ async function activateScheduledProjects(competitionId) {
         try {
           const user = await db.findOne('users', { id: userId });
           if (user && user.email) {
+            // Send launch week reminder notification for each project
+            for (const project of projectsForUser) {
+              try {
+                await notificationManager.sendLaunchWeekReminderNotification({
+                  userId: user.id,
+                  userEmail: user.email,
+                  project: project,
+                  competition: competition,
+                });
+              } catch (reminderErr) {
+                console.error(`Failed to send launch week reminder for project ${project.name}:`, reminderErr);
+              }
+            }
+
             // If only one project, keep single template for better subject line
             if (projectsForUser.length === 1) {
               await notificationManager.sendWeeklyCompetitionEntryNotification({
