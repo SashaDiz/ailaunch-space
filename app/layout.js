@@ -26,7 +26,7 @@ export const metadata = {
     siteName: "AI Launch Space",
     images: [
       {
-        url: "/og-image.png",
+        url: "/assets/OG_img.png",
         width: 1200,
         height: 630,
         alt: "AI Launch Space - Weekly Competition Platform for AI Projects",
@@ -37,7 +37,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "AI Launch Space - Weekly Competition Platform for AI Projects",
     description: "Submit your AI project to the weekly competition and get high authority backlinks.",
-    images: ["/og-image.png"],
+    images: ["/assets/OG_img.png"],
     creator: "@ailaunchspace",
   },
   robots: {
@@ -60,7 +60,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" data-theme="light" className="scroll-smooth" data-scroll-behavior="smooth">
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/assets/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="theme-color" content="#ED0D79" />
         <meta name="mobile-web-app-capable" content="yes" />
