@@ -8,6 +8,7 @@ import {
   Link,
   Check,
   Copy,
+  Github,
 } from "iconoir-react";
 import toast from "react-hot-toast";
 
@@ -319,6 +320,13 @@ export function SocialFollow({
       name: "X",
       url: "https://x.com/ailaunchspace",
       icon: X,
+      color: "text-white",
+      bgColor: "hover:bg-[#ED0D79]",
+    },
+    {
+      name: "GitHub",
+      url: "https://github.com/SashaDiz/ailaunch-space",
+      icon: Github,
       color: "text-white",
       bgColor: "hover:bg-[#ED0D79]",
     },

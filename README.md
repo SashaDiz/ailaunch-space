@@ -1,6 +1,25 @@
-# Directory Hunt 🚀
+# AI Launch Space 🚀
+
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-blue)](https://supabase.com/)
+[![React](https://img.shields.io/badge/React-19-blue)](https://reactjs.org/)
 
 A weekly competition platform for AI projects where AI builders can submit their tools, get valuable backlinks, and compete for weekly recognition. Think Product Hunt but specifically for AI projects and tools.
+
+## 🌟 Live Demo
+
+Visit the live application at [https://ailaunch.space](https://ailaunch.space)
+
+## 🎯 What is AI Launch Space?
+
+AI Launch Space is a community-driven platform that helps AI builders:
+- **Launch their projects** with weekly competitions
+- **Get valuable backlinks** from high-authority domains
+- **Build audience** through community voting
+- **Compete for recognition** with weekly winner badges
+
+Perfect for AI startups, indie developers, and anyone building AI tools who wants to get their project in front of the right audience.
 
 ## 🚀 Features
 
@@ -152,9 +171,34 @@ Test authentication by:
 ### 1. Clone & Install
 
 ```bash
-git clone <repository-url>
-cd ailaunchspace
+# Clone the repository
+git clone https://github.com/SashaDiz/ailaunch-space.git
+cd ailaunch-space
+
+# Install dependencies
 pnpm install
+```
+
+### 2. Development Setup
+
+For a complete development setup, follow the [Development Setup](#-development-setup) section below.
+
+**Quick start for contributors:**
+```bash
+# 1. Fork the repository on GitHub
+# 2. Clone your fork
+git clone https://github.com/YOUR_USERNAME/ailaunch-space.git
+cd ailaunch-space
+
+# 3. Install dependencies
+pnpm install
+
+# 4. Copy environment template
+cp .env.example .env.local
+
+# 5. Set up your environment variables (see Development Setup)
+# 6. Start development server
+pnpm dev
 ```
 
 ### 2. Supabase Setup
@@ -736,6 +780,86 @@ ailaunchspace/
 
 ## 🔧 Development
 
+### Development Setup
+
+This section provides a complete guide for setting up the development environment.
+
+#### Prerequisites
+
+- **Node.js 18+** - [Download here](https://nodejs.org/)
+- **pnpm** - `npm install -g pnpm` (recommended) or use npm
+- **Git** - For version control
+- **Supabase account** - [Sign up here](https://supabase.com) (free tier available)
+
+#### Step-by-Step Setup
+
+1. **Clone and Install**
+   ```bash
+   git clone https://github.com/SashaDiz/ailaunch-space.git
+   cd ailaunch-space
+   pnpm install
+   ```
+
+2. **Environment Configuration**
+   ```bash
+   # Copy the environment template
+   cp .env.example .env.local
+   ```
+   
+   Then edit `.env.local` with your configuration (see [Environment Variables](#environment-variables) below).
+
+3. **Database Setup**
+   - Create a Supabase project at [supabase.com](https://supabase.com)
+   - Run the database schema from `supabase/schema.sql`
+   - Get your API keys from Project Settings → API
+
+4. **Start Development Server**
+   ```bash
+   pnpm dev
+   ```
+   
+   Visit `http://localhost:3000` to see the application!
+
+#### Environment Variables
+
+Create a `.env.local` file with the following variables:
+
+```env
+# App Configuration
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NODE_ENV=development
+
+# Supabase (Get from: https://app.supabase.com/project/_/settings/api)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+SUPABASE_PROJECT_ID=your-project-id
+
+# LemonSqueezy (Payment) - Optional for basic development
+LEMONSQUEEZY_API_KEY=your_lemonsqueezy_api_key
+LEMONSQUEEZY_STORE_ID=your_store_id
+LEMONSQUEEZY_WEBHOOK_SECRET=your_webhook_secret
+LEMONSQUEEZY_PRODUCT_ID_PREMIUM=your_premium_product_id
+
+# Email Notifications (Optional for basic development)
+RESEND_API_KEY=your_resend_api_key
+
+# Cron Job Security (Generate a random secret string)
+CRON_SECRET=your_random_secret_string_here
+
+# Analytics (Optional)
+NEXT_PUBLIC_GA_ID=your_google_analytics_id
+
+# Supabase S3 Storage (for image uploads)
+SUPABASE_S3_ENDPOINT=https://your-project.supabase.co/storage/v1/s3
+SUPABASE_S3_REGION=us-east-1
+SUPABASE_S3_ACCESS_KEY_ID=your_s3_access_key_id
+SUPABASE_S3_SECRET_ACCESS_KEY=your_s3_secret_access_key
+SUPABASE_S3_BUCKET=logos
+```
+
+**Note**: For basic development and testing, you only need the Supabase variables. Other services are optional.
+
 ### Available Scripts
 
 ```bash
@@ -753,6 +877,37 @@ pnpm supabase:types  # Generate TypeScript types
 pnpm test:lemonsqueezy  # Test LemonSqueezy connection and webhook setup
 pnpm webhook:simulate   # Simulate webhook events for testing
 ```
+
+### Development Workflow
+
+1. **Create a feature branch**:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. **Make your changes** and test them:
+   ```bash
+   pnpm dev
+   ```
+
+3. **Run linting**:
+   ```bash
+   pnpm lint
+   ```
+
+4. **Test database connection**:
+   ```bash
+   pnpm db:test
+   ```
+
+5. **Commit and push**:
+   ```bash
+   git add .
+   git commit -m 'Add: your feature description'
+   git push origin feature/your-feature-name
+   ```
+
+6. **Open a Pull Request** on GitHub
 
 ### Admin Features
 
@@ -971,15 +1126,101 @@ All tables have RLS policies enabled:
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+We welcome contributions from the community! Whether you're fixing bugs, adding features, or improving documentation, your help makes AI Launch Space better for everyone.
+
+### How to Contribute
+
+1. **Fork the repository** on GitHub
+2. **Clone your fork** locally:
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/ailaunch-space.git
+   cd ailaunch-space
+   ```
+3. **Create a feature branch**:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+4. **Set up development environment** (see [Development Setup](#-development-setup) below)
+5. **Make your changes** and test them thoroughly
+6. **Commit your changes**:
+   ```bash
+   git commit -m 'Add: your feature description'
+   ```
+7. **Push to your fork**:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+8. **Open a Pull Request** on GitHub
+
+### What We're Looking For
+
+- 🐛 **Bug fixes** - Help us squash bugs and improve stability
+- ✨ **New features** - Add functionality that benefits the community
+- 📚 **Documentation** - Improve setup guides, API docs, and code comments
+- 🎨 **UI/UX improvements** - Make the platform more user-friendly
+- ⚡ **Performance optimizations** - Help the platform run faster
+- 🧪 **Tests** - Add test coverage for better reliability
+
+### Development Guidelines
+
+- **Code Style**: Follow existing patterns and use Prettier for formatting
+- **Commits**: Use clear, descriptive commit messages
+- **Testing**: Test your changes thoroughly before submitting
+- **Documentation**: Update relevant documentation for new features
+- **Breaking Changes**: Discuss major changes in an issue first
+
+### Getting Help
+
+- 💬 **Discussions**: Use GitHub Discussions for questions and ideas
+- 🐛 **Issues**: Report bugs and request features via GitHub Issues
+- 📧 **Contact**: Reach out to [@SashaDiz](https://github.com/SashaDiz) for direct questions
+
+### Recognition
+
+Contributors will be recognized in:
+- 📝 **README Contributors section**
+- 🏆 **Special contributor badges**
+- 🎉 **Release notes** for significant contributions
 
 ## 📝 License
 
-This project is licensed under the MIT License.
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+### What this means for you:
+
+- ✅ **Commercial use** - Use this project in commercial applications
+- ✅ **Modification** - Modify the code to fit your needs
+- ✅ **Distribution** - Share and distribute the code
+- ✅ **Private use** - Use the project privately
+- ❌ **Liability** - No warranty or liability protection
+- ❌ **Warranty** - No warranty provided
+
+## 👥 Contributors
+
+We appreciate all contributors who help make AI Launch Space better! 
+
+### How to become a contributor:
+
+1. **Star the repository** ⭐
+2. **Fork and contribute** - Submit your first PR
+3. **Report issues** - Help us find and fix bugs
+4. **Share feedback** - Let us know how we can improve
+
+### Recognition:
+
+- 🏆 **Contributor badges** for active contributors
+- 📝 **README mention** for significant contributions  
+- 🎉 **Release notes** for major contributions
+- 💬 **Community recognition** in discussions
+
+---
+
+**Made with ❤️ by the AI Launch Space community**
+
+[![GitHub stars](https://img.shields.io/github/stars/SashaDiz/ailaunch-space?style=social)](https://github.com/SashaDiz/ailaunch-space)
+[![GitHub forks](https://img.shields.io/github/forks/SashaDiz/ailaunch-space?style=social)](https://github.com/SashaDiz/ailaunch-space)
+[![GitHub issues](https://img.shields.io/github/issues/SashaDiz/ailaunch-space)](https://github.com/SashaDiz/ailaunch-space/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/SashaDiz/ailaunch-space)](https://github.com/SashaDiz/ailaunch-space/pulls)
 
 ## 🆘 Troubleshooting
 
