@@ -261,7 +261,7 @@ export default function ImageUpload({
           <input
             type="url"
             placeholder="https://example.com/logo.png"
-            className={`input input-bordered w-full transition-all duration-200 focus:border-[#ED0D79] focus:ring-2 focus:ring-[#ED0D79]/20 focus:outline-none ${
+            className={`input input-bordered w-full transition-all duration-200 focus-visible:border-[#ED0D79] focus-visible:ring-2 focus-visible:ring-[#ED0D79]/20 focus-visible:outline-none ${
               error ? "input-error border-error" : "border-base-300"
             }`}
             style={{

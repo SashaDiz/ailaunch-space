@@ -231,7 +231,7 @@ function ProjectInfoStep({ formData, setFormData, errors, checkingDuplicate, che
               <input
                 type="text"
                 placeholder="e.g. AI Content Generator"
-                className={`input input-bordered w-full transition-all duration-200 focus:border-[#ED0D79] focus:ring-2 focus:ring-[#ED0D79]/20 focus:outline-none ${
+                className={`input input-bordered w-full transition-all duration-200 focus-visible:border-[#ED0D79] focus-visible:ring-2 focus-visible:ring-[#ED0D79]/20 focus-visible:outline-none ${
                   errors.name ? "input-error border-error" : "border-base-300"
                 }`}
                 style={{
@@ -265,7 +265,7 @@ function ProjectInfoStep({ formData, setFormData, errors, checkingDuplicate, che
               <input
                 type="url"
                 placeholder="https://your-ai-project.com"
-                className={`input input-bordered w-full transition-all duration-200 focus:border-[#ED0D79] focus:ring-2 focus:ring-[#ED0D79]/20 focus:outline-none ${
+                className={`input input-bordered w-full transition-all duration-200 focus-visible:border-[#ED0D79] focus-visible:ring-2 focus-visible:ring-[#ED0D79]/20 focus-visible:outline-none ${
                   errors.website_url ? "input-error border-error" : "border-base-300"
                 }`}
                 style={{
@@ -297,7 +297,7 @@ function ProjectInfoStep({ formData, setFormData, errors, checkingDuplicate, che
               </div>
               <input
                 type="text"
-                className={`input input-bordered w-full transition-all duration-200 focus:border-[#ED0D79] focus:ring-2 focus:ring-[#ED0D79]/20 focus:outline-none ${
+                className={`input input-bordered w-full transition-all duration-200 focus-visible:border-[#ED0D79] focus-visible:ring-2 focus-visible:ring-[#ED0D79]/20 focus-visible:outline-none ${
                   errors.short_description ? "input-error border-error" : "border-base-300"
                 }`}
                 style={{
@@ -334,7 +334,7 @@ function ProjectInfoStep({ formData, setFormData, errors, checkingDuplicate, che
                 <input
                   type="text"
                   placeholder="username"
-                  className="input input-bordered w-full rounded-l-none transition-all duration-200 focus:border-[#ED0D79] focus:ring-2 focus:ring-[#ED0D79]/20 focus:outline-none border-base-300"
+                  className="input input-bordered w-full rounded-l-none transition-all duration-200 focus-visible:border-[#ED0D79] focus-visible:ring-2 focus-visible:ring-[#ED0D79]/20 focus-visible:outline-none border-base-300"
                   value={formData.maker_twitter?.replace("@", "") || ""}
                   onChange={(e) =>
                     setFormData({
@@ -362,7 +362,7 @@ function ProjectInfoStep({ formData, setFormData, errors, checkingDuplicate, che
                 <span className="label-text font-semibold text-base-content">Full Description</span>
               </div>
               <textarea
-                className="textarea textarea-bordered h-32 w-full resize-none transition-all duration-200 focus:border-[#ED0D79] focus:ring-2 focus:ring-[#ED0D79]/20 focus:outline-none border-base-300"
+                className="textarea textarea-bordered h-32 w-full resize-none transition-all duration-200 focus-visible:border-[#ED0D79] focus-visible:ring-2 focus-visible:ring-[#ED0D79]/20 focus-visible:outline-none border-base-300"
                 placeholder="Provide a detailed description of your AI project, its features, and what makes it unique..."
                 value={formData.full_description || ""}
                 onChange={(e) =>
@@ -507,6 +507,7 @@ function PlanStep({ formData, setFormData, errors = {}, isEditingDraft = false }
                   type="radio"
                   name="plan"
                   className="radio radio-primary mr-3"
+                  style={{ accentColor: '#ED0D79' }}
                   checked={formData.plan === planKey}
                   onChange={() => setFormData({ ...formData, plan: planKey })}
                 />

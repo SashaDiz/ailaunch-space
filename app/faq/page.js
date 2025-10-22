@@ -89,6 +89,7 @@ export default function FAQPage() {
               name="faq-accordion"
               checked={openIndex === index}
               onChange={() => toggleFAQ(index)}
+              style={{ accentColor: '#ED0D79' }}
             />
             <div className="collapse-title text-xl font-medium">
               {faq.question}

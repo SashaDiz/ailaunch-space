@@ -213,7 +213,7 @@ select:focus-visible,
   margin-top: 0.25rem;
 }
 
-.form-input:focus {
+.form-input:focus-visible {
   border-color: hsl(var(--p));
   box-shadow: 0 0 0 3px hsl(var(--p) / 0.1);
 }
@@ -230,6 +230,18 @@ select:focus-visible,
 
 .radio.radio-primary:checked::before {
   background-color: white;
+}
+
+/* Ensure all form elements use primary color consistently */
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+  accent-color: #ED0D79;
+}
+
+/* Custom styling for native checkboxes and radio buttons */
+input[type="checkbox"]:not(.checkbox):not(.radio),
+input[type="radio"]:not(.checkbox):not(.radio) {
+  accent-color: #ED0D79;
 }
 
 /* Custom icon colors */

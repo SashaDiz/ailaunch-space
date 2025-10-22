@@ -44,7 +44,7 @@ const CustomDropdown = ({
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
-        className={`w-full py-3 pl-3 pr-8 border border-gray-300 rounded-xl focus:border-[#ED0D79] focus:ring-2 focus:ring-[#ED0D79]/20 focus:outline-none transition-all duration-200 bg-white hover:border-gray-400 text-left flex items-center justify-between ${
+        className={`w-full py-3 pl-3 pr-8 border border-gray-300 rounded-xl focus-visible:border-[#ED0D79] focus-visible:ring-2 focus-visible:ring-[#ED0D79]/20 focus-visible:outline-none transition-all duration-200 bg-white hover:border-gray-400 text-left flex items-center justify-between ${
           disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
         }`}
       >

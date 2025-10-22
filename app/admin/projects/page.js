@@ -788,7 +788,7 @@ export default function AdminProjectsPage() {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search projects..."
-                    className="w-full pl-7 pr-7 py-2 text-sm border border-gray-300 rounded-lg focus:border-[#ED0D79] focus:ring-1 focus:ring-[#ED0D79]/20 focus:outline-none"
+                    className="w-full pl-7 pr-7 py-2 text-sm border border-gray-300 rounded-lg focus-visible:border-[#ED0D79] focus-visible:ring-1 focus-visible:ring-[#ED0D79]/20 focus-visible:outline-none"
                   />
                   {search && (
                     <button
@@ -807,7 +807,7 @@ export default function AdminProjectsPage() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="py-2 pl-2 pr-6 text-sm border border-gray-300 rounded-lg focus:border-[#ED0D79] focus:ring-1 focus:ring-[#ED0D79]/20 focus:outline-none appearance-none cursor-pointer min-w-[120px]"
+                  className="py-2 pl-2 pr-6 text-sm border border-gray-300 rounded-lg focus-visible:border-[#ED0D79] focus-visible:ring-1 focus-visible:ring-[#ED0D79]/20 focus-visible:outline-none appearance-none cursor-pointer min-w-[120px]"
                 >
                   <option value="all">All Statuses</option>
                   <option value="pending">Pending</option>
@@ -822,7 +822,7 @@ export default function AdminProjectsPage() {
                 <select
                   value={planFilter}
                   onChange={(e) => setPlanFilter(e.target.value)}
-                  className="py-2 pl-2 pr-6 text-sm border border-gray-300 rounded-lg focus:border-[#ED0D79] focus:ring-1 focus:ring-[#ED0D79]/20 focus:outline-none appearance-none cursor-pointer min-w-[100px]"
+                  className="py-2 pl-2 pr-6 text-sm border border-gray-300 rounded-lg focus-visible:border-[#ED0D79] focus-visible:ring-1 focus-visible:ring-[#ED0D79]/20 focus-visible:outline-none appearance-none cursor-pointer min-w-[100px]"
                 >
                   <option value="all">All Plans</option>
                   <option value="standard">Standard</option>
@@ -843,7 +843,7 @@ export default function AdminProjectsPage() {
                       router.push("/admin/projects");
                     }
                   }}
-                  className="py-2 pl-2 pr-6 text-sm border border-gray-300 rounded-lg focus:border-[#ED0D79] focus:ring-1 focus:ring-[#ED0D79]/20 focus:outline-none appearance-none cursor-pointer min-w-[120px]"
+                  className="py-2 pl-2 pr-6 text-sm border border-gray-300 rounded-lg focus-visible:border-[#ED0D79] focus-visible:ring-1 focus-visible:ring-[#ED0D79]/20 focus-visible:outline-none appearance-none cursor-pointer min-w-[120px]"
                 >
                   <option value="all">All Projects</option>
                   <option value="winners">Winners Only</option>

@@ -721,7 +721,7 @@ export default function SettingsPage() {
                 type="text"
                 value={deleteConfirmation}
                 onChange={(e) => setDeleteConfirmation(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:border-red-500 transition-colors"
                 placeholder="DELETE"
                 autoComplete="off"
               />

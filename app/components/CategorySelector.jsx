@@ -209,7 +209,7 @@ export function CategorySelector({
                 placeholder="Search categories..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-base-300 rounded-md bg-base-100 text-base-content placeholder-base-content/60 focus:outline-none focus:ring-2 focus:ring-[#ED0D79]/20 focus:border-[#ED0D79]"
+                className="w-full px-3 py-2 border border-base-300 rounded-md bg-base-100 text-base-content placeholder-base-content/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ED0D79]/20 focus-visible:border-[#ED0D79]"
               />
             </div>
 
