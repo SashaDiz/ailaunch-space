@@ -130,7 +130,7 @@ export default function HomePage() {
         ease: "power2.out",
       });
     }
-    
+
     if (mainContentRef.current) {
       tl.to(
         mainContentRef.current,
@@ -143,7 +143,7 @@ export default function HomePage() {
         "-=0.6"
       ); // Start 0.6s before previous animation ends
     }
-    
+
     if (sidebarRef.current) {
       tl.to(
         sidebarRef.current,
@@ -156,7 +156,7 @@ export default function HomePage() {
         "-=0.4"
       ); // Start 0.4s before previous animation ends
     }
-    
+
     if (featuredRef.current) {
       tl.to(
         featuredRef.current,
@@ -307,8 +307,8 @@ export default function HomePage() {
                 <div className="flex flex-col items-center text-center py-12 gap-6">
                   <Rocket className="w-12 h-12 text-gray-600" strokeWidth={1} />
                   <p className="text-gray-700 text-md font-medium">No AI projects found for this competition.</p>
-                  <Link 
-                    href="/submit?plan=standard" 
+                  <Link
+                    href="/submit?plan=standard"
                     className="block text-center bg-white text-gray-900 border border-gray-200 rounded-lg py-3 font-semibold text-sm no-underline transition duration-300 outline outline-4 outline-transparent hover:border-[#ED0D79] hover:bg-[#ED0D79] hover:text-white hover:outline-[#ed0d7924] min-h-[48px] min-w-[200px]"
                     aria-label="Submit your AI project to be the first in this competition"
                   >
@@ -318,35 +318,16 @@ export default function HomePage() {
               )}
             </section>
 
-            {/* Featured Section
-          
-          <section ref={featuredRef} className="mt-8 sm:mt-16">
-            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-center lg:text-left">Featured on</h2>
-            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6 opacity-60">
-              
-              <div className="flex items-center space-x-2 hover:opacity-100 duration-300 cursor-pointer transform hover:scale-105 transition-transform">
-                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-red-500 rounded"></div>
-                <span className="text-xs sm:text-sm font-medium">Startup Flame</span>
-              </div>
-              <div className="flex items-center space-x-2 hover:opacity-100 duration-300 cursor-pointer transform hover:scale-105 transition-transform">
-                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-yellow-500 rounded"></div>
-                <span className="text-xs sm:text-sm font-medium">Yo.directory</span>
-              </div>
-              <div className="flex items-center space-x-2 hover:opacity-100 duration-300 cursor-pointer transform hover:scale-105 transition-transform">
-                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded"></div>
-                <span className="text-xs sm:text-sm font-medium">Twelve.tools</span>
-              </div>
-              <div className="flex items-center space-x-2 hover:opacity-100 duration-300 cursor-pointer transform hover:scale-105 transition-transform">
-                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-blue-500 rounded"></div>
-                <span className="text-xs sm:text-sm font-medium">LaunchBoard.dev</span>
-              </div>
-              <div className="flex items-center space-x-2 hover:opacity-100 duration-300 cursor-pointer transform hover:scale-105 transition-transform">
-                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-purple-500 rounded"></div>
-                <span className="text-xs sm:text-sm font-medium">Faster.com</span>
-              </div>
-            </div>
-          </section>
-          */}
+            {/* Featured Section */}
+
+            <section ref={featuredRef} className="mt-8 sm:mt-16">
+              <h2 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3 text-center lg:text-left">Featured on</h2>
+              <ul className="flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6 opacity-60">
+                <li><a href="https://launchigniter.com/product/ai-launch-space?ref=badge-ai-launch-space" target="_blank">
+                  <img src="https://launchigniter.com/api/badge/ai-launch-space?theme=neutral" alt="Featured on LaunchIgniter" width="180" height="45" />
+                </a></li>
+              </ul>
+            </section>
           </div>
 
           {/* Right Sidebar */}
