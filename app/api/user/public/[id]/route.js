@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "../../../libs/database.js";
+import { db } from "../../../../libs/database.js";
 
 // GET /api/user/public/[id] - Get public user profile data
 export async function GET(request, { params }) {

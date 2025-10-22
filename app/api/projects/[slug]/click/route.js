@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "../../../libs/database.js";
+import { db } from "../../../../libs/database.js";
 
 // POST /api/projects/[slug]/click - Track click on external project link
 export async function POST(request, { params }) {
