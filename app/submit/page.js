@@ -119,27 +119,28 @@ const PLANS = {
       { text: "Standard launch queue", icon: Clock },
     ],
     limitations: [],
-    popular: false,
+    popular: true, // Make standard popular since it's the only visible option
   },
-  premium: {
-    id: "premium",
-    name: "Premium Launch",
-    price: 15,
-    currency: "USD",
-    description: "Maximum exposure for established AI projects",
-    icon: Medal,
-    features: [
-      { text: "Live on homepage for a week", icon: Home },
-      { text: "10 extra premium slots weekly", icon: Crown },
-      { text: "Badge for top 3 ranking products", icon: Trophy },
-      { text: "3+ Guaranteed high authority lifetime backlink", icon: LinkIcon },
-      { text: "Skip the queue", icon: Clock },
-      { text: "Social media promotion", icon: Megaphone },
-      { text: "Premium badge", icon: Star },
-    ],
-    limitations: [],
-    popular: true,
-  },
+  // Premium plan temporarily hidden - keeping for future use
+  // premium: {
+  //   id: "premium",
+  //   name: "Premium Launch",
+  //   price: 15,
+  //   currency: "USD",
+  //   description: "Maximum exposure for established AI projects",
+  //   icon: Medal,
+  //   features: [
+  //     { text: "Live on homepage for a week", icon: Home },
+  //     { text: "10 extra premium slots weekly", icon: Crown },
+  //     { text: "Badge for top 3 ranking products", icon: Trophy },
+  //     { text: "3+ Guaranteed high authority lifetime backlink", icon: LinkIcon },
+  //     { text: "Skip the queue", icon: Clock },
+  //     { text: "Social media promotion", icon: Megaphone },
+  //     { text: "Premium badge", icon: Star },
+  //   ],
+  //   limitations: [],
+  //   popular: true,
+  // },
 };
 
 function StepIndicator({ currentStep, steps }) {
@@ -490,8 +491,9 @@ function PlanStep({ formData, setFormData, errors = {}, isEditingDraft = false }
         )}
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        {Object.entries(PLANS).map(([planKey, plan]) => (
+      <div className="flex justify-center">
+        <div className="max-w-md w-full">
+          {Object.entries(PLANS).map(([planKey, plan]) => (
           <div
             key={planKey}
             className={`card card-bordered cursor-pointer transition-all ${
@@ -546,6 +548,7 @@ function PlanStep({ formData, setFormData, errors = {}, isEditingDraft = false }
             </div>
           </div>
         ))}
+        </div>
       </div>
 
       <div className="alert" style={{ backgroundColor: 'rgba(255, 148, 42, 0.1)', color: 'black', boxShadow: 'none', border: 'none' }}>
@@ -1215,9 +1218,15 @@ function SubmitPageContent() {
       setCurrentStep(2); // Skip plan selection step
       
       // Show a toast to inform the user about the pre-selected plan
-      toast.success(`Selected ${planParam === "premium" ? "Premium" : "Standard"} plan. Please fill in your project details.`, {
-        duration: 4000,
-      });
+      if (planParam === "premium") {
+        toast.success(`Selected Premium plan. Please fill in your project details.`, {
+          duration: 4000,
+        });
+      } else {
+        toast.success(`Selected Standard plan. Please fill in your project details.`, {
+          duration: 4000,
+        });
+      }
     }
   }, [searchParams]);
 

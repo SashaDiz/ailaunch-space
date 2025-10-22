@@ -74,9 +74,9 @@ export default function CountdownTimer({ competitionData }) {
   }, []);
 
   return (
-    <div className="flex flex-row items-center justify-between p-6 bg-[#ed0d7912] rounded-2xl mb-8">
-      <div>
-        <h2 className="text-xl font-medium mb-1 text-base-content/80">
+    <div className="flex flex-col sm:flex-row items-center justify-between p-4 sm:p-6 bg-[#ed0d7912] rounded-2xl mb-8 gap-4 sm:gap-0">
+      <div className="text-center sm:text-left">
+        <h2 className="text-lg sm:text-xl font-medium mb-1 text-base-content/80">
           {isExpired
             ? "Competition ended"
             : competitionData &&

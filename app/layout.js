@@ -66,7 +66,7 @@ export default function RootLayout({ children }) {
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
-      <body className="antialiased" suppressHydrationWarning={true}>
+      <body className="antialiased overflow-x-hidden" suppressHydrationWarning={true}>
         <Providers>
           <div className="min-h-screen bg-base-100 flex flex-col">
             <Header />

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { OpenNewWindow, Plus, ThumbsUp, Crown } from "iconoir-react";
@@ -46,12 +46,27 @@ export function ProductCard({
   project,
   onVote,
   inactiveCta = false,
-  viewMode = "list",
+  viewMode = "auto",
   showStatusBadge = false,
 }) {
   const [isVoting, setIsVoting] = useState(false);
   const [currentVotes, setCurrentVotes] = useState(project.upvotes);
   const [userVoted, setUserVoted] = useState(project.userVoted);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect screen size for auto view mode
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768); // md breakpoint
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
+  // Determine actual view mode
+  const actualViewMode = viewMode === "auto" ? (isMobile ? "grid" : "list") : viewMode;
 
   // Generate AI project link data once for use in multiple places
   const projectLink = generateProjectLink(project);
@@ -174,17 +189,17 @@ export function ProductCard({
   };
 
   // Grid view layout
-  if (viewMode === "grid") {
+  if (actualViewMode === "grid") {
     return (
       <div className="block">
         <div
-          className="w-full bg-white rounded-2xl border border-gray-200 p-4 group cursor-pointer transition duration-300 ease-in-out hover:border-[#ED0D79] hover:scale-[1.01]"
+          className="w-full bg-white rounded-2xl border border-gray-200 p-3 sm:p-4 group cursor-pointer transition duration-300 ease-in-out hover:border-[#ED0D79] hover:scale-[1.01]"
           onClick={handleCardClick}
         >
           {/* Top section: Logo with badges and Vote Button */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-2">
-              <div className="w-[64px] h-[64px] border rounded-lg border-base-300 overflow-hidden flex-shrink-0">
+              <div className="w-[48px] h-[48px] sm:w-[64px] sm:h-[64px] border rounded-lg border-base-300 overflow-hidden flex-shrink-0">
                 <Image
                   src={project.logo_url}
                   alt={`${project.name} logo`}
@@ -202,8 +217,8 @@ export function ProductCard({
 
                 {/* Premium Badge */}
                 {project.plan === "premium" && (
-                  <span className="inline-flex leading-none items-center gap-1 px-1 py-0.5 text-[11px] font-medium text-white rounded-sm" style={{backgroundColor: '#ED0D79'}}>
-                    <Crown className="w-4 h-4" strokeWidth={1.5} />
+                  <span className="inline-flex leading-none items-center gap-1 px-1 py-0.5 text-[10px] sm:text-[11px] font-medium text-white rounded-sm" style={{backgroundColor: '#ED0D79'}}>
+                    <Crown className="w-3 h-3 sm:w-4 sm:h-4" strokeWidth={1.5} />
                     <span className="mt-0.5">Premium</span>
                   </span>
                 )}
@@ -214,7 +229,7 @@ export function ProductCard({
               onClick={handleVote}
               disabled={isVoting || !isVotingAllowed()}
               title={!isVotingAllowed() ? getVotingDisabledReason() : ""}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-4 rounded-lg min-w-20 text-md font-semibold transition duration-300 ease-in-out
+              className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3.5 py-2 sm:py-4 rounded-lg min-w-16 sm:min-w-20 text-sm sm:text-md font-semibold transition duration-300 ease-in-out
                           ${
                             !isVotingAllowed()
                               ? "bg-gray-400 text-white border-1 border-gray-300 pointer-events-none cursor-not-allowed opacity-60"
@@ -231,17 +246,17 @@ export function ProductCard({
                           }`}
             >
               <ThumbsUp
-                width={24}
-                height={24}
+                width={20}
+                height={20}
                 strokeWidth={1.5}
                 color={
                   !isVotingAllowed() ? "#ffffff" : userVoted ? "#ffffff" : "#000000"
                 }
               />
               {isVoting ? (
-                <div className="w-4 h-4 border-2 border-gray-300 border-t-current rounded-full animate-spin"></div>
+                <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-gray-300 border-t-current rounded-full animate-spin"></div>
               ) : (
-                <span className="text-md leading-none font-semibold mt-0.5">{currentVotes}</span>
+                <span className="text-sm sm:text-md leading-none font-semibold mt-0.5">{currentVotes}</span>
               )}
             </button>
           </div>
@@ -249,7 +264,7 @@ export function ProductCard({
           {/* Title */}
           <div className="mb-3">
             <div className="flex items-center space-x-2 mb-1">
-              <h3 className="text-lg font-semibold text-base-content">
+              <h3 className="text-base sm:text-lg font-semibold text-base-content line-clamp-1">
                 {project.name}
               </h3>
 
@@ -271,7 +286,7 @@ export function ProductCard({
           </div>
 
           {/* Description */}
-          <p className="text-sm text-base-content/70 mb-3 line-clamp-3">
+          <p className="text-xs sm:text-sm text-base-content/70 mb-3 line-clamp-2 sm:line-clamp-3">
             {project.short_description}
           </p>
 
@@ -293,13 +308,13 @@ export function ProductCard({
               href={projectLink.url}
               target="_blank"
               rel={projectLink.rel}
-              className="cursor-pointer inline-flex items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-2 py-2 text-gray-600 hover:bg-gray-100 transition"
+              className="cursor-pointer inline-flex items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-1.5 sm:px-2 py-1.5 sm:py-2 text-gray-600 hover:bg-gray-100 transition"
               onClick={(e) => {
                 e.stopPropagation();
                 handleVisitWebsite();
               }}
             >
-              <OpenNewWindow className="w-4 h-4" />
+              <OpenNewWindow className="w-3 h-3 sm:w-4 sm:h-4" />
             </a>
           </div>
         </div>

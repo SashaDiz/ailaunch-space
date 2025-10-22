@@ -154,12 +154,13 @@ export function Header() {
           <div className="flex items-center space-x-3">
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center space-x-1">
-              <Link
+              {/* Pricing link temporarily hidden - keeping for future use */}
+              {/* <Link
                 href="/pricing"
                 className="px-3 py-2 text-sm font-medium text-base-content hover:text-[#ED0D79] transition-colors"
               >
                 Pricing
-              </Link>
+              </Link> */}
               <div className="dropdown dropdown-hover">
                 <div
                   tabIndex={0}
@@ -216,7 +217,7 @@ export function Header() {
             </nav>
             {/* Launch AI Project Button */}
             <Link
-              href="/submit"
+              href="/submit?plan=standard"
               className="text-center bg-[#ED0D79] text-white rounded-lg px-4 py-3 font-semibold text-sm no-underline transition duration-300 hover:scale-105 hidden sm:flex items-center gap-2"
               onMouseEnter={handlePlusIconHover}
               onMouseLeave={handlePlusIconLeave}
@@ -357,13 +358,14 @@ export function Header() {
             <div className="p-6">
               {/* Navigation Links */}
               <div className="space-y-4 mb-8">
-                <Link
+                {/* Pricing link temporarily hidden - keeping for future use */}
+                {/* <Link
                   href="/pricing"
                   onClick={closeMobileMenu}
                   className="block text-lg font-medium text-gray-900 hover:text-[#ED0D79] transition-colors"
                 >
                   Pricing
-                </Link>
+                </Link> */}
                 
                 <Link
                   href="/projects"
@@ -377,7 +379,7 @@ export function Header() {
               {/* Submit Button */}
               <div className="mb-8">
                 <Link
-                  href="/submit"
+                  href="/submit?plan=standard"
                   onClick={closeMobileMenu}
                   className="flex items-center justify-center w-full bg-[#ED0D79] text-white rounded-lg px-6 py-4 font-semibold text-lg no-underline transition duration-300 hover:scale-105"
                 >

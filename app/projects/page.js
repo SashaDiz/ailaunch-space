@@ -316,7 +316,7 @@ function ProjectsPageContent() {
   );
   const [selectedPricing, setSelectedPricing] = useState("all");
   const [sortBy, setSortBy] = useState(searchParams.get("sort") || "upvotes");
-  const [viewMode, setViewMode] = useState("list");
+  const [viewMode, setViewMode] = useState("grid");
   const [showFilters, setShowFilters] = useState(false);
   const [pagination, setPagination] = useState({});
 
@@ -510,7 +510,7 @@ function ProjectsPageContent() {
               </div>
 
               {/* View Mode Toggle */}
-              <div className="hidden sm:flex border border-gray-300 rounded-lg overflow-hidden">
+              <div className="flex border border-gray-300 rounded-lg overflow-hidden">
                 {VIEW_MODES.map((mode) => (
                   <button
                     key={mode.value}
