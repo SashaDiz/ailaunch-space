@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { db } from "../../../../libs/database.js";
-import { notificationManager } from "../../../../libs/notification-service.js";
-import { getSupabaseAdmin } from "../../../../libs/supabase.js";
+import { db } from "../../../libs/database.js";
+import { notificationManager } from "../../../libs/notification-service.js";
+import { getSupabaseAdmin } from "../../../libs/supabase.js";
 
 // This cron job sends competition week end notifications to newsletter subscribers
 // It runs when a competition week ends (Sunday 11:59 PM PST / Monday 7:59 AM UTC)

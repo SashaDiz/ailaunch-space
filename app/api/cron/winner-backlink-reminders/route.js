@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { db } from "../../../../libs/database.js";
-import { notificationManager } from "../../../../libs/notification-service.js";
+import { db } from "../../../libs/database.js";
+import { notificationManager } from "../../../libs/notification-service.js";
 
 // This cron job sends winner backlink reminder notifications
 // It runs daily to check for winners who haven't added their backlink badge
