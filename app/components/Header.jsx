@@ -29,11 +29,9 @@ export function Header() {
   useEffect(() => {
     if (user && !loading && isClient && user.id) {
       // Only fetch if we have a valid user with an ID
-      console.log("User authenticated, fetching profile for:", user.id);
       fetchUserProfile();
     } else if (!user && !loading && isClient) {
       // Clear profile when user is not authenticated
-      console.log("User not authenticated, clearing profile");
       setUserProfile(null);
     }
   }, [user, loading, isClient]);
@@ -68,7 +66,6 @@ export function Header() {
 
   const fetchUserProfile = async () => {
     try {
-      console.log("Fetching user profile for user:", user?.id);
       
       // Add cache-busting parameter to ensure fresh data
       const response = await fetch(`/api/user?type=profile&t=${Date.now()}`, {
@@ -78,7 +75,6 @@ export function Header() {
         }
       });
       
-      console.log("API response status:", response.status);
       
       if (response.ok) {
         const result = await response.json();
@@ -87,18 +83,14 @@ export function Header() {
         }
       } else if (response.status === 401) {
         // User is not authenticated, this is expected
-        console.log("User not authenticated, clearing profile");
         setUserProfile(null);
       } else if (response.status === 404) {
         // API route not found - this might be a development server issue
-        console.warn("API route not found - this might be a development server issue");
         setUserProfile(null);
       } else {
-        console.error("Failed to fetch user profile:", response.status, response.statusText);
         setUserProfile(null);
       }
     } catch (error) {
-      console.error("Failed to fetch user profile:", error);
       setUserProfile(null);
     }
   };
@@ -156,7 +148,6 @@ export function Header() {
         setGroupedCategories(data.data.groupedCategories || {});
       }
     } catch (error) {
-      console.error("Failed to fetch categories:", error);
     }
   };
 
@@ -222,11 +213,10 @@ export function Header() {
               <Image
                 src="/assets/logo.svg"
                 alt="AI Launch Space"
-                height={40}
-                width={40}
+                height={44}
+                width={140}
                 priority
-                style={{ width: "auto", height: "44px" }}
-                className="h-11"
+                className="h-11 w-auto"
               />
             </Link>
 
@@ -436,9 +426,8 @@ export function Header() {
                 <Image
                   src="/assets/logo.svg"
                   alt="AI Launch Space"
-                  height={32}
-                  width={32}
-                  style={{ width: "auto", height: "auto" }}
+                  height={40}
+                  width={40}
                   className="h-10"
                 />
               </div>

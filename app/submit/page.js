@@ -920,6 +920,7 @@ function SubmitPageContent() {
   const [formData, setFormData] = useState({
     plan: "standard", // Default to standard plan
     pricing: "Free", // Default to Free pricing
+    categories: [], // Initialize categories as empty array
   });
   const [errors, setErrors] = useState({});
   const [categories, setCategories] = useState([]);
@@ -1203,6 +1204,17 @@ function SubmitPageContent() {
     return () => clearTimeout(timeoutId);
   }, [formData.short_description]);
 
+  // Clear category errors when categories are selected
+  useEffect(() => {
+    if (formData.categories && formData.categories.length > 0) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.categories;
+        return newErrors;
+      });
+    }
+  }, [formData.categories]);
+
 
   // Handle plan selection from URL parameters
   useEffect(() => {
@@ -1242,7 +1254,6 @@ function SubmitPageContent() {
 
   // Payment polling for automatic redirect when LemonJS fails
   const startPaymentPolling = (projectId) => {
-    console.log("Starting payment polling for AI project:", projectId);
     setPaymentPolling({ projectId: projectId, startTime: Date.now() });
 
     // Store polling info in localStorage so it persists across page navigation
@@ -1268,7 +1279,6 @@ function SubmitPageContent() {
         if (response.ok) {
           const result = await response.json();
           if (result.success && result.paymentStatus === "paid") {
-            console.log("Payment detected via polling! Processing success...");
             clearInterval(pollInterval);
             localStorage.removeItem("payment_polling");
             setPaymentPolling(null);
@@ -1294,7 +1304,6 @@ function SubmitPageContent() {
 
       // Stop polling after max attempts
       if (pollCount >= maxPolls) {
-        console.log("Payment polling timed out");
         clearInterval(pollInterval);
         localStorage.removeItem("payment_polling");
         setPaymentPolling(null);
@@ -1338,7 +1347,6 @@ function SubmitPageContent() {
     setIsLoading(true);
     
     // Clear any stale payment polling state when resuming a draft
-    console.log("Clearing any stale payment polling state...");
     localStorage.removeItem("payment_polling");
     localStorage.removeItem("premium_form_data");
     localStorage.removeItem("premium_project_id");
@@ -1351,7 +1359,6 @@ function SubmitPageContent() {
         const draftData = JSON.parse(savedDraft);
         sessionStorage.removeItem("resumeDraft");
         
-        console.log("Loading draft from session storage:", draftData);
         
         // Clean and populate form with draft data
         const cleanedData = cleanDraftData(draftData);
@@ -1378,7 +1385,6 @@ function SubmitPageContent() {
         const result = await response.json();
         const draft = result.data.project;
         
-        console.log("Draft loaded from API:", draft);
         
         // Clean and populate form with draft data
         const cleanedData = cleanDraftData(draft);
@@ -1413,7 +1419,6 @@ function SubmitPageContent() {
         const result = await response.json();
         const project = result.data.project; // Fixed: accessing the nested project object
 
-        console.log("Project data loaded for edit:", project);
 
         // Check if project can be edited
         if (project.status !== "scheduled") {
@@ -1462,7 +1467,6 @@ function SubmitPageContent() {
       const step = urlParams.get("step");
       const projectId = urlParams.get("projectId");
 
-      console.log("URL params on load:", { payment, step, projectId });
 
       // Check for pending premium payment in localStorage even without URL params
       const savedFormData = localStorage.getItem("premium_form_data");
@@ -1477,7 +1481,6 @@ function SubmitPageContent() {
 
           // If polling started less than 10 minutes ago, check payment status immediately
           if (timeSinceStart < 10 * 60 * 1000) {
-            console.log("Checking payment status on page load...", pollingData);
             
             // Immediately check payment status with timeout
             try {
@@ -1494,7 +1497,6 @@ function SubmitPageContent() {
               if (statusResponse.ok) {
                 const statusResult = await statusResponse.json();
                 if (statusResult.success && statusResult.paymentStatus) {
-                  console.log("✅ Payment already completed! Redirecting...");
                   localStorage.removeItem("payment_polling");
                   localStorage.removeItem("premium_form_data");
                   localStorage.removeItem("premium_project_id");
@@ -1524,10 +1526,8 @@ function SubmitPageContent() {
             }
             
             // If payment not confirmed yet, resume polling only if no error
-            console.log("Payment not confirmed yet, resuming polling...");
             startPaymentPolling(pollingData.projectId);
           } else {
-            console.log("Payment polling expired (>10 minutes), clearing state");
             localStorage.removeItem("payment_polling");
             localStorage.removeItem("premium_form_data");
             localStorage.removeItem("premium_project_id");
@@ -1541,7 +1541,6 @@ function SubmitPageContent() {
       }
 
       if (savedFormData && savedProjectId && !payment && user) {
-        console.log("Found pending premium session:", { savedProjectId });
 
         // Verify this saved data belongs to the current user by checking if the project exists and belongs to them
         try {
@@ -1567,7 +1566,6 @@ function SubmitPageContent() {
               return;
             } else {
               // Clear invalid localStorage data
-              console.log("Clearing invalid premium session data");
               localStorage.removeItem("premium_form_data");
               localStorage.removeItem("premium_project_id");
             }
@@ -1586,7 +1584,6 @@ function SubmitPageContent() {
 
       if (payment === "success" && projectId) {
         // Payment successful - project already created, just show success and redirect
-        console.log("Processing successful payment return");
         
         // Clean up localStorage
         localStorage.removeItem("premium_form_data");
@@ -1634,7 +1631,6 @@ function SubmitPageContent() {
           const savedId = localStorage.getItem("premium_project_id");
 
           if (savedData || savedId) {
-            console.log("Clearing old premium session data");
             localStorage.removeItem("premium_form_data");
             localStorage.removeItem("premium_project_id");
             localStorage.removeItem("payment_polling");
@@ -1661,9 +1657,6 @@ function SubmitPageContent() {
   const validateStep = (step) => {
     const newErrors = {};
 
-    console.log("Validating step:", step, "with formData:", formData);
-    console.log("Current errors:", errors);
-    console.log("Checking states:", { checkingDuplicate, checkingName });
 
     // Check if we're still checking for duplicates
     if (step === 2 && (checkingDuplicate || checkingName)) {
@@ -1683,32 +1676,18 @@ function SubmitPageContent() {
       return false;
     }
 
-    // Check for any other existing errors
-    if (step === 2 && Object.keys(errors).length > 0) {
-      console.error("Existing errors found:", errors);
-      const errorMessages = Object.entries(errors)
-        .map(([field, message]) => `${field}: ${message}`)
-        .join(", ");
-      toast.error(`Please fix the following errors: ${errorMessages}`);
-      return false;
-    }
-
     try {
       switch (step) {
         case 1:
           PlanSelectionSchema.parse(formData);
-          console.log("✅ Step 1 validation passed");
           break;
 
         case 2:
-          console.log("Validating step 2 with schema...");
           ProjectInfoSchema.parse(formData);
-          console.log("✅ Step 2 validation passed");
           break;
 
         case 3:
           LaunchWeekSchema.parse(formData);
-          console.log("✅ Step 3 validation passed");
           break;
       }
     } catch (error) {
@@ -1733,7 +1712,6 @@ function SubmitPageContent() {
 
     setErrors(newErrors);
     const isValid = Object.keys(newErrors).length === 0;
-    console.log("Validation result:", isValid ? "✅ PASSED" : "❌ FAILED", newErrors);
     return isValid;
   };
 
@@ -1805,17 +1783,8 @@ function SubmitPageContent() {
         ) {
           // The success URL is now handled by the API - user will be redirected back to submit page
           const successUrl = `${window.location.origin}/submit?payment=success&projectId=${projectId}`;
-          console.log(
-            "Payment checkout created successfully:",
-            checkoutResult.data
-          );
-          console.log("Success URL configured:", successUrl);
-          console.log("Checkout URL:", checkoutResult.data.checkoutUrl);
 
           // Start payment polling and open payment in new window
-          console.log(
-            "Starting payment polling and opening payment in new window..."
-          );
           startPaymentPolling(projectId);
 
           toast.success("💳 Opening payment page in new window...", {

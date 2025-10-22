@@ -16,10 +16,10 @@ export function Footer() {
               <Image
                 src="/assets/logo-white.svg"
                 alt="AI Launch Space"
-                height={48}
-                width={48}
+                height={44}
+                width={140}
                 priority
-                style={{ width: "auto", height: "48px" }}
+                className="h-12 w-auto"
               />
             </Link>
             <p className="text-white/70 text-sm">
