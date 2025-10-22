@@ -90,6 +90,11 @@ async function getCategories(includeCount) {
     return acc;
   }, {});
 
+  // Sort categories alphabetically within each sphere
+  Object.keys(groupedCategories).forEach(sphere => {
+    groupedCategories[sphere].sort((a, b) => a.name.localeCompare(b.name));
+  });
+
     return NextResponse.json({
       success: true,
       data: {

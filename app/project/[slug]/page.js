@@ -17,6 +17,7 @@ import { SocialShare } from "../../components/SocialShare";
 import { CategoryBadge, PricingBadge } from "../../components/CategoryBadge";
 import WinnerBadge from "../../components/WinnerBadge";
 import WinnerEmbed, { WinnerEmbedButton } from "../../components/WinnerEmbed";
+import UserProfileLink from "../../components/UserProfileLink";
 import { useUser } from "../../hooks/useUser";
 
 function ProjectDetailPageContent() {
@@ -331,6 +332,22 @@ function ProjectDetailPageContent() {
                       <PricingBadge pricing={project.pricing} size="sm" />
                     )}
                   </div>
+
+                  {/* User Information */}
+                  {project.user && (
+                    <div className="mt-4 pt-4 border-t border-base-300">
+                      <div className="flex items-center gap-2 text-sm text-base-content/70">
+                        <span>Created by</span>
+                        <UserProfileLink
+                          userId={project.user.id}
+                          userName={project.user.name}
+                          userAvatar={project.user.avatar}
+                          size="sm"
+                          className="text-base-content hover:text-[#ED0D79]"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -538,37 +555,38 @@ function ProjectDetailPageContent() {
               project.relatedProjects.length > 0 && (
                 <div className="card rounded-xl border border-base-300">
                   <div className="card-body">
-                    <h2 className="text-xl font-bold mb-4">
+                    <h2 className="text-xl font-bold mb-6">
                       Related Projects
                     </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {project.relatedProjects.map((related) => (
                         <Link
                           key={related.id}
                           href={`/project/${related.slug}`}
-                          className="card rounded-xl card-compact bg-base-200 shadow-sm hover:shadow-md transition-shadow"
+                          className="relative block p-4 rounded-lg border border-gray-200 hover:border-[#ED0D79] hover:bg-gray-50 transition-all duration-200 group"
                         >
-                          <div className="card-body">
-                            <div className="flex items-center space-x-3 mb-2">
-                              <div className="avatar">
-                                <div className="w-10 h-10 rounded-lg border border-base-300">
-                                  <Image
-                                    src={related.logo_url}
-                                    alt={`${related.name} logo`}
-                                    width={40}
-                                    height={40}
-                                    className="rounded-lg object-cover"
-                                  />
-                                </div>
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h3 className="font-semibold text-sm truncate">
+                          <div className="flex items-start space-x-3">
+                            {/* Project Logo */}
+                            <div className="w-12 h-12 rounded-lg border border-gray-200 overflow-hidden flex-shrink-0">
+                              <Image
+                                src={related.logo_url}
+                                alt={`${related.name} logo`}
+                                width={48}
+                                height={48}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+
+                            {/* Project Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center space-x-2 mb-2">
+                                <h4 className="text-sm font-semibold text-gray-900 truncate">
                                   {related.name}
-                                </h3>
-                                <div className="flex items-center space-x-2 text-xs text-base-content/60">
-                                  <span>{related.upvotes} votes</span>
-                                </div>
+                                </h4>
                               </div>
+                              <p className="text-xs text-gray-600 line-clamp-2">
+                                {related.short_description || related.tagline}
+                              </p>
                             </div>
                           </div>
                         </Link>

@@ -103,20 +103,64 @@ export async function GET(request, { params }) {
       userVoted = !!vote;
     }
 
-    // Get related projects (same categories)
-    // Use $overlaps for array-to-array comparison in Supabase
-    const relatedProjects = await db.find(
-      "apps",
-      {
-        categories: { $overlaps: project.categories },
-        id: { $ne: project.id },
-        status: "live",
-      },
-      {
-        sort: { upvotes: -1, premium_badge: -1, created_at: -1 },
-        limit: 3,
-      }
-    );
+    // Get related projects with improved algorithm
+    // First, try to get projects with exact category matches
+    console.log("Current project categories:", project.categories);
+    
+    // Try to find projects that share at least one category
+    let relatedProjects = [];
+    
+    if (project.categories && project.categories.length > 0) {
+      relatedProjects = await db.find(
+        "apps",
+        {
+          categories: { $overlaps: project.categories },
+          id: { $ne: project.id },
+          status: { $in: ["live", "past"] },
+        },
+        {
+          sort: { 
+            upvotes: -1, 
+            premium_badge: -1, 
+            created_at: -1 
+          },
+          limit: 6,
+        }
+      );
+    }
+    
+    console.log("Found related projects with category overlap:", relatedProjects.length);
+    console.log("Related projects categories:", relatedProjects.map(p => ({ name: p.name, categories: p.categories })));
+
+    // If we don't have enough related projects, get more from any category
+    if (relatedProjects.length < 6) {
+      console.log("Not enough category-matched projects, fetching additional ones...");
+      const excludeIds = relatedProjects.map(p => p.id);
+      excludeIds.push(project.id); // Also exclude current project
+      
+      const additionalProjects = await db.find(
+        "apps",
+        {
+          id: { $nin: excludeIds },
+          status: { $in: ["live", "past"] },
+        },
+        {
+          sort: { 
+            upvotes: -1, 
+            premium_badge: -1, 
+            created_at: -1 
+          },
+          limit: 6 - relatedProjects.length,
+        }
+      );
+      
+      console.log("Additional projects found:", additionalProjects.length);
+      relatedProjects = [...relatedProjects, ...additionalProjects];
+    }
+
+    // Limit to 6 projects maximum
+    relatedProjects = relatedProjects.slice(0, 6);
+    console.log("Final related projects count:", relatedProjects.length);
 
     // Get current competition for this project and determine status
     const competitions = project.weekly_competition_id
@@ -154,6 +198,26 @@ export async function GET(request, { params }) {
       }
     }
 
+    // Get user information for the project
+    let userInfo = null;
+    if (project.submitted_by) {
+      try {
+        const user = await db.findOne("users", { id: project.submitted_by });
+        if (user) {
+          userInfo = {
+            id: user.id,
+            name: user.full_name || user.name || "Anonymous",
+            avatar: user.avatar_url,
+            bio: user.bio,
+            twitter: user.twitter,
+            website: user.website
+          };
+        }
+      } catch (error) {
+        console.error("Error fetching user info for project:", error);
+      }
+    }
+
     // Format response
     const projectWithMetadata = {
       ...project,
@@ -164,6 +228,7 @@ export async function GET(request, { params }) {
       statusBadge: statusBadge, // "scheduled", "live", "past" - виден только владельцу в dashboard
       canVote: canVote, // можно ли голосовать за этот проект
       competitionStatus: competitionStatus,
+      user: userInfo,
     };
 
     return NextResponse.json({

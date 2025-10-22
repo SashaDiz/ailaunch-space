@@ -47,6 +47,8 @@ export function getSupabaseAdmin() {
         hasUrl: !!supabaseUrl,
         hasServiceKey: !!supabaseServiceKey,
         nodeEnv: process.env.NODE_ENV,
+        urlValue: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : 'undefined',
+        keyValue: supabaseServiceKey ? `${supabaseServiceKey.substring(0, 10)}...` : 'undefined'
       });
       throw new Error('Missing Supabase service role environment variables. Please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in your environment.');
     }
@@ -57,6 +59,11 @@ export function getSupabaseAdmin() {
           persistSession: false,
           autoRefreshToken: false,
         },
+        global: {
+          headers: {
+            'User-Agent': 'AI-Launch-Space/1.0'
+          }
+        }
       });
       console.log('Supabase admin client initialized successfully');
     } catch (error) {

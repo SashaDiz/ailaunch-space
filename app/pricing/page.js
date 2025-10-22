@@ -117,10 +117,10 @@ function PricingCard({ plan, index }) {
         </div>
 
         <Link href={`/submit?plan=${plan.id}`} className="w-full mt-auto">
-          <button className={`btn w-full btn-lg ${
+          <button className={`w-full py-4 px-6 rounded-lg font-semibold text-base transition duration-300 outline outline-4 outline-transparent ${
             plan.popular 
-              ? "bg-pink-500 hover:bg-pink-600 text-white border-pink-500" 
-              : "bg-white hover:bg-gray-50 text-black border-gray-300"
+              ? "bg-[#ED0D79] hover:bg-[#ED0D79]/90 text-white border-[#ED0D79] hover:scale-105" 
+              : "bg-white hover:bg-[#ED0D79] text-black border border-gray-200 hover:text-white hover:border-[#ED0D79] hover:outline-[#ed0d7924]"
           }`}>
             {plan.cta}
           </button>
@@ -138,8 +138,8 @@ export default function PricingPage() {
       <div className="bg-white py-8 pt-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="mb-8">
-            <Link href="/submit" className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-black hover:bg-gray-50 transition-colors">
-              <Rocket className="w-4 h-4 mr-2" />
+            <Link href="/submit" className="inline-flex items-center px-6 py-3 bg-[#ED0D79] text-white rounded-lg font-semibold text-sm no-underline transition duration-300 hover:scale-105 hover:bg-[#ED0D79]/90">
+              <Rocket className="w-4 h-4 mr-2" strokeWidth={2} />
               Launch your directory
             </Link>
           </div>

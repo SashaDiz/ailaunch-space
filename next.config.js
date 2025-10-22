@@ -9,7 +9,7 @@ const nextConfig = {
       "sdfzsocizvmgrisnlcvz.storage.supabase.co", // Supabase S3 storage domain
     ],
   },
-  serverExternalPackages: ["mongodb"],
+  serverExternalPackages: ["mongodb", "@supabase/supabase-js", "@supabase/ssr"],
   webpack: (config, { dev, isServer }) => {
     // Suppress all webpack warnings in development
     if (dev) {
@@ -52,7 +52,15 @@ const nextConfig = {
     if (config.cache && config.cache.type === "filesystem") {
       config.cache.maxMemoryGenerations = 0;
       config.cache.maxAge = 1000 * 60 * 60 * 24 * 7; // 1 week
+      config.cache.compression = 'gzip';
     }
+    
+    // Disable problematic webpack optimizations that cause module loading issues
+    config.optimization = {
+      ...config.optimization,
+      moduleIds: 'deterministic',
+      chunkIds: 'deterministic',
+    };
 
     // Split GSAP and large dependencies to reduce bundle size
     if (!isServer) {

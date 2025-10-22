@@ -5,69 +5,66 @@ import React, { useState, useRef, useEffect } from "react";
 // Categories organized by spheres
 const CATEGORIES_BY_SPHERE = {
   "Business & Finance": [
-    "Finance & FinTech",
-    "HR & Recruitment", 
-    "Marketing & Sales",
-    "Startup & Small Business",
-    "Business Intelligence & Analytics",
-    "Customer Service & Support"
+    "Analytics",
+    "Customer Service",
+    "Finance",
+    "HR", 
+    "Marketing",
+    "SEO",
+    "Startup"
   ],
   "Consumer & Lifestyle": [
-    "Education & Learning",
-    "Health & Wellness",
+    "Education",
+    "Healthcare",
     "Productivity",
-    "Personal Assistant Tools"
+    "Personal Assistant"
   ],
   "Content & Creativity": [
-    "Design & Art",
-    "Video & Content Creation",
-    "Music & Audio",
-    "Writing & Copywriting",
+    "Design",
+    "Video",
+    "Music",
+    "Writing",
     "Image Generation",
-    "Animation & VFX"
+    "Animation"
   ],
   "Developer & Tech": [
-    "Developer Tools",
-    "AI & Machine Learning",
+    "Dev Tools",
+    "AI",
     "Data Management",
-    "API & Integration Tools",
-    "No-Code/Low-Code",
-    "Automation Tools"
+    "API",
+    "No-Code",
+    "Automation"
   ],
   "E-commerce & Retail": [
     "E-commerce",
-    "Customer Analytics",
-    "Recommendation Systems",
-    "Chatbots & Virtual Assistants"
+    "Analytics",
+    "Recommendation",
+    "Chatbots"
   ],
   "Entertainment & Media": [
     "Gaming",
-    "Social Media Tools",
-    "Streaming & Podcasting"
+    "Social Media",
+    "Streaming"
   ],
   "Industry-Specific": [
-    "Healthcare & MedTech",
-    "Legal & Compliance",
-    "Real Estate & PropTech",
-    "Research & Academia"
+    "Healthcare",
+    "Legal",
+    "Real Estate",
+    "Research"
   ],
   "Language & Communication": [
-    "Translation & Localization",
-    "Text Analysis & NLP",
-    "Voice & Speech",
-    "Chatbots & Conversational AI"
+    "Translation",
+    "NLP",
+    "Voice",
+    "Chatbots"
   ],
   "Vision & Recognition": [
     "Computer Vision",
-    "Image Recognition",
-    "Video Analysis",
-    "OCR & Document Processing"
+    "Document Processing"
   ],
   "Other": [
     "Cybersecurity",
-    "Sustainability & Impact",
-    "Research Tools",
-    "General AI Tools"
+    "Sustainability"
   ]
 };
 

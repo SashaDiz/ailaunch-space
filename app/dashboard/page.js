@@ -16,6 +16,7 @@ import {
   StatsReport,
   Xmark,
   ThumbsUp,
+  Rocket,
 } from "iconoir-react";
 import toast from "react-hot-toast";
 import WinnerBadge from "../components/WinnerBadge";
@@ -410,6 +411,22 @@ function ProjectCard({ project, onResumeDraft }) {
   );
 }
 
+function SubmitCard() {
+  return (
+    <div className="block h-full">
+      <Link 
+        href="/submit" 
+        className="w-full h-full bg-[#ed0d7924] rounded-2xl border border-[#ed0d79a6] p-6 group cursor-pointer transition duration-300 ease-in-out hover:scale-[1.01] flex flex-col items-center justify-center text-center hover:bg-[#ed0d7924]/20"
+      >
+          <Rocket className="w-8 h-8 text-[#ED0D79] mb-2" />
+        <h3 className="text-lg font-semibold text-[#ED0D79]">
+          Submit Your AI Project
+        </h3>
+      </Link>
+    </div>
+  );
+}
+
 function DashboardContent() {
   const { user, loading: authLoading } = useUser();
   const router = useRouter();
@@ -512,21 +529,13 @@ function DashboardContent() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold mb-2 text-gray-900">
-                Welcome back, {user?.user_metadata?.name?.split(" ")[0] || user?.email?.split("@")[0] || "Creator"}!
-              </h1>
-              <p className="text-gray-600">
-                Manage your AI projects and track your launch performance.
-              </p>
-            </div>
-            <div className="mt-4 sm:mt-0">
-              <Link href="/submit" className="inline-flex items-center gap-2 px-6 py-3 bg-[#ED0D79] text-white font-semibold rounded-lg hover:bg-[#ED0D79]/90 transition duration-300 ease-in-out hover:scale-[1.02] shadow-sm">
-                <Plus className="w-4 h-4" />
-                Submit New AI Project
-              </Link>
-            </div>
+          <div>
+            <h1 className="text-3xl font-bold mb-2 text-gray-900">
+              Welcome back, {user?.user_metadata?.name?.split(" ")[0] || user?.email?.split("@")[0] || "Creator"}!
+            </h1>
+            <p className="text-gray-600">
+              Manage your AI projects and track your launch performance.
+            </p>
           </div>
         </div>
 
@@ -631,6 +640,7 @@ function DashboardContent() {
 
               {projects.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+                  <SubmitCard />
                   {projects.map((project) => (
                     <ProjectCard 
                       key={project.id} 
@@ -641,25 +651,26 @@ function DashboardContent() {
                 </div>
               ) : (
                 // Empty State
-                <div className="text-center py-16">
-                  <div className="w-24 h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-6">
-                    <Plus className="w-12 h-12 text-gray-400" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2 text-gray-900">
-                    No AI projects yet
-                  </h3>
-                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                    Ready to launch your first AI project? Submit it now and
-                    start building your audience and getting valuable backlinks.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
-                    <Link href="/submit" className="inline-flex items-center gap-2 px-6 py-3 bg-[#ED0D79] text-white font-semibold rounded-lg hover:bg-[#ED0D79]/90 transition duration-300 ease-in-out hover:scale-[1.02] shadow-sm">
-                      <Plus className="w-4 h-4" />
-                      Submit Your First AI Project
-                    </Link>
-                    <Link href="/projects" className="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-700 font-semibold rounded-lg border border-gray-200 hover:border-[#ED0D79] hover:bg-gray-50 transition duration-300 ease-in-out hover:scale-[1.02] shadow-sm">
-                      Browse Examples
-                    </Link>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+                  <SubmitCard />
+                  <div className="col-span-1 md:col-span-1 lg:col-span-2">
+                    <div className="text-center py-16">
+                      <div className="w-24 h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                        <Plus className="w-12 h-12 text-gray-400" />
+                      </div>
+                      <h3 className="text-xl font-semibold mb-2 text-gray-900">
+                        No AI projects yet
+                      </h3>
+                      <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                        Ready to launch your first AI project? Submit it now and
+                        start building your audience and getting valuable backlinks.
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
+                        <Link href="/projects" className="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-700 font-semibold rounded-lg border border-gray-200 hover:border-[#ED0D79] hover:bg-gray-50 transition duration-300 ease-in-out hover:scale-[1.02] shadow-sm">
+                          Browse Examples
+                        </Link>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

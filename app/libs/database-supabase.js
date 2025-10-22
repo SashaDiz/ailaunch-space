@@ -285,6 +285,15 @@ export class SupabaseDatabaseManager {
     const { data, error } = await supabaseQuery;
 
     if (error) {
+      console.error('Supabase find error:', {
+        table,
+        query: JSON.stringify(query, null, 2),
+        error: error,
+        errorMessage: error.message,
+        errorDetails: error.details,
+        errorHint: error.hint,
+        errorCode: error.code
+      });
       throw new Error(`Find failed: ${error.message}`);
     }
 

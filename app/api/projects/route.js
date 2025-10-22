@@ -252,19 +252,68 @@ export async function GET(request) {
     const skip = (page - 1) * limit;
 
     // Get total count for pagination
-    const totalCount = await db.count("apps", filter);
+    let totalCount;
+    try {
+      totalCount = await db.count("apps", filter);
+    } catch (countError) {
+      console.error('Count query failed:', countError);
+      
+      // If this is a connection error, use 0 as fallback
+      if (countError.message && (countError.message.includes('502') || countError.message.includes('Bad Gateway'))) {
+        console.warn('Count query failed, using 0 as fallback');
+        totalCount = 0;
+      } else {
+        throw countError;
+      }
+    }
     const totalPages = Math.ceil(totalCount / limit);
 
     // Fetch AI projects with sorting
-    const projects = await db.find(
-      "apps", 
-      filter,
-      {
-        sort: sortOptions,
-        limit,
-        skip,
+    let projects;
+    try {
+      projects = await db.find(
+        "apps", 
+        filter,
+        {
+          sort: sortOptions,
+          limit,
+          skip,
+        }
+      );
+    } catch (dbError) {
+      console.error('Database query failed:', dbError);
+      
+      // If this is a connection error, return empty results with a warning
+      if (dbError.message && (dbError.message.includes('502') || dbError.message.includes('Bad Gateway'))) {
+        console.warn('Database connection failed, returning empty results');
+        return NextResponse.json({
+          success: true,
+          data: {
+            projects: [],
+            pagination: {
+              page,
+              limit,
+              totalCount: 0,
+              totalPages: 0,
+              hasNext: false,
+              hasPrev: false,
+            },
+            filters: {
+              category,
+              pricing,
+              competition,
+              status,
+              sort,
+              search,
+            },
+            warning: "Database temporarily unavailable. Please try again later."
+          },
+        });
       }
-    );
+      
+      // Re-throw other database errors
+      throw dbError;
+    }
 
     // Get user's votes if authenticated
     let userVotes = {};
@@ -378,6 +427,26 @@ export async function GET(request) {
       name: error.name,
       url: request.url
     });
+    
+    // Check if this is a Supabase connection error
+    if (error.message && error.message.includes('502 Bad Gateway')) {
+      console.error('Supabase connection failed - 502 Bad Gateway. This may indicate:');
+      console.error('1. Supabase service is down or experiencing issues');
+      console.error('2. Incorrect Supabase URL or service key');
+      console.error('3. Network connectivity issues');
+      console.error('4. Rate limiting or IP blocking');
+      
+      return NextResponse.json(
+        { 
+          error: "Database connection failed", 
+          code: "DATABASE_CONNECTION_ERROR",
+          message: "Unable to connect to the database. Please try again later.",
+          details: process.env.NODE_ENV === 'development' ? error.message : "Database connection error"
+        },
+        { status: 503 }
+      );
+    }
+    
     return NextResponse.json(
       { 
         error: "Internal server error", 

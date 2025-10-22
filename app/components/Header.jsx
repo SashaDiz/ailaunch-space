@@ -194,7 +194,7 @@ export function Header() {
                           {sphereCategories.map((category) => (
                             <Link
                               key={category.id || category.name}
-                              href={`/projects?category=${
+                              href={`/projects?categories=${
                                 category.slug || category.name
                               }`}
                               className="flex items-center px-6 py-2 text-sm text-base-content hover:bg-base-200 hover:text-[#ED0D79] transition-colors"

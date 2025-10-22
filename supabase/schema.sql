@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS public.users (
   github TEXT,
   linkedin TEXT,
   location TEXT,
+  avatar_url TEXT,
   
   -- Platform-specific fields
   total_submissions INTEGER DEFAULT 0,
@@ -509,6 +510,29 @@ CREATE INDEX idx_analytics_target ON public.analytics(target_type, target_id, da
 CREATE INDEX idx_analytics_date ON public.analytics(date DESC);
 
 -- ============================================================================
+-- LINK TYPE CHANGES TABLE
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.link_type_changes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  project_id UUID NOT NULL REFERENCES public.apps(id) ON DELETE CASCADE,
+  
+  -- Change details
+  from_type TEXT NOT NULL CHECK (from_type IN ('nofollow', 'dofollow')),
+  to_type TEXT NOT NULL CHECK (to_type IN ('nofollow', 'dofollow')),
+  changed_by TEXT NOT NULL, -- User ID or "system"
+  reason TEXT NOT NULL,
+  
+  -- Timestamps
+  timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Indexes for link_type_changes
+CREATE INDEX idx_link_type_changes_project_id ON public.link_type_changes(project_id);
+CREATE INDEX idx_link_type_changes_timestamp ON public.link_type_changes(timestamp DESC);
+CREATE INDEX idx_link_type_changes_changed_by ON public.link_type_changes(changed_by);
+
+-- ============================================================================
 -- EXTERNAL WEBHOOKS TABLE
 -- ============================================================================
 
@@ -590,6 +614,7 @@ ALTER TABLE public.newsletter ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sidebar_content ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.backlinks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.analytics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.link_type_changes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.external_webhooks ENABLE ROW LEVEL SECURITY;
 
 -- Users: Users can read their own data, admins can read all
@@ -761,6 +786,14 @@ CREATE POLICY "Only admins can modify backlinks" ON public.backlinks
 
 -- Analytics: Admin only
 CREATE POLICY "Only admins can access analytics" ON public.analytics
+  FOR ALL
+  TO authenticated
+  USING (EXISTS (
+    SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'
+  ));
+
+-- Link type changes: Admin only
+CREATE POLICY "Only admins can access link type changes" ON public.link_type_changes
   FOR ALL
   TO authenticated
   USING (EXISTS (

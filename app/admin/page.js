@@ -12,6 +12,7 @@ import {
   Trophy,
 } from "iconoir-react";
 import toast from "react-hot-toast";
+import AdminNav from "../components/admin/AdminNav";
 
 function StatCard({
   icon: Icon,
@@ -21,21 +22,17 @@ function StatCard({
   color = "primary",
 }) {
   return (
-    <div className="card bg-base-100 shadow-sm border border-base-300">
-      <div className="card-body p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-base-content/60 text-sm">{title}</p>
-            <h3 className="text-2xl font-bold">{value}</h3>
-            {description && (
-              <p className="text-xs text-base-content/50">{description}</p>
-            )}
-          </div>
-          <div
-            className={`w-12 h-12 bg-${color}/10 rounded-full flex items-center justify-center`}
-          >
-            <Icon className={`w-6 h-6 text-${color}`} />
-          </div>
+    <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:border-[#ED0D79] transition duration-300 ease-in-out">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-gray-600 text-sm font-medium">{title}</p>
+          <h3 className="text-2xl font-bold text-gray-900 mt-1">{value}</h3>
+          {description && (
+            <p className="text-xs text-gray-500 mt-1">{description}</p>
+          )}
+        </div>
+        <div className="w-12 h-12 bg-[#ED0D79]/10 rounded-xl flex items-center justify-center">
+          <Icon className="w-6 h-6 text-[#ED0D79]" />
         </div>
       </div>
     </div>
@@ -126,22 +123,18 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-base-100">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Navigation */}
+        <AdminNav />
+
         {/* Header */}
         <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">Admin Panel</h1>
-              <p className="text-base-content/70">
-                Review submissions, manage approvals, and monitor platform activity.
-              </p>
-            </div>
-            <div className="mt-4 sm:mt-0">
-              <Link href="/dashboard" className="btn btn-ghost btn-sm">
-                ← Back to Dashboard
-              </Link>
-            </div>
+          <div>
+            <h1 className="text-3xl font-bold mb-2 text-gray-900">Admin Panel</h1>
+            <p className="text-gray-600">
+              Review submissions, manage approvals, and monitor platform activity.
+            </p>
           </div>
         </div>
 
@@ -152,14 +145,12 @@ export default function AdminPage() {
               {[...Array(3)].map((_, i) => (
                 <div
                   key={i}
-                  className="card bg-base-100 shadow-sm border border-base-300"
+                  className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm"
                 >
-                  <div className="card-body p-6">
-                    <div className="animate-pulse">
-                      <div className="skeleton h-4 w-20 mb-2"></div>
-                      <div className="skeleton h-8 w-16 mb-2"></div>
-                      <div className="skeleton h-3 w-24"></div>
-                    </div>
+                  <div className="animate-pulse">
+                    <div className="skeleton h-4 w-20 mb-2"></div>
+                    <div className="skeleton h-8 w-16 mb-2"></div>
+                    <div className="skeleton h-3 w-24"></div>
                   </div>
                 </div>
               ))}
@@ -169,7 +160,7 @@ export default function AdminPage() {
           <div className="space-y-8">
             {/* Simple Analytics */}
             <div>
-              <h2 className="text-2xl font-bold mb-6">Platform Analytics</h2>
+              <h2 className="text-2xl font-bold mb-6 text-gray-900">Platform Analytics</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <StatCard
                   icon={Folder}
@@ -197,60 +188,56 @@ export default function AdminPage() {
 
             {/* Review Section */}
             <div>
-              <h2 className="text-2xl font-bold mb-6">Review & Approve</h2>
+              <h2 className="text-2xl font-bold mb-6 text-gray-900">Review & Approve</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="card bg-base-100 shadow-sm border border-base-300 hover:shadow-md transition-all">
-                  <div className="card-body p-6">
-                    <div className="flex items-start space-x-4">
-                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <EditPencil className="w-6 h-6 text-primary" />
+                <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:border-[#ED0D79] hover:shadow-md transition-all duration-300 ease-in-out">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-12 h-12 bg-[#ED0D79]/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <EditPencil className="w-6 h-6 text-[#ED0D79]" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900">Project Submissions</h3>
+                        {stats.pendingProjects > 0 && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                            {stats.pendingProjects} pending
+                          </span>
+                        )}
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-lg font-semibold">Project Submissions</h3>
-                          {stats.pendingProjects > 0 && (
-                            <span className="badge badge-warning badge-sm">
-                              {stats.pendingProjects} pending
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-base-content/70 text-sm mb-4">
-                          Review submitted AI projects, approve or reject submissions, and manage dofollow backlinks for competition winners.
-                        </p>
-                        <Link
-                          href="/admin/projects"
-                          className="btn btn-primary btn-sm"
-                        >
-                          {stats.pendingProjects > 0 
-                            ? `Review ${stats.pendingProjects} Pending` 
-                            : "Manage Submissions"
-                          }
-                        </Link>
-                      </div>
+                      <p className="text-gray-600 text-sm mb-4">
+                        Review submitted AI projects, approve or reject submissions, and manage dofollow backlinks for competition winners.
+                      </p>
+                      <Link
+                        href="/admin/projects"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-[#ED0D79] text-white font-semibold rounded-lg hover:bg-[#ED0D79]/90 transition duration-300 ease-in-out hover:scale-[1.02] shadow-sm text-sm"
+                      >
+                        {stats.pendingProjects > 0 
+                          ? `Review ${stats.pendingProjects} Pending` 
+                          : "Manage Submissions"
+                        }
+                      </Link>
                     </div>
                   </div>
                 </div>
 
-                <div className="card bg-base-100 shadow-sm border border-base-300 hover:shadow-md transition-all">
-                  <div className="card-body p-6">
-                    <div className="flex items-start space-x-4">
-                      <div className="w-12 h-12 bg-warning/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Trophy className="w-6 h-6 text-warning" />
+                <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:border-[#ED0D79] hover:shadow-md transition-all duration-300 ease-in-out">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Trophy className="w-6 h-6 text-amber-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900">Winner Badge Management</h3>
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-lg font-semibold">Winner Badge Management</h3>
-                        </div>
-                        <p className="text-base-content/70 text-sm mb-4">
-                          Select and manage weekly competition winners, assign 1st, 2nd, and 3rd place badges, and verify backlink placements for dofollow links.
-                        </p>
-                        <Link
-                          href="/admin/projects?tab=winners"
-                          className="btn btn-warning btn-sm"
-                        >
-                          Manage Winners
-                        </Link>
-                      </div>
+                      <p className="text-gray-600 text-sm mb-4">
+                        Select and manage weekly competition winners, assign 1st, 2nd, and 3rd place badges, and verify backlink placements for dofollow links.
+                      </p>
+                      <Link
+                        href="/admin/projects?tab=winners"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white font-semibold rounded-lg hover:bg-amber-700 transition duration-300 ease-in-out hover:scale-[1.02] shadow-sm text-sm"
+                      >
+                        Manage Winners
+                      </Link>
                     </div>
                   </div>
                 </div>

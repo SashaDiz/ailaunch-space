@@ -17,6 +17,7 @@ export default function WinnerEmbed({
   className = ""
 }) {
   const [copied, setCopied] = useState(false);
+  const [isDarkTheme, setIsDarkTheme] = useState(false);
 
   if (!position || position < 1 || position > 3) {
     return null;
@@ -35,10 +36,20 @@ export default function WinnerEmbed({
     }
   };
 
-  const embedCode = `<a href="https://ailaunch.space/" target="_blank" rel="noopener noreferrer" style="text-decoration: none; display: inline-block;">
-<div style="width: 225px; height: 52px; display: flex; align-items: center; justify-content: flex-start; background: white; gap: 8px; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 16px 8px 8px; font-family: system-ui, -apple-system, sans-serif;">
+  const embedCode = isDarkTheme 
+    ? `<a href="https://ailaunch.space/" target="_blank" rel="noopener noreferrer" style="text-decoration: none; display: inline-block;">
+<div style="width: auto; min-width: 225px; height: 52px; display: flex; align-items: center; justify-content: flex-start; background: #1f2937; gap: 8px; border: 1px solid #374151; border-radius: 8px; padding: 8px 16px 8px 8px; font-family: system-ui, -apple-system, sans-serif;">
+  <img src="https://ailaunch.space/assets/ailaunch-embed-white.svg" alt="#${position} AI Product on AILaunch.space" width="42" height="42" style="flex-shrink: 0;" />
+  <div style="display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; font-size: 14px; font-weight: 700; line-height: 1.2; color: #f9fafb;">
+    #${position} AI Product of the Week
+    <span style="color: #ED0D79; font-size: 12px;">AILaunch.space</span>
+  </div>
+</div>
+</a>`
+    : `<a href="https://ailaunch.space/" target="_blank" rel="noopener noreferrer" style="text-decoration: none; display: inline-block;">
+<div style="width: auto; min-width: 225px; height: 52px; display: flex; align-items: center; justify-content: flex-start; background: white; gap: 8px; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 16px 8px 8px; font-family: system-ui, -apple-system, sans-serif;">
   <img src="https://ailaunch.space/assets/ailaunch-embed.svg" alt="#${position} AI Product on AILaunch.space" width="42" height="42" style="flex-shrink: 0;" />
-  <div style="display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; font-size: 14px; font-weight: 500; line-height: 1.2; color: #111827;">
+  <div style="display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; font-size: 14px; font-weight: 700; line-height: 1.2; color: #111827;">
     #${position} AI Product of the Week
     <span style="color: #ED0D79; font-size: 12px;">AILaunch.space</span>
   </div>
@@ -67,6 +78,38 @@ export default function WinnerEmbed({
         <p className="text-gray-600">
           Place the downloaded badge on your website with a link back to AILaunch.space.
         </p>
+      </div>
+
+      {/* Theme Toggle */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
+          <div>
+            <h4 className="text-sm font-semibold text-gray-900 mb-1">Badge Theme</h4>
+            <p className="text-xs text-gray-600">Choose between light and dark theme for your badge</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsDarkTheme(false)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors duration-200 ${
+                !isDarkTheme 
+                  ? 'bg-[#ED0D79] text-white' 
+                  : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Light
+            </button>
+            <button
+              onClick={() => setIsDarkTheme(true)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors duration-200 ${
+                isDarkTheme 
+                  ? 'bg-[#ED0D79] text-white' 
+                  : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Dark
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Instructions */}
@@ -106,42 +149,27 @@ export default function WinnerEmbed({
             href="https://ailaunch.space/"
             target="_blank"
             rel="noopener noreferrer"
-            style={{ textDecoration: 'none', display: 'inline-block' }}
           >
             <div 
-              style={{
-                width: '225px',
-                height: '52px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'flex-start',
-                background: 'white',
-                gap: '8px',
-                border: '1px solid #d1d5db',
-                borderRadius: '8px',
-                padding: '8px 16px 8px 8px',
-                fontFamily: 'system-ui, -apple-system, sans-serif'
-              }}
+              width="225" 
+              height="52" 
+              className={`flex items-center justify-start gap-2 border rounded-lg p-2 pr-4 hover:border-[#ED0D79] hover:scale-105 transition-transform duration-200 ${
+                isDarkTheme 
+                  ? 'bg-gray-800 border-gray-600' 
+                  : 'bg-white border-gray-300'
+              }`}
             >
-              <img
-                src="https://ailaunch.space/assets/ailaunch-embed.svg"
-                alt={`#${position} AI Product on AILaunch.space`}
-                width="42"
-                height="42"
-                style={{ flexShrink: 0 }}
-              />
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'flex-start',
-                justifyContent: 'flex-start',
-                fontSize: '14px',
-                fontWeight: '500',
-                lineHeight: '1.2',
-                color: '#111827'
-              }}>
+            <img
+               src={isDarkTheme ? "/assets/ailaunch-embed-white.svg" : "/assets/ailaunch-embed.svg"}
+               alt={`#${position} AI Product on AILaunch.space`}
+               width="42"
+               height="42"
+             />
+              <div className={`flex flex-col items-start justify-start text-md font-medium leading-tight ${
+                isDarkTheme ? 'text-gray-100' : 'text-gray-900'
+              }`}> 
                 #{position} AI Product of the Week
-                <span style={{ color: '#ED0D79', fontSize: '12px' }}>AILaunch.space</span>
+                <span className="text-[#ED0D79] text-sm">AILaunch.space</span>
               </div>
             </div>
           </a>

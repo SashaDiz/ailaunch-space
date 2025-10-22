@@ -32,9 +32,11 @@ export async function GET(request) {
         return await getUserProjects(authCheck.session, searchParams);
       case "stats":
         return await getUserStats(authCheck.session, searchParams);
+      case "profile":
+        return await getUserProfile(authCheck.session);
       default:
         return NextResponse.json(
-          { error: "Invalid type parameter. Use: projects, stats" },
+          { error: "Invalid type parameter. Use: projects, stats, profile" },
           { status: 400 }
         );
     }
@@ -50,7 +52,7 @@ export async function GET(request) {
 // Helper functions
 async function getUserProjects(session, searchParams) {
   const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "10");
+  const limit = parseInt(searchParams.get("limit") || "50"); // Increased default limit
   const status = searchParams.get("status");
   
   const filter = { submitted_by: session.user.id };
@@ -201,6 +203,105 @@ async function getUserStats(session, searchParams) {
       approvedSubmissions: liveProjects,
     },
   });
+}
+
+async function getUserProfile(session) {
+  const userId = session.user.id;
+
+  // Get user profile data from database
+  const userProfile = await db.findOne("users", { id: userId });
+  
+  if (!userProfile) {
+    return NextResponse.json(
+      { error: "User profile not found" },
+      { status: 404 }
+    );
+  }
+
+  return NextResponse.json({
+    success: true,
+    data: {
+      id: userProfile.id,
+      full_name: userProfile.full_name,
+      bio: userProfile.bio,
+      twitter: userProfile.twitter,
+      website: userProfile.website,
+      github: userProfile.github,
+      linkedin: userProfile.linkedin,
+      location: userProfile.location,
+      avatar_url: userProfile.avatar_url,
+      created_at: userProfile.created_at,
+      updated_at: userProfile.updated_at
+    }
+  });
+}
+
+// PUT /api/user - Update user profile
+export async function PUT(request) {
+  try {
+    const authCheck = await checkUserAuth();
+    if (authCheck.error) return authCheck.error;
+
+    const userId = authCheck.session.user.id;
+    const body = await request.json();
+    
+    const { 
+      full_name, 
+      bio, 
+      twitter, 
+      website, 
+      github, 
+      linkedin, 
+      location,
+      avatar_url
+    } = body;
+
+    // Validate required fields
+    if (!full_name || full_name.trim().length === 0) {
+      return NextResponse.json(
+        { error: "Full name is required" },
+        { status: 400 }
+      );
+    }
+
+    // Prepare update data
+    const updateData = {
+      full_name: full_name.trim(),
+      bio: bio?.trim() || null,
+      twitter: twitter?.trim() || null,
+      website: website?.trim() || null,
+      github: github?.trim() || null,
+      linkedin: linkedin?.trim() || null,
+      location: location?.trim() || null,
+      avatar_url: avatar_url?.trim() || null,
+      updated_at: new Date().toISOString()
+    };
+
+    // Update user in database
+    const result = await db.updateOne("users", { id: userId }, { $set: updateData });
+    
+    if (!result || result.modifiedCount === 0) {
+      return NextResponse.json(
+        { error: "Failed to update profile" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Profile updated successfully",
+      data: updateData
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    return NextResponse.json(
+      { 
+        error: "Failed to update profile",
+        details: error.message 
+      },
+      { status: 500 }
+    );
+  }
 }
 
 // DELETE /api/user - Delete user account and all associated data

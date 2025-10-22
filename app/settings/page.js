@@ -292,115 +292,177 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-base-100">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <Link href="/dashboard" className="btn btn-ghost btn-sm mb-4">
-            <NavArrowLeft className="w-4 h-4 mr-2" />
+          <Link 
+            href="/dashboard" 
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-[#ED0D79] transition-colors duration-200 mb-6"
+          >
+            <NavArrowLeft className="w-4 h-4" />
             Back to Dashboard
           </Link>
 
-          <h1 className="text-3xl font-bold">Account Settings</h1>
-          <p className="text-base-content/70 mt-2">
-            Manage your connected accounts and account preferences.
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Account Settings</h1>
+              <p className="text-gray-600">
+                Manage your connected accounts, notification preferences, and account security.
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Notification Preferences Section */}
-        <div className="card bg-base-100 shadow-sm border border-base-300 mb-6">
-          <div className="card-body">
-            <h2 className="card-title text-xl mb-4">
-              <Bell className="w-5 h-5" />
-              Email Notifications
-            </h2>
-            <p className="text-base-content/70 mb-6">
-              Manage your email notification preferences. Some notifications are required and cannot be disabled.
-            </p>
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-8">
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-[#ED0D79]/10 rounded-xl flex items-center justify-center">
+                <Bell className="w-5 h-5 text-[#ED0D79]" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Email Notifications</h2>
+                <p className="text-gray-600 text-sm">
+                  Manage your email notification preferences. Some notifications are required and cannot be disabled.
+                </p>
+              </div>
+            </div>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Competition Notifications */}
               <div>
-                <h3 className="font-semibold text-lg mb-3">Competitions</h3>
+                <h3 className="font-semibold text-lg text-gray-900 mb-4 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-[#ED0D79] rounded-full"></div>
+                  Competition Updates
+                </h3>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 border border-base-300 rounded-lg">
-                    <div>
-                      <h4 className="font-medium">Weekly Competition Entry</h4>
-                      <p className="text-sm text-base-content/60">When your project enters a weekly competition</p>
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-[#ED0D79]/30 transition-colors">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900">Weekly Competition Entry</h4>
+                      <p className="text-sm text-gray-600 mt-1">When your project enters a weekly competition</p>
                     </div>
-                    <input
-                      type="checkbox"
-                      className="toggle toggle-primary"
-                      checked={notificationPreferences.weekly_competition_entry}
-                      onChange={() => toggleNotificationPreference('weekly_competition_entry')}
-                    />
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="sr-only"
+                        checked={notificationPreferences.weekly_competition_entry}
+                        onChange={() => toggleNotificationPreference('weekly_competition_entry')}
+                      />
+                      <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        notificationPreferences.weekly_competition_entry ? 'bg-[#ED0D79]' : 'bg-gray-300'
+                      }`}>
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          notificationPreferences.weekly_competition_entry ? 'translate-x-6' : 'translate-x-1'
+                        }`} />
+                      </div>
+                    </label>
                   </div>
                   
-                  <div className="flex items-center justify-between p-3 border border-base-300 rounded-lg">
-                    <div>
-                      <h4 className="font-medium">Competition Winners</h4>
-                      <p className="text-sm text-base-content/60">When you win a position in competitions</p>
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-[#ED0D79]/30 transition-colors">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900">Competition Winners</h4>
+                      <p className="text-sm text-gray-600 mt-1">When you win a position in competitions</p>
                     </div>
-                    <input
-                      type="checkbox"
-                      className="toggle toggle-primary"
-                      checked={notificationPreferences.competition_winners}
-                      onChange={() => toggleNotificationPreference('competition_winners')}
-                    />
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="sr-only"
+                        checked={notificationPreferences.competition_winners}
+                        onChange={() => toggleNotificationPreference('competition_winners')}
+                      />
+                      <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        notificationPreferences.competition_winners ? 'bg-[#ED0D79]' : 'bg-gray-300'
+                      }`}>
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          notificationPreferences.competition_winners ? 'translate-x-6' : 'translate-x-1'
+                        }`} />
+                      </div>
+                    </label>
                   </div>
                   
-                  <div className="flex items-center justify-between p-3 border border-base-300 rounded-lg">
-                    <div>
-                      <h4 className="font-medium">Winner Badge Reminder</h4>
-                      <p className="text-sm text-base-content/60">Reminders to add winner badges for dofollow links</p>
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-[#ED0D79]/30 transition-colors">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900">Winner Badge Reminder</h4>
+                      <p className="text-sm text-gray-600 mt-1">Reminders to add winner badges for dofollow links</p>
                     </div>
-                    <input
-                      type="checkbox"
-                      className="toggle toggle-primary"
-                      checked={notificationPreferences.winner_reminder}
-                      onChange={() => toggleNotificationPreference('winner_reminder')}
-                    />
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="sr-only"
+                        checked={notificationPreferences.winner_reminder}
+                        onChange={() => toggleNotificationPreference('winner_reminder')}
+                      />
+                      <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        notificationPreferences.winner_reminder ? 'bg-[#ED0D79]' : 'bg-gray-300'
+                      }`}>
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          notificationPreferences.winner_reminder ? 'translate-x-6' : 'translate-x-1'
+                        }`} />
+                      </div>
+                    </label>
                   </div>
                 </div>
               </div>
 
               {/* Optional Notifications */}
               <div>
-                <h3 className="font-semibold text-lg mb-3">Optional</h3>
+                <h3 className="font-semibold text-lg text-gray-900 mb-4 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                  Optional Updates
+                </h3>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 border border-base-300 rounded-lg">
-                    <div>
-                      <h4 className="font-medium">Weekly Digest</h4>
-                      <p className="text-sm text-base-content/60">Weekly summary of AI Launch Space activity</p>
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-[#ED0D79]/30 transition-colors">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900">Weekly Digest</h4>
+                      <p className="text-sm text-gray-600 mt-1">Weekly summary of AI Launch Space activity</p>
                     </div>
-                    <input
-                      type="checkbox"
-                      className="toggle toggle-primary"
-                      checked={notificationPreferences.weekly_digest}
-                      onChange={() => toggleNotificationPreference('weekly_digest')}
-                    />
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="sr-only"
+                        checked={notificationPreferences.weekly_digest}
+                        onChange={() => toggleNotificationPreference('weekly_digest')}
+                      />
+                      <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        notificationPreferences.weekly_digest ? 'bg-[#ED0D79]' : 'bg-gray-300'
+                      }`}>
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          notificationPreferences.weekly_digest ? 'translate-x-6' : 'translate-x-1'
+                        }`} />
+                      </div>
+                    </label>
                   </div>
                   
-                  <div className="flex items-center justify-between p-3 border border-base-300 rounded-lg">
-                    <div>
-                      <h4 className="font-medium">Marketing Emails</h4>
-                      <p className="text-sm text-base-content/60">Product updates and promotional content</p>
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-[#ED0D79]/30 transition-colors">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900">Marketing Emails</h4>
+                      <p className="text-sm text-gray-600 mt-1">Product updates and promotional content</p>
                     </div>
-                    <input
-                      type="checkbox"
-                      className="toggle toggle-primary"
-                      checked={notificationPreferences.marketing_emails}
-                      onChange={() => toggleNotificationPreference('marketing_emails')}
-                    />
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="sr-only"
+                        checked={notificationPreferences.marketing_emails}
+                        onChange={() => toggleNotificationPreference('marketing_emails')}
+                      />
+                      <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        notificationPreferences.marketing_emails ? 'bg-[#ED0D79]' : 'bg-gray-300'
+                      }`}>
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          notificationPreferences.marketing_emails ? 'translate-x-6' : 'translate-x-1'
+                        }`} />
+                      </div>
+                    </label>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end pt-4">
+              <div className="flex justify-end pt-6 border-t border-gray-200">
                 <button
                   onClick={updateNotificationPreferences}
                   disabled={isUpdatingNotifications}
-                  className="btn btn-primary"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#ED0D79] text-white font-semibold text-sm rounded-lg hover:bg-[#ED0D79]/90 transition duration-300 ease-in-out hover:scale-[1.02] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isUpdatingNotifications ? (
                     <>
@@ -409,7 +471,7 @@ export default function SettingsPage() {
                     </>
                   ) : (
                     <>
-                      <Check className="w-4 h-4 mr-2" />
+                      <Check className="w-4 h-4" />
                       Save Preferences
                     </>
                   )}
@@ -420,26 +482,36 @@ export default function SettingsPage() {
         </div>
 
         {/* Connected Accounts Section */}
-        <div className="card bg-base-100 shadow-sm border border-base-300 mb-6">
-          <div className="card-body">
-            <h2 className="card-title text-xl mb-4">Connected Accounts</h2>
-            <p className="text-base-content/70 mb-6">
-              Link multiple accounts to sign in with different providers.
-            </p>
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-8">
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-[#ED0D79]/10 rounded-xl flex items-center justify-center">
+                <LinkIcon className="w-5 h-5 text-[#ED0D79]" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Connected Accounts</h2>
+                <p className="text-gray-600 text-sm">
+                  Link multiple accounts to sign in with different providers for enhanced security.
+                </p>
+              </div>
+            </div>
 
             <div className="space-y-4">
               {/* Google */}
-              <div className="flex items-center justify-between p-4 border border-base-300 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-[#ED0D79]/30 transition-colors">
                 <div className="flex items-center space-x-4">
-                  {getProviderIcon("google")}
+                  <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-gray-200">
+                    {getProviderIcon("google")}
+                  </div>
                   <div>
-                    <h3 className="font-medium">Google</h3>
+                    <h3 className="font-semibold text-gray-900">Google</h3>
                     {isProviderConnected("google") ? (
-                      <p className="text-sm text-success">Connected</p>
+                      <div className="flex items-center gap-1 mt-1">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <p className="text-sm text-green-600 font-medium">Connected</p>
+                      </div>
                     ) : (
-                      <p className="text-sm text-base-content/60">
-                        Not connected
-                      </p>
+                      <p className="text-sm text-gray-500 mt-1">Not connected</p>
                     )}
                   </div>
                 </div>
@@ -453,7 +525,7 @@ export default function SettingsPage() {
                         handleUnlinkProvider(googleIdentity);
                       }
                     }}
-                    className="btn btn-outline btn-sm btn-error"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={connectedProviders.length === 1}
                   >
                     Disconnect
@@ -462,10 +534,13 @@ export default function SettingsPage() {
                   <button
                     onClick={() => handleLinkProvider("google")}
                     disabled={isLinking.google}
-                    className="btn btn-outline btn-sm"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#ED0D79] bg-[#ED0D79]/10 border border-[#ED0D79]/20 rounded-lg hover:bg-[#ED0D79]/20 hover:border-[#ED0D79]/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLinking.google ? (
-                      <span className="loading loading-spinner loading-sm"></span>
+                      <>
+                        <span className="loading loading-spinner loading-sm"></span>
+                        Connecting...
+                      </>
                     ) : (
                       "Connect"
                     )}
@@ -474,17 +549,20 @@ export default function SettingsPage() {
               </div>
 
               {/* GitHub */}
-              <div className="flex items-center justify-between p-4 border border-base-300 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-[#ED0D79]/30 transition-colors">
                 <div className="flex items-center space-x-4">
-                  {getProviderIcon("github")}
+                  <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-gray-200">
+                    {getProviderIcon("github")}
+                  </div>
                   <div>
-                    <h3 className="font-medium">GitHub</h3>
+                    <h3 className="font-semibold text-gray-900">GitHub</h3>
                     {isProviderConnected("github") ? (
-                      <p className="text-sm text-success">Connected</p>
+                      <div className="flex items-center gap-1 mt-1">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <p className="text-sm text-green-600 font-medium">Connected</p>
+                      </div>
                     ) : (
-                      <p className="text-sm text-base-content/60">
-                        Not connected
-                      </p>
+                      <p className="text-sm text-gray-500 mt-1">Not connected</p>
                     )}
                   </div>
                 </div>
@@ -498,7 +576,7 @@ export default function SettingsPage() {
                         handleUnlinkProvider(githubIdentity);
                       }
                     }}
-                    className="btn btn-outline btn-sm btn-error"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={connectedProviders.length === 1}
                   >
                     Disconnect
@@ -507,10 +585,13 @@ export default function SettingsPage() {
                   <button
                     onClick={() => handleLinkProvider("github")}
                     disabled={isLinking.github}
-                    className="btn btn-outline btn-sm"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#ED0D79] bg-[#ED0D79]/10 border border-[#ED0D79]/20 rounded-lg hover:bg-[#ED0D79]/20 hover:border-[#ED0D79]/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLinking.github ? (
-                      <span className="loading loading-spinner loading-sm"></span>
+                      <>
+                        <span className="loading loading-spinner loading-sm"></span>
+                        Connecting...
+                      </>
                     ) : (
                       "Connect"
                     )}
@@ -520,31 +601,53 @@ export default function SettingsPage() {
             </div>
 
             {connectedProviders.length === 1 && (
-              <div className="alert alert-info mt-4">
-                <WarningTriangle className="w-5 h-5" />
-                <span className="text-sm">
-                  You must have at least one connected account to sign in. Link
-                  another account before disconnecting this one.
-                </span>
+              <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                <div className="flex items-start gap-3">
+                  <WarningTriangle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-amber-800">Security Notice</p>
+                    <p className="text-sm text-amber-700 mt-1">
+                      You must have at least one connected account to sign in. Link another account before disconnecting this one.
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
           </div>
         </div>
 
         {/* Danger Zone */}
-        <div className="card bg-base-100 shadow-sm border border-error">
-          <div className="card-body">
-            <h2 className="card-title text-xl text-error mb-2">Danger Zone</h2>
-            <p className="text-base-content/70 mb-6">
-              Permanently delete your account and all associated data. This
-              action cannot be undone.
-            </p>
+        <div className="bg-white rounded-2xl border border-red-200 shadow-sm">
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
+                <Trash className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-red-600">Danger Zone</h2>
+                <p className="text-gray-600 text-sm">
+                  Permanently delete your account and all associated data. This action cannot be undone.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-red-50 border border-red-200 rounded-xl mb-6">
+              <div className="flex items-start gap-3">
+                <WarningTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-red-800">Warning: This action is irreversible</p>
+                  <p className="text-sm text-red-700 mt-1">
+                    Deleting your account will permanently remove all your data, including projects, votes, and profile information.
+                  </p>
+                </div>
+              </div>
+            </div>
 
             <button
               onClick={() => setShowDeleteModal(true)}
-              className="btn btn-error btn-outline w-full sm:w-auto"
+              className="inline-flex items-center gap-2 px-6 py-3 text-white font-semibold text-sm bg-red-600 rounded-lg hover:bg-red-700 transition duration-300 ease-in-out hover:scale-[1.02] shadow-sm"
             >
-              <Trash className="w-5 h-5 mr-2" />
+              <Trash className="w-5 h-5" />
               Delete Account
             </button>
           </div>
@@ -553,84 +656,108 @@ export default function SettingsPage() {
 
       {/* Delete Account Modal */}
       {showDeleteModal && (
-        <dialog open className="modal modal-open">
-          <div className="modal-box">
-            <h3 className="font-bold text-lg text-error mb-4">
-              <WarningTriangle className="w-6 h-6 inline mr-2" />
-              Delete Account
-            </h3>
-            <p className="mb-4">
-              This will permanently delete your account and all associated data,
-              including:
-            </p>
-            <ul className="list-disc list-inside mb-4 text-sm space-y-1">
-              <li>All your submitted projects</li>
-              <li>Your votes and interactions</li>
-              <li>Your profile information</li>
-              <li>All associated data</li>
-            </ul>
-            <div className="alert alert-error mb-4">
-              <WarningTriangle className="w-5 h-5" />
-              <span className="text-sm">
-                This action cannot be undone. Please be certain.
-              </span>
-            </div>
-
-            <div className="form-control mb-6">
-              <label className="label">
-                <span className="label-text font-medium">
-                  Type <span className="font-bold">DELETE</span> to confirm
-                </span>
-              </label>
-              <input
-                type="text"
-                value={deleteConfirmation}
-                onChange={(e) => setDeleteConfirmation(e.target.value)}
-                className="input input-bordered w-full"
-                placeholder="DELETE"
-                autoComplete="off"
-              />
-            </div>
-
-            <div className="modal-action">
-              <button
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setDeleteConfirmation("");
-                }}
-                className="btn btn-ghost"
-                disabled={isDeleting}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteAccount}
-                disabled={
-                  deleteConfirmation !== "DELETE" || isDeleting
-                }
-                className="btn btn-error"
-              >
-                {isDeleting ? (
-                  <span className="loading loading-spinner loading-sm"></span>
-                ) : (
-                  <>
-                    <Trash className="w-5 h-5 mr-2" />
-                    Delete My Account
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-          <div
-            className="modal-backdrop"
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => {
               if (!isDeleting) {
                 setShowDeleteModal(false);
                 setDeleteConfirmation("");
               }
             }}
-          ></div>
-        </dialog>
+          />
+          <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
+                <WarningTriangle className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-red-600">Delete Account</h3>
+                <p className="text-gray-600 text-sm">This action cannot be undone</p>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-gray-700 mb-4">
+                This will permanently delete your account and all associated data, including:
+              </p>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+                  All your submitted projects
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+                  Your votes and interactions
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+                  Your profile information
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+                  All associated data
+                </li>
+              </ul>
+            </div>
+
+            <div className="p-4 bg-red-50 border border-red-200 rounded-xl mb-6">
+              <div className="flex items-start gap-3">
+                <WarningTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-red-800">Final Warning</p>
+                  <p className="text-sm text-red-700 mt-1">
+                    This action cannot be undone. Please be certain before proceeding.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Type <span className="font-bold text-red-600">DELETE</span> to confirm
+              </label>
+              <input
+                type="text"
+                value={deleteConfirmation}
+                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
+                placeholder="DELETE"
+                autoComplete="off"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteConfirmation("");
+                }}
+                className="flex-1 px-4 py-3 text-gray-700 font-medium bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleteConfirmation !== "DELETE" || isDeleting}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 text-white font-semibold text-sm bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? (
+                  <>
+                    <span className="loading loading-spinner loading-sm"></span>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash className="w-5 h-5" />
+                    Delete My Account
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
