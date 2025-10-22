@@ -18,11 +18,67 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
   const plusIconRef = useRef(null);
 
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  // Fetch user profile data when user is available
+  useEffect(() => {
+    if (user && !loading) {
+      fetchUserProfile();
+    }
+  }, [user, loading]);
+
+  // Listen for profile updates
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      if (user && !loading) {
+        // Force refresh with a small delay to ensure database is updated
+        setTimeout(() => {
+          fetchUserProfile();
+        }, 200);
+        
+        // Additional refresh attempts to ensure consistency
+        setTimeout(() => {
+          fetchUserProfile();
+        }, 500);
+        
+        setTimeout(() => {
+          fetchUserProfile();
+        }, 1000);
+      }
+    };
+
+    // Listen for custom profile update events
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+    
+    return () => {
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+    };
+  }, [user, loading]);
+
+  const fetchUserProfile = async () => {
+    try {
+      // Add cache-busting parameter to ensure fresh data
+      const response = await fetch(`/api/user?type=profile&t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          setUserProfile(result.data);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch user profile:", error);
+    }
+  };
 
   // Ensure we're on the client side before setting up scroll listener
   useEffect(() => {
@@ -147,6 +203,7 @@ export function Header() {
                 width={40}
                 priority
                 style={{ width: "auto", height: "44px" }}
+                className="h-11"
               />
             </Link>
 
@@ -242,19 +299,35 @@ export function Header() {
                 >
                   <div className="avatar">
                     <div className="w-12 h-12 rounded-full border-2 border-base-300 transition-all duration-200 hover:border-[#ED0D79] hover:scale-105">
-                      {user.user_metadata?.avatar_url ? (
-                        <Image
-                          src={user.user_metadata.avatar_url}
-                          alt={user.user_metadata?.full_name || user.email || "User"}
-                          width={32}
-                          height={32}
-                          className="rounded-full"
-                        />
-                      ) : (
-                        <div className="bg-[#ED0D79] text-white w-full h-full flex items-center justify-center text-xs font-medium">
-                          {(user.user_metadata?.full_name?.[0] || user.email?.[0] || "U").toUpperCase()}
-                        </div>
-                      )}
+                      {(() => {
+                        const avatarUrl = userProfile?.avatar_url || user.user_metadata?.avatar_url;
+                        return avatarUrl ? (
+                          <Image
+                            src={avatarUrl}
+                            alt={user.user_metadata?.full_name || user.email || "User"}
+                            width={32}
+                            height={32}
+                            className="rounded-full"
+                            key={`avatar-${avatarUrl}-${userProfile?.updated_at || Date.now()}`}
+                            unoptimized={true}
+                            onError={(e) => {
+                              // Hide the image and show initials instead
+                              const parent = e.target.parentElement;
+                              if (parent) {
+                                parent.innerHTML = `
+                                  <div class="bg-[#ED0D79] text-white w-full h-full flex items-center justify-center text-xs font-medium">
+                                    ${(user.user_metadata?.full_name?.[0] || user.email?.[0] || "U").toUpperCase()}
+                                  </div>
+                                `;
+                              }
+                            }}
+                          />
+                        ) : (
+                          <div className="bg-[#ED0D79] text-white w-full h-full flex items-center justify-center text-xs font-medium">
+                            {(user.user_metadata?.full_name?.[0] || user.email?.[0] || "U").toUpperCase()}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -342,7 +415,8 @@ export function Header() {
                   alt="AI Launch Space"
                   height={32}
                   width={32}
-                  className="h-10 w-auto"
+                  style={{ width: "auto", height: "auto" }}
+                  className="h-10"
                 />
               </div>
               <button
@@ -394,19 +468,35 @@ export function Header() {
                   <div className="flex items-center mb-4">
                     <div className="avatar mr-3">
                       <div className="w-12 h-12 rounded-full border-2 border-gray-300">
-                        {user.user_metadata?.avatar_url ? (
-                          <Image
-                            src={user.user_metadata.avatar_url}
-                            alt={user.user_metadata?.full_name || user.email || "User"}
-                            width={48}
-                            height={48}
-                            className="rounded-full"
-                          />
-                        ) : (
-                          <div className="bg-[#ED0D79] text-white w-full h-full flex items-center justify-center text-lg font-medium">
-                            {(user.user_metadata?.full_name?.[0] || user.email?.[0] || "U").toUpperCase()}
-                          </div>
-                        )}
+                        {(() => {
+                          const avatarUrl = userProfile?.avatar_url || user.user_metadata?.avatar_url;
+                          return avatarUrl ? (
+                            <Image
+                              src={avatarUrl}
+                              alt={user.user_metadata?.full_name || user.email || "User"}
+                              width={48}
+                              height={48}
+                              className="rounded-full"
+                              key={`mobile-avatar-${avatarUrl}-${userProfile?.updated_at || Date.now()}`}
+                              unoptimized={true}
+                              onError={(e) => {
+                                // Hide the image and show initials instead
+                                const parent = e.target.parentElement;
+                                if (parent) {
+                                  parent.innerHTML = `
+                                    <div class="bg-[#ED0D79] text-white w-full h-full flex items-center justify-center text-lg font-medium">
+                                      ${(user.user_metadata?.full_name?.[0] || user.email?.[0] || "U").toUpperCase()}
+                                    </div>
+                                  `;
+                                }
+                              }}
+                            />
+                          ) : (
+                            <div className="bg-[#ED0D79] text-white w-full h-full flex items-center justify-center text-lg font-medium">
+                              {(user.user_metadata?.full_name?.[0] || user.email?.[0] || "U").toUpperCase()}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                     <div>

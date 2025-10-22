@@ -264,6 +264,9 @@ export async function PUT(request) {
       );
     }
 
+    // Get current user data to preserve avatar_url if not being updated
+    const currentUser = await db.findOne("users", { id: userId });
+    
     // Prepare update data
     const updateData = {
       full_name: full_name.trim(),
@@ -273,9 +276,16 @@ export async function PUT(request) {
       github: github?.trim() || null,
       linkedin: linkedin?.trim() || null,
       location: location?.trim() || null,
-      avatar_url: avatar_url?.trim() || null,
       updated_at: new Date().toISOString()
     };
+
+    // Only include avatar_url in update if it's being explicitly updated
+    if (avatar_url !== undefined) {
+      updateData.avatar_url = avatar_url?.trim() || null;
+    } else {
+      // Preserve existing avatar_url
+      updateData.avatar_url = currentUser?.avatar_url;
+    }
 
     // Update user in database
     const result = await db.updateOne("users", { id: userId }, { $set: updateData });
@@ -287,10 +297,27 @@ export async function PUT(request) {
       );
     }
 
+    // Prepare response data - only include avatar_url if it was updated
+    const responseData = {
+      full_name: updateData.full_name,
+      bio: updateData.bio,
+      twitter: updateData.twitter,
+      website: updateData.website,
+      github: updateData.github,
+      linkedin: updateData.linkedin,
+      location: updateData.location,
+      updated_at: updateData.updated_at
+    };
+
+    // Only include avatar_url in response if it was explicitly updated
+    if (avatar_url !== undefined) {
+      responseData.avatar_url = updateData.avatar_url;
+    }
+
     return NextResponse.json({
       success: true,
       message: "Profile updated successfully",
-      data: updateData
+      data: responseData
     });
   } catch (error) {
     console.error("Update profile error:", error);

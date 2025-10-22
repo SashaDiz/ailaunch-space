@@ -58,7 +58,8 @@ export default function ProfilePage() {
             website: profileData.website || "",
           });
           // Prioritize custom uploaded avatar over OAuth provider avatar
-          setProfileImage(profileData.avatar_url || user.user_metadata?.avatar_url || null);
+          const avatarUrl = profileData.avatar_url || user.user_metadata?.avatar_url || null;
+          setProfileImage(avatarUrl);
         }
       }
     } catch (error) {
@@ -72,7 +73,8 @@ export default function ProfilePage() {
         website: "",
       });
       // Use OAuth provider avatar as fallback
-      setProfileImage(user.user_metadata?.avatar_url || null);
+      const fallbackAvatarUrl = user.user_metadata?.avatar_url || null;
+      setProfileImage(fallbackAvatarUrl);
     } finally {
       setIsLoadingProfile(false);
     }
@@ -134,6 +136,8 @@ export default function ProfilePage() {
         setIsEditing(false);
         // Reload profile data to ensure UI is in sync
         await loadProfileData();
+        // Don't update avatar state when updating other profile data
+        // Avatar updates are handled separately in handleImageUpload and handleRemoveImage
       } else {
         throw new Error(result.error || 'Failed to update profile');
       }
@@ -174,6 +178,8 @@ export default function ProfilePage() {
         toast.success('Profile image removed successfully!');
         // Reload profile data to ensure UI is in sync
         await loadProfileData();
+        // Notify header component to refresh avatar
+        window.dispatchEvent(new CustomEvent('profileUpdated'));
       } else {
         throw new Error(result.error || 'Failed to remove profile image');
       }
@@ -235,6 +241,8 @@ export default function ProfilePage() {
           toast.success('Profile image updated successfully!');
           // Reload profile data to ensure UI is in sync
           await loadProfileData();
+          // Notify header component to refresh avatar
+          window.dispatchEvent(new CustomEvent('profileUpdated'));
         } else {
           throw new Error(updateResult.error || 'Failed to update profile');
         }
@@ -338,7 +346,6 @@ export default function ProfilePage() {
                         className="rounded-full object-cover"
                         unoptimized={true}
                         onError={(e) => {
-                          console.error("Profile image failed to load:", e);
                           // Hide the image and show initials instead
                           const parent = e.target.parentElement;
                           if (parent) {
@@ -452,18 +459,27 @@ export default function ProfilePage() {
                 Profile Information
               </h3>
 
-              <div className="space-y-4">
-                {/* Name */}
-                <div className="flex items-center space-x-3">
-                  <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                  <div className="flex-1">
-                    <h4 className="text-sm font-medium text-gray-700">Display Name</h4>
-                    <p className="text-gray-900 font-medium">{profile.name || "Not set"}</p>
+              {isEditing ? (
+                <div className="space-y-6">
+                  {/* Display Name */}
+                  <div className="flex items-center space-x-3">
+                    <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <div className="flex-1">
+                      <label htmlFor="display-name" className="block text-sm font-medium text-gray-700 mb-2">
+                        Display Name
+                      </label>
+                      <input
+                        id="display-name"
+                        type="text"
+                        value={profile.name}
+                        onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED0D79] focus:border-transparent"
+                        placeholder="Enter your display name"
+                      />
+                    </div>
                   </div>
-                </div>
 
-                {/* Bio */}
-                {profile.bio && (
+                  {/* Bio */}
                   <div className="flex items-start space-x-3">
                     <div className="w-4 h-4 flex-shrink-0 mt-1">
                       <div className="w-4 h-4 bg-gray-100 rounded-full flex items-center justify-center">
@@ -471,48 +487,119 @@ export default function ProfilePage() {
                       </div>
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-sm font-medium text-gray-700">Bio</h4>
-                      <p className="text-gray-900 text-sm">{profile.bio}</p>
+                      <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-2">
+                        Bio
+                      </label>
+                      <textarea
+                        id="bio"
+                        value={profile.bio}
+                        onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED0D79] focus:border-transparent"
+                        placeholder="Tell us about yourself"
+                        rows={3}
+                      />
                     </div>
                   </div>
-                )}
 
-                {/* Twitter */}
-                {profile.twitter && (
+                  {/* Twitter */}
                   <div className="flex items-center space-x-3">
                     <Twitter className="w-4 h-4 text-gray-400 flex-shrink-0" />
                     <div className="flex-1">
-                      <h4 className="text-sm font-medium text-gray-700">Twitter</h4>
-                      <a
-                        href={`https://twitter.com/${profile.twitter.replace('@', '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer nofollow"
-                        className="text-[#ED0D79] hover:text-[#ED0D79]/80 transition-colors font-medium text-sm"
-                      >
-                        @{profile.twitter.replace('@', '')}
-                      </a>
+                      <label htmlFor="twitter" className="block text-sm font-medium text-gray-700 mb-2">
+                        Twitter
+                      </label>
+                      <input
+                        id="twitter"
+                        type="text"
+                        value={profile.twitter}
+                        onChange={(e) => setProfile({ ...profile, twitter: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED0D79] focus:border-transparent"
+                        placeholder="@username"
+                      />
                     </div>
                   </div>
-                )}
 
-                {/* Website */}
-                {profile.website && (
+                  {/* Website */}
                   <div className="flex items-center space-x-3">
                     <Globe className="w-4 h-4 text-gray-400 flex-shrink-0" />
                     <div className="flex-1">
-                      <h4 className="text-sm font-medium text-gray-700">Website</h4>
-                      <a
-                        href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
-                        target="_blank"
-                        rel="noopener noreferrer nofollow"
-                        className="text-[#ED0D79] hover:text-[#ED0D79]/80 transition-colors font-medium text-sm break-all"
-                      >
-                        {profile.website}
-                      </a>
+                      <label htmlFor="website" className="block text-sm font-medium text-gray-700 mb-2">
+                        Website
+                      </label>
+                      <input
+                        id="website"
+                        type="url"
+                        value={profile.website}
+                        onChange={(e) => setProfile({ ...profile, website: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED0D79] focus:border-transparent"
+                        placeholder="https://yourwebsite.com"
+                      />
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Name */}
+                  <div className="flex items-center space-x-3">
+                    <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h4 className="text-sm font-medium text-gray-700">Display Name</h4>
+                      <p className="text-gray-900 font-medium">{profile.name || "Not set"}</p>
+                    </div>
+                  </div>
+
+                  {/* Bio */}
+                  {profile.bio && (
+                    <div className="flex items-start space-x-3">
+                      <div className="w-4 h-4 flex-shrink-0 mt-1">
+                        <div className="w-4 h-4 bg-gray-100 rounded-full flex items-center justify-center">
+                          <span className="text-xs text-gray-600 font-medium">B</span>
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium text-gray-700">Bio</h4>
+                        <p className="text-gray-900 text-sm">{profile.bio}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Twitter */}
+                  {profile.twitter && (
+                    <div className="flex items-center space-x-3">
+                      <Twitter className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium text-gray-700">Twitter</h4>
+                        <a
+                          href={`https://twitter.com/${profile.twitter.replace('@', '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer nofollow"
+                          className="text-[#ED0D79] hover:text-[#ED0D79]/80 transition-colors font-medium text-sm"
+                        >
+                          @{profile.twitter.replace('@', '')}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Website */}
+                  {profile.website && (
+                    <div className="flex items-center space-x-3">
+                      <Globe className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium text-gray-700">Website</h4>
+                        <a
+                          href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
+                          target="_blank"
+                          rel="noopener noreferrer nofollow"
+                          className="text-[#ED0D79] hover:text-[#ED0D79]/80 transition-colors font-medium text-sm break-all"
+                        >
+                          {profile.website}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -564,50 +651,55 @@ export default function ProfilePage() {
                 const websiteLink = getWebsiteLink();
 
                 return (
-                  <Link
+                  <div
                     key={project.id}
-                    href={`/project/${project.slug}`}
                     className="relative block p-4 rounded-lg border border-gray-200 hover:border-[#ED0D79] hover:bg-gray-50 transition-all duration-200 group"
                   >
+                    {/* Project Link - Main Clickable Area */}
+                    <Link
+                      href={`/project/${project.slug}`}
+                      className="block"
+                    >
+                      <div className="flex items-start space-x-3">
+                        {/* Project Logo */}
+                        <div className="w-12 h-12 rounded-lg border border-gray-200 overflow-hidden flex-shrink-0">
+                          <Image
+                            src={project.logo_url}
+                            alt={`${project.name} logo`}
+                            width={48}
+                            height={48}
+                            className="w-full h-full object-cover"
+                            unoptimized={true}
+                          />
+                        </div>
+
+                        {/* Project Info */}
+                        <div className="flex-1 min-w-0 pr-6">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <h4 className="text-sm font-semibold text-gray-900 truncate">
+                              {project.name}
+                            </h4>
+                            {/* Winner Badge */}
+                            <WinnerBadge position={project.weekly_position} size="xs" />
+                          </div>
+                          <p className="text-xs text-gray-600 line-clamp-2">
+                            {project.short_description}
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
+
                     {/* External Link - Top Right Corner */}
                     <a
                       href={websiteLink.url}
                       target="_blank"
                       rel={websiteLink.rel}
-                      className="absolute top-3 right-3 p-1 text-gray-400 hover:text-[#ED0D79] transition-colors"
+                      className="absolute top-3 right-3 p-1 text-gray-400 hover:text-[#ED0D79] transition-colors z-10"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <OpenNewWindow className="w-4 h-4" />
                     </a>
-
-                    <div className="flex items-start space-x-3">
-                      {/* Project Logo */}
-                      <div className="w-12 h-12 rounded-lg border border-gray-200 overflow-hidden flex-shrink-0">
-                        <Image
-                          src={project.logo_url}
-                          alt={`${project.name} logo`}
-                          width={48}
-                          height={48}
-                          className="w-full h-full object-cover"
-                          unoptimized={true}
-                        />
-                      </div>
-
-                      {/* Project Info */}
-                      <div className="flex-1 min-w-0 pr-6">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <h4 className="text-sm font-semibold text-gray-900 truncate">
-                            {project.name}
-                          </h4>
-                          {/* Winner Badge */}
-                          <WinnerBadge position={project.weekly_position} size="xs" />
-                        </div>
-                        <p className="text-xs text-gray-600 line-clamp-2">
-                          {project.short_description}
-                        </p>
-                      </div>
-                    </div>
-                  </Link>
+                  </div>
                 );
               })}
             </div>

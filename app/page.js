@@ -63,11 +63,11 @@ Follow my journey as I share lessons, wins, and experiments along the way!"
         </div>
         <div className="flex flex-col items-center gap-4">
           <a href="https://frogdr.com/ailaunch.space?utm_source=ailaunch.space" target="_blank">
-            <img 
-              src="https://frogdr.com/ailaunch.space/badge-white.svg" 
-              alt="Monitor your Domain Rating with FrogDR" 
-              width="200" 
-              height="43" 
+            <img
+              src="https://frogdr.com/ailaunch.space/badge-white.svg"
+              alt="Monitor your Domain Rating with FrogDR"
+              width="200"
+              height="43"
               className="w-full max-w-[200px] h-auto"
             />
           </a>
@@ -103,7 +103,7 @@ export default function HomePage() {
   // Initialize animations on mount
   useEffect(() => {
     if (!isClient) return;
-    
+
     const tl = gsap.timeline();
 
     // Set initial states for sections
@@ -227,86 +227,91 @@ export default function HomePage() {
       <div className="relative z-10 max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Hero Section */}
         <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
-        {/* Main Content Area */}
-        <div className="lg:col-span-2">
-          {/* Hero Header */}
-          <section
-            ref={heroRef}
-            className="text-center lg:text-left pt-4 sm:pt-8 pb-4 sm:pb-8 max-w-xl lg:mr-auto"
-          >
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl leading-tight font-semibold text-gray-900 mb-4">
-              Launch Your AI Project &amp;&nbsp;Get Discovered
-            </h1>
-            <p className="text-base sm:text-lg font-normal text-gray-900 mb-4 sm:mb-6 max-w-xl mx-auto lg:mx-0">
-              Submit your AI project and get early exposure, reach other AI builders and innovators, and showcase your innovation to the community.
-            </p>
-          </section>
+          {/* Main Content Area */}
+          <div className="lg:col-span-2">
+            {/* Hero Header */}
+            <section
+              ref={heroRef}
+              className="text-center lg:text-left pt-4 sm:pt-8 pb-4 sm:pb-8 max-w-xl lg:mr-auto"
+            >
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl leading-tight font-semibold text-gray-900 mb-4">
+                Launch Your AI Project &amp;&nbsp;Get Discovered
+              </h1>
+              <p className="text-base sm:text-lg font-normal text-gray-900 mb-4 sm:mb-6 max-w-xl mx-auto lg:mx-0">
+                Submit your AI project and get early exposure, reach other AI builders and innovators, and showcase your innovation to the community.
+              </p>
+            </section>
 
-          {/* Best Weekly Products Section */}
-          <section ref={mainContentRef}>
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-medium text-gray-900">
-                  Best Weekly Products
-                </h2>
-                {/* Stats */}
-                <div className="p-2 px-4 rounded-xl bg-gray-100 text-center">
-                  <p className="text-sm font-semibold text-base-content/60">
-                    {projects.length} / 15 Apps
-                  </p>
-                </div>
-              </div>
-
-              <CountdownTimer competitionData={competition} />
-            </div>
-
-            {/* Project Listings */}
-            {loading ? (
-              <div className="grid grid-cols-1 gap-4">
-                {[...Array(6)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="bg-base-100 rounded-lg p-4 border border-base-300"
-                  >
-                    <div className="flex items-start space-x-3">
-                      <div className="skeleton w-12 h-12 rounded-full"></div>
-                      <div className="flex-1 space-y-2">
-                        <div className="skeleton h-4 w-3/4"></div>
-                        <div className="skeleton h-3 w-full"></div>
-                        <div className="skeleton h-3 w-1/2"></div>
-                      </div>
-                      <div className="skeleton w-16 h-16 rounded-lg"></div>
-                    </div>
+            {/* Best Weekly Products Section */}
+            <section ref={mainContentRef}>
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-medium text-gray-900">
+                    Best Weekly Products
+                  </h2>
+                  {/* Stats */}
+                  <div className="p-2 px-4 rounded-xl bg-gray-100 text-center">
+                    <p className="text-sm font-semibold text-base-content/60">
+                      {projects.length} / 15 Apps
+                    </p>
                   </div>
-                ))}
-              </div>
-            ) : projects.length > 0 ? (
-              <div ref={projectsRef} className="grid grid-cols-1 gap-4">
-                {projects.map((project) => (
-                  <ProductCard
-                    key={project.id}
-                    project={project}
-                    onVote={handleVote}
-                    viewMode="auto"
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center text-center py-12 gap-6">
-                <Rocket className="w-12 h-12" strokeWidth={1.5} />
-                <p>No AI projects found for this competition.</p>
-                <Link href="/submit?plan=standard" className="btn btn-primary">
-                  Be the first to submit!
-                </Link>
-              </div>
-            )}
-          </section>
+                </div>
 
-          {/* Featured Section */}
+                <CountdownTimer competitionData={competition} />
+              </div>
+
+              {/* Project Listings */}
+              {loading ? (
+                <div className="grid grid-cols-1 gap-4">
+                  {[...Array(6)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="bg-base-100 rounded-lg p-4 border border-base-300"
+                    >
+                      <div className="flex items-start space-x-3">
+                        <div className="skeleton w-12 h-12 rounded-full"></div>
+                        <div className="flex-1 space-y-2">
+                          <div className="skeleton h-4 w-3/4"></div>
+                          <div className="skeleton h-3 w-full"></div>
+                          <div className="skeleton h-3 w-1/2"></div>
+                        </div>
+                        <div className="skeleton w-16 h-16 rounded-lg"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : projects.length > 0 ? (
+                <div ref={projectsRef} className="grid grid-cols-1 gap-4">
+                  {projects.map((project) => (
+                    <ProductCard
+                      key={project.id}
+                      project={project}
+                      onVote={handleVote}
+                      viewMode="auto"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center text-center py-12 gap-6">
+                  <Rocket className="w-12 h-12 text-gray-600" strokeWidth={1} />
+                  <p className="text-gray-700 text-md font-medium">No AI projects found for this competition.</p>
+                  <Link 
+                    href="/submit?plan=standard" 
+                    className="block text-center bg-white text-gray-900 border border-gray-200 rounded-lg py-3 font-semibold text-sm no-underline transition duration-300 outline outline-4 outline-transparent hover:border-[#ED0D79] hover:bg-[#ED0D79] hover:text-white hover:outline-[#ed0d7924] min-h-[48px] min-w-[200px]"
+                    aria-label="Submit your AI project to be the first in this competition"
+                  >
+                    Be the first to submit!
+                  </Link>
+                </div>
+              )}
+            </section>
+
+            {/* Featured Section
+          
           <section ref={featuredRef} className="mt-8 sm:mt-16">
             <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-center lg:text-left">Featured on</h2>
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6 opacity-60">
-              {/* Partner logos */}
+              
               <div className="flex items-center space-x-2 hover:opacity-100 duration-300 cursor-pointer transform hover:scale-105 transition-transform">
                 <div className="w-5 h-5 sm:w-6 sm:h-6 bg-red-500 rounded"></div>
                 <span className="text-xs sm:text-sm font-medium">Startup Flame</span>
@@ -329,13 +334,14 @@ export default function HomePage() {
               </div>
             </div>
           </section>
-        </div>
+          */}
+          </div>
 
-        {/* Right Sidebar */}
-        <div ref={sidebarRef} className="lg:col-span-1">
-          <RightSidePanel />
+          {/* Right Sidebar */}
+          <div ref={sidebarRef} className="lg:col-span-1">
+            <RightSidePanel />
+          </div>
         </div>
-      </div>
       </div>
     </div>
   );
