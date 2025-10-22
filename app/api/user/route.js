@@ -209,13 +209,39 @@ async function getUserProfile(session) {
   const userId = session.user.id;
 
   // Get user profile data from database
-  const userProfile = await db.findOne("users", { id: userId });
+  let userProfile = await db.findOne("users", { id: userId });
   
+  // If user profile doesn't exist, create it
   if (!userProfile) {
-    return NextResponse.json(
-      { error: "User profile not found" },
-      { status: 404 }
-    );
+    console.log("User profile not found, creating new profile for user:", userId);
+    
+    // Create a new user profile with basic information
+    const newUserProfile = {
+      id: userId,
+      full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
+      first_name: session.user.user_metadata?.first_name || session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
+      role: 'user',
+      total_submissions: 0,
+      total_votes: 0,
+      reputation: 0,
+      is_active: true,
+      created_at: new Date(),
+      updated_at: new Date(),
+      last_login_at: new Date()
+    };
+
+    try {
+      // Insert the new user profile
+      await db.insertOne("users", newUserProfile);
+      userProfile = newUserProfile;
+      console.log("Successfully created user profile for:", userId);
+    } catch (error) {
+      console.error("Failed to create user profile:", error);
+      return NextResponse.json(
+        { error: "Failed to create user profile" },
+        { status: 500 }
+      );
+    }
   }
 
   return NextResponse.json({

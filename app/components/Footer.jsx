@@ -12,7 +12,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
-          <Link href="/">
+            <Link href="/">
               <Image
                 src="/assets/logo-white.svg"
                 alt="AI Launch Space"
@@ -53,6 +53,7 @@ export function Footer() {
                   Submit AI Project
                 </Link>
               </li>
+              {/* temporarily hidden
               <li>
                 <Link
                   href="/pricing"
@@ -61,6 +62,7 @@ export function Footer() {
                   Pricing
                 </Link>
               </li>
+              */}
             </ul>
           </div>
 
@@ -78,10 +80,10 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/help"
+                  href="/faq"
                   className="text-white/70 hover:text-[#ED0D79] transition-colors"
                 >
-                  Help Center
+                  FAQs
                 </Link>
               </li>
               {/* CHANGELOG FEATURE DISABLED - COMMENTED OUT FOR FUTURE DEVELOPMENT

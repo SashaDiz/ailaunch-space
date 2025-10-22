@@ -106,28 +106,33 @@ export default function HomePage() {
 
     const tl = gsap.timeline();
 
-    // Set initial states for sections
-    gsap.set(
-      [
-        heroRef.current,
-        mainContentRef.current,
-        sidebarRef.current,
-        featuredRef.current,
-      ],
-      {
+    // Set initial states for sections - only if refs exist
+    const refs = [
+      heroRef.current,
+      mainContentRef.current,
+      sidebarRef.current,
+      featuredRef.current,
+    ].filter(Boolean); // Filter out null refs
+
+    if (refs.length > 0) {
+      gsap.set(refs, {
         opacity: 0,
         y: 30,
-      }
-    );
+      });
+    }
 
     // Animate sections with staggered delays for smooth entrance
-    tl.to(heroRef.current, {
-      opacity: 1,
-      y: 0,
-      duration: 0.8,
-      ease: "power2.out",
-    })
-      .to(
+    if (heroRef.current) {
+      tl.to(heroRef.current, {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        ease: "power2.out",
+      });
+    }
+    
+    if (mainContentRef.current) {
+      tl.to(
         mainContentRef.current,
         {
           opacity: 1,
@@ -136,8 +141,11 @@ export default function HomePage() {
           ease: "power2.out",
         },
         "-=0.6"
-      ) // Start 0.6s before previous animation ends
-      .to(
+      ); // Start 0.6s before previous animation ends
+    }
+    
+    if (sidebarRef.current) {
+      tl.to(
         sidebarRef.current,
         {
           opacity: 1,
@@ -146,8 +154,11 @@ export default function HomePage() {
           ease: "power2.out",
         },
         "-=0.4"
-      ) // Start 0.4s before previous animation ends
-      .to(
+      ); // Start 0.4s before previous animation ends
+    }
+    
+    if (featuredRef.current) {
+      tl.to(
         featuredRef.current,
         {
           opacity: 1,
@@ -157,6 +168,7 @@ export default function HomePage() {
         },
         "-=0.6"
       ); // Start 0.6s before previous animation ends
+    }
   }, [isClient]);
 
   // Animate projects when they change

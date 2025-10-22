@@ -27,10 +27,16 @@ export function Header() {
 
   // Fetch user profile data when user is available
   useEffect(() => {
-    if (user && !loading) {
+    if (user && !loading && isClient && user.id) {
+      // Only fetch if we have a valid user with an ID
+      console.log("User authenticated, fetching profile for:", user.id);
       fetchUserProfile();
+    } else if (!user && !loading && isClient) {
+      // Clear profile when user is not authenticated
+      console.log("User not authenticated, clearing profile");
+      setUserProfile(null);
     }
-  }, [user, loading]);
+  }, [user, loading, isClient]);
 
   // Listen for profile updates
   useEffect(() => {
@@ -62,6 +68,8 @@ export function Header() {
 
   const fetchUserProfile = async () => {
     try {
+      console.log("Fetching user profile for user:", user?.id);
+      
       // Add cache-busting parameter to ensure fresh data
       const response = await fetch(`/api/user?type=profile&t=${Date.now()}`, {
         cache: 'no-store',
@@ -69,14 +77,29 @@ export function Header() {
           'Cache-Control': 'no-cache'
         }
       });
+      
+      console.log("API response status:", response.status);
+      
       if (response.ok) {
         const result = await response.json();
         if (result.success) {
           setUserProfile(result.data);
         }
+      } else if (response.status === 401) {
+        // User is not authenticated, this is expected
+        console.log("User not authenticated, clearing profile");
+        setUserProfile(null);
+      } else if (response.status === 404) {
+        // API route not found - this might be a development server issue
+        console.warn("API route not found - this might be a development server issue");
+        setUserProfile(null);
+      } else {
+        console.error("Failed to fetch user profile:", response.status, response.statusText);
+        setUserProfile(null);
       }
     } catch (error) {
       console.error("Failed to fetch user profile:", error);
+      setUserProfile(null);
     }
   };
 
