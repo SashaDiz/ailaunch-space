@@ -369,6 +369,11 @@ export default function HomePage() {
                     <img src="https://auraplusplus.com/images/badges/featured-on-light.svg" alt="Featured on Aura++" width="120" height="24" />
                   </a>
                 </li>
+                <li>
+                  <a href="https://turbo0.com/item/ai-launch-space" target="_blank" rel="noopener noreferrer">
+                    <img src="https://img.turbo0.com/badge-listed-light.svg" alt="Listed on Turbo0" width="110" height="22" />
+                  </a>
+                </li>
               </ul>
             </section>
           </div>
