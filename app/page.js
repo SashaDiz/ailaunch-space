@@ -83,6 +83,35 @@ export default function HomePage() {
   const [competition, setCompetition] = useState(null);
   const [isClient, setIsClient] = useState(false);
 
+  // Schema.org structured data for the homepage
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ailaunch.space";
+
+  const homepageSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "AI Launch Space - Weekly Competition Platform for AI Projects",
+    "description": "Submit your AI project to the weekly competition and get high authority backlinks. Join the community of successful AI builders and innovators.",
+    "url": baseUrl,
+    "mainEntity": {
+      "@type": "Organization",
+      "name": "AI Launch Space",
+      "description": "Weekly Competition Platform for AI Projects",
+      "url": baseUrl,
+      "logo": `${baseUrl}/assets/logo.svg`
+    },
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": baseUrl
+        }
+      ]
+    }
+  };
+
   // Animation refs
   const heroRef = useRef(null);
   const mainContentRef = useRef(null);
@@ -234,6 +263,13 @@ export default function HomePage() {
 
   return (
     <div className="relative">
+      {/* Schema.org structured data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(homepageSchema),
+        }}
+      />
       {/* Decorative asymmetric blob with dramatic morphing - only on main page */}
       <div className="decorative-blob" aria-hidden="true"></div>
       <div className="relative z-10 max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
@@ -322,10 +358,17 @@ export default function HomePage() {
 
             <section ref={featuredRef} className="mt-8 sm:mt-16">
               <h2 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3 text-center lg:text-left">Featured on</h2>
-              <ul className="flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6 opacity-60">
-                <li><a href="https://launchigniter.com/product/ai-launch-space?ref=badge-ai-launch-space" target="_blank">
-                  <img src="https://launchigniter.com/api/badge/ai-launch-space?theme=neutral" alt="Featured on LaunchIgniter" width="120" height="32" />
-                </a></li>
+              <ul className="flex flex-wrap items-center justify-center lg:justify-start gap-2 opacity-60">
+                <li>
+                  <a href="https://launchigniter.com/product/ai-launch-space?ref=badge-ai-launch-space" target="_blank">
+                    <img src="https://launchigniter.com/api/badge/ai-launch-space?theme=neutral" alt="Featured on LaunchIgniter" width="140" height="32" />
+                  </a>
+                </li>
+                <li>
+                  <a href="https://auraplusplus.com/projects/ai-launch-space" target="_blank" rel="noopener">
+                    <img src="https://auraplusplus.com/images/badges/featured-on-light.svg" alt="Featured on Aura++" width="120" height="24" />
+                  </a>
+                </li>
               </ul>
             </section>
           </div>

@@ -12,6 +12,9 @@ export const metadata = {
   authors: [{ name: "AI Launch Space" }],
   creator: "AI Launch Space",
   publisher: "AI Launch Space",
+  alternates: {
+    canonical: process.env.NEXT_PUBLIC_APP_URL || "https://ailaunch.space",
+  },
   formatDetection: {
     email: false,
     address: false,
@@ -57,6 +60,41 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ailaunch.space";
+  
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "AI Launch Space",
+    "description": "Weekly Competition Platform for AI Projects",
+    "url": baseUrl,
+    "logo": `${baseUrl}/assets/logo.svg`,
+    "sameAs": [
+      "https://x.com/ailaunchspace"
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "customer service",
+      "url": `${baseUrl}/contact`
+    }
+  };
+
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "AI Launch Space",
+    "description": "Submit your AI project to the weekly competition and get high authority backlinks. Join the community of successful AI builders and innovators.",
+    "url": baseUrl,
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": `${baseUrl}/projects?search={search_term_string}`
+      },
+      "query-input": "required name=search_term_string"
+    }
+  };
+
   return (
     <html lang="en" data-theme="light" className="scroll-smooth" data-scroll-behavior="smooth">
       <head>
@@ -65,6 +103,18 @@ export default function RootLayout({ children }) {
         <meta name="theme-color" content="#ED0D79" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationSchema),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(websiteSchema),
+          }}
+        />
       </head>
       <body className="antialiased overflow-x-hidden" suppressHydrationWarning={true}>
         <Providers>

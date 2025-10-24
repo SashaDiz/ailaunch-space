@@ -39,27 +39,29 @@ export default {
           'primary': '#ED0D79',
           'secondary': '#7c3aed',
           'accent': '#06b6d4',
-          'neutral': '#374151',
+          'neutral': '#1f2937', // Darker for better contrast
           'base-100': '#ffffff',
           'base-200': '#f9fafb',
           'base-300': '#f3f4f6',
+          'base-content': '#1f2937', // Darker base content for better contrast
           'info': '#0ea5e9',
-          'success': '#10b981',
-          'warning': '#f59e0b',
-          'error': '#ef4444',
+          'success': '#059669', // Darker green for better contrast
+          'warning': '#d97706', // Darker orange for better contrast
+          'error': '#dc2626', // Darker red for better contrast
         },
         dark: {
           'primary': '#ED0D79',
           'secondary': '#8b5cf6',
           'accent': '#06b6d4',
-          'neutral': '#1f2937',
+          'neutral': '#e5e7eb', // Lighter for better contrast on dark
           'base-100': '#111827',
           'base-200': '#1f2937',
           'base-300': '#374151',
+          'base-content': '#f9fafb', // Lighter content for better contrast
           'info': '#0ea5e9',
-          'success': '#10b981',
-          'warning': '#f59e0b',
-          'error': '#ef4444',
+          'success': '#22c55e', // Lighter green for better contrast
+          'warning': '#fbbf24', // Lighter orange for better contrast
+          'error': '#f87171', // Lighter red for better contrast
         },
         abyss: {
           'primary': '#ED0D79',
