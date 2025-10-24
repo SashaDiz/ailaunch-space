@@ -375,9 +375,14 @@ export default function HomePage() {
                   </a>
                 </li>
                 <li>
-                <a href="https://fazier.com/launches/www.ailaunch.space" target="_blank">
-                <img src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=featured&theme=neutral" width="160" height="32" alt="Fazier badge" />
-                </a>
+                  <a href="https://fazier.com/launches/www.ailaunch.space" target="_blank">
+                    <img src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=featured&theme=neutral" width="160" height="32" alt="Fazier badge" />
+                  </a>
+                </li>
+                <li>
+                  <a href="https://launchboard.dev" target="_blank" rel="noopener noreferrer">
+                    <img src="https://launchboard.dev/launchboard-badge.png" alt="Launched on LaunchBoard - Product Launch Platform" width="90" height="24" />
+                  </a>
                 </li>
               </ul>
             </section>
