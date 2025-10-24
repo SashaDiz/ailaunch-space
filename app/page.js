@@ -374,6 +374,11 @@ export default function HomePage() {
                     <img src="https://img.turbo0.com/badge-listed-light.svg" alt="Listed on Turbo0" width="110" height="22" />
                   </a>
                 </li>
+                <li>
+                <a href="https://fazier.com/launches/www.ailaunch.space" target="_blank">
+                <img src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=featured&theme=neutral" width="160" height="32" alt="Fazier badge" />
+                </a>
+                </li>
               </ul>
             </section>
           </div>
