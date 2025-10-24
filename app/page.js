@@ -358,7 +358,7 @@ export default function HomePage() {
 
             <section ref={featuredRef} className="mt-8 sm:mt-16">
               <h2 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3 text-center lg:text-left">Featured on</h2>
-              <ul className="flex flex-wrap items-center justify-center lg:justify-start gap-2 opacity-60">
+              <ul className="flex flex-wrap items-center justify-center lg:justify-start gap-2">
                 <li>
                   <a href="https://launchigniter.com/product/ai-launch-space?ref=badge-ai-launch-space" target="_blank">
                     <img src="https://launchigniter.com/api/badge/ai-launch-space?theme=neutral" alt="Featured on LaunchIgniter" width="140" height="32" />
