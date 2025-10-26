@@ -384,6 +384,16 @@ export default function HomePage() {
                     <img src="https://launchboard.dev/launchboard-badge.png" alt="Launched on LaunchBoard - Product Launch Platform" width="90" height="24" />
                   </a>
                 </li>
+                <li>
+                  <a href="https://auraplusplus.com/projects/directory-hunt" target="_blank" title="Aura++ Top 2 Daily Winner">
+                    <img
+                      src="https://auraplusplus.com/images/badges/top2-light.svg"
+                      alt="Aura++ Top 2 Daily Winner"
+                      width="160"
+                      height="24"
+                    />
+                  </a>
+                </li>
               </ul>
             </section>
           </div>
