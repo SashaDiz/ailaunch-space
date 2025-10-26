@@ -395,9 +395,14 @@ export default function HomePage() {
                   </a>
                 </li>
                 <li>
-                <a href="https://twelve.tools" target="_blank">
-                <img src="https://twelve.tools/badge0-white.svg" alt="Featured on Twelve Tools" width="140" height="24" />
-                </a>
+                  <a href="https://twelve.tools" target="_blank">
+                    <img src="https://twelve.tools/badge0-white.svg" alt="Featured on Twelve Tools" width="140" height="24" />
+                  </a>
+                </li>
+                <li>
+                  <a href="https://uno.directory" target="_blank" rel="noopener noreferrer">
+                    <img src="https://uno.directory/badges/uno-directory.svg" alt="Uno Directory" width="140" height="24" />
+                  </a>
                 </li>
               </ul>
             </section>
