@@ -404,6 +404,11 @@ export default function HomePage() {
                     <img src="https://uno.directory/badges/uno-directory.svg" alt="Uno Directory" width="140" height="24" />
                   </a>
                 </li>
+                <li>
+                  <a href="https://yo.directory/" target="_blank" >
+                    <img src="https://cdn.prod.website-files.com/65c1546fa73ea974db789e3d/65e1e171f89ebfa7bd0129ac_yodirectory-featured.png" alt="yo.directory" width="150" height="54" />
+                  </a>
+                </li>
               </ul>
             </section>
           </div>
