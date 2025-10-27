@@ -318,7 +318,7 @@ async function createUpcomingWeeks() {
     }
     
     const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
+    weekEnd.setDate(weekEnd.getDate() + 6);
     weekEnd.setHours(7, 59, 59, 999); // End at 11:59:59 PM Sunday PST (7:59 AM Monday UTC)
     
     // Generate week number using ISO week numbering for consistency

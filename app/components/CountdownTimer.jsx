@@ -13,42 +13,38 @@ export default function CountdownTimer({ competitionData }) {
   const [isExpired, setIsExpired] = useState(false);
   const [isBeforeStart, setIsBeforeStart] = useState(false);
   const timerRef = useRef(null);
-  const targetTimeRef = useRef(null);
 
-  // Helper function to get timezone offset in minutes
-  const getTimezoneOffset = (timezone) => {
-    const timezoneMap = {
-      PST: -8 * 60, // Pacific Standard Time (UTC-8)
-      PDT: -7 * 60, // Pacific Daylight Time (UTC-7)
-      EST: -5 * 60, // Eastern Standard Time (UTC-5)
-      EDT: -4 * 60, // Eastern Daylight Time (UTC-4)
-      UTC: 0,
-    };
-    return timezoneMap[timezone?.toUpperCase()] || 0;
+  // Simplified timestamp conversion
+  const getTimeStamp = (dateString) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    return date.getTime();
   };
 
-  // Convert date string to proper timezone-aware timestamp
-  const getTimezoneAwareTime = (dateString, timezone) => {
-    if (!dateString) return null;
+  // Recalculate target time on each tick
+  const getTargetTime = () => {
+    const now = new Date().getTime();
+    const startTime = getTimeStamp(competitionData.start_date);
+    const endTime = getTimeStamp(competitionData.end_date);
     
-    // Parse the date string (should be ISO format from database)
-    const date = new Date(dateString);
-    
-    // Get the timezone offset
-    const tzOffset = getTimezoneOffset(timezone);
-    
-    // Adjust for timezone (convert to UTC)
-    const adjustedDate = new Date(date.getTime() - (tzOffset * 60 * 1000));
-    
-    return adjustedDate.getTime();
+    if (startTime && now < startTime) {
+      setIsBeforeStart(true);
+      setIsExpired(false);
+      return startTime;
+    } else if (endTime) {
+      setIsBeforeStart(false);
+      setIsExpired(now >= endTime);
+      return endTime;
+    }
+    return null;
   };
 
   // Calculate time remaining
-  const calculateTimeLeft = () => {
-    if (!targetTimeRef.current) return null;
+  const calculateTimeLeft = (targetTime) => {
+    if (!targetTime) return null;
 
     const now = new Date().getTime();
-    const difference = targetTimeRef.current - now;
+    const difference = targetTime - now;
 
     if (difference <= 0) {
       return {
@@ -69,46 +65,21 @@ export default function CountdownTimer({ competitionData }) {
     };
   };
 
-  // Initialize the countdown with competition data
+  // Consolidated countdown logic
   useEffect(() => {
     if (!competitionData) return;
 
-    const timezone = competitionData.timezone || "PST";
-    const now = new Date().getTime();
-    
-    // Get timezone-aware timestamps
-    const startTime = getTimezoneAwareTime(competitionData.start_date, timezone);
-    const endTime = getTimezoneAwareTime(competitionData.end_date, timezone);
-    
-    // Determine if we're before start or during competition
-    if (startTime && now < startTime) {
-      // Competition hasn't started yet - countdown to start
-      targetTimeRef.current = startTime;
-      setIsBeforeStart(true);
-      setIsExpired(false);
-    } else if (endTime) {
-      // Competition is active or ended - countdown to end
-      targetTimeRef.current = endTime;
-      setIsBeforeStart(false);
-      setIsExpired(now >= endTime);
-    }
-
     // Calculate initial time
-    const initial = calculateTimeLeft();
+    const targetTime = getTargetTime();
+    const initial = calculateTimeLeft(targetTime);
     if (initial) {
       setTimeLeft(initial);
-      if (targetTimeRef.current && now >= targetTimeRef.current) {
-        setIsExpired(true);
-      }
     }
-  }, [competitionData]);
 
-  // Update countdown every second
-  useEffect(() => {
-    if (!targetTimeRef.current) return;
-
+    // Update countdown every second
     const interval = setInterval(() => {
-      const newTimeLeft = calculateTimeLeft();
+      const currentTargetTime = getTargetTime();
+      const newTimeLeft = calculateTimeLeft(currentTargetTime);
       if (newTimeLeft) {
         setTimeLeft(newTimeLeft);
         if (newTimeLeft.totalMs <= 0) {
@@ -119,7 +90,7 @@ export default function CountdownTimer({ competitionData }) {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [competitionData]);
 
   // Determine heading text
   const getHeading = () => {
