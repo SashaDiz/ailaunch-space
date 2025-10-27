@@ -361,59 +361,76 @@ export default function HomePage() {
               <ul className="flex flex-wrap items-center justify-center lg:justify-start gap-2">
                 <li>
                   <a href="https://launchigniter.com/product/ai-launch-space?ref=badge-ai-launch-space" target="_blank">
-                    <img src="https://launchigniter.com/api/badge/ai-launch-space?theme=neutral" alt="Featured on LaunchIgniter" width="140" height="32" />
+                    <div className="flex items-center justify-center gap-2 bg-white rounded-lg p-2 border border-gray-200 hover:border-[#ED0D79] hover:scale-105 transition-transform duration-200">
+                      <img src="/assets/lignighter.svg" alt="Featured on LaunchIgniter" width="24" height="24" />
+                      <span className="text-sm font-medium">LaunchIgniter</span>
+                    </div>
                   </a>
                 </li>
                 <li>
                   <a href="https://auraplusplus.com/projects/ai-launch-space" target="_blank" rel="noopener">
-                    <img src="https://auraplusplus.com/images/badges/featured-on-light.svg" alt="Featured on Aura++" width="120" height="24" />
+                    <div className="flex items-center justify-center gap-2 bg-white rounded-lg p-2 border border-gray-200 hover:border-[#ED0D79] hover:scale-105 transition-transform duration-200">
+                      <img src="/assets/aura.png" alt="Featured on Aura++" width="24" height="24" />
+                      <span className="text-sm font-medium">Aura++</span>
+                    </div>
                   </a>
                 </li>
                 <li>
                   <a href="https://turbo0.com/item/ai-launch-space" target="_blank" rel="noopener noreferrer">
-                    <img src="https://img.turbo0.com/badge-listed-light.svg" alt="Listed on Turbo0" width="110" height="22" />
+                    <div className="flex items-center justify-center gap-2 bg-white rounded-lg p-2 border border-gray-200 hover:border-[#ED0D79] hover:scale-105 transition-transform duration-200">
+                      <img src="/assets/turbo.png" alt="Listed on Turbo0" width="24" height="24" />
+                      <span className="text-sm font-medium">Turbo0</span>
+                    </div>
                   </a>
                 </li>
                 <li>
                   <a href="https://fazier.com/launches/www.ailaunch.space" target="_blank">
-                    <img src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=featured&theme=neutral" width="160" height="32" alt="Fazier badge" />
+                    <div className="flex items-center justify-center gap-2 bg-white rounded-lg p-2 border border-gray-200 hover:border-[#ED0D79] hover:scale-105 transition-transform duration-200">
+                      <img src="/assets/fazier.png" alt="Featured on Fazier" width="24" height="24" />
+                      <span className="text-sm font-medium">Fazier</span>
+                    </div>
                   </a>
                 </li>
                 <li>
                   <a href="https://launchboard.dev" target="_blank" rel="noopener noreferrer">
-                    <img src="https://launchboard.dev/launchboard-badge.png" alt="Launched on LaunchBoard - Product Launch Platform" width="90" height="24" />
-                  </a>
-                </li>
-                <li>
-                  <a href="https://auraplusplus.com/projects/directory-hunt" target="_blank" title="Aura++ Top 2 Daily Winner">
-                    <img
-                      src="https://auraplusplus.com/images/badges/top2-light.svg"
-                      alt="Aura++ Top 2 Daily Winner"
-                      width="160"
-                      height="24"
-                    />
+                    <div className="flex items-center justify-center gap-2 bg-white rounded-lg p-2 border border-gray-200 hover:border-[#ED0D79] hover:scale-105 transition-transform duration-200">
+                      <img src="/assets/lboard.svg" alt="Launched on LaunchBoard - Product Launch Platform" width="24" height="24" />
+                      <span className="text-sm font-medium">LaunchBoard</span>
+                    </div>
                   </a>
                 </li>
                 <li>
                   <a href="https://twelve.tools" target="_blank">
-                    <img src="https://twelve.tools/badge0-white.svg" alt="Featured on Twelve Tools" width="140" height="24" />
+                    <div className="flex items-center justify-center gap-2 bg-white rounded-lg p-2 border border-gray-200 hover:border-[#ED0D79] hover:scale-105 transition-transform duration-200">
+                      <img src="/assets/twelve.svg" alt="Featured on Twelve Tools" width="24" height="24" />
+                      <span className="text-sm font-medium">Twelve Tools</span>
+                    </div>
                   </a>
                 </li>
                 <li>
                   <a href="https://uno.directory" target="_blank" rel="noopener noreferrer">
-                    <img src="https://uno.directory/badges/uno-directory.svg" alt="Uno Directory" width="140" height="24" />
+                    <div className="flex items-center justify-center gap-2 bg-white rounded-lg p-2 border border-gray-200 hover:border-[#ED0D79] hover:scale-105 transition-transform duration-200">
+                      <img src="/assets/uno.svg" alt="Uno Directory" width="24" height="24" />
+                      <span className="text-sm font-medium">Uno Directory</span>
+                    </div>
                   </a>
                 </li>
                 <li>
                   <a href="https://yo.directory/" target="_blank" >
-                    <img src="https://cdn.prod.website-files.com/65c1546fa73ea974db789e3d/65e1e171f89ebfa7bd0129ac_yodirectory-featured.png" alt="yo.directory" width="150" height="54" />
+                    <div className="flex items-center justify-center gap-2 bg-white rounded-lg p-2 border border-gray-200 hover:border-[#ED0D79] hover:scale-105 transition-transform duration-200">
+                      <img src="/assets/yo.svg" alt="yo.directory" width="24" height="24" />
+                      <span className="text-sm font-medium">yo.directory</span>
+                    </div>
                   </a>
                 </li>
                 <li>
                   <a href="https://www.aidirectori.es" target="_blank">
-                    <img src="https://cdn.aidirectori.es/ai-tools/badges/dark-mode.png" alt="AI Directories Badge" width="140" height="24" />
+                    <div className="flex items-center justify-center gap-2 bg-white rounded-lg p-2 border border-gray-200 hover:border-[#ED0D79] hover:scale-105 transition-transform duration-200">
+                      <img src="/assets/aidirectory.png" alt="AI Directories Badge" width="24" height="24" />
+                      <span className="text-sm font-medium">AI Directories</span>
+                    </div>
                   </a>
-                </li>
+                </li>    
               </ul>
             </section>
           </div>
