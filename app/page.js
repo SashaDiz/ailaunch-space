@@ -288,7 +288,6 @@ export default function HomePage() {
               <p className="text-base sm:text-lg font-normal text-gray-900 mb-4 sm:mb-6 max-w-xl mx-auto lg:mx-0">
                 Submit your AI project and get early exposure, reach other AI builders and innovators, and showcase your innovation to the community.
               </p>
-              <a href="https://startupfa.me/s/ailaunch.space?utm_source=www.ailaunch.space" target="_blank"><img src="https://startupfa.me/badges/featured-badge-small.webp" alt="AI Launch Space - Featured on Startup Fame" width="224" height="36" /></a>
             </section>
 
             {/* Best Weekly Products Section */}
@@ -439,9 +438,6 @@ export default function HomePage() {
                       <span className="text-sm font-medium">Startup Fame</span>
                     </div>
                   </a>
-                </li>
-                <li>
-                  <a href="https://startupfa.me/s/ailaunch.space?utm_source=www.ailaunch.space" target="_blank"><img src="https://startupfa.me/badges/featured-badge.webp" alt="AI Launch Space - Featured on Startup Fame" width="171" height="54" /></a>
                 </li>
               </ul>
             </section>
