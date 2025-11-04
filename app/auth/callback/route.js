@@ -9,10 +9,13 @@ export async function GET(request) {
   const error_description = requestUrl.searchParams.get('error_description');
   const next = requestUrl.searchParams.get('next') || '/';
 
+  // Ensure we're using the correct origin (production or local)
+  const origin = requestUrl.origin;
+
   // Handle OAuth errors
   if (error) {
     console.error('OAuth error:', error, error_description);
-    return NextResponse.redirect(new URL(`/auth/signin?error=OAuthCallback&details=${encodeURIComponent(error_description || error)}`, requestUrl.origin));
+    return NextResponse.redirect(new URL(`/auth/signin?error=OAuthCallback&details=${encodeURIComponent(error_description || error)}`, origin));
   }
 
   if (code) {
@@ -59,12 +62,12 @@ export async function GET(request) {
       
       if (exchangeError) {
         console.error('Error exchanging code for session:', exchangeError);
-        return NextResponse.redirect(new URL(`/auth/signin?error=AuthCallback&details=${encodeURIComponent(exchangeError.message)}`, requestUrl.origin));
+        return NextResponse.redirect(new URL(`/auth/signin?error=AuthCallback&details=${encodeURIComponent(exchangeError.message)}`, origin));
       }
 
       if (!data?.session) {
         console.error('No session returned after code exchange');
-        return NextResponse.redirect(new URL('/auth/signin?error=NoSession', requestUrl.origin));
+        return NextResponse.redirect(new URL('/auth/signin?error=NoSession', origin));
       }
 
       console.log('Successfully authenticated user:', data.user?.email);
@@ -73,16 +76,16 @@ export async function GET(request) {
       // the database trigger (on_auth_user_created). No need to manually sync here.
       
       // Redirect immediately after session is established
-      const response = NextResponse.redirect(new URL(next, requestUrl.origin));
+      const response = NextResponse.redirect(new URL(next, origin));
       
       return response;
     } catch (error) {
       console.error('Error in auth callback:', error);
-      return NextResponse.redirect(new URL(`/auth/signin?error=AuthCallback&details=${encodeURIComponent(error.message)}`, requestUrl.origin));
+      return NextResponse.redirect(new URL(`/auth/signin?error=AuthCallback&details=${encodeURIComponent(error.message)}`, origin));
     }
   }
 
   // URL to redirect to after sign in process completes
-  return NextResponse.redirect(new URL(next, requestUrl.origin));
+  return NextResponse.redirect(new URL(next, origin));
 }
 
