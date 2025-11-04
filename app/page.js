@@ -439,6 +439,14 @@ export default function HomePage() {
                     </div>
                   </a>
                 </li>
+                <li>
+                <a href="https://launch-list.org/product/ai-launch-space" target="_blank">
+                    <div className="flex items-center justify-center gap-2 bg-white rounded-lg p-2 border border-gray-200 hover:border-[#ED0D79] hover:scale-105 transition-transform duration-200">
+                      <img src="/assets/launch-list.png" alt="Featured on Launch List" width="24" height="24" />
+                      <span className="text-sm font-medium">Launch List</span>
+                    </div>
+                  </a>
+                </li>
               </ul>
             </section>
           </div>
