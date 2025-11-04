@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 
 export async function middleware(request) {
+  // Create a response object that we'll modify
   let response = NextResponse.next({
     request,
   });
@@ -10,50 +11,28 @@ export async function middleware(request) {
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
-      auth: {
-        flowType: 'pkce',
-        detectSessionInUrl: false, // Don't detect in middleware
-        persistSession: true,
-        autoRefreshToken: true,
-      },
       cookies: {
-        get(name) {
-          return request.cookies.get(name)?.value;
+        getAll() {
+          return request.cookies.getAll();
         },
-        set(name, value, options) {
-          // Update both request and response cookies
-          request.cookies.set({
-            name,
-            value,
-            ...options,
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value);
           });
-          response.cookies.set({
-            name,
-            value,
-            ...options,
+          response = NextResponse.next({
+            request,
           });
-        },
-        remove(name, options) {
-          // Remove from both request and response cookies
-          request.cookies.delete(name);
-          response.cookies.delete(name);
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
+          });
         },
       },
     }
   );
 
-  // Refresh session if expired - required for Server Components
-  // This will automatically refresh the session if it's expired
-  const { data: { session }, error } = await supabase.auth.getSession();
-  
-  // Log session status in middleware (only for debugging)
-  if (request.nextUrl.pathname.startsWith('/api/projects') && request.method === 'POST') {
-    console.log('Middleware - Session check for POST /api/projects:', {
-      hasSession: !!session,
-      userId: session?.user?.id,
-      error: error?.message,
-    });
-  }
+  // IMPORTANT: Only call getUser() to refresh session, not getSession()
+  // This avoids sending large session data in every response
+  await supabase.auth.getUser();
 
   return response;
 }

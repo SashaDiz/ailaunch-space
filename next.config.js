@@ -9,39 +9,11 @@ const nextConfig = {
       "sdfzsocizvmgrisnlcvz.storage.supabase.co", // Supabase S3 storage domain
     ],
   },
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://app.rybbit.io; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https:; font-src 'self' data:; connect-src 'self' https://app.rybbit.io; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;",
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
-          },
-          {
-            key: 'X-DNS-Prefetch-Control',
-            value: 'on',
-          },
-        ],
-      },
-    ];
-  },
+  // Commented out headers to fix 431 error - headers too large
+  // Can be re-enabled in production with optimization
+  // async headers() {
+  //   return [];
+  // },
   serverExternalPackages: ["mongodb", "@supabase/supabase-js", "@supabase/ssr"],
   webpack: (config, { dev, isServer }) => {
     // Suppress all webpack warnings in development
