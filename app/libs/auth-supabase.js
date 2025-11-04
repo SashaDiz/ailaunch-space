@@ -199,7 +199,14 @@ export async function signOut() {
           cookieStore.set({ name, value, ...options });
         },
         remove(name, options) {
-          cookieStore.set({ name, value: '', ...options });
+          // Properly expire the cookie by setting it to empty and maxAge to 0
+          cookieStore.set({ 
+            name, 
+            value: '', 
+            ...options,
+            maxAge: 0,
+            expires: new Date(0)
+          });
         },
       },
     }

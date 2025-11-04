@@ -369,9 +369,21 @@ export function Header() {
                   <div className="divider my-1"></div>
                   <li>
                     <button onClick={async () => {
-                      await supabase.auth.signOut();
-                      router.push("/");
-                      router.refresh();
+                      try {
+                        // Call the server-side sign out API
+                        await fetch('/api/auth/signout', {
+                          method: 'POST',
+                        });
+                        // Also sign out from client side
+                        await supabase.auth.signOut();
+                        router.push("/");
+                        router.refresh();
+                      } catch (error) {
+                        console.error('Sign out error:', error);
+                        // Still try to redirect even if there's an error
+                        router.push("/");
+                        router.refresh();
+                      }
                     }}>
                       Sign out
                     </button>
@@ -543,10 +555,23 @@ export function Header() {
                     </Link>
                     <button
                       onClick={async () => {
-                        await supabase.auth.signOut();
-                        closeMobileMenu();
-                        router.push("/");
-                        router.refresh();
+                        try {
+                          // Call the server-side sign out API
+                          await fetch('/api/auth/signout', {
+                            method: 'POST',
+                          });
+                          // Also sign out from client side
+                          await supabase.auth.signOut();
+                          closeMobileMenu();
+                          router.push("/");
+                          router.refresh();
+                        } catch (error) {
+                          console.error('Sign out error:', error);
+                          // Still try to redirect even if there's an error
+                          closeMobileMenu();
+                          router.push("/");
+                          router.refresh();
+                        }
                       }}
                       className="block py-2 text-base text-gray-700 hover:text-[#ED0D79] transition-colors"
                     >

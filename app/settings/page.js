@@ -231,7 +231,11 @@ export default function SettingsPage() {
         throw new Error(deleteError);
       }
 
-      // Sign out the user
+      // Sign out the user using server-side API
+      await fetch('/api/auth/signout', {
+        method: 'POST',
+      });
+      // Also sign out from client side
       await supabase.auth.signOut();
       
       toast.success("Your account has been deleted");
