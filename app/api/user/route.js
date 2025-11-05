@@ -244,7 +244,7 @@ async function getUserProfile(session) {
     }
   }
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     success: true,
     data: {
       id: userProfile.id,
@@ -260,6 +260,13 @@ async function getUserProfile(session) {
       updated_at: userProfile.updated_at
     }
   });
+
+  // Prevent caching of user profile data to ensure fresh avatar URLs
+  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  response.headers.set('Pragma', 'no-cache');
+  response.headers.set('Expires', '0');
+
+  return response;
 }
 
 // PUT /api/user - Update user profile

@@ -31,9 +31,20 @@ function ProjectDetailPageContent() {
   const [loading, setLoading] = useState(true);
   const [isVoting, setIsVoting] = useState(false);
   const fetchingRef = useRef(false);
+  const notFoundRef = useRef(false);
+  const lastSlugRef = useRef(null);
 
   useEffect(() => {
-    if (slug) {
+    // Reset notFound flag if slug changes
+    if (slug !== lastSlugRef.current) {
+      notFoundRef.current = false;
+      lastSlugRef.current = slug;
+      setProject(null);
+      setLoading(true);
+    }
+
+    // Only fetch if we have a slug and haven't already determined it's not found
+    if (slug && !notFoundRef.current) {
       fetchProject();
     }
   }, [slug]);
@@ -51,7 +62,7 @@ function ProjectDetailPageContent() {
 
   const fetchProject = async () => {
     // Prevent duplicate calls (helpful in development with StrictMode)
-    if (fetchingRef.current) return;
+    if (fetchingRef.current || notFoundRef.current) return;
 
     try {
       fetchingRef.current = true;
@@ -60,12 +71,20 @@ function ProjectDetailPageContent() {
       if (response.ok) {
         const data = await response.json();
         setProject(data.data.project);
-      } else {
+        notFoundRef.current = false; // Reset in case we get a successful response
+      } else if (response.status === 404) {
+        // Mark as not found to prevent retries for 404 errors
+        notFoundRef.current = true;
+        setProject(null);
         toast.error("AI project not found");
+      } else {
+        // For other errors, don't prevent retries but show error
+        toast.error("Failed to load AI project");
       }
     } catch (error) {
       console.error("Failed to fetch AI project:", error);
       toast.error("Failed to load AI project");
+      // Don't mark as not found on network errors - allow retry on next mount
     } finally {
       setLoading(false);
       fetchingRef.current = false;

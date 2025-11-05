@@ -19,6 +19,7 @@ export function Header() {
   const [isClient, setIsClient] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
   const plusIconRef = useRef(null);
 
   useEffect(() => {
@@ -29,10 +30,14 @@ export function Header() {
   useEffect(() => {
     if (user && !loading && isClient && user.id) {
       // Only fetch if we have a valid user with an ID
-      fetchUserProfile();
+      setProfileLoading(true);
+      fetchUserProfile().finally(() => {
+        setProfileLoading(false);
+      });
     } else if (!user && !loading && isClient) {
       // Clear profile when user is not authenticated
       setUserProfile(null);
+      setProfileLoading(false);
     }
   }, [user, loading, isClient]);
 
@@ -40,19 +45,11 @@ export function Header() {
   useEffect(() => {
     const handleProfileUpdate = () => {
       if (user && !loading) {
-        // Force refresh with a small delay to ensure database is updated
-        setTimeout(() => {
-          fetchUserProfile();
-        }, 200);
-        
-        // Additional refresh attempts to ensure consistency
-        setTimeout(() => {
-          fetchUserProfile();
-        }, 500);
-        
-        setTimeout(() => {
-          fetchUserProfile();
-        }, 1000);
+        // Force immediate refresh to get latest avatar from database
+        // Clear userProfile state first to force re-render
+        setUserProfile(null);
+        // Then fetch fresh data with cache-busting
+        fetchUserProfile();
       }
     };
 
@@ -66,7 +63,7 @@ export function Header() {
 
   const fetchUserProfile = async () => {
     try {
-      
+      setProfileLoading(true);
       // Add cache-busting parameter to ensure fresh data
       const response = await fetch(`/api/user?type=profile&t=${Date.now()}`, {
         cache: 'no-store',
@@ -92,6 +89,8 @@ export function Header() {
       }
     } catch (error) {
       setUserProfile(null);
+    } finally {
+      setProfileLoading(false);
     }
   };
 
@@ -313,16 +312,44 @@ export function Header() {
                   <div className="avatar">
                     <div className="w-12 h-12 rounded-full border-2 border-base-300 transition-all duration-200 hover:border-[#ED0D79] hover:scale-105">
                       {(() => {
-                        const avatarUrl = userProfile?.avatar_url || user.user_metadata?.avatar_url;
-                        return avatarUrl ? (
+                        // CRITICAL: Don't show OAuth avatar while profile is loading - wait for database check
+                        // This prevents showing old OAuth avatar first, then switching to database avatar
+                        if (profileLoading) {
+                          // Show loading state (initials) while waiting for profile data
+                          return (
+                            <div className="bg-[#ED0D79] text-white w-full h-full flex items-center justify-center text-xs font-medium">
+                              {(user.user_metadata?.full_name?.[0] || user.email?.[0] || "U").toUpperCase()}
+                            </div>
+                          );
+                        }
+
+                        // IMPORTANT: If user manually uploaded an avatar (stored in database), 
+                        // ONLY use that one. Never show OAuth provider avatar (Google/Github) if database has one.
+                        // Priority: database avatar_url > OAuth provider avatar_url (only if no database avatar)
+                        const avatarUrl = userProfile?.avatar_url 
+                          ? userProfile.avatar_url  // Always prefer database avatar if it exists
+                          : (user.user_metadata?.avatar_url || null); // Only use OAuth avatar if database has none
+                        
+                        // Add cache-busting query parameter to force fresh image load
+                        // Use profile updated_at timestamp when available (most accurate), 
+                        // otherwise fall back to a stable identifier to prevent unnecessary re-renders
+                        const cacheBust = userProfile?.updated_at 
+                          ? new Date(userProfile.updated_at).getTime() 
+                          : (user?.id ? `user-${user.id.slice(0, 8)}` : Date.now());
+                        const avatarUrlWithCache = avatarUrl 
+                          ? `${avatarUrl}${avatarUrl.includes('?') ? '&' : '?'}t=${cacheBust}`
+                          : null;
+                        return avatarUrlWithCache ? (
                           <Image
-                            src={avatarUrl}
+                            src={avatarUrlWithCache}
                             alt={user.user_metadata?.full_name || user.email || "User"}
                             width={32}
                             height={32}
                             className="rounded-full"
-                            key={`avatar-${avatarUrl}-${userProfile?.updated_at || Date.now()}`}
+                            key={`avatar-${userProfile?.avatar_url || 'none'}-${cacheBust}-${userProfile?.updated_at || ''}`}
                             unoptimized={true}
+                            priority={false}
+                            loading="eager"
                             onError={(e) => {
                               // Hide the image and show initials instead
                               const parent = e.target.parentElement;
@@ -493,16 +520,44 @@ export function Header() {
                     <div className="avatar mr-3">
                       <div className="w-12 h-12 rounded-full border-2 border-gray-300">
                         {(() => {
-                          const avatarUrl = userProfile?.avatar_url || user.user_metadata?.avatar_url;
-                          return avatarUrl ? (
+                          // CRITICAL: Don't show OAuth avatar while profile is loading - wait for database check
+                          // This prevents showing old OAuth avatar first, then switching to database avatar
+                          if (profileLoading) {
+                            // Show loading state (initials) while waiting for profile data
+                            return (
+                              <div className="bg-[#ED0D79] text-white w-full h-full flex items-center justify-center text-lg font-medium">
+                                {(user.user_metadata?.full_name?.[0] || user.email?.[0] || "U").toUpperCase()}
+                              </div>
+                            );
+                          }
+
+                          // IMPORTANT: If user manually uploaded an avatar (stored in database), 
+                          // ONLY use that one. Never show OAuth provider avatar (Google/Github) if database has one.
+                          // Priority: database avatar_url > OAuth provider avatar_url (only if no database avatar)
+                          const avatarUrl = userProfile?.avatar_url 
+                            ? userProfile.avatar_url  // Always prefer database avatar if it exists
+                            : (user.user_metadata?.avatar_url || null); // Only use OAuth avatar if database has none
+                          
+                          // Add cache-busting query parameter to force fresh image load
+                          // Use profile updated_at timestamp when available (most accurate), 
+                          // otherwise fall back to a stable identifier to prevent unnecessary re-renders
+                          const cacheBust = userProfile?.updated_at 
+                            ? new Date(userProfile.updated_at).getTime() 
+                            : (user?.id ? `user-${user.id.slice(0, 8)}` : Date.now());
+                          const avatarUrlWithCache = avatarUrl 
+                            ? `${avatarUrl}${avatarUrl.includes('?') ? '&' : '?'}t=${cacheBust}`
+                            : null;
+                          return avatarUrlWithCache ? (
                             <Image
-                              src={avatarUrl}
+                              src={avatarUrlWithCache}
                               alt={user.user_metadata?.full_name || user.email || "User"}
                               width={48}
                               height={48}
                               className="rounded-full"
-                              key={`mobile-avatar-${avatarUrl}-${userProfile?.updated_at || Date.now()}`}
+                              key={`mobile-avatar-${userProfile?.avatar_url || 'none'}-${cacheBust}-${userProfile?.updated_at || ''}`}
                               unoptimized={true}
+                              priority={false}
+                              loading="eager"
                               onError={(e) => {
                                 // Hide the image and show initials instead
                                 const parent = e.target.parentElement;

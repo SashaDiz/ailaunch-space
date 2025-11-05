@@ -490,7 +490,7 @@ async function approveProject(request, session) {
     // Send approval notification
     try {
       if (userEmail && user) {
-        await notificationManager.sendSubmissionApprovalNotification({
+        const notificationResult = await notificationManager.sendSubmissionApprovalNotification({
           userId: user.id,
           userEmail: userEmail,
           project: {
@@ -499,9 +499,55 @@ async function approveProject(request, session) {
             slug: project.slug
           }
         });
+        
+        // Log notification result for debugging
+        if (!notificationResult?.success) {
+          console.error("❌ APPROVAL NOTIFICATION FAILED:", {
+            userId: user.id,
+            userEmail: userEmail,
+            projectId: project.id,
+            projectName: project.name,
+            error: notificationResult?.error,
+            code: notificationResult?.code,
+            details: notificationResult?.details,
+            timestamp: new Date().toISOString()
+          });
+          
+          // Fallback to legacy email system
+          try {
+            if (userEmail) {
+              await emailNotifications.projectApproved(userEmail, {
+                projectName: project.name,
+                slug: project.slug,
+              });
+            }
+          } catch (emailError) {
+            console.error("❌ LEGACY EMAIL FALLBACK FAILED:", {
+              error: emailError.message,
+              userEmail,
+              projectId: project.id,
+              timestamp: new Date().toISOString()
+            });
+          }
+        } else {
+          console.log("✅ Approval notification sent:", {
+            userId: user.id,
+            userEmail: userEmail,
+            emailId: notificationResult?.data?.id,
+            timestamp: new Date().toISOString()
+          });
+        }
       }
     } catch (notificationError) {
-      console.error("Failed to send approval notification:", notificationError);
+      console.error("❌ APPROVAL NOTIFICATION EXCEPTION:", {
+        error: notificationError.message,
+        stack: notificationError.stack,
+        userId: user?.id,
+        userEmail: userEmail,
+        projectId: project.id,
+        projectName: project.name,
+        timestamp: new Date().toISOString()
+      });
       
       // Fallback to legacy email system
       try {
@@ -512,7 +558,12 @@ async function approveProject(request, session) {
           });
         }
       } catch (emailError) {
-        console.error("Failed to send approval email:", emailError);
+        console.error("❌ LEGACY EMAIL FALLBACK FAILED:", {
+          error: emailError.message,
+          userEmail,
+          projectId: project.id,
+          timestamp: new Date().toISOString()
+        });
       }
     }
 
@@ -561,7 +612,7 @@ async function approveProject(request, session) {
     // Send rejection notification
     try {
       if (userEmail && user) {
-        await notificationManager.sendSubmissionDeclineNotification({
+        const notificationResult = await notificationManager.sendSubmissionDeclineNotification({
           userId: user.id,
           userEmail: userEmail,
           project: {
@@ -571,9 +622,57 @@ async function approveProject(request, session) {
           },
           rejectionReason: rejectionReason
         });
+        
+        // Log notification result for debugging
+        if (!notificationResult?.success) {
+          console.error("❌ REJECTION NOTIFICATION FAILED:", {
+            userId: user.id,
+            userEmail: userEmail,
+            projectId: project.id,
+            projectName: project.name,
+            rejectionReason,
+            error: notificationResult?.error,
+            code: notificationResult?.code,
+            details: notificationResult?.details,
+            timestamp: new Date().toISOString()
+          });
+          
+          // Fallback to legacy email system
+          try {
+            if (userEmail) {
+              await emailNotifications.projectRejected(userEmail, {
+                projectName: project.name,
+                rejectionReason: rejectionReason,
+              });
+            }
+          } catch (emailError) {
+            console.error("❌ LEGACY EMAIL FALLBACK FAILED:", {
+              error: emailError.message,
+              userEmail,
+              projectId: project.id,
+              timestamp: new Date().toISOString()
+            });
+          }
+        } else {
+          console.log("✅ Rejection notification sent:", {
+            userId: user.id,
+            userEmail: userEmail,
+            emailId: notificationResult?.data?.id,
+            timestamp: new Date().toISOString()
+          });
+        }
       }
     } catch (notificationError) {
-      console.error("Failed to send rejection notification:", notificationError);
+      console.error("❌ REJECTION NOTIFICATION EXCEPTION:", {
+        error: notificationError.message,
+        stack: notificationError.stack,
+        userId: user?.id,
+        userEmail: userEmail,
+        projectId: project.id,
+        projectName: project.name,
+        rejectionReason,
+        timestamp: new Date().toISOString()
+      });
       
       // Fallback to legacy email system
       try {
@@ -584,7 +683,12 @@ async function approveProject(request, session) {
           });
         }
       } catch (emailError) {
-        console.error("Failed to send rejection email:", emailError);
+        console.error("❌ LEGACY EMAIL FALLBACK FAILED:", {
+          error: emailError.message,
+          userEmail,
+          projectId: project.id,
+          timestamp: new Date().toISOString()
+        });
       }
     }
 

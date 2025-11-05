@@ -202,10 +202,44 @@ class NotificationManager {
 
     const serviceMethod = serviceMap[emailType];
     if (!serviceMethod) {
-      throw new Error(`Unknown email type: ${emailType}`);
+      const error = new Error(`Unknown email type: ${emailType}`);
+      console.error('❌ NOTIFICATION ERROR:', {
+        error: error.message,
+        emailType,
+        userEmail,
+        timestamp: new Date().toISOString()
+      });
+      throw error;
     }
 
-    return await notificationService[serviceMethod](userEmail, data);
+    try {
+      const result = await notificationService[serviceMethod](userEmail, data);
+      
+      // Log failures with full details
+      if (!result.success) {
+        console.error('❌ EMAIL NOTIFICATION FAILED:', {
+          emailType,
+          serviceMethod,
+          userEmail,
+          error: result.error,
+          code: result.code,
+          details: result.details,
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('❌ EMAIL NOTIFICATION EXCEPTION:', {
+        emailType,
+        serviceMethod,
+        userEmail,
+        error: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
+      throw error;
+    }
   }
 
   /**

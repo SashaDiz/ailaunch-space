@@ -44,6 +44,13 @@ export async function getOrCreateUser(supabaseUser) {
       console.log('Created new user:', dbUser.email);
     } else {
       // Update last login and profile info
+      // IMPORTANT: Preserve manually uploaded avatar_url - only use OAuth avatar if database doesn't have one
+      // If user manually uploaded an avatar (stored in database), don't overwrite it with OAuth provider's avatar
+      const shouldUseOAuthAvatar = !dbUser.avatar_url || dbUser.avatar_url.trim() === '';
+      const avatarUrl = shouldUseOAuthAvatar 
+        ? (supabaseUser.user_metadata?.avatar_url || dbUser.avatar_url)
+        : dbUser.avatar_url;
+      
       await db.updateOne(
         'users',
         { id: supabaseUser.id },
@@ -51,7 +58,7 @@ export async function getOrCreateUser(supabaseUser) {
           $set: {
             last_login_at: new Date(),
             name: supabaseUser.user_metadata?.full_name || dbUser.name,
-            avatar_url: supabaseUser.user_metadata?.avatar_url || dbUser.avatar_url,
+            avatar_url: avatarUrl,
           },
         }
       );

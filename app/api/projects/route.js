@@ -1012,7 +1012,7 @@ export async function POST(request) {
     // Send submission received notification
     try {
       if (user && user.email) {
-        await notificationManager.sendSubmissionReceivedNotification({
+        const notificationResult = await notificationManager.sendSubmissionReceivedNotification({
           userId: user.id,
           userEmail: user.email,
           project: {
@@ -1021,9 +1021,38 @@ export async function POST(request) {
             slug: projectData.slug
           }
         });
+        
+        // Log notification result for debugging
+        if (!notificationResult?.success) {
+          console.error("❌ SUBMISSION NOTIFICATION FAILED:", {
+            userId: user.id,
+            userEmail: user.email,
+            projectId: result.insertedId,
+            projectName: projectData.name,
+            error: notificationResult?.error,
+            code: notificationResult?.code,
+            details: notificationResult?.details,
+            timestamp: new Date().toISOString()
+          });
+        } else {
+          console.log("✅ Submission notification sent:", {
+            userId: user.id,
+            userEmail: user.email,
+            emailId: notificationResult?.data?.id,
+            timestamp: new Date().toISOString()
+          });
+        }
       }
     } catch (notificationError) {
-      console.error("Failed to send submission received notification:", notificationError);
+      console.error("❌ SUBMISSION NOTIFICATION EXCEPTION:", {
+        error: notificationError.message,
+        stack: notificationError.stack,
+        userId: user?.id,
+        userEmail: user?.email,
+        projectId: result.insertedId,
+        projectName: projectData.name,
+        timestamp: new Date().toISOString()
+      });
       // Don't fail the submission if notification fails
     }
 
