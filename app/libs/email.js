@@ -1251,8 +1251,16 @@ export const sendEmail = async (to, template, data, options = {}) => {
   try {
     const resendClient = getResend();
     if (!resendClient) {
-      console.warn('RESEND_API_KEY not configured, skipping email send');
-      return { success: false, error: 'Email service not configured' };
+      const errorMsg = 'RESEND_API_KEY not configured. Email sending is disabled.';
+      console.error('❌', errorMsg);
+      console.error('   Set RESEND_API_KEY in your environment variables.');
+      console.error('   Production: Add to Vercel environment variables');
+      console.error('   Development: Add to .env.local file');
+      return { 
+        success: false, 
+        error: 'Email service not configured',
+        details: errorMsg 
+      };
     }
 
     // Development mode safety check - only redirect for non-newsletter emails
@@ -1264,7 +1272,7 @@ export const sendEmail = async (to, template, data, options = {}) => {
 
     const emailTemplate = emailTemplates[template];
     if (!emailTemplate) {
-      throw new Error(`Email template '${template}' not found`);
+      throw new Error(`Email template '${template}' not found. Available templates: ${Object.keys(emailTemplates).join(', ')}`);
     }
 
     const subject = typeof emailTemplate.subject === 'function' 
@@ -1278,6 +1286,10 @@ export const sendEmail = async (to, template, data, options = {}) => {
       ? 'AI Launch Space <onboarding@resend.dev>'
       : 'AI Launch Space <noreply@ailaunch.space>';
 
+    console.log(`📧 Sending email: ${template} to ${to}`);
+    console.log(`   Environment: ${process.env.NODE_ENV}`);
+    console.log(`   From: ${fromAddress}`);
+
     const result = await resendClient.emails.send({
       from: fromAddress,
       to: Array.isArray(to) ? to : [to],
@@ -1288,15 +1300,55 @@ export const sendEmail = async (to, template, data, options = {}) => {
           name: 'category',
           value: template
         },
+        {
+          name: 'environment',
+          value: process.env.NODE_ENV || 'unknown'
+        },
         ...(options.tags || [])
       ]
     });
 
-    console.log('Email sent successfully:', result.data?.id);
+    if (result.error) {
+      // Resend returned an error
+      console.error('❌ Email send failed:', result.error);
+      
+      // Provide helpful error messages
+      let helpMessage = '';
+      if (result.error.message?.includes('domain')) {
+        helpMessage = '\n   💡 Tip: Verify your domain in Resend dashboard: https://resend.com/domains';
+      } else if (result.error.message?.includes('API key')) {
+        helpMessage = '\n   💡 Tip: Check your RESEND_API_KEY is valid';
+      }
+      
+      console.error('   Error details:', result.error.message);
+      if (helpMessage) console.error(helpMessage);
+      
+      return { 
+        success: false, 
+        error: result.error.message,
+        code: result.error.name
+      };
+    }
+
+    console.log('✅ Email sent successfully:', result.data?.id);
+    console.log(`   View in Resend: https://resend.com/emails/${result.data?.id}`);
+    
     return { success: true, data: result.data };
   } catch (error) {
-    console.error('Email send error:', error);
-    return { success: false, error: error.message };
+    console.error('❌ Email send error:', error);
+    
+    // Provide more context for common errors
+    if (error.message?.includes('fetch')) {
+      console.error('   💡 Network error: Check your internet connection or Resend API status');
+    } else if (error.message?.includes('unauthorized')) {
+      console.error('   💡 API key error: Verify RESEND_API_KEY is correct');
+    }
+    
+    return { 
+      success: false, 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    };
   }
 };
 

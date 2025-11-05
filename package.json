@@ -11,7 +11,8 @@
     "db:migrate": "node scripts/migrate-to-supabase.js",
     "supabase:types": "supabase gen types typescript --project-id \"$SUPABASE_PROJECT_ID\" > types/supabase.ts",
     "test:lemonsqueezy": "node scripts/test-lemonsqueezy.js",
-    "webhook:simulate": "node scripts/simulate-webhook.js"
+    "webhook:simulate": "node scripts/simulate-webhook.js",
+    "email:check": "node scripts/check-email-config.js"
   },
   "type": "module",
   "dependencies": {
