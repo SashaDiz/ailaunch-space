@@ -110,9 +110,13 @@ export async function GET(request) {
     }
 
     // Determine FROM address
-    const fromAddress = process.env.NODE_ENV === 'development' 
-      ? 'AI Launch Space <onboarding@resend.dev>'
-      : 'AI Launch Space <noreply@ailaunch.space>';
+    const fromAddress = process.env.NODE_ENV === 'development'
+      ? (process.env.RESEND_DEV_FROM || 'AI Launch Space <onboarding@resend.dev>')
+      : (
+          process.env.RESEND_PRODUCTION_FROM ||
+          process.env.RESEND_FROM_EMAIL ||
+          'AI Launch Space <noreply@resend.ailaunch.space>'
+        );
 
     diagnostics.checks.fromAddress = fromAddress;
 

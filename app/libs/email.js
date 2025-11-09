@@ -1267,6 +1267,21 @@ const isDevelopment = () => {
   return process.env.NODE_ENV === 'development';
 };
 
+const FALLBACK_DEV_FROM = 'AI Launch Space <onboarding@resend.dev>';
+const FALLBACK_PROD_FROM = 'AI Launch Space <noreply@resend.ailaunch.space>';
+
+const getFromAddress = () => {
+  if (isDevelopment()) {
+    return process.env.RESEND_DEV_FROM || FALLBACK_DEV_FROM;
+  }
+
+  return (
+    process.env.RESEND_PRODUCTION_FROM ||
+    process.env.RESEND_FROM_EMAIL ||
+    FALLBACK_PROD_FROM
+  );
+};
+
 export const sendEmail = async (to, template, data, options = {}) => {
   const envType = process.env.VERCEL_ENV || process.env.NODE_ENV || 'unknown';
   
@@ -1320,9 +1335,7 @@ export const sendEmail = async (to, template, data, options = {}) => {
 
     // Use development-friendly from address for localhost
     // In production, use verified domain
-    const fromAddress = isDevelopment()
-      ? 'AI Launch Space <onboarding@resend.dev>'
-      : 'AI Launch Space <noreply@ailaunch.space>';
+    const fromAddress = getFromAddress();
 
     const emailDetails = {
       template,
@@ -1370,11 +1383,11 @@ export const sendEmail = async (to, template, data, options = {}) => {
       // Provide helpful error messages
       let helpMessage = '';
       if (result.error.message?.includes('domain') || result.error.message?.includes('not verified')) {
-        helpMessage = '\n   💡 DOMAIN ERROR: Verify your domain in Resend dashboard: https://resend.com/domains\n   💡 Make sure ailaunch.space is verified and SPF/DKIM records are correct';
+        helpMessage = '\n   💡 DOMAIN ERROR: Verify your domain in Resend dashboard: https://resend.com/domains\n   💡 Make sure resend.ailaunch.space is verified and SPF/DKIM records are correct';
       } else if (result.error.message?.includes('API key') || result.error.message?.includes('unauthorized')) {
         helpMessage = '\n   💡 API KEY ERROR: Check your RESEND_API_KEY is valid and has sending permissions';
       } else if (result.error.message?.includes('from')) {
-        helpMessage = '\n   💡 FROM ADDRESS ERROR: Verify the domain ailaunch.space is verified in Resend';
+        helpMessage = '\n   💡 FROM ADDRESS ERROR: Verify the domain resend.ailaunch.space is verified in Resend';
       }
       
       if (helpMessage) {
@@ -1424,7 +1437,7 @@ export const sendEmail = async (to, template, data, options = {}) => {
     } else if (error.message?.includes('unauthorized') || error.message?.includes('API')) {
       console.error('   💡 API key error: Verify RESEND_API_KEY is correct and has proper permissions');
     } else if (error.message?.includes('domain')) {
-      console.error('   💡 Domain error: Verify ailaunch.space is verified in Resend dashboard');
+      console.error('   💡 Domain error: Verify resend.ailaunch.space is verified in Resend dashboard');
     }
     
     // In production, always log full error details

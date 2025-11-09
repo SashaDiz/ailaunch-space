@@ -18,6 +18,7 @@ import { promisify } from 'util';
 
 const resolveTxt = promisify(dns.resolveTxt);
 const resolveCname = promisify(dns.resolveCname);
+const resolveMx = promisify(dns.resolveMx);
 
 // Load environment variables
 const __filename = fileURLToPath(import.meta.url);
@@ -32,6 +33,10 @@ const results = {
   failed: [],
   warnings: []
 };
+
+const DEFAULT_SENDING_DOMAIN = 'resend.ailaunch.space';
+const resendSendingDomain = process.env.RESEND_SENDING_DOMAIN || DEFAULT_SENDING_DOMAIN;
+const resendRootDomain = process.env.RESEND_ROOT_DOMAIN || resendSendingDomain.split('.').slice(-2).join('.');
 
 function pass(check) {
   results.passed.push(check);
@@ -102,7 +107,7 @@ if (resendApiKey && resendApiKey.startsWith('re_')) {
       pass(`Successfully connected to Resend (${domains.data.length} domains found)`);
 
       if (domains.data.length === 0) {
-        warn('No domains configured in Resend', 'Add ailaunch.space to Resend dashboard');
+        warn('No domains configured in Resend', `Add ${resendSendingDomain} to Resend dashboard`);
       } else {
         console.log('\n   Domains:');
         domains.data.forEach(domain => {
@@ -110,17 +115,17 @@ if (resendApiKey && resendApiKey.startsWith('re_')) {
           console.log(`   ${statusIcon} ${domain.name} - ${domain.status} (${domain.region})`);
         });
 
-        const ailaunchDomain = domains.data.find(d => d.name === 'ailaunch.space');
-        if (ailaunchDomain) {
-          if (ailaunchDomain.status === 'verified') {
-            pass('ailaunch.space domain is verified');
+        const sendingDomainEntry = domains.data.find(d => d.name === resendSendingDomain);
+        if (sendingDomainEntry) {
+          if (sendingDomainEntry.status === 'verified') {
+            pass(`${resendSendingDomain} domain is verified`);
           } else {
-            fail('ailaunch.space domain is not verified', 
-              `Status: ${ailaunchDomain.status}. Verify DNS records in Resend dashboard.`);
+            fail(`${resendSendingDomain} domain is not verified`, 
+              `Status: ${sendingDomainEntry.status}. Verify DNS records in Resend dashboard.`);
           }
         } else {
-          warn('ailaunch.space domain not found in Resend', 
-            'Add it at https://resend.com/domains');
+          warn(`${resendSendingDomain} domain not found in Resend`, 
+            `Add it at https://resend.com/domains or set RESEND_SENDING_DOMAIN accordingly`);
         }
       }
 
@@ -132,8 +137,12 @@ if (resendApiKey && resendApiKey.startsWith('re_')) {
         warn('TEST_EMAIL not set', 'Set TEST_EMAIL in .env.local to send a test email');
       } else {
         const fromAddress = process.env.NODE_ENV === 'production' 
-          ? 'noreply@ailaunch.space'
-          : 'onboarding@resend.dev';
+          ? (
+              process.env.RESEND_PRODUCTION_FROM ||
+              process.env.RESEND_FROM_EMAIL ||
+              `noreply@${resendSendingDomain}`
+            )
+          : (process.env.RESEND_DEV_FROM || 'onboarding@resend.dev');
 
         try {
           const { data: emailData, error: emailError } = await resend.emails.send({
@@ -161,11 +170,11 @@ if (resendApiKey && resendApiKey.startsWith('re_')) {
 }
 
 // Check 3: DNS Records (for production)
-console.log('\n🌐 Checking DNS Records for ailaunch.space...\n');
+console.log(`\n🌐 Checking DNS Records for ${resendSendingDomain}...\n`);
 
 try {
   // Check SPF record
-  const txtRecords = await resolveTxt('ailaunch.space');
+  const txtRecords = await resolveTxt(resendSendingDomain);
   const spfRecord = txtRecords.find(record => 
     record.join('').includes('v=spf1')
   );
@@ -184,10 +193,22 @@ try {
 
   // Check DKIM record
   try {
-    const dkimRecords = await resolveCname('resend._domainkey.ailaunch.space');
+    const dkimRecords = await resolveCname(`resend._domainkey.${resendSendingDomain}`);
     pass('DKIM record configured');
   } catch (error) {
     warn('DKIM record not found', 'Add DKIM CNAME record from Resend dashboard');
+  }
+
+  // Check MX record
+  try {
+    const mxRecords = await resolveMx(resendSendingDomain);
+    if (mxRecords && mxRecords.length > 0) {
+      pass(`MX records found (${mxRecords.map(r => `${r.exchange} (priority ${r.priority})`).join(', ')})`);
+    } else {
+      warn('No MX records found', 'Add MX records from Resend dashboard');
+    }
+  } catch (error) {
+    warn('MX records not found', 'Add MX records from Resend dashboard');
   }
 
 } catch (error) {
@@ -200,8 +221,8 @@ console.log('   ⚠️  Manual checks required:');
 console.log('   1. Go to Supabase Dashboard → Authentication → Email Templates');
 console.log('   2. Ensure all templates are configured');
 console.log('   3. Check Authentication → URL Configuration:');
-console.log('      - Site URL: https://ailaunch.space');
-console.log('      - Redirect URLs: https://ailaunch.space/auth/callback');
+console.log(`      - Site URL: https://${resendRootDomain}`);
+console.log(`      - Redirect URLs: https://${resendRootDomain}/auth/callback`);
 console.log('   4. Optional: Configure Custom SMTP with Resend credentials');
 
 // Summary

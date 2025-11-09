@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { Webhook } from "svix";
 import { db } from "../../libs/database.js";
+import { getSupabaseAdmin } from "../../libs/supabase.js";
 import { webhookEvents } from "../../libs/webhooks.js";
 
 // POST /api/webhooks?type=external|internal
@@ -55,16 +57,48 @@ export async function GET(request) {
 // Helper functions
 async function handleExternalWebhook(request) {
   try {
-    const body = await request.json();
-    const signature = request.headers.get("x-webhook-signature");
-    const source = request.headers.get("x-webhook-source") || "unknown";
+    const rawBody = await request.text();
+    let parsedBody = {};
+
+    if (rawBody) {
+      try {
+        parsedBody = JSON.parse(rawBody);
+      } catch (parseError) {
+        console.error("Failed to parse webhook payload:", parseError);
+        return NextResponse.json(
+          { error: "Invalid JSON payload" },
+          { status: 400 }
+        );
+      }
+    }
+
+    const headers = Object.fromEntries(request.headers.entries());
+    const signature =
+      headers["x-webhook-signature"] || headers["svix-signature"] || null;
+
+    const explicitSource = headers["x-webhook-source"];
+    let source =
+      explicitSource || (headers["svix-signature"] ? "resend" : "unknown");
+
+    if (source === "resend") {
+      const verificationResult = await verifyResendWebhook(rawBody, headers);
+      if (!verificationResult.valid) {
+        console.error("Resend webhook verification failed:", verificationResult.error);
+        return NextResponse.json(
+          { error: "Invalid webhook signature" },
+          { status: 400 }
+        );
+      }
+      parsedBody = verificationResult.payload;
+    }
 
     // Log the webhook
     const webhookLog = {
       source,
       signature,
-      body,
-      headers: Object.fromEntries(request.headers.entries()),
+      body: parsedBody,
+      raw_body: rawBody,
+      headers,
       timestamp: new Date(),
       processed: false,
     };
@@ -73,13 +107,13 @@ async function handleExternalWebhook(request) {
 
     // Process based on source
     let result = { success: true, message: "Webhook received" };
-    
+
     switch (source) {
       case "resend":
-        result = await processResendWebhook(body);
+        result = await processResendWebhook(parsedBody);
         break;
       case "github":
-        result = await processGitHubWebhook(body, signature);
+        result = await processGitHubWebhook(parsedBody, signature);
         break;
       default:
         console.log(`Unknown webhook source: ${source}`);
@@ -99,7 +133,6 @@ async function handleExternalWebhook(request) {
     );
 
     return NextResponse.json(result);
-
   } catch (error) {
     console.error("External webhook error:", error);
     return NextResponse.json(
@@ -181,18 +214,207 @@ async function getWebhookLogs(searchParams) {
 
 // Webhook processors
 async function processResendWebhook(body) {
-  // Process Resend email webhooks (delivery, bounce, etc.)
   const { type, data } = body;
-  
+
   switch (type) {
-    case "email.delivered":
-      // Update email delivery status
-      return { success: true, message: "Email delivery confirmed" };
+    case "contact.created":
+      await syncResendContact(data, { event: type });
+      return { success: true, message: "Contact created synced" };
+    case "contact.updated":
+      await syncResendContact(data, { event: type });
+      return { success: true, message: "Contact updated synced" };
+    case "contact.deleted":
+      await syncResendContact(
+        { ...data, unsubscribed: true },
+        { event: type, reason: "deleted" }
+      );
+      return { success: true, message: "Contact deleted processed" };
     case "email.bounced":
-      // Handle bounced email
+    case "email.failed":
+      await syncEmailStatuses(data, "bounced", { event: type });
       return { success: true, message: "Email bounce processed" };
+    case "email.complained":
+      await syncEmailStatuses(data, "unsubscribed", { event: type });
+      return { success: true, message: "Complaint processed" };
+    case "email.delivered":
+    case "email.sent":
+    case "email.delivery_delayed":
+    case "email.opened":
+    case "email.clicked":
+    case "email.received":
+      return { success: true, message: `Resend event ${type} acknowledged` };
     default:
       return { success: true, message: `Resend event ${type} acknowledged` };
+  }
+}
+
+const newsletterStates = new Set(["subscribed", "unsubscribed", "bounced"]);
+
+let cachedSupabaseAdmin = undefined;
+function getSupabaseAdminClient() {
+  if (cachedSupabaseAdmin !== undefined) {
+    return cachedSupabaseAdmin || null;
+  }
+
+  try {
+    cachedSupabaseAdmin = getSupabaseAdmin();
+  } catch (error) {
+    console.error("Supabase admin client unavailable:", error.message);
+    cachedSupabaseAdmin = false;
+  }
+
+  return cachedSupabaseAdmin || null;
+}
+
+async function syncResendContact(contactData, context = {}) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) {
+    return;
+  }
+
+  const email = contactData?.email?.trim().toLowerCase();
+  if (!email) {
+    console.warn("Resend contact event missing email");
+    return;
+  }
+
+  const status = contactData.unsubscribed ? "unsubscribed" : "subscribed";
+  await upsertNewsletterStatus(supabase, email, status, {
+    allowInsert: true,
+    ...context,
+  });
+}
+
+async function syncEmailStatuses(emailData, status, context = {}) {
+  if (!newsletterStates.has(status)) {
+    return;
+  }
+
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) {
+    return;
+  }
+
+  const recipients = Array.isArray(emailData?.to) ? emailData.to : [];
+  if (recipients.length === 0 && emailData?.recipient) {
+    recipients.push(emailData.recipient);
+  }
+
+  await Promise.all(
+    recipients.map(async (recipient) => {
+      const normalizedEmail =
+        typeof recipient === "string"
+          ? recipient.trim().toLowerCase()
+          : recipient?.email?.trim().toLowerCase();
+
+      if (!normalizedEmail) {
+        return;
+      }
+
+      await upsertNewsletterStatus(supabase, normalizedEmail, status, {
+        allowInsert: false,
+        ...context,
+      });
+    })
+  );
+}
+
+async function upsertNewsletterStatus(supabase, email, status, context = {}) {
+  try {
+    const now = new Date().toISOString();
+    const updateData = {
+      status,
+      updated_at: now,
+    };
+
+    if (status === "subscribed") {
+      updateData.subscribed_at = now;
+      updateData.unsubscribed_at = null;
+    } else if (status === "unsubscribed") {
+      updateData.unsubscribed_at = now;
+    } else if (status === "bounced") {
+      updateData.unsubscribed_at = now;
+    }
+
+    const { data: updatedRows, error: updateError } = await supabase
+      .from("newsletter")
+      .update(updateData)
+      .eq("email", email)
+      .select("id");
+
+    if (updateError) {
+      console.error("Failed to update newsletter status:", {
+        email,
+        status,
+        error: updateError.message,
+      });
+      return;
+    }
+
+    const allowInsert = context?.allowInsert ?? true;
+
+    if (allowInsert && (!updatedRows || updatedRows.length === 0)) {
+      const insertPayload = {
+        email,
+        status,
+        source: context?.event || "resend_webhook",
+        subscribed_at: status === "subscribed" ? now : null,
+        unsubscribed_at:
+          status === "unsubscribed" || status === "bounced" ? now : null,
+        created_at: now,
+        updated_at: now,
+      };
+
+      const { error: insertError } = await supabase
+        .from("newsletter")
+        .insert(insertPayload);
+
+      if (insertError) {
+        console.error("Failed to insert newsletter status:", {
+          email,
+          status,
+          error: insertError.message,
+        });
+      }
+    }
+  } catch (error) {
+    console.error("Newsletter status sync error:", { email, status, error });
+  }
+}
+
+async function verifyResendWebhook(payload, headers) {
+  const webhookSecret = process.env.RESEND_WEBHOOK_SECRET;
+
+  if (!webhookSecret) {
+    return {
+      valid: false,
+      error: new Error("RESEND_WEBHOOK_SECRET is not configured"),
+    };
+  }
+
+  const svixHeaders = {
+    "svix-id": headers["svix-id"],
+    "svix-timestamp": headers["svix-timestamp"],
+    "svix-signature": headers["svix-signature"],
+  };
+
+  if (
+    !svixHeaders["svix-id"] ||
+    !svixHeaders["svix-timestamp"] ||
+    !svixHeaders["svix-signature"]
+  ) {
+    return {
+      valid: false,
+      error: new Error("Missing Svix headers for webhook verification"),
+    };
+  }
+
+  try {
+    const wh = new Webhook(webhookSecret);
+    const verifiedPayload = wh.verify(payload, svixHeaders);
+    return { valid: true, payload: verifiedPayload };
+  } catch (error) {
+    return { valid: false, error };
   }
 }
 
