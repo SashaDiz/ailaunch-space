@@ -4,16 +4,60 @@ import { Providers } from "./components/Providers";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 
+const stripTrailingSlash = (value) => value?.replace(/\/+$/, "");
+
+const preferredCanonicalUrl =
+  stripTrailingSlash(process.env.NEXT_PUBLIC_CANONICAL_URL) ||
+  "https://ailaunch.space";
+
+const deploymentUrl = stripTrailingSlash(
+  process.env.NEXT_PUBLIC_APP_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "")
+);
+
+const metadataBaseOrigin =
+  stripTrailingSlash(deploymentUrl || preferredCanonicalUrl) ||
+  "https://www.ailaunch.space";
+
+const withWwwVariant = preferredCanonicalUrl.includes("://www.")
+  ? preferredCanonicalUrl.replace("://www.", "://")
+  : preferredCanonicalUrl.replace("://", "://www.");
+
+const ogImagePath = "/assets/OG_img.png";
+
+const ogImageCandidates = [
+  `${metadataBaseOrigin}${ogImagePath}`,
+  `${preferredCanonicalUrl}${ogImagePath}`,
+];
+
+if (withWwwVariant !== preferredCanonicalUrl) {
+  ogImageCandidates.push(`${withWwwVariant}${ogImagePath}`);
+}
+
+const ogImageUrls = Array.from(new Set(ogImageCandidates.filter(Boolean)));
+
 export const metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')),
+  metadataBase: new URL(metadataBaseOrigin),
   title: "AI Launch Space - Weekly Competition Platform for AI Projects",
-  description: "Submit your AI project to the weekly competition and get high authority backlinks. Join the community of successful AI builders and innovators.",
-  keywords: ["AI", "artificial intelligence", "AI tools", "AI launch", "backlinks", "SEO", "AI projects", "product hunt for AI", "AI directory", "machine learning"],
+  description:
+    "Submit your AI project to the weekly competition and get high authority backlinks. Join the community of successful AI builders and innovators.",
+  keywords: [
+    "AI",
+    "artificial intelligence",
+    "AI tools",
+    "AI launch",
+    "backlinks",
+    "SEO",
+    "AI projects",
+    "product hunt for AI",
+    "AI directory",
+    "machine learning",
+  ],
   authors: [{ name: "AI Launch Space" }],
   creator: "AI Launch Space",
   publisher: "AI Launch Space",
   alternates: {
-    canonical: process.env.NEXT_PUBLIC_APP_URL || "https://ailaunch.space",
+    canonical: preferredCanonicalUrl,
   },
   formatDetection: {
     email: false,
@@ -23,24 +67,26 @@ export const metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: process.env.NEXT_PUBLIC_APP_URL || "https://ailaunch.space",
+    url: preferredCanonicalUrl,
     title: "AI Launch Space - Weekly Competition Platform for AI Projects",
-    description: "Submit your AI project to the weekly competition and get high authority backlinks.",
+    description:
+      "Submit your AI project to the weekly competition and get high authority backlinks.",
     siteName: "AI Launch Space",
-    images: [
-      {
-        url: "/assets/OG_img.png",
-        width: 1200,
-        height: 630,
-        alt: "AI Launch Space - Weekly Competition Platform for AI Projects",
-      },
-    ],
+    images: ogImageUrls.map((url) => ({
+      url,
+      secureUrl: url,
+      width: 1200,
+      height: 630,
+      alt: "AI Launch Space - Weekly Competition Platform for AI Projects",
+    })),
   },
   twitter: {
     card: "summary_large_image",
+    site: "@ailaunchspace",
     title: "AI Launch Space - Weekly Competition Platform for AI Projects",
-    description: "Submit your AI project to the weekly competition and get high authority backlinks.",
-    images: ["/assets/OG_img.png"],
+    description:
+      "Submit your AI project to the weekly competition and get high authority backlinks.",
+    images: ogImageUrls,
     creator: "@ailaunchspace",
   },
   robots: {

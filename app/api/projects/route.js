@@ -84,8 +84,9 @@ export async function GET(request) {
       });
     }
     
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    // Validate and limit pagination to prevent resource exhaustion
+    const page = Math.max(1, Math.min(1000, parseInt(searchParams.get("page") || "1")));
+    const limit = Math.max(1, Math.min(100, parseInt(searchParams.get("limit") || "10")));
     const category = searchParams.get("category"); // Legacy single category
     const categories = searchParams.get("categories"); // New multiple categories
     const pricing = searchParams.get("pricing");
@@ -448,12 +449,17 @@ export async function GET(request) {
       );
     }
     
+    // Don't expose internal error details in production
+    const errorMessage = process.env.NODE_ENV === 'development' 
+      ? error.message 
+      : "An error occurred while processing your request.";
+    
     return NextResponse.json(
       { 
         error: "Internal server error", 
         code: "INTERNAL_ERROR",
-        message: error.message,
-        details: process.env.NODE_ENV === 'development' ? error.stack : error.message
+        message: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
       },
       { status: 500 }
     );
@@ -538,7 +544,31 @@ export async function POST(request) {
       email: user.email
     });
 
+    // Check request size to prevent DoS attacks
+    const contentLength = request.headers.get("content-length");
+    const MAX_REQUEST_SIZE = 500 * 1024; // 500KB max for JSON requests
+    if (contentLength && parseInt(contentLength) > MAX_REQUEST_SIZE) {
+      return NextResponse.json(
+        { 
+          error: "Request too large. Maximum size is 500KB.", 
+          code: "REQUEST_TOO_LARGE"
+        },
+        { status: 413 }
+      );
+    }
+
     const body = await request.json();
+    
+    // Validate body is an object
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return NextResponse.json(
+        { 
+          error: "Invalid request body", 
+          code: "INVALID_BODY"
+        },
+        { status: 400 }
+      );
+    }
     
     console.log('AI project submission - Request body:', {
       plan: body.plan,
@@ -564,9 +594,23 @@ export async function POST(request) {
       );
     }
 
-    // Validate URL formats
+    // Sanitize and validate input fields
+    const sanitizeString = (str, maxLength = 1000) => {
+      if (typeof str !== 'string') return '';
+      return str.trim().substring(0, maxLength).replace(/[<>]/g, '');
+    };
+
+    // Validate and sanitize URL formats
     try {
-      new URL(body.website_url);
+      const url = new URL(body.website_url);
+      // Only allow http and https protocols
+      if (!['http:', 'https:'].includes(url.protocol)) {
+        throw new Error('Invalid protocol');
+      }
+      // Validate URL length
+      if (body.website_url.length > 2048) {
+        throw new Error('URL too long');
+      }
     } catch (e) {
       console.error('Invalid website URL format:', body.website_url);
       return NextResponse.json(
@@ -578,6 +622,11 @@ export async function POST(request) {
         { status: 400 }
       );
     }
+    
+    // Sanitize text fields
+    if (body.name) body.name = sanitizeString(body.name, 100);
+    if (body.short_description) body.short_description = sanitizeString(body.short_description, 160);
+    if (body.full_description) body.full_description = sanitizeString(body.full_description, 2000);
 
     // Validate logo URL (required)
     if (!body.logo_url) {
@@ -592,7 +641,15 @@ export async function POST(request) {
     }
 
     try {
-      new URL(body.logo_url);
+      const logoUrl = new URL(body.logo_url);
+      // Only allow http and https protocols
+      if (!['http:', 'https:'].includes(logoUrl.protocol)) {
+        throw new Error('Invalid protocol');
+      }
+      // Validate URL length
+      if (body.logo_url.length > 2048) {
+        throw new Error('URL too long');
+      }
     } catch (e) {
       console.error('Invalid logo URL format:', body.logo_url);
       return NextResponse.json(
@@ -608,7 +665,15 @@ export async function POST(request) {
     // Validate optional video URL
     if (body.video_url && body.video_url.trim() !== "") {
       try {
-        new URL(body.video_url);
+        const videoUrl = new URL(body.video_url);
+        // Only allow http and https protocols
+        if (!['http:', 'https:'].includes(videoUrl.protocol)) {
+          throw new Error('Invalid protocol');
+        }
+        // Validate URL length
+        if (body.video_url.length > 2048) {
+          throw new Error('URL too long');
+        }
       } catch (e) {
         console.error('Invalid video URL format:', body.video_url);
         return NextResponse.json(
@@ -620,6 +685,33 @@ export async function POST(request) {
           { status: 400 }
         );
       }
+    }
+    
+    // Validate and sanitize arrays
+    if (body.categories && Array.isArray(body.categories)) {
+      body.categories = body.categories
+        .filter(cat => typeof cat === 'string' && cat.length <= 50)
+        .slice(0, 5) // Limit to 5 categories
+        .map(cat => sanitizeString(cat, 50));
+    }
+    
+    if (body.tags && Array.isArray(body.tags)) {
+      body.tags = body.tags
+        .filter(tag => typeof tag === 'string' && tag.length <= 30)
+        .slice(0, 10) // Limit to 10 tags
+        .map(tag => sanitizeString(tag, 30));
+    }
+    
+    // Validate plan type
+    if (body.plan && !['standard', 'premium'].includes(body.plan)) {
+      return NextResponse.json(
+        { 
+          error: "Invalid plan type. Must be 'standard' or 'premium'", 
+          code: "INVALID_PLAN",
+          fields: ["plan"],
+        },
+        { status: 400 }
+      );
     }
 
     // Generate slug from name

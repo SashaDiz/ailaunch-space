@@ -1271,15 +1271,23 @@ const FALLBACK_DEV_FROM = 'AI Launch Space <onboarding@resend.dev>';
 const FALLBACK_PROD_FROM = 'AI Launch Space <noreply@resend.ailaunch.space>';
 
 const getFromAddress = () => {
+  // Allow overriding FROM address in any environment via env vars
+  if (process.env.RESEND_FROM_EMAIL) {
+    return process.env.RESEND_FROM_EMAIL;
+  }
+  
+  if (process.env.RESEND_PRODUCTION_FROM) {
+    return process.env.RESEND_PRODUCTION_FROM;
+  }
+
   if (isDevelopment()) {
+    // In development, allow using custom domain if RESEND_DEV_FROM is set
+    // Otherwise use onboarding domain for testing
     return process.env.RESEND_DEV_FROM || FALLBACK_DEV_FROM;
   }
 
-  return (
-    process.env.RESEND_PRODUCTION_FROM ||
-    process.env.RESEND_FROM_EMAIL ||
-    FALLBACK_PROD_FROM
-  );
+  // Production: always use verified domain
+  return FALLBACK_PROD_FROM;
 };
 
 export const sendEmail = async (to, template, data, options = {}) => {
@@ -1315,10 +1323,16 @@ export const sendEmail = async (to, template, data, options = {}) => {
       };
     }
 
-    // Development mode safety check - only redirect for non-newsletter emails
-    if (isDevelopment() && template !== 'newsletterWelcome') {
-      const verifiedEmail = 'elkiwebdesign@gmail.com';
+    // Development mode safety check - only redirect if RESEND_DEV_REDIRECT is not explicitly disabled
+    // This allows testing with actual user emails in development when needed
+    const shouldRedirectInDev = isDevelopment() && 
+                                 template !== 'newsletterWelcome' &&
+                                 process.env.RESEND_DEV_REDIRECT !== 'false';
+    
+    if (shouldRedirectInDev) {
+      const verifiedEmail = process.env.RESEND_DEV_REDIRECT_TO || 'elkiwebdesign@gmail.com';
       console.log(`Development mode: Redirecting email from ${to} to ${verifiedEmail}`);
+      console.log(`   To disable redirect, set RESEND_DEV_REDIRECT=false in .env.local`);
       to = verifiedEmail;
     }
 
@@ -1336,6 +1350,21 @@ export const sendEmail = async (to, template, data, options = {}) => {
     // Use development-friendly from address for localhost
     // In production, use verified domain
     const fromAddress = getFromAddress();
+    
+    // Extract domain from FROM address for validation
+    const fromDomain = fromAddress.match(/@([^\s>]+)/)?.[1] || '';
+    const isUsingCustomDomain = fromDomain && !fromDomain.includes('resend.dev') && !fromDomain.includes('onboarding');
+    
+    // Log configuration details
+    console.log('📧 Email Configuration:', {
+      from: fromAddress,
+      fromDomain: fromDomain,
+      isUsingCustomDomain,
+      environment: envType,
+      isProduction: isProduction(),
+      isDevelopment: isDevelopment(),
+      apiKeyConfigured: !!process.env.RESEND_API_KEY
+    });
 
     const emailDetails = {
       template,
@@ -1347,6 +1376,11 @@ export const sendEmail = async (to, template, data, options = {}) => {
     };
 
     console.log('📧 Sending email:', emailDetails);
+    
+    // Warn if using custom domain in production but might not be verified
+    if (isProduction() && isUsingCustomDomain) {
+      console.log(`   ⚠️  Using custom domain "${fromDomain}" - ensure it's verified in Resend: https://resend.com/domains`);
+    }
 
     const result = await resendClient.emails.send({
       from: fromAddress,
@@ -1382,21 +1416,47 @@ export const sendEmail = async (to, template, data, options = {}) => {
       
       // Provide helpful error messages
       let helpMessage = '';
-      if (result.error.message?.includes('domain') || result.error.message?.includes('not verified')) {
-        helpMessage = '\n   💡 DOMAIN ERROR: Verify your domain in Resend dashboard: https://resend.com/domains\n   💡 Make sure resend.ailaunch.space is verified and SPF/DKIM records are correct';
-      } else if (result.error.message?.includes('API key') || result.error.message?.includes('unauthorized')) {
-        helpMessage = '\n   💡 API KEY ERROR: Check your RESEND_API_KEY is valid and has sending permissions';
-      } else if (result.error.message?.includes('from')) {
-        helpMessage = '\n   💡 FROM ADDRESS ERROR: Verify the domain resend.ailaunch.space is verified in Resend';
+      const errorMsg = result.error.message?.toLowerCase() || '';
+      
+      if (errorMsg.includes('domain') || errorMsg.includes('not verified') || errorMsg.includes('unverified')) {
+        const domainFromAddress = fromAddress.match(/@([^\s>]+)/)?.[1] || 'unknown';
+        helpMessage = `\n   💡 DOMAIN ERROR: The domain "${domainFromAddress}" is not verified in Resend\n` +
+                     `   💡 Steps to fix:\n` +
+                     `      1. Go to https://resend.com/domains\n` +
+                     `      2. Verify that "${domainFromAddress}" is added and verified\n` +
+                     `      3. Check that all DNS records (SPF, DKIM, MX) are correctly configured\n` +
+                     `      4. Wait 15-30 minutes after adding DNS records for propagation\n` +
+                     `      5. Click "Verify" in Resend dashboard\n`;
+      } else if (errorMsg.includes('api key') || errorMsg.includes('unauthorized') || errorMsg.includes('authentication')) {
+        helpMessage = `\n   💡 API KEY ERROR: Your RESEND_API_KEY is invalid or missing\n` +
+                     `   💡 Steps to fix:\n` +
+                     `      1. Get your API key from: https://resend.com/api-keys\n` +
+                     `      2. Ensure it starts with "re_" and has "Full access" or "Sending access"\n` +
+                     `      3. Add to environment variables:\n` +
+                     `         - Production: Vercel → Settings → Environment Variables\n` +
+                     `         - Development: .env.local file\n`;
+      } else if (errorMsg.includes('from') || errorMsg.includes('sender')) {
+        helpMessage = `\n   💡 FROM ADDRESS ERROR: The FROM address "${fromAddress}" is invalid\n` +
+                     `   💡 Steps to fix:\n` +
+                     `      1. Verify the domain in FROM address is added to Resend: https://resend.com/domains\n` +
+                     `      2. Ensure the domain status is "Verified" (green checkmark)\n` +
+                     `      3. Check FROM address format: "Name <email@domain.com>" or "email@domain.com"\n` +
+                     `      4. For production, use: "AI Launch Space <noreply@resend.ailaunch.space>"\n`;
+      } else if (errorMsg.includes('rate limit') || errorMsg.includes('too many')) {
+        helpMessage = `\n   💡 RATE LIMIT ERROR: You've exceeded Resend's sending limits\n` +
+                     `   💡 Wait a few minutes before retrying\n`;
       }
       
       if (helpMessage) {
         console.error(helpMessage);
       }
       
-      // In production, log more details for debugging
+      // In production, always log full error details for debugging
       if (isProduction()) {
         console.error('   PRODUCTION ERROR DETAILS:', JSON.stringify(errorDetails, null, 2));
+        console.error('   FROM ADDRESS USED:', fromAddress);
+        console.error('   RECIPIENT:', Array.isArray(to) ? to : [to]);
+        console.error('   Check Resend dashboard: https://resend.com/emails');
       }
       
       return { 

@@ -191,8 +191,9 @@ export async function DELETE(request) {
 
 // Helper functions
 async function getProjects(searchParams) {
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "25");
+  // Validate and limit pagination to prevent resource exhaustion
+  const page = Math.max(1, Math.min(1000, parseInt(searchParams.get("page") || "1")));
+  const limit = Math.max(1, Math.min(100, parseInt(searchParams.get("limit") || "25")));
   const status = searchParams.get("status");
   const plan = searchParams.get("plan");
   const search = searchParams.get("search");
@@ -208,10 +209,19 @@ async function getProjects(searchParams) {
   }
 
   if (search) {
+    // Escape special regex characters to prevent ReDoS attacks
+    const escapeRegex = (str) => {
+      if (typeof str !== 'string') return '';
+      // Limit search length to prevent DoS
+      const limited = str.trim().substring(0, 100);
+      return limited.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    };
+    const safeSearch = escapeRegex(search);
+    
     filter.$or = [
-      { name: { $regex: search, $options: "i" } },
-      { short_description: { $regex: search, $options: "i" } },
-      { website_url: { $regex: search, $options: "i" } },
+      { name: { $regex: safeSearch, $options: "i" } },
+      { short_description: { $regex: safeSearch, $options: "i" } },
+      { website_url: { $regex: safeSearch, $options: "i" } },
     ];
   }
 

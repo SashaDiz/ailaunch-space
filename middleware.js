@@ -34,6 +34,25 @@ export async function middleware(request) {
   // This avoids sending large session data in every response
   await supabase.auth.getUser();
 
+  // Add security headers to all responses
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  
+  // Content Security Policy (can be customized based on needs)
+  const csp = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // unsafe-eval needed for some Next.js features
+    "style-src 'self' 'unsafe-inline'", // unsafe-inline needed for Tailwind
+    "img-src 'self' data: https:",
+    "font-src 'self' data:",
+    "connect-src 'self' https://*.supabase.co",
+    "frame-ancestors 'none'",
+  ].join('; ');
+  
+  response.headers.set('Content-Security-Policy', csp);
+
   return response;
 }
 
