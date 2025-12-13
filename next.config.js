@@ -2,11 +2,23 @@
 const nextConfig = {
   images: {
     unoptimized: true,
-    domains: [
-      "localhost",
-      "avatars.githubusercontent.com",
-      "lh3.googleusercontent.com",
-      "sdfzsocizvmgrisnlcvz.storage.supabase.co", // Supabase S3 storage domain
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "sdfzsocizvmgrisnlcvz.storage.supabase.co", // Supabase S3 storage domain
+      },
+      {
+        protocol: "http",
+        hostname: "localhost",
+      },
     ],
   },
   // Commented out headers to fix 431 error - headers too large
@@ -15,6 +27,9 @@ const nextConfig = {
   //   return [];
   // },
   serverExternalPackages: ["mongodb", "@supabase/supabase-js", "@supabase/ssr"],
+  // Add empty turbopack config to silence Next.js 16 warning
+  // We're using webpack config for custom optimizations
+  turbopack: {},
   webpack: (config, { dev, isServer }) => {
     // Suppress all webpack warnings in development
     if (dev) {
