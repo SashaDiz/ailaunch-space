@@ -9,10 +9,10 @@ import GuidePromoCard from "./components/GuidePromoCard";
 import SponsorCard from "./components/SponsorCard";
 import CountdownTimer from "./components/CountdownTimer";
 
-// Import assets
-import alexIcon from "/public/assets/alex-icon.png";
-import codefastLogo from "/public/assets/codefa.st.png";
-import datafastLogo from "/public/assets/datafa.st.png";
+// Image paths - using static paths for Next.js Image component
+const alexIcon = "/assets/alex-icon.png";
+const codefastLogo = "/assets/codefa.st.png";
+const datafastLogo = "/assets/datafa.st.png";
 import { Rocket } from "iconoir-react";
 
 
