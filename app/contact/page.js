@@ -30,10 +30,10 @@ export default function ContactPage() {
                 For general inquiries, support, and partnership opportunities:
               </p>
               <a
-                href="mailto:support@ailaunch.space"
+                href="mailto:hello@resend.ailaunch.space"
                 className="link link-primary font-medium"
               >
-                support@ailaunch.space
+                hello@resend.ailaunch.space
               </a>
             </div>
           </div>

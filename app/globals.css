@@ -450,6 +450,15 @@ button:disabled {
   }
 }
 
+/* Smaller tooltip text for rejected status badges */
+.badge.tooltip[data-tip]::before {
+  font-size: 0.75rem;
+  padding: 0.375rem 0.5rem;
+  max-width: 250px;
+  white-space: normal;
+  word-wrap: break-word;
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *,

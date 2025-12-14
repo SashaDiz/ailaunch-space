@@ -118,9 +118,13 @@ export default function HomePage() {
   const sidebarRef = useRef(null);
   const projectsRef = useRef(null);
   const featuredRef = useRef(null);
+  const hasFetchedRef = useRef(false);
 
-  // Fetch projects and competition data on mount
+  // Fetch projects and competition data on mount (only once)
   useEffect(() => {
+    // Prevent refetching when switching tabs/windows
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
     fetchData();
   }, []);
 

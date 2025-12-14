@@ -26,9 +26,7 @@ export const emailTemplates = {
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
               <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
-                  ALS
-                </div>
+                <img src="${process.env.NEXT_PUBLIC_APP_URL}/assets/logo.svg" alt="AI Launch Space" style="max-width: 200px; height: auto; margin-bottom: 20px;" />
                 <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: 700;">
                   Welcome to AI Launch Space! 🎉
                 </h1>
@@ -66,7 +64,7 @@ export const emailTemplates = {
 
               <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; text-align: center;">
                 <p style="color: #6b7280; font-size: 14px; margin: 0;">
-                  Need help? Contact us at hello@ailaunch.space<br>
+                  Need help? Contact us at hello@resend.ailaunch.space<br>
                   The AI Launch Space Team
                 </p>
               </div>
@@ -91,9 +89,7 @@ export const emailTemplates = {
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
               <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: inline-block; background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
-                  ALS
-                </div>
+                <img src="${process.env.NEXT_PUBLIC_APP_URL}/assets/logo.svg" alt="AI Launch Space" style="max-width: 200px; height: auto; margin-bottom: 20px;" />
                 <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: 700;">
                   Account Deleted
                 </h1>
@@ -149,9 +145,7 @@ export const emailTemplates = {
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
               <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
-                  ALS
-                </div>
+                <img src="${process.env.NEXT_PUBLIC_APP_URL}/assets/logo.svg" alt="AI Launch Space" style="max-width: 200px; height: auto; margin-bottom: 20px;" />
                 <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: 700;">
                   Competition Entry Confirmed! 🚀
                 </h1>
@@ -229,9 +223,7 @@ export const emailTemplates = {
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
               <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
-                  ALS
-                </div>
+                <img src="${process.env.NEXT_PUBLIC_APP_URL}/assets/logo.svg" alt="AI Launch Space" style="max-width: 200px; height: auto; margin-bottom: 20px;" />
                 <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: 700;">
                   Competition Entries Confirmed! 🚀
                 </h1>
@@ -312,9 +304,7 @@ export const emailTemplates = {
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
               <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
-                  ALS
-                </div>
+                <img src="${process.env.NEXT_PUBLIC_APP_URL}/assets/logo.svg" alt="AI Launch Space" style="max-width: 200px; height: auto; margin-bottom: 20px;" />
                 <div style="font-size: 48px; margin-bottom: 10px;">🏆</div>
                 <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: 700;">
                   Amazing Achievement!
@@ -386,9 +376,7 @@ export const emailTemplates = {
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
               <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
-                  ALS
-                </div>
+                <img src="${process.env.NEXT_PUBLIC_APP_URL}/assets/logo.svg" alt="AI Launch Space" style="max-width: 200px; height: auto; margin-bottom: 20px;" />
                 <div style="font-size: 48px; margin-bottom: 10px;">🔗</div>
                 <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: 700;">
                   Claim Your Dofollow Link!
@@ -434,7 +422,7 @@ export const emailTemplates = {
 
               <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; text-align: center;">
                 <p style="color: #6b7280; font-size: 14px; margin: 0;">
-                  Need help? Contact us at hello@ailaunch.space<br>
+                  Need help? Contact us at hello@resend.ailaunch.space<br>
                   The AI Launch Space Team
                 </p>
               </div>
@@ -460,9 +448,7 @@ export const emailTemplates = {
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
               <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
-                  ALS
-                </div>
+                <img src="${process.env.NEXT_PUBLIC_APP_URL}/assets/logo.svg" alt="AI Launch Space" style="max-width: 200px; height: auto; margin-bottom: 20px;" />
                 <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: 700;">
                   Congratulations! 🎉
                 </h1>
@@ -525,9 +511,7 @@ export const emailTemplates = {
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
               <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
-                  ALS
-                </div>
+                <img src="${process.env.NEXT_PUBLIC_APP_URL}/assets/logo.svg" alt="AI Launch Space" style="max-width: 200px; height: auto; margin-bottom: 20px;" />
                 <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: 700;">
                   Submission Update
                 </h1>
@@ -564,7 +548,7 @@ export const emailTemplates = {
                    style="display: inline-block; background: #ED0D79; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 12px;">
                   Submit Again
                 </a>
-                <a href="mailto:hello@ailaunch.space" 
+                <a href="mailto:hello@resend.ailaunch.space" 
                    style="display: inline-block; background: #6b7280; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">
                    Contact Support
                 </a>
@@ -598,9 +582,7 @@ export const emailTemplates = {
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
               <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
-                  ALS
-                </div>
+                <img src="${process.env.NEXT_PUBLIC_APP_URL}/assets/logo.svg" alt="AI Launch Space" style="max-width: 200px; height: auto; margin-bottom: 20px;" />
                 <div style="font-size: 48px; margin-bottom: 10px;">📋</div>
                 <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: 700;">
                   Submission Received!
@@ -649,7 +631,7 @@ export const emailTemplates = {
 
               <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; text-align: center;">
                 <p style="color: #6b7280; font-size: 14px; margin: 0;">
-                  Questions? Contact us at hello@ailaunch.space<br>
+                  Questions? Contact us at hello@resend.ailaunch.space<br>
                   The AI Launch Space Team
                 </p>
               </div>
@@ -675,9 +657,7 @@ export const emailTemplates = {
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
               <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
-                  ALS
-                </div>
+                <img src="${process.env.NEXT_PUBLIC_APP_URL}/assets/logo.svg" alt="AI Launch Space" style="max-width: 200px; height: auto; margin-bottom: 20px;" />
                 <div style="font-size: 48px; margin-bottom: 10px;">🚀</div>
                 <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: 700;">
                   Launch Week Starts Now!
@@ -764,9 +744,7 @@ export const emailTemplates = {
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
               <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
-                  ALS
-                </div>
+                <img src="${process.env.NEXT_PUBLIC_APP_URL}/assets/logo.svg" alt="AI Launch Space" style="max-width: 200px; height: auto; margin-bottom: 20px;" />
                 <div style="font-size: 48px; margin-bottom: 10px;">🏆</div>
                 <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: 700;">
                   New Competition Week!
@@ -860,9 +838,7 @@ export const emailTemplates = {
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
               <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
-                  ALS
-                </div>
+                <img src="${process.env.NEXT_PUBLIC_APP_URL}/assets/logo.svg" alt="AI Launch Space" style="max-width: 200px; height: auto; margin-bottom: 20px;" />
                 <div style="font-size: 48px; margin-bottom: 10px;">🎉</div>
                 <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: 700;">
                   Competition Results!
@@ -966,9 +942,7 @@ export const emailTemplates = {
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
               <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
-                  ALS
-                </div>
+                <img src="${process.env.NEXT_PUBLIC_APP_URL}/assets/logo.svg" alt="AI Launch Space" style="max-width: 200px; height: auto; margin-bottom: 20px;" />
                 <div style="font-size: 48px; margin-bottom: 10px;">🔗</div>
                 <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: 700;">
                   Final Reminder!
@@ -1024,7 +998,7 @@ export const emailTemplates = {
 
               <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; text-align: center;">
                 <p style="color: #6b7280; font-size: 14px; margin: 0;">
-                  Need help? Contact us immediately at hello@ailaunch.space<br>
+                  Need help? Contact us immediately at hello@resend.ailaunch.space<br>
                   The AI Launch Space Team
                 </p>
               </div>
@@ -1050,9 +1024,7 @@ export const emailTemplates = {
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
               <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: inline-block; background: linear-gradient(135deg, #ED0D79, #8b5cf6); color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-bottom: 20px;">
-                  ALS
-                </div>
+                <img src="${process.env.NEXT_PUBLIC_APP_URL}/assets/logo.svg" alt="AI Launch Space" style="max-width: 200px; height: auto; margin-bottom: 20px;" />
                 <div style="font-size: 48px; margin-bottom: 10px;">📧</div>
                 <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: 700;">
                   Welcome to our Newsletter! 🎉
@@ -1112,7 +1084,7 @@ export const emailTemplates = {
 
               <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; text-align: center;">
                 <p style="color: #6b7280; font-size: 14px; margin: 0;">
-                  Questions? Reply to this email or contact us at hello@ailaunch.space<br>
+                  Questions? Reply to this email or contact us at hello@resend.ailaunch.space<br>
                   The AI Launch Space Team
                 </p>
                 <p style="color: #9ca3af; font-size: 12px; margin: 10px 0 0 0;">

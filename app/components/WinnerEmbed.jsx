@@ -36,24 +36,13 @@ export default function WinnerEmbed({
     }
   };
 
-  const embedCode = isDarkTheme 
-    ? `<a href="https://ailaunch.space/" target="_blank" rel="noopener noreferrer" style="text-decoration: none; display: inline-block;">
-<div style="width: auto; min-width: 225px; height: 52px; display: flex; align-items: center; justify-content: flex-start; background: #1f2937; gap: 8px; border: 1px solid #374151; border-radius: 8px; padding: 8px 16px 8px 8px; font-family: system-ui, -apple-system, sans-serif;">
-  <img src="https://ailaunch.space/assets/ailaunch-embed-white.svg" alt="#${position} AI Product on AILaunch.space" width="42" height="42" style="flex-shrink: 0;" />
-  <div style="display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; font-size: 14px; font-weight: 700; line-height: 1.2; color: #f9fafb;">
-    #${position} AI Product of the Week
-    <span style="color: #ED0D79; font-size: 12px;">AILaunch.space</span>
-  </div>
-</div>
-</a>`
-    : `<a href="https://ailaunch.space/" target="_blank" rel="noopener noreferrer" style="text-decoration: none; display: inline-block;">
-<div style="width: auto; min-width: 225px; height: 52px; display: flex; align-items: center; justify-content: flex-start; background: white; gap: 8px; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 16px 8px 8px; font-family: system-ui, -apple-system, sans-serif;">
-  <img src="https://ailaunch.space/assets/ailaunch-embed.svg" alt="#${position} AI Product on AILaunch.space" width="42" height="42" style="flex-shrink: 0;" />
-  <div style="display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; font-size: 14px; font-weight: 700; line-height: 1.2; color: #111827;">
-    #${position} AI Product of the Week
-    <span style="color: #ED0D79; font-size: 12px;">AILaunch.space</span>
-  </div>
-</div>
+  const getBadgePath = (pos, dark) => {
+    const theme = dark ? 'dark' : '';
+    return `/assets/badges/winner-${pos}${theme ? `-${theme}` : ''}.svg`;
+  };
+
+  const embedCode = `<a href="https://ailaunch.space/" target="_blank" rel="noopener noreferrer" style="text-decoration: none; display: inline-block;">
+<img src="https://ailaunch.space${getBadgePath(position, isDarkTheme)}" alt="#${position} AI Product on AILaunch.space" width="265" height="58" style="display: block;" />
 </a>`;
 
   const handleCopyCode = async () => {
@@ -150,28 +139,13 @@ export default function WinnerEmbed({
             target="_blank"
             rel="noopener noreferrer"
           >
-            <div 
-              width="225" 
-              height="52" 
-              className={`flex items-center justify-start gap-2 border rounded-lg p-2 pr-4 hover:border-[#ED0D79] hover:scale-105 transition-transform duration-200 ${
-                isDarkTheme 
-                  ? 'bg-gray-800 border-gray-600' 
-                  : 'bg-white border-gray-300'
-              }`}
-            >
             <img
-               src={isDarkTheme ? "/assets/ailaunch-embed-white.svg" : "/assets/ailaunch-embed.svg"}
-               alt={`#${position} AI Product on AILaunch.space`}
-               width="42"
-               height="42"
-             />
-              <div className={`flex flex-col items-start justify-start text-md font-medium leading-tight ${
-                isDarkTheme ? 'text-gray-100' : 'text-gray-900'
-              }`}> 
-                #{position} AI Product of the Week
-                <span className="text-[#ED0D79] text-sm">AILaunch.space</span>
-              </div>
-            </div>
+              src={getBadgePath(position, isDarkTheme)}
+              alt={`#${position} AI Product on AILaunch.space`}
+              width="265"
+              height="58"
+              className="hover:scale-105 transition-transform duration-200"
+            />
           </a>
         </div>
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useUser } from "../hooks/useUser";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -85,6 +85,19 @@ function ProjectCard({ project, onResumeDraft }) {
       return <span className="badge badge-ghost badge-sm">Draft</span>;
     }
     
+    // Check for rejected status FIRST - this takes priority over statusBadge
+    if (project.status === "rejected") {
+      const rejectionReason = project.rejection_reason || "No reason provided";
+      return (
+        <span 
+          className="badge badge-error badge-sm cursor-help tooltip tooltip-top" 
+          data-tip={rejectionReason}
+        >
+          Rejected
+        </span>
+      );
+    }
+    
     // Use statusBadge for competition-related status (past, scheduled, live)
     if (project.statusBadge) {
       switch (project.statusBadge) {
@@ -105,16 +118,12 @@ function ProjectCard({ project, onResumeDraft }) {
         return (
           <span className="badge badge-warning badge-sm">Under Review</span>
         );
-      case "rejected":
-        return <span className="badge badge-error badge-sm">Rejected</span>;
       case "scheduled":
         return <span className="badge badge-info badge-sm">Scheduled</span>;
       case "approved":
         return <span className="badge badge-primary badge-sm">Approved</span>;
       case "archived":
         return <span className="badge badge-neutral badge-sm">Archived</span>;
-      case "draft":
-        return <span className="badge badge-ghost badge-sm">Draft</span>;
       default:
         return <span className="badge badge-neutral badge-sm">{project.status}</span>;
     }
@@ -455,6 +464,9 @@ function DashboardContent() {
     return num.toString();
   };
 
+  const hasFetchedRef = useRef(false);
+  const lastUserIdRef = useRef(null);
+
   useEffect(() => {
     if (authLoading) return;
 
@@ -463,10 +475,18 @@ function DashboardContent() {
       return;
     }
 
-    if (user) {
+    // Only refetch if user ID actually changed, not on every render or tab switch
+    if (user && user.id !== lastUserIdRef.current) {
+      lastUserIdRef.current = user.id;
+      hasFetchedRef.current = false;
+    }
+
+    // Prevent refetching when switching tabs/windows if we already have data
+    if (user && !hasFetchedRef.current) {
+      hasFetchedRef.current = true;
       fetchDashboardData();
     }
-  }, [user, authLoading, router]);
+  }, [user?.id, authLoading]); // Removed router from dependencies
 
   // Update active tab when URL changes
   useEffect(() => {

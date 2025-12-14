@@ -123,8 +123,8 @@ export default function TermsPage() {
             </ul>
             <p className="text-base-content/70 mb-4">
               <strong>Refund Process:</strong> To request a refund, contact us at{" "}
-              <a href="mailto:support@ailaunchspace.com" className="link link-primary">
-                support@ailaunchspace.com
+              <a href="mailto:hello@resend.ailaunch.space" className="link link-primary">
+                hello@resend.ailaunch.space
               </a>
               {" "}with your payment details and reason for the refund request. Refunds will be processed within 5-10 business days and returned to your original payment method.
             </p>
@@ -225,10 +225,10 @@ export default function TermsPage() {
               </Link>
               {" "}or email us at{" "}
               <a
-                href="mailto:hello@ailaunchspace.com"
+                href="mailto:hello@resend.ailaunch.space"
                 className="link link-primary"
               >
-                hello@ailaunchspace.com
+                hello@resend.ailaunch.space
               </a>
               .
             </p>
