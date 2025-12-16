@@ -206,7 +206,7 @@ export function ProductCard({
                   width={64}
                   height={64}
                   className="rounded-lg object-cover w-full h-full"
-                  style={{ width: "auto", height: "auto" }}
+                  style={{ width: "100%", height: "100%" }}
                 />
               </div>
               
@@ -338,7 +338,7 @@ export function ProductCard({
               width={96}
               height={96}
               className="rounded-lg object-cover w-full h-full"
-              style={{ width: "auto", height: "auto" }}
+              style={{ width: "100%", height: "100%" }}
             />
           </div>
 
