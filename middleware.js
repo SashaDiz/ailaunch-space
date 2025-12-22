@@ -7,32 +7,45 @@ export async function middleware(request) {
     request,
   });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
+  // Detect Startup Fame bot and other crawlers
+  const userAgent = request.headers.get('user-agent') || '';
+  const clientIP = request.headers.get('x-forwarded-for')?.split(',')[0] || 
+                   request.headers.get('x-real-ip') || 
+                   'unknown';
+  
+  const isStartupFameBot = clientIP === '149.56.28.175' || 
+                          userAgent.toLowerCase().includes('startupfame') ||
+                          userAgent.toLowerCase().includes('startupfa.me');
+  
+  // Skip auth check for bots to ensure they can access the page
+  if (!isStartupFameBot) {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              request.cookies.set(name, value);
+            });
+            response = NextResponse.next({
+              request,
+            });
+            cookiesToSet.forEach(({ name, value, options }) => {
+              response.cookies.set(name, value, options);
+            });
+          },
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            request.cookies.set(name, value);
-          });
-          response = NextResponse.next({
-            request,
-          });
-          cookiesToSet.forEach(({ name, value, options }) => {
-            response.cookies.set(name, value, options);
-          });
-        },
-      },
-    }
-  );
+      }
+    );
 
-  // IMPORTANT: Only call getUser() to refresh session, not getSession()
-  // This avoids sending large session data in every response
-  await supabase.auth.getUser();
+    // IMPORTANT: Only call getUser() to refresh session, not getSession()
+    // This avoids sending large session data in every response
+    await supabase.auth.getUser();
+  }
 
   // Add security headers to all responses
   response.headers.set('X-Content-Type-Options', 'nosniff');

@@ -163,7 +163,16 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className="antialiased overflow-x-hidden" suppressHydrationWarning={true}>
-        {/* Hidden link for Startup Fame bot verification - always in static HTML */}
+        {/* Hidden links for Startup Fame bot verification - always in static HTML */}
+        {/* Base domain link as required by bot */}
+        <a 
+          href="https://startupfa.me" 
+          style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', borderWidth: 0 }}
+          aria-hidden="true"
+        >
+          Startup Fame
+        </a>
+        {/* Subpage link for tracking */}
         <a 
           href="https://startupfa.me/s/ailaunch.space?utm_source=www.ailaunch.space" 
           style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', borderWidth: 0 }}
@@ -172,6 +181,7 @@ export default function RootLayout({ children }) {
           Startup Fame
         </a>
         <noscript>
+          <a href="https://startupfa.me">Startup Fame</a>
           <a href="https://startupfa.me/s/ailaunch.space?utm_source=www.ailaunch.space">Startup Fame</a>
         </noscript>
         <Providers>
