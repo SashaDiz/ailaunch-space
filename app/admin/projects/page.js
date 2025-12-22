@@ -17,6 +17,7 @@ import {
   Trophy,
   Check,
   Hourglass,
+  Trash,
 } from "iconoir-react";
 import toast from "react-hot-toast";
 import WinnerBadge from "../../components/WinnerBadge";
@@ -41,7 +42,7 @@ const generateProjectLink = (project) => {
   };
 };
 
-function ProjectRow({ project, onStatusUpdate }) {
+function ProjectRow({ project, onStatusUpdate, onDelete, isDeleting }) {
   const [updating, setUpdating] = useState(false);
   const [togglingLinkType, setTogglingLinkType] = useState(false);
   const [currentLinkType, setCurrentLinkType] = useState(project.link_type || "nofollow");
@@ -384,13 +385,27 @@ function ProjectRow({ project, onStatusUpdate }) {
           >
             <OpenNewWindow className="w-4 h-4" />
           </Link>
+
+          {/* Delete Button */}
+          <button
+            onClick={() => onDelete(project.id, project.name)}
+            disabled={isDeleting}
+            className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800 hover:bg-red-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Delete Project"
+          >
+            {isDeleting ? (
+              <span className="loading loading-spinner loading-xs"></span>
+            ) : (
+              <Trash className="w-3 h-3" />
+            )}
+          </button>
         </div>
       </td>
     </tr>
   );
 }
 
-function ProjectMobileCard({ project, onStatusUpdate }) {
+function ProjectMobileCard({ project, onStatusUpdate, onDelete, isDeleting }) {
   const [updating, setUpdating] = useState(false);
   const [togglingLinkType, setTogglingLinkType] = useState(false);
   const [currentLinkType, setCurrentLinkType] = useState(project.link_type || "nofollow");
@@ -614,6 +629,24 @@ function ProjectMobileCard({ project, onStatusUpdate }) {
           <OpenNewWindow className="w-4 h-4 mr-2" />
           Visit
         </Link>
+
+        <button
+          onClick={() => onDelete(project.id, project.name)}
+          disabled={isDeleting}
+          className="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium bg-red-100 text-red-800 hover:bg-red-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isDeleting ? (
+            <>
+              <span className="loading loading-spinner loading-xs mr-2"></span>
+              Deleting...
+            </>
+          ) : (
+            <>
+              <Trash className="w-4 h-4 mr-2" />
+              Delete
+            </>
+          )}
+        </button>
       </div>
     </div>
   );
@@ -636,6 +669,7 @@ export default function AdminProjectsPage() {
     totalCount: 0,
     totalPages: 0,
   });
+  const [deletingProjectId, setDeletingProjectId] = useState(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -734,6 +768,45 @@ export default function AdminProjectsPage() {
         project.id === projectId ? { ...project, status: newStatus } : project
       )
     );
+  };
+
+  const handleDelete = async (projectId, projectName) => {
+    // Confirm deletion
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${projectName}"? This action cannot be undone.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingProjectId(projectId);
+    try {
+      const response = await fetch(`/api/admin?type=projects&id=${projectId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        toast.success(`Project "${projectName}" deleted successfully`);
+        // Remove project from list
+        setProjects(projects.filter((project) => project.id !== projectId));
+        // Update pagination if needed
+        if (projects.length === 1 && pagination.page > 1) {
+          setPagination({ ...pagination, page: pagination.page - 1 });
+        } else {
+          // Refresh the list to get updated counts
+          fetchProjects();
+        }
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete project");
+      }
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast.error(error.message || "Failed to delete project");
+    } finally {
+      setDeletingProjectId(null);
+    }
   };
 
   const handlePageChange = (newPage) => {
@@ -1039,6 +1112,8 @@ export default function AdminProjectsPage() {
                           key={project.id}
                           project={project}
                           onStatusUpdate={handleStatusUpdate}
+                          onDelete={handleDelete}
+                          isDeleting={deletingProjectId === project.id}
                         />
                       ))}
                     </tbody>
@@ -1052,6 +1127,8 @@ export default function AdminProjectsPage() {
                       key={project.id}
                       project={project}
                       onStatusUpdate={handleStatusUpdate}
+                      onDelete={handleDelete}
+                      isDeleting={deletingProjectId === project.id}
                     />
                   ))}
                 </div>
