@@ -77,7 +77,7 @@ export default function FeaturedOn() {
           </a>
         </li>
         <li>
-          <a href="https://startupfa.me" target="_blank" rel="noopener noreferrer">
+          <a href="https://startupfa.me/s/ailaunch.space?utm_source=www.ailaunch.space" target="_blank" rel="noopener noreferrer">
             <div className="flex items-center justify-center gap-2 bg-white rounded-lg p-2 border border-gray-200 hover:border-[#ED0D79] hover:scale-105 transition-transform duration-200">
               <img src="/assets/startupfame.svg" alt="AI Launch Space - Featured on Startup Fame" width="24" height="24" />
               <span className="text-sm font-medium">Startup Fame</span>
