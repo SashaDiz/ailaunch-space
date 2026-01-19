@@ -67,6 +67,20 @@ export async function GET(request) {
       });
     }
 
+    // STEP 4: Award winners for completed competitions that don't have winners
+    try {
+      const retroactiveWinners = await awardWinnersForCompletedCompetitions();
+      if (retroactiveWinners.length > 0) {
+        results.retroactive_winners = retroactiveWinners;
+      }
+    } catch (error) {
+      console.error('Failed to award retroactive winners:', error);
+      results.errors.push({
+        step: 'retroactive_winners',
+        error: error.message,
+      });
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Competition cron job completed',
@@ -471,5 +485,62 @@ async function awardWinners(competition) {
     console.error(`Error awarding winners for ${competition.competition_id}:`, error);
     return [];
   }
+}
+
+// Award winners for completed competitions that don't have winners yet
+async function awardWinnersForCompletedCompetitions() {
+  const awarded = [];
+  
+  try {
+    // Find completed competitions without winners
+    const completedCompetitions = await db.find('competitions', {
+      type: 'weekly',
+      status: 'completed',
+    });
+    
+    for (const competition of completedCompetitions) {
+      // Check if competition already has winners
+      if (competition.top_three_ids && competition.top_three_ids.length > 0) {
+        continue;
+      }
+      
+      try {
+        const winners = await awardWinners(competition);
+        
+        if (winners.length > 0) {
+          // Update competition with winner IDs
+          await db.updateOne(
+            'competitions',
+            { id: competition.id },
+            {
+              $set: {
+                winner_id: winners[0]?.id || null,
+                runner_up_ids: winners.slice(1).map(w => w.id),
+                top_three_ids: winners.map(w => w.id),
+                completed_at: competition.completed_at || new Date(),
+              },
+            }
+          );
+          
+          awarded.push({
+            competition_id: competition.competition_id,
+            winners: winners.map(w => ({
+              id: w.id,
+              name: w.name,
+              position: w.position,
+              upvotes: w.upvotes,
+            })),
+          });
+        }
+      } catch (error) {
+        console.error(`Failed to award winners for ${competition.competition_id}:`, error);
+      }
+    }
+  } catch (error) {
+    console.error('Error awarding winners for completed competitions:', error);
+    throw error;
+  }
+  
+  return awarded;
 }
 

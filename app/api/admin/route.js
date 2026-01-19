@@ -146,9 +146,11 @@ export async function POST(request) {
         return await updateLinkType(request, authCheck.session);
       case "winner-badge":
         return await updateWinnerBadge(request, authCheck.session);
+      case "retroactive-winners":
+        return await retroactiveAwardWinners(request);
       default:
         return NextResponse.json(
-          { error: "Invalid action parameter. Use: approve-project, complete-competition, link-type, winner-badge" },
+          { error: "Invalid action parameter. Use: approve-project, complete-competition, link-type, winner-badge, retroactive-winners" },
           { status: 400 }
         );
     }
@@ -997,4 +999,214 @@ async function updateWinnerBadge(request, session) {
       { status: 500 }
     );
   }
+}
+
+// Retroactively award winners for completed competitions that don't have winners
+async function retroactiveAwardWinners(request) {
+  try {
+    const body = await request.json();
+    const { competitionId, all } = body;
+
+    // If competitionId is provided, award winners for that specific competition
+    if (competitionId) {
+      const competition = await db.findOne("competitions", {
+        competition_id: competitionId,
+        type: "weekly",
+        status: "completed",
+      });
+
+      if (!competition) {
+        return NextResponse.json(
+          { error: "Competition not found or not completed" },
+          { status: 404 }
+        );
+      }
+
+      // Check if winners already exist
+      if (competition.top_three_ids && competition.top_three_ids.length > 0) {
+        return NextResponse.json({
+          success: true,
+          message: `Competition ${competitionId} already has winners assigned`,
+          competition: {
+            id: competitionId,
+            winners: competition.top_three_ids,
+          },
+        });
+      }
+
+      const winners = await awardWinnersForCompetition(competition);
+
+      return NextResponse.json({
+        success: true,
+        message: `Awarded winners for competition ${competitionId}`,
+        competition: {
+          id: competitionId,
+          winnersCount: winners.length,
+          winners: winners.map((w) => ({
+            position: w.position,
+            id: w.id,
+            name: w.name,
+            slug: w.slug,
+            upvotes: w.upvotes,
+          })),
+        },
+      });
+    }
+
+    // If all is true, award winners for all completed competitions without winners
+    if (all) {
+      const completedCompetitions = await db.find("competitions", {
+        type: "weekly",
+        status: "completed",
+      });
+
+      const results = [];
+      let totalAwarded = 0;
+
+      for (const competition of completedCompetitions) {
+        // Check if competition already has winners
+        if (competition.top_three_ids && competition.top_three_ids.length > 0) {
+          continue;
+        }
+
+        try {
+          const winners = await awardWinnersForCompetition(competition);
+          if (winners.length > 0) {
+            totalAwarded += winners.length;
+            results.push({
+              competition_id: competition.competition_id,
+              winnersCount: winners.length,
+              winners: winners.map((w) => ({
+                position: w.position,
+                name: w.name,
+                upvotes: w.upvotes,
+              })),
+            });
+          }
+        } catch (error) {
+          console.error(`Failed to award winners for ${competition.competition_id}:`, error);
+          results.push({
+            competition_id: competition.competition_id,
+            error: error.message,
+          });
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: `Processed ${results.length} competitions, awarded ${totalAwarded} winners`,
+        results,
+      });
+    }
+
+    return NextResponse.json(
+      { error: "Either competitionId or all=true must be provided" },
+      { status: 400 }
+    );
+  } catch (error) {
+    console.error("Retroactive award winners error:", error);
+    return NextResponse.json(
+      { error: "Failed to award winners", details: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+// Award winners for a competition (shared function)
+async function awardWinnersForCompetition(competition) {
+  // Get all live projects in this competition, sorted by upvotes
+  const projects = await db.find(
+    "apps",
+    {
+      weekly_competition_id: competition.id,
+      status: "live",
+    },
+    {
+      sort: { upvotes: -1, premium_badge: -1, created_at: -1 },
+    }
+  );
+
+  if (projects.length === 0) {
+    return [];
+  }
+
+  // Award top 3
+  const winners = projects.slice(0, 3);
+  const results = [];
+
+  for (let i = 0; i < winners.length; i++) {
+    const winner = winners[i];
+    const position = i + 1;
+
+    // Update project with winner status
+    await db.updateOne(
+      "apps",
+      { id: winner.id },
+      {
+        $set: {
+          weekly_position: position,
+          weekly_winner: true,
+          dofollow_status: true,
+          link_type: "dofollow",
+          dofollow_reason: "weekly_winner",
+          dofollow_awarded_at: new Date(),
+          entered_weekly: false, // Remove from weekly display
+        },
+      }
+    );
+
+    results.push({
+      ...winner,
+      position,
+    });
+
+    // Send winner notification (optional, might want to skip for retroactive awards)
+    try {
+      const user = await db.findOne("users", { id: winner.submitted_by });
+      if (user && user.email) {
+        await notificationManager.sendCompetitionWinnerNotification({
+          userId: user.id,
+          userEmail: user.email,
+          project: winner,
+          competition: competition,
+          position: position,
+        });
+      }
+    } catch (notificationError) {
+      console.error(`Failed to send winner notification for ${winner.name}:`, notificationError);
+    }
+  }
+
+  // Update competition with winner IDs
+  await db.updateOne(
+    "competitions",
+    { id: competition.id },
+    {
+      $set: {
+        winner_id: winners[0]?.id || null,
+        runner_up_ids: winners.slice(1).map((w) => w.id),
+        top_three_ids: winners.map((w) => w.id),
+        completed_at: competition.completed_at || new Date(),
+      },
+    }
+  );
+
+  // Remove non-winners from weekly display
+  if (projects.length > 3) {
+    await db.updateMany(
+      "apps",
+      {
+        weekly_competition_id: competition.id,
+        status: "live",
+        weekly_winner: { $ne: true },
+      },
+      {
+        $set: {
+          entered_weekly: false,
+        },
+      }
+    );
+  }
+
+  return results;
 }
