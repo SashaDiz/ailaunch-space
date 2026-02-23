@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { Xmark, CheckCircle, Send } from "iconoir-react";
 
 export const AUTO_SUBMIT_CHECKOUT_URL =
-  "https://buy.stripe.com/5kA8zCfZc9SeafC7ss";
+  "https://www.submitmy.website/?ref=ailaunchspace";
 
 export function AutoSubmitModal({ isOpen, onClose }) {
   const [mounted, setMounted] = useState(false);
@@ -46,14 +46,14 @@ export function AutoSubmitModal({ isOpen, onClose }) {
   if (!isOpen || !mounted) return null;
 
   const benefits = [
-    "Save 60+ hours of manual work",
-    "Boost Domain Rating (DR +15 guaranteed)",
-    "Get up to 20% of traffic from directories",
-    "Manual, human-paced submissions (99.9% safe)",
-    "Backlinks from a 10,000+ directory database",
-    "Detailed report with full listing ownership",
-    "Delivered in 1 month with weekly updates",
-    "Long-term SEO gains and higher rankings",
+    "Save 72+ hours of manual work",
+    "120+ hand-picked directory submissions",
+    "AI-prepared, human-reviewed listings",
+    "Curated directories only — no spam or low-authority sites",
+    "Live dashboard to track submission progress",
+    "Complete backlink report included",
+    "Delivered in 30 days",
+    "Long-term SEO gains and higher Domain Rating",
   ];
 
   const modalContent = (
@@ -76,7 +76,7 @@ export function AutoSubmitModal({ isOpen, onClose }) {
               id="modal-title"
               className="text-xl sm:text-2xl font-bold text-gray-900 pr-10"
             >
-              Boost Your DR by 15+
+              Submit Your Project to 120+ Directories in one click
             </h2>
             <button
               onClick={onClose}
@@ -92,18 +92,18 @@ export function AutoSubmitModal({ isOpen, onClose }) {
             id="modal-description"
             className="text-base text-gray-900 mb-4 leading-relaxed pr-5"
           >
-            Submit to 100+ hand-picked directories in one click with ListingBott - #1 directory submission service.
+            Submit to 120+ hand-picked directories with SubmitMy.Website — AI-prepared, human-reviewed listings.
           </p>
-          
+
           {/* Learn More Link */}
           <div className="mb-6">
             <a
-              href="https://listingbott.com/?ref=directoryhunt.org"
+              href="https://www.submitmy.website/?ref=ailaunchspace"
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-gray-600 hover:text-black underline inline-flex items-center gap-1"
             >
-              Learn more about ListingBott
+              Learn more about SubmitMy.Website
             </a>
           </div>
 
@@ -130,7 +130,7 @@ export function AutoSubmitModal({ isOpen, onClose }) {
               onClick={onClose}
             >
               <Send className="w-4 h-4" strokeWidth={2} />
-              Submit with ListingBott ($499)
+              Submit with SubmitMy.Website ($99)
             </a>
             <button
               onClick={onClose}

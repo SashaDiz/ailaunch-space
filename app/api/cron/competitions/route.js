@@ -114,16 +114,17 @@ function getNextMonday(fromDate = new Date()) {
   return date;
 }
 
-// Helper: Get competition ID from date (format: YYYY-Www)
+// Helper: Get competition ID from date (format: YYYY-Www) using ISO 8601 week numbering
 function getCompetitionId(date) {
-  const year = date.getFullYear();
-  
-  // Calculate ISO week number
-  const startOfYear = new Date(Date.UTC(year, 0, 1));
-  const days = Math.floor((date - startOfYear) / (24 * 60 * 60 * 1000));
-  const weekNumber = Math.ceil((days + startOfYear.getUTCDay() + 1) / 7);
-  
-  return `${year}-W${String(weekNumber).padStart(2, '0')}`;
+  // ISO 8601: week starts Monday, week 1 contains the year's first Thursday
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNumber = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  const isoYear = d.getUTCFullYear();
+
+  return `${isoYear}-W${String(weekNumber).padStart(2, '0')}`;
 }
 
 // Create upcoming weekly competitions (next 8 weeks)
@@ -178,7 +179,7 @@ async function createUpcomingWeeklyCompetitions() {
           standard_submissions: 0,
           premium_submissions: 0,
           max_standard_slots: 15,
-          max_premium_slots: 999,
+          max_premium_slots: 25,
           total_votes: 0,
           total_participants: 0,
           top_three_ids: [],

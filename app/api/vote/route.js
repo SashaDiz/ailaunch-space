@@ -236,6 +236,22 @@ export async function POST(request) {
       );
     }
 
+    // Update streak and check rewards (only for upvotes)
+    if (action === "upvote") {
+      try {
+        const userTimezone = timezone || user?.timezone || null;
+        const streakResult = await updateUserStreak(userId, userTimezone);
+        if (streakResult.incremented) {
+          try {
+            await checkAndUnlockRewards(userId);
+          } catch (rewardError) {
+            console.error("Reward check failed:", rewardError);
+          }
+        }
+      } catch (streakError) {
+        console.error("Streak update failed:", streakError);
+      }
+    }
 
     // Fetch updated app to get accurate vote count
     const updatedApp = await db.findOne("apps", { id: appId });

@@ -256,6 +256,7 @@ async function getUserProfile(session) {
       linkedin: userProfile.linkedin,
       location: userProfile.location,
       avatar_url: userProfile.avatar_url,
+      is_admin: userProfile.is_admin === true,
       created_at: userProfile.created_at,
       updated_at: userProfile.updated_at
     }

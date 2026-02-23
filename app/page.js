@@ -20,7 +20,7 @@ import { Rocket, Send, PlusCircle } from "iconoir-react";
 // Image paths - using static paths for Next.js Image component
 const alexIcon = "/assets/alex-icon.png";
 const codefastLogo = "/assets/codefa.st.png";
-const datafastLogo = "/assets/datafa.st.png";
+const submitmywebsiteLogo = "/assets/submitmywebsite.png";
 
 
 function ProjectCard({ project, onVote }) {
@@ -45,9 +45,18 @@ Follow my journey as I share lessons, wins, and experiments along the way!"
         </div>
         <div className="flex flex-col items-start gap-4">
           <h2 className="text-sm lg:text-md font-medium text-gray-900 uppercase">
-            Secret weapons
+            Partners
           </h2>
           <div className="flex flex-col gap-4 w-full">
+            <SponsorCard
+              sponsor={{
+                logo: submitmywebsiteLogo,
+                name: "SubmitMy.Website",
+                description:
+                  "Submit your startup to 120+ directories in one click. Boost your SEO and get more backlinks on autopilot.",
+                url: "https://www.submitmy.website/?ref=ailaunchspace",
+              }}
+            />
             <SponsorCard
               sponsor={{
                 logo: codefastLogo,
@@ -55,15 +64,6 @@ Follow my journey as I share lessons, wins, and experiments along the way!"
                 description:
                   "This course by Marc Lou helped me to build this launchpad. I strongly recommend it for begginers.",
                 url: "https://codefa.st/?via=ailaunch",
-              }}
-            />
-            <SponsorCard
-              sponsor={{
-                logo: datafastLogo,
-                name: "Datafa.st",
-                description:
-                  "Beautiful and useful analytics tool for your projects. Great for tracking your growth and performance.",
-                url: "https://datafa.st/?via=ailaunch",
               }}
             />
           </div>

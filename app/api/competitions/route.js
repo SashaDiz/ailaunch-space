@@ -209,15 +209,19 @@ function getNextMondayStart() {
   
   // Calculate days to next Monday
   const daysToMonday = (1 + 7 - now.getDay()) % 7;
-  if (daysToMonday === 0 && now.getHours() >= 0) {
-    // It's Monday but past midnight, get next Monday
-    nextMonday.setDate(now.getDate() + 7);
+  if (daysToMonday === 0) {
+    // It's Monday
+    if (now.getUTCHours() >= 8) {
+      // Past 8 AM UTC (competition already started), get next Monday
+      nextMonday.setDate(now.getDate() + 7);
+    }
+    // Before 8 AM UTC — stay on current Monday
   } else {
     nextMonday.setDate(now.getDate() + daysToMonday);
   }
-  
+
   // Set to 12:00 AM PST (Pacific Standard Time = UTC-8)
-  nextMonday.setHours(8, 0, 0, 0); // 8 AM UTC = 12 AM PST
+  nextMonday.setUTCHours(8, 0, 0, 0); // 8 AM UTC = 12 AM PST
   
   return nextMonday;
 }
@@ -319,7 +323,7 @@ async function createUpcomingWeeks() {
     
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekEnd.getDate() + 6);
-    weekEnd.setHours(7, 59, 59, 999); // End at 11:59:59 PM Sunday PST (7:59 AM Monday UTC)
+    weekEnd.setUTCHours(7, 59, 59, 999); // End at 11:59:59 PM Sunday PST (7:59 AM Monday UTC)
     
     // Generate week number using ISO week numbering for consistency
     const year = weekStart.getFullYear();
@@ -370,9 +374,25 @@ async function updateExpiredCompetitions() {
       end_date: { $lt: now }
     });
     
-    // Process each expired weekly competition (award winners, etc.)
+    // Remove projects from weekly display for expired competitions
+    // Winner awarding is handled exclusively by the daily cron job (/api/cron/competitions)
     for (const competition of expiredWeekly) {
-      await processExpiredCompetition(competition); // Pass the entire competition object
+      try {
+        await db.updateMany("apps",
+          {
+            weekly_competition_id: competition.id,
+            weekly_competition_ended: { $ne: true }
+          },
+          {
+            $set: {
+              entered_weekly: false,
+              weekly_competition_ended: true
+            }
+          }
+        );
+      } catch (err) {
+        console.error('Failed to update projects for expired competition:', { competitionId: competition.competition_id, error: err });
+      }
     }
     
     // Update weekly competitions that have ended
@@ -421,72 +441,6 @@ async function updateExpiredCompetitions() {
     
   } catch (error) {
     console.error("Failed to update competition statuses:", error);
-  }
-}
-
-// Process expired competition (award winners and update projects)
-async function processExpiredCompetition(competition) {
-  try {
-    // Get all projects in this competition sorted by votes, then premium badge
-    const projects = await db.find("apps", {
-      weekly_competition_id: competition.id, // UUID reference
-      status: "live"
-    }, {
-      sort: { upvotes: -1, premium_badge: -1, created_at: -1 }
-    });
-    
-    if (projects.length === 0) {
-      return;
-    }
-    
-    // Award winners (top 3)
-    const winners = projects.slice(0, 3);
-    const winnerIds = winners.map(d => d.id);
-    
-    // Award winner badges and dofollow links
-    for (let i = 0; i < winners.length; i++) {
-      const winner = winners[i];
-      const position = i + 1;
-      
-      // Check if already processed
-      const existing = await db.findOne("apps", { 
-        id: winner.id, 
-        weekly_position: { $exists: true } 
-      });
-      
-      if (!existing) {
-        await db.updateOne("apps",
-          { id: winner.id },
-          {
-            $set: {
-              weekly_position: position,
-              weekly_winner: true,
-              dofollow_links_earned: (winner.dofollow_links_earned || 0) + 1,
-              link_status: "dofollow"
-              // updated_at is automatically set by database trigger
-            }
-          }
-        );
-      }
-    }
-    
-    // Remove projects from weekly display
-    await db.updateMany("apps",
-      { 
-        weekly_competition_id: competition.id, // UUID reference
-        weekly_competition_ended: { $ne: true }
-      },
-      {
-        $set: {
-          entered_weekly: false,
-          weekly_competition_ended: true
-          // updated_at is automatically set by database trigger
-        }
-      }
-    )
-    
-  } catch (error) {
-    console.error('Failed to process expired competition:', { competitionId: competition.competition_id, error });
   }
 }
 

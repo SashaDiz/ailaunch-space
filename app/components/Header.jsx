@@ -393,6 +393,14 @@ export function Header() {
                   <li>
                     <Link href="/settings">Account Settings</Link>
                   </li>
+                  {userProfile?.is_admin && (
+                    <>
+                      <div className="divider my-1"></div>
+                      <li>
+                        <Link href="/admin">Admin Panel</Link>
+                      </li>
+                    </>
+                  )}
                   <div className="divider my-1"></div>
                   <li>
                     <button onClick={async () => {
@@ -608,6 +616,15 @@ export function Header() {
                     >
                       Account Settings
                     </Link>
+                    {userProfile?.is_admin && (
+                      <Link
+                        href="/admin"
+                        onClick={closeMobileMenu}
+                        className="block py-2 text-base text-gray-700 hover:text-[#ED0D79] transition-colors"
+                      >
+                        Admin Panel
+                      </Link>
+                    )}
                     <button
                       onClick={async () => {
                         try {

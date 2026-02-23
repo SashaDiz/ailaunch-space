@@ -25,7 +25,7 @@ export default function SponsorCard({
           />
         </div>
         <div>
-          <div className="font-semibold text-lg text-gray-900">
+          <div className="font-semibold text-md text-gray-900">
             {sponsor.name}
           </div>
           <div className="text-gray-700 text-sm mt-1">
