@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Star,
   Globe,
@@ -14,6 +15,8 @@ import {
   Megaphone,
   Rocket,
 } from "iconoir-react";
+import { VoteRequiredModal } from "../components/VoteRequiredModal";
+import { useUser } from "../hooks/useUser";
 
 const plans = [
   {
@@ -61,7 +64,7 @@ const plans = [
   },
 ];
 
-function PricingCard({ plan, index }) {
+function PricingCard({ plan, index, onLaunchClick, checkingVote }) {
   return (
     <div
       className={`card bg-white border transition-all ${
@@ -116,15 +119,17 @@ function PricingCard({ plan, index }) {
           )}
         </div>
 
-        <Link href={`/submit?plan=${plan.id}`} className="w-full mt-auto">
-          <button className={`w-full py-4 px-6 rounded-lg font-semibold text-base transition duration-300 outline outline-4 outline-transparent ${
+        <button
+          onClick={() => onLaunchClick(plan.id)}
+          disabled={checkingVote}
+          className={`w-full mt-auto py-4 px-6 rounded-lg font-semibold text-base transition duration-300 outline outline-4 outline-transparent min-h-[48px] disabled:opacity-50 disabled:cursor-not-allowed ${
             plan.popular 
               ? "bg-[#ED0D79] hover:bg-[#ED0D79]/90 text-white border-[#ED0D79] hover:scale-105" 
               : "bg-white hover:bg-[#ED0D79] text-black border border-gray-200 hover:text-white hover:border-[#ED0D79] hover:outline-[#ed0d7924]"
-          }`}>
-            {plan.cta}
-          </button>
-        </Link>
+          }`}
+        >
+          {checkingVote ? 'Checking...' : plan.cta}
+        </button>
       </div>
     </div>
   );
@@ -132,6 +137,71 @@ function PricingCard({ plan, index }) {
 
 
 export default function PricingPage() {
+  const [isVoteRequiredModalOpen, setIsVoteRequiredModalOpen] = useState(false);
+  const [checkingVote, setCheckingVote] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const { user, loading: userLoading } = useUser();
+  const router = useRouter();
+
+  // Listen for vote success events - close vote required modal if open
+  useEffect(() => {
+    const handleVoteSuccess = async () => {
+      if (isVoteRequiredModalOpen) {
+        // User just voted - close the modal and navigate to submit
+        setIsVoteRequiredModalOpen(false);
+        if (selectedPlan) {
+          router.push(`/submit?plan=${selectedPlan}`);
+          setSelectedPlan(null);
+        } else {
+          router.push('/submit');
+        }
+      }
+    };
+
+    window.addEventListener('voteSuccess', handleVoteSuccess);
+    return () => {
+      window.removeEventListener('voteSuccess', handleVoteSuccess);
+    };
+  }, [isVoteRequiredModalOpen, selectedPlan, router]);
+
+  // Handle Launch button click - check vote status
+  const handleLaunchClick = async (planId) => {
+    // If user is not authenticated, let them navigate normally
+    // The submit page will handle authentication
+    if (!user) {
+      router.push(`/submit?plan=${planId}`);
+      return;
+    }
+
+    // Check if user has voted today
+    setCheckingVote(true);
+    setSelectedPlan(planId);
+    try {
+      const response = await fetch('/api/vote/check-today', {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+
+      if (data.authenticated && !data.hasVotedToday) {
+        // User hasn't voted today - show modal
+        setIsVoteRequiredModalOpen(true);
+      } else {
+        // User has voted or there was an error - allow navigation
+        router.push(`/submit?plan=${planId}`);
+        setSelectedPlan(null);
+      }
+    } catch (error) {
+      console.error('Error checking vote status:', error);
+      // On error, allow navigation to avoid blocking users
+      router.push(`/submit?plan=${planId}`);
+      setSelectedPlan(null);
+    } finally {
+      setCheckingVote(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
@@ -140,7 +210,7 @@ export default function PricingPage() {
           <div className="mb-8">
             <Link href="/submit" className="inline-flex items-center px-6 py-3 bg-[#ED0D79] text-white rounded-lg font-semibold text-sm no-underline transition duration-300 hover:scale-105 hover:bg-[#ED0D79]/90">
               <Rocket className="w-4 h-4 mr-2" strokeWidth={2} />
-              Launch your directory
+              Launch your AI project
             </Link>
           </div>
           <h1 className="text-4xl lg:text-5xl font-bold mb-6 text-black">
@@ -156,11 +226,25 @@ export default function PricingPage() {
       <div className="max-w-5xl mx-auto px-4 py-4">
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {plans.map((plan, index) => (
-            <PricingCard key={plan.id} plan={plan} index={index} />
+            <PricingCard 
+              key={plan.id} 
+              plan={plan} 
+              index={index}
+              onLaunchClick={handleLaunchClick}
+              checkingVote={checkingVote}
+            />
           ))}
         </div>
       </div>
 
+      {/* Vote Required Modal */}
+      <VoteRequiredModal
+        isOpen={isVoteRequiredModalOpen}
+        onClose={() => {
+          setIsVoteRequiredModalOpen(false);
+          setSelectedPlan(null);
+        }}
+      />
     </div>
   );
 }

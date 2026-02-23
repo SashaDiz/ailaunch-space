@@ -205,7 +205,7 @@ export function Header() {
         ? 'bg-white/80 backdrop-blur-md' 
         : 'bg-transparent backdrop-blur-none'
     }`}>
-      <div className="max-w-[1280px] mx-auto px-4 py-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1480px] mx-auto px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo and Brand */}
             <Link href="/">

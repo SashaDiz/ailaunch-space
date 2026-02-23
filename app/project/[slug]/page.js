@@ -19,6 +19,8 @@ import WinnerBadge from "../../components/WinnerBadge";
 import WinnerEmbed, { WinnerEmbedButton } from "../../components/WinnerEmbed";
 import UserProfileLink from "../../components/UserProfileLink";
 import { useUser } from "../../hooks/useUser";
+import { AutoSubmitModal, AUTO_SUBMIT_CHECKOUT_URL } from "../../components/AutoSubmitModal";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 function ProjectDetailPageContent() {
   const params = useParams();
@@ -33,6 +35,7 @@ function ProjectDetailPageContent() {
   const fetchingRef = useRef(false);
   const notFoundRef = useRef(false);
   const lastSlugRef = useRef(null);
+  const [showAutoSubmitModal, setShowAutoSubmitModal] = useState(false);
 
   useEffect(() => {
     // Reset notFound flag if slug changes
@@ -57,8 +60,22 @@ function ProjectDetailPageContent() {
           duration: 5000,
         }
       );
+
+      // Show auto submit modal after successful submission (once per project)
+      if (typeof window === "undefined" || !slug) return;
+      try {
+        const storageKey = `autoSubmitModalShown_${slug}`;
+        const hasShown = window.localStorage.getItem(storageKey);
+        if (!hasShown) {
+          setShowAutoSubmitModal(true);
+          window.localStorage.setItem(storageKey, "true");
+        }
+      } catch (error) {
+        // If localStorage is unavailable, still show once in this session
+        setShowAutoSubmitModal(true);
+      }
     }
-  }, [submitted]);
+  }, [submitted, slug]);
 
   const fetchProject = async () => {
     // Prevent duplicate calls (helpful in development with StrictMode)
@@ -226,22 +243,10 @@ function ProjectDetailPageContent() {
   if (loading) {
     return (
       <div className="min-h-screen bg-base-100">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="animate-pulse">
-            <div className="h-8 bg-base-300 rounded w-1/4 mb-4"></div>
-            <div className="h-64 bg-base-300 rounded mb-8"></div>
-            <div className="grid lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-6">
-                <div className="h-32 bg-base-300 rounded"></div>
-                <div className="h-48 bg-base-300 rounded"></div>
-              </div>
-              <div className="space-y-6">
-                <div className="h-48 bg-base-300 rounded"></div>
-                <div className="h-32 bg-base-300 rounded"></div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <LoadingSpinner 
+          fullScreen={true} 
+          message="Loading project..."
+        />
       </div>
     );
   }
@@ -753,6 +758,12 @@ function ProjectDetailPageContent() {
           </div>
         </div>
       </div>
+      
+      {/* Auto Submit Modal */}
+      <AutoSubmitModal
+        isOpen={showAutoSubmitModal}
+        onClose={() => setShowAutoSubmitModal(false)}
+      />
     </div>
   );
 }
@@ -761,11 +772,11 @@ export default function ProjectDetailPage() {
   return (
     <Suspense 
       fallback={
-        <div className="min-h-screen bg-base-100 flex items-center justify-center">
-          <div className="text-center">
-            <span className="loading loading-spinner loading-lg"></span>
-            <p className="mt-4 text-base-content/70">Loading AI project...</p>
-          </div>
+        <div className="min-h-screen bg-base-100">
+          <LoadingSpinner 
+            fullScreen={true} 
+            message="Loading AI project..."
+          />
         </div>
       }
     >

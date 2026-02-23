@@ -18,7 +18,7 @@ import {
 } from "../../libs/linkTypeManager.js";
 
 // Admin authentication middleware
-async function checkAdminAuth() {
+async function checkAdminAuth(request) {
   const cookieStore = await cookies();
   
   const supabase = createServerClient(
@@ -57,7 +57,7 @@ async function checkAdminAuth() {
 // GET /api/admin?type=projects|competitions|stats|link-type|completable-competitions&...
 export async function GET(request) {
   try {
-    const authCheck = await checkAdminAuth();
+    const authCheck = await checkAdminAuth(request);
     if (authCheck.error) return authCheck.error;
 
     const { searchParams } = new URL(request.url);
@@ -101,7 +101,7 @@ export async function GET(request) {
 // PUT /api/admin?type=projects&id=...
 export async function PUT(request) {
   try {
-    const authCheck = await checkAdminAuth();
+    const authCheck = await checkAdminAuth(request);
     if (authCheck.error) return authCheck.error;
 
     const { searchParams } = new URL(request.url);
@@ -131,7 +131,7 @@ export async function PUT(request) {
 // POST /api/admin - Handle various admin actions
 export async function POST(request) {
   try {
-    const authCheck = await checkAdminAuth();
+    const authCheck = await checkAdminAuth(request);
     if (authCheck.error) return authCheck.error;
 
     const { searchParams } = new URL(request.url);
@@ -166,7 +166,7 @@ export async function POST(request) {
 // DELETE /api/admin?type=projects&id=...
 export async function DELETE(request) {
   try {
-    const authCheck = await checkAdminAuth();
+    const authCheck = await checkAdminAuth(request);
     if (authCheck.error) return authCheck.error;
 
     const { searchParams } = new URL(request.url);

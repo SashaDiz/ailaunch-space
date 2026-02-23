@@ -21,6 +21,8 @@ import {
 import toast from "react-hot-toast";
 import WinnerBadge from "../components/WinnerBadge";
 import { WinnerEmbedButton } from "../components/WinnerEmbed";
+import { AutoSubmitModal } from "../components/AutoSubmitModal";
+import { VoteRequiredModal } from "../components/VoteRequiredModal";
 
 function StatsCard({ icon: Icon, title, value, description, className = "" }) {
   return (
@@ -420,18 +422,18 @@ function ProjectCard({ project, onResumeDraft }) {
   );
 }
 
-function SubmitCard() {
+function SubmitCard({ onClick }) {
   return (
     <div className="block h-full">
-      <Link 
-        href="/submit" 
-        className="w-full h-full bg-[#ed0d7924] rounded-2xl border border-[#ed0d79a6] p-6 group cursor-pointer transition duration-300 ease-in-out hover:scale-[1.01] flex flex-col items-center justify-center text-center hover:bg-[#ed0d7924]/20"
+      <button
+        onClick={onClick}
+        className="w-full h-full bg-[#ed0d7924] rounded-2xl border border-[#ed0d79a6] p-6 group cursor-pointer transition duration-300 ease-in-out hover:scale-[1.01] flex flex-col items-center justify-center text-center hover:bg-[#ed0d7924]/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ED0D79]"
       >
           <Rocket className="w-8 h-8 text-[#ED0D79] mb-2" />
         <h3 className="text-lg font-semibold text-[#ED0D79]">
           Submit Your AI Project
         </h3>
-      </Link>
+      </button>
     </div>
   );
 }
@@ -446,6 +448,9 @@ function DashboardContent() {
   const [activeTab, setActiveTab] = useState(
     searchParams.get("tab") || "overview"
   );
+  const [isAutoSubmitModalOpen, setIsAutoSubmitModalOpen] = useState(false);
+  const [isVoteRequiredModalOpen, setIsVoteRequiredModalOpen] = useState(false);
+  const [checkingVote, setCheckingVote] = useState(false);
 
   const handleResumeDraft = (project) => {
     // Redirect to submit page with draft data pre-filled
@@ -495,6 +500,73 @@ function DashboardContent() {
       setActiveTab(tab);
     }
   }, [searchParams]);
+
+  // Check if modal should be shown from URL params
+  useEffect(() => {
+    const submitted = searchParams.get("submitted");
+    if (submitted) {
+      setIsAutoSubmitModalOpen(true);
+    }
+  }, [searchParams]);
+
+  // Listen for vote success events - close vote required modal if open
+  useEffect(() => {
+    const handleVoteSuccess = async () => {
+      if (isVoteRequiredModalOpen) {
+        // User just voted - close the modal and navigate to submit
+        setIsVoteRequiredModalOpen(false);
+        router.push('/submit');
+      }
+    };
+
+    window.addEventListener('voteSuccess', handleVoteSuccess);
+    return () => {
+      window.removeEventListener('voteSuccess', handleVoteSuccess);
+    };
+  }, [isVoteRequiredModalOpen, router]);
+
+  const handleAutoSubmitModalClose = () => {
+    setIsAutoSubmitModalOpen(false);
+    const submitted = searchParams.get("submitted");
+    if (submitted) {
+      router.replace("/dashboard");
+    }
+  };
+
+  // Handle Launch button click - check vote status
+  const handleLaunchClick = async () => {
+    // If user is not authenticated, let them navigate normally
+    // The submit page will handle authentication
+    if (!user) {
+      router.push('/submit');
+      return;
+    }
+
+    // Check if user has voted today
+    setCheckingVote(true);
+    try {
+      const response = await fetch('/api/vote/check-today', {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+
+      if (data.authenticated && !data.hasVotedToday) {
+        // User hasn't voted today - show modal
+        setIsVoteRequiredModalOpen(true);
+      } else {
+        // User has voted or there was an error - allow navigation
+        router.push('/submit');
+      }
+    } catch (error) {
+      console.error('Error checking vote status:', error);
+      // On error, allow navigation to avoid blocking users
+      router.push('/submit');
+    } finally {
+      setCheckingVote(false);
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -660,7 +732,7 @@ function DashboardContent() {
 
               {projects.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
-                  <SubmitCard />
+                  <SubmitCard onClick={handleLaunchClick} />
                   {projects.map((project) => (
                     <ProjectCard 
                       key={project.id} 
@@ -672,7 +744,7 @@ function DashboardContent() {
               ) : (
                 // Empty State
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
-                  <SubmitCard />
+                  <SubmitCard onClick={handleLaunchClick} />
                   <div className="col-span-1 md:col-span-1 lg:col-span-2">
                     <div className="text-center py-16">
                       <div className="w-24 h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-6">
@@ -698,6 +770,18 @@ function DashboardContent() {
           </div>
         )}
       </div>
+      
+      {/* Auto Submit Modal */}
+      <AutoSubmitModal
+        isOpen={isAutoSubmitModalOpen}
+        onClose={handleAutoSubmitModalClose}
+      />
+      
+      {/* Vote Required Modal */}
+      <VoteRequiredModal
+        isOpen={isVoteRequiredModalOpen}
+        onClose={() => setIsVoteRequiredModalOpen(false)}
+      />
     </div>
   );
 }

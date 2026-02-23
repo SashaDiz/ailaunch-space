@@ -1,21 +1,16 @@
 import { NextResponse } from "next/server";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { createClient } from "@supabase/supabase-js";
 import { v4 as uuidv4 } from "uuid";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-// Initialize S3 client for Supabase Storage
-const s3Client = new S3Client({
-  endpoint: process.env.SUPABASE_S3_ENDPOINT,
-  region: process.env.SUPABASE_S3_REGION || "us-east-1",
-  credentials: {
-    accessKeyId: process.env.SUPABASE_S3_ACCESS_KEY_ID,
-    secretAccessKey: process.env.SUPABASE_S3_SECRET_ACCESS_KEY,
-  },
-  forcePathStyle: true, // Required for Supabase S3
-});
+// Initialize Supabase client with service role for storage operations
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
-const BUCKET_NAME = process.env.SUPABASE_S3_BUCKET || "logos";
+const BUCKET_NAME = "logos";
 const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const MAX_REQUEST_SIZE = 5 * 1024 * 1024; // 5MB max request size
@@ -165,22 +160,35 @@ export async function POST(request) {
     const validExtension = extensionMap[fileExtension] || 'jpg';
     
     const fileName = `${uuidv4()}.${validExtension}`;
-    const filePath = fileName; // Don't include bucket name here since it's already in BUCKET_NAME
+    const filePath = fileName;
 
-    // Upload to S3
-    const command = new PutObjectCommand({
-      Bucket: BUCKET_NAME,
-      Key: filePath,
-      Body: buffer,
-      ContentType: file.type,
-      CacheControl: "public, max-age=31536000",
-    });
+    // Upload to Supabase Storage
+    const { data, error: uploadError } = await supabaseAdmin.storage
+      .from(BUCKET_NAME)
+      .upload(filePath, buffer, {
+        cacheControl: "31536000",
+        upsert: false,
+        contentType: file.type,
+      });
 
-    await s3Client.send(command);
+    if (uploadError) {
+      console.error("Supabase Storage upload error:", uploadError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Failed to upload file to storage",
+          details: uploadError.message,
+        },
+        { status: 500 }
+      );
+    }
 
-    // Construct public URL - fix the URL format for Supabase Storage
-    const baseUrl = process.env.SUPABASE_S3_ENDPOINT.replace('/storage/v1/s3', '');
-    const publicUrl = `${baseUrl}/storage/v1/object/public/${BUCKET_NAME}/${filePath}`;
+    // Get public URL
+    const { data: urlData } = supabaseAdmin.storage
+      .from(BUCKET_NAME)
+      .getPublicUrl(filePath);
+
+    const publicUrl = urlData.publicUrl;
 
     console.log("Upload successful:", {
       fileName: fileName,

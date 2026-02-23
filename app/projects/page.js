@@ -17,6 +17,7 @@ import {
 } from "iconoir-react";
 import toast from "react-hot-toast";
 import { ProductCard } from "../components/ProductCard";
+import Pagination from "../components/Pagination";
 
 const SORT_OPTIONS = [
   { value: "upvotes", label: "Most Votes", icon: Plus },
@@ -624,45 +625,13 @@ function ProjectsPageContent() {
 
                 {/* Pagination */}
                 {pagination.totalPages > 1 && (
-                  <div className="flex justify-center mt-8">
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handlePageChange(pagination.page - 1)}
-                        disabled={!pagination.hasPrev}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        Previous
-                      </button>
-
-                      {[...Array(Math.min(5, pagination.totalPages))].map(
-                        (_, i) => {
-                          const pageNum = Math.max(1, pagination.page - 2) + i;
-                          if (pageNum > pagination.totalPages) return null;
-
-                          return (
-                            <button
-                              key={`page-${pageNum}`}
-                              onClick={() => handlePageChange(pageNum)}
-                              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                                pageNum === pagination.page
-                                  ? "bg-[#ED0D79] text-white"
-                                  : "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
-                              }`}
-                            >
-                              {pageNum}
-                            </button>
-                          );
-                        }
-                      )}
-
-                      <button
-                        onClick={() => handlePageChange(pagination.page + 1)}
-                        disabled={!pagination.hasNext}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        Next
-                      </button>
-                    </div>
+                  <div className="mt-8">
+                    <Pagination
+                      page={pagination.page || 1}
+                      totalPages={pagination.totalPages}
+                      onPageChange={handlePageChange}
+                      ariaLabel="Browse projects pagination"
+                    />
                   </div>
                 )}
               </>

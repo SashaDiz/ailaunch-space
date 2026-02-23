@@ -10,6 +10,17 @@ import { notificationManager } from "../../libs/notification-service.js";
 // GET /api/projects - Get AI projects with filtering and sorting
 export async function GET(request) {
   try {
+    // Check rate limiting for GET requests
+    const { checkRateLimit, createRateLimitResponse } = await import("../../libs/rateLimit.js");
+    const rateLimitResult = await checkRateLimit(request, 'general');
+    if (!rateLimitResult.allowed) {
+      const rateLimitResponse = createRateLimitResponse(rateLimitResult);
+      return new NextResponse(rateLimitResponse.body, {
+        status: rateLimitResponse.status,
+        headers: rateLimitResponse.headers,
+      });
+    }
+
     const { searchParams } = new URL(request.url);
     
     // Check for duplicate website URL or slug (special endpoint)

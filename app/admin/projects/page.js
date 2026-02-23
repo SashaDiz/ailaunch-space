@@ -24,6 +24,7 @@ import WinnerBadge from "../../components/WinnerBadge";
 import { WinnerEmbedButton } from "../../components/WinnerEmbed";
 import AdminNav from "../../components/admin/AdminNav";
 import CustomDropdown from "../../components/CustomDropdown";
+import Pagination from "../../components/Pagination";
 
 // Helper function to generate project link with ref parameter and proper rel attribute
 const generateProjectLink = (project) => {
@@ -1136,44 +1137,12 @@ export default function AdminProjectsPage() {
                 {/* Pagination */}
                 {pagination.totalPages > 1 && (
                   <div className="p-6 border-t border-gray-200">
-                    <div className="flex items-center justify-center">
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => handlePageChange(pagination.page - 1)}
-                          disabled={pagination.page <= 1}
-                          className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          «
-                        </button>
-
-                        {[...Array(Math.min(5, pagination.totalPages))].map(
-                          (_, i) => {
-                            const page = i + 1;
-                            return (
-                              <button
-                                key={page}
-                                onClick={() => handlePageChange(page)}
-                                className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg ${
-                                  page === pagination.page
-                                    ? "bg-[#ED0D79] text-white"
-                                    : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-50 hover:text-gray-700"
-                                }`}
-                              >
-                                {page}
-                              </button>
-                            );
-                          }
-                        )}
-
-                        <button
-                          onClick={() => handlePageChange(pagination.page + 1)}
-                          disabled={pagination.page >= pagination.totalPages}
-                          className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          »
-                        </button>
-                      </div>
-                    </div>
+                    <Pagination
+                      page={pagination.page || 1}
+                      totalPages={pagination.totalPages}
+                      onPageChange={handlePageChange}
+                      ariaLabel="Admin projects pagination"
+                    />
                   </div>
                 )}
               </>

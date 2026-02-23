@@ -8,12 +8,19 @@ import { ProductCard } from "./components/ProductCard";
 import GuidePromoCard from "./components/GuidePromoCard";
 import SponsorCard from "./components/SponsorCard";
 import CountdownTimer from "./components/CountdownTimer";
+import { AutoSubmitModal } from "./components/AutoSubmitModal";
+import { VoteRequiredModal } from "./components/VoteRequiredModal";
+import { StreakCard } from "./components/StreakCard";
+import { UmamiStats } from "./components/UmamiStats";
+import { useUser } from "./hooks/useUser";
+import { useRouter } from "next/navigation";
+
+import { Rocket, Send, PlusCircle } from "iconoir-react";
 
 // Image paths - using static paths for Next.js Image component
 const alexIcon = "/assets/alex-icon.png";
 const codefastLogo = "/assets/codefa.st.png";
 const datafastLogo = "/assets/datafa.st.png";
-import { Rocket } from "iconoir-react";
 
 
 function ProjectCard({ project, onVote }) {
@@ -22,7 +29,7 @@ function ProjectCard({ project, onVote }) {
 
 function RightSidePanel() {
   return (
-    <div className="right-side w-full lg:max-w-96 lg:w-full lg:sticky lg:top-16 mt-6 lg:mt-0">
+    <div className="right-side w-full lg:max-w-none lg:w-full lg:sticky lg:top-16 mt-6 lg:mt-0">
       <aside className="space-y-6 lg:space-y-8 py-4 lg:py-8">
         <div className="flex flex-col items-start gap-4">
           <GuidePromoCard
@@ -77,11 +84,32 @@ Follow my journey as I share lessons, wins, and experiments along the way!"
   );
 }
 
+function LeftSidePanel() {
+  return (
+    <div className="left-side w-full lg:max-w-none lg:w-full lg:sticky lg:top-16 mt-6 lg:mt-0">
+      <aside className="space-y-6 lg:space-y-6 xl:space-y-8 py-4 lg:py-6 xl:py-8">
+        <UmamiStats />
+        <div className="flex flex-col gap-4">
+          <h2 className="text-sm lg:text-base xl:text-lg font-medium text-gray-900 uppercase">
+            Your Streak
+          </h2>
+          <StreakCard />
+        </div>
+      </aside>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [competition, setCompetition] = useState(null);
   const [isClient, setIsClient] = useState(false);
+  const [isAutoSubmitModalOpen, setIsAutoSubmitModalOpen] = useState(false);
+  const [isVoteRequiredModalOpen, setIsVoteRequiredModalOpen] = useState(false);
+  const [checkingVote, setCheckingVote] = useState(false);
+  const { user, loading: userLoading } = useUser();
+  const router = useRouter();
 
   // Schema.org structured data for the homepage
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ailaunch.space";
@@ -132,6 +160,86 @@ export default function HomePage() {
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Check if modal should be shown automatically (once per day)
+  useEffect(() => {
+    if (!isClient) return;
+
+    const checkAndShowModal = () => {
+      const storageKey = "autoSubmitModalLastShown";
+      const lastShownDate = localStorage.getItem(storageKey);
+      const today = new Date().toDateString(); // e.g., "Mon Jan 15 2024"
+
+      // If never shown or last shown on a different day, show the modal
+      if (!lastShownDate || lastShownDate !== today) {
+        setIsAutoSubmitModalOpen(true);
+      }
+    };
+
+    checkAndShowModal();
+  }, [isClient]);
+
+  // Listen for vote success events - close vote required modal if open
+  useEffect(() => {
+    if (!isClient) return;
+
+    const handleVoteSuccess = async () => {
+      if (isVoteRequiredModalOpen) {
+        // User just voted - close the modal
+        setIsVoteRequiredModalOpen(false);
+      }
+    };
+
+    window.addEventListener('voteSuccess', handleVoteSuccess);
+    return () => {
+      window.removeEventListener('voteSuccess', handleVoteSuccess);
+    };
+  }, [isClient, isVoteRequiredModalOpen]);
+
+  // Save the date when modal is closed
+  const handleModalClose = () => {
+    const storageKey = "autoSubmitModalLastShown";
+    const today = new Date().toDateString();
+    localStorage.setItem(storageKey, today);
+    setIsAutoSubmitModalOpen(false);
+  };
+
+  // Handle Launch Project button click - check vote status
+  const handleLaunchProject = async (e) => {
+    e.preventDefault();
+    
+    // If user is not authenticated, let them navigate normally
+    // The submit page will handle authentication
+    if (!user) {
+      router.push('/submit');
+      return;
+    }
+
+    // Check if user has voted today
+    setCheckingVote(true);
+    try {
+      const response = await fetch('/api/vote/check-today', {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+
+      if (data.authenticated && !data.hasVotedToday) {
+        // User hasn't voted today - show modal
+        setIsVoteRequiredModalOpen(true);
+      } else {
+        // User has voted or there was an error - allow navigation
+        router.push('/submit');
+      }
+    } catch (error) {
+      console.error('Error checking vote status:', error);
+      // On error, allow navigation to avoid blocking users
+      router.push('/submit');
+    } finally {
+      setCheckingVote(false);
+    }
+  };
 
   // Initialize animations on mount
   useEffect(() => {
@@ -276,26 +384,55 @@ export default function HomePage() {
       />
       {/* Decorative asymmetric blob with dramatic morphing - only on main page */}
       <div className="decorative-blob" aria-hidden="true"></div>
-      <div className="relative z-10 max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <div className="relative z-10 max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Hero Section */}
-        <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
+        <div className="grid lg:grid-cols-12 xl:grid-cols-4 gap-6 lg:gap-6 xl:gap-8">
+          {/* Left Sidebar - Streak Card */}
+          <div className="lg:col-span-3 xl:col-span-1">
+            <LeftSidePanel />
+          </div>
+
           {/* Main Content Area */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-6 xl:col-span-2 w-full max-w-full overflow-x-hidden">
             {/* Hero Header */}
             <section
               ref={heroRef}
-              className="text-center lg:text-left pt-4 sm:pt-8 pb-4 sm:pb-8 max-w-xl lg:mr-auto"
+              className="text-center lg:text-left pt-4 sm:pt-8 pb-4 sm:pb-8 w-full lg:max-w-xl xl:max-w-xl"
             >
               <h1 className="text-3xl sm:text-4xl lg:text-5xl leading-tight font-semibold text-gray-900 mb-4">
                 Launch Your AI Project &amp;&nbsp;Get Discovered
               </h1>
-              <p className="text-base sm:text-lg font-normal text-gray-900 mb-4 sm:mb-6 max-w-xl mx-auto lg:mx-0">
+              <p className="text-base sm:text-lg font-normal text-gray-900 mb-4 sm:mb-6 w-full lg:max-w-xl mx-auto lg:mx-0">
                 Submit your AI project and get early exposure, reach other AI builders and innovators, and showcase your innovation to the community.
               </p>
+              
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 items-center justify-center lg:justify-start">
+                <button
+                  onClick={handleLaunchProject}
+                  disabled={checkingVote}
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-black text-white border-2 border-black rounded-lg font-semibold text-xs no-underline transition duration-300 hover:-translate-y-1 hover:shadow-[0_4px_0_rgba(0,0,0,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black min-h-[48px] w-full sm:w-auto sm:min-w-[200px] uppercase disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
+                  aria-label="Launch your AI project"
+                >
+                  <PlusCircle 
+                    className="h-4 w-4"
+                    strokeWidth={2}
+                  />
+                  {checkingVote ? 'Checking...' : 'Launch a Project'}
+                </button>
+                <button
+                  onClick={() => setIsAutoSubmitModalOpen(true)}
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-900 border-2 border-gray-900 rounded-lg font-semibold text-xs no-underline transition duration-300 hover:-translate-y-1 hover:shadow-[0_4px_0_rgba(0,0,0,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900 min-h-[48px] w-full sm:w-auto sm:min-w-[200px] uppercase"
+                  aria-label="Learn about auto submit service"
+                >
+                  <Send className="h-4 w-4" strokeWidth={2} />
+                  Auto submit
+                </button>
+              </div>
             </section>
 
             {/* Best Weekly Products Section */}
-            <section ref={mainContentRef}>
+            <section ref={mainContentRef} id="projects-section">
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-medium text-gray-900">
@@ -464,11 +601,23 @@ export default function HomePage() {
           </div>
 
           {/* Right Sidebar */}
-          <div ref={sidebarRef} className="lg:col-span-1">
+          <div ref={sidebarRef} className="lg:col-span-3 xl:col-span-1">
             <RightSidePanel />
           </div>
         </div>
       </div>
+      
+      {/* Auto Submit Modal */}
+      <AutoSubmitModal
+        isOpen={isAutoSubmitModalOpen}
+        onClose={handleModalClose}
+      />
+      
+      {/* Vote Required Modal */}
+      <VoteRequiredModal
+        isOpen={isVoteRequiredModalOpen}
+        onClose={() => setIsVoteRequiredModalOpen(false)}
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { validateVote } from "../../libs/models/schemas.js";
 import { checkRateLimit, createRateLimitResponse, addSecurityHeaders, validation } from "../../libs/rateLimit.js";
 import { webhookEvents } from "../../libs/webhooks.js";
 import { getSession } from "../../libs/auth-supabase.js";
+import { updateUserStreak, checkAndUnlockRewards } from "../../libs/streaks.js";
 
 // POST /api/vote - Submit or remove a vote
 export async function POST(request) {
@@ -40,7 +41,7 @@ export async function POST(request) {
     });
 
     const body = await request.json();
-    const { appId, action } = body; // action: 'upvote' or 'remove'
+    const { appId, action, timezone } = body; // action: 'upvote' or 'remove', timezone: IANA timezone identifier
 
     if (!appId || !action) {
       return NextResponse.json(
@@ -57,6 +58,29 @@ export async function POST(request) {
     }
 
     const userId = session.user.id;
+
+    // Get user to check/update timezone
+    const user = await db.findOne("users", { id: userId });
+    
+    // If timezone is provided and different from stored timezone, update it
+    if (timezone && timezone !== user?.timezone) {
+      try {
+        await db.updateOne(
+          "users",
+          { id: userId },
+          {
+            $set: {
+              timezone: timezone,
+              updated_at: new Date(),
+            },
+          }
+        );
+        console.log(`Updated timezone for user ${userId} to ${timezone}`);
+      } catch (error) {
+        console.error(`Failed to update timezone for user ${userId}:`, error);
+        // Don't fail the vote if timezone update fails
+      }
+    }
 
     // Get the app to verify it exists and get competition info
     const app = await db.findOne("apps", { id: appId });
@@ -146,19 +170,23 @@ export async function POST(request) {
         );
       }
 
+      // Get user's vote multiplier (user already fetched above)
+      const voteMultiplier = user?.vote_multiplier || 1;
+
       // Create new vote
       const voteData = {
         user_id: userId,
         app_id: appId,
         weekly_competition_id: app.weekly_competition_id, // UUID reference
         vote_type: "upvote",
+        vote_weight: voteMultiplier, // Store multiplier in vote weight
         ip_address: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip"),
         user_agent: request.headers.get("user-agent"),
         // created_at is handled by DB defaults
       };
 
       await db.insertOne("votes", voteData);
-      voteChange = 1;
+      voteChange = voteMultiplier; // Apply multiplier to vote count
 
     } else if (action === "remove") {
       if (!existingVote) {
@@ -168,9 +196,12 @@ export async function POST(request) {
         );
       }
 
+      // For removals, we need to know the original vote weight
+      const originalVoteWeight = existingVote.vote_weight || 1;
+      
       // Remove existing vote
       await db.deleteOne("votes", { id: existingVote.id });
-      voteChange = -1;
+      voteChange = -originalVoteWeight; // Remove the original weighted vote
     }
 
     // Update app vote count atomically to prevent race conditions
