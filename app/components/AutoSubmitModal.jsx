@@ -90,22 +90,10 @@ export function AutoSubmitModal({ isOpen, onClose }) {
           {/* Description */}
           <p
             id="modal-description"
-            className="text-base text-gray-900 mb-4 leading-relaxed pr-5"
+            className="text-sm text-gray-900 mb-6 leading-relaxed pr-5"
           >
-            Submit to 120+ hand-picked directories with SubmitMy.Website — AI-prepared, human-reviewed listings.
+            120+ hand-picked directories — AI-prepared, human-reviewed listings.
           </p>
-
-          {/* Learn More Link */}
-          <div className="mb-6">
-            <a
-              href="https://www.submitmy.website/?ref=ailaunchspace"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-gray-600 hover:text-black underline inline-flex items-center gap-1"
-            >
-              Learn more about SubmitMy.Website
-            </a>
-          </div>
 
           {/* Benefits List */}
           <ul className="space-y-2 mb-8">

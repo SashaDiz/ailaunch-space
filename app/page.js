@@ -21,6 +21,7 @@ import { Rocket, Send, PlusCircle } from "iconoir-react";
 const alexIcon = "/assets/alex-icon.png";
 const codefastLogo = "/assets/codefa.st.png";
 const submitmywebsiteLogo = "/assets/submitmywebsite.png";
+const directorykitLogo = "/assets/directorykit.png";
 
 
 function ProjectCard({ project, onVote }) {
@@ -53,7 +54,7 @@ Follow my journey as I share lessons, wins, and experiments along the way!"
                 logo: submitmywebsiteLogo,
                 name: "SubmitMy.Website",
                 description:
-                  "Submit your startup to 120+ directories in one click. Boost your SEO and get more backlinks on autopilot.",
+                  "Submit your startup to 120+ directories in one click.",
                 url: "https://www.submitmy.website/?ref=ailaunchspace",
               }}
             />
@@ -62,8 +63,17 @@ Follow my journey as I share lessons, wins, and experiments along the way!"
                 logo: codefastLogo,
                 name: "Codefa.st",
                 description:
-                  "This course by Marc Lou helped me to build this launchpad. I strongly recommend it for begginers.",
+                  "The course that helped me build this launchpad. Great for beginners.",
                 url: "https://codefa.st/?via=ailaunch",
+              }}
+            />
+            <SponsorCard
+              sponsor={{
+                logo: directorykitLogo,
+                name: "DirectoryKit",
+                description:
+                  "Directory Boilerplate for Next.js.",
+                url: "https://directorykit.online/",
               }}
             />
           </div>
