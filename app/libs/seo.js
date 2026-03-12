@@ -328,17 +328,7 @@ Disallow: /auth/
 
 # Allow important pages
 Allow: /api/sitemap
-Allow: /api/robots
-
-# Block common bot spam
-User-agent: AhrefsBot
-Disallow: /
-
-User-agent: MJ12bot
-Disallow: /
-
-User-agent: SemrushBot
-Disallow: /`;
+Allow: /api/robots`;
 }
 
 // Extract keywords from content
