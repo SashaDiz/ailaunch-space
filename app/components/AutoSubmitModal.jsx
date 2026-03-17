@@ -2,10 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Xmark, CheckCircle, Send } from "iconoir-react";
+import { Xmark, CheckCircle, Rocket } from "iconoir-react";
 
 export const AUTO_SUBMIT_CHECKOUT_URL =
-  "https://www.submitmy.website/?ref=ailaunchspace";
+  "https://directory-launch.com/?ref=ailaunchspace";
 
 export function AutoSubmitModal({ isOpen, onClose }) {
   const [mounted, setMounted] = useState(false);
@@ -46,14 +46,14 @@ export function AutoSubmitModal({ isOpen, onClose }) {
   if (!isOpen || !mounted) return null;
 
   const benefits = [
-    "Save 72+ hours of manual work",
-    "120+ hand-picked directory submissions",
-    "AI-prepared, human-reviewed listings",
-    "Curated directories only — no spam or low-authority sites",
-    "Live dashboard to track submission progress",
-    "Complete backlink report included",
-    "Delivered in 30 days",
-    "Long-term SEO gains and higher Domain Rating",
+    "Ship in hours, not weeks",
+    "75+ pre-built React components",
+    "Stripe payments, auth, admin dashboard included",
+    "AI-friendly architecture (works with Claude, Cursor, Copilot)",
+    "100% TypeScript with Tailwind CSS",
+    "SEO-optimized with structured data",
+    "$249 one-time — no recurring fees",
+    "14-day money-back guarantee",
   ];
 
   const modalContent = (
@@ -76,7 +76,7 @@ export function AutoSubmitModal({ isOpen, onClose }) {
               id="modal-title"
               className="text-xl sm:text-2xl font-bold text-gray-900 pr-10"
             >
-              Submit Your Project to 120+ Directories in one click
+              Launch Your Own Directory Site in Hours
             </h2>
             <button
               onClick={onClose}
@@ -92,7 +92,7 @@ export function AutoSubmitModal({ isOpen, onClose }) {
             id="modal-description"
             className="text-sm text-gray-900 mb-6 leading-relaxed pr-5"
           >
-            120+ hand-picked directories — AI-prepared, human-reviewed listings.
+            Production-ready Next.js boilerplate for directories, marketplaces, and catalogs. Save millions of tokens on component generation.
           </p>
 
           {/* Benefits List */}
@@ -117,8 +117,8 @@ export function AutoSubmitModal({ isOpen, onClose }) {
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-black text-white rounded-lg font-semibold text-sm no-underline transition duration-300 hover:-translate-y-1 hover:shadow-[0_4px_0_rgba(0,0,0,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900 min-h-[48px] uppercase"
               onClick={onClose}
             >
-              <Send className="w-4 h-4" strokeWidth={2} />
-              Submit with SubmitMy.Website ($99)
+              <Rocket className="w-4 h-4" strokeWidth={2} />
+              Get DirectoryKit ($249)
             </a>
             <button
               onClick={onClose}

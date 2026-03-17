@@ -15,12 +15,11 @@ import { UmamiStats } from "./components/UmamiStats";
 import { useUser } from "./hooks/useUser";
 import { useRouter } from "next/navigation";
 
-import { Rocket, Send, PlusCircle } from "iconoir-react";
+import { Rocket, PlusCircle } from "iconoir-react";
 
 // Image paths - using static paths for Next.js Image component
 const alexIcon = "/assets/alex-icon.png";
 const codefastLogo = "/assets/codefa.st.png";
-const submitmywebsiteLogo = "/assets/submitmywebsite.png";
 const directorykitLogo = "/assets/directorykit.png";
 
 
@@ -51,11 +50,11 @@ Follow my journey as I share lessons, wins, and experiments along the way!"
           <div className="flex flex-col gap-4 w-full">
             <SponsorCard
               sponsor={{
-                logo: submitmywebsiteLogo,
-                name: "SubmitMy.Website",
+                logo: directorykitLogo,
+                name: "DirectoryKit",
                 description:
-                  "Submit your startup to 120+ directories in one click.",
-                url: "https://www.submitmy.website/?ref=ailaunchspace",
+                  "Launch your directory site in hours, not weeks. Next.js boilerplate with 75+ components.",
+                url: "https://directory-launch.com/?ref=ailaunchspace",
               }}
             />
             <SponsorCard
@@ -65,15 +64,6 @@ Follow my journey as I share lessons, wins, and experiments along the way!"
                 description:
                   "The course that helped me build this launchpad. Great for beginners.",
                 url: "https://codefa.st/?via=ailaunch",
-              }}
-            />
-            <SponsorCard
-              sponsor={{
-                logo: directorykitLogo,
-                name: "DirectoryKit",
-                description:
-                  "Directory Boilerplate for Next.js.",
-                url: "https://directorykit.online/",
               }}
             />
           </div>
@@ -433,10 +423,10 @@ export default function HomePage() {
                 <button
                   onClick={() => setIsAutoSubmitModalOpen(true)}
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-900 border-2 border-gray-900 rounded-lg font-semibold text-xs no-underline transition duration-300 hover:-translate-y-1 hover:shadow-[0_4px_0_rgba(0,0,0,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900 min-h-[48px] w-full sm:w-auto sm:min-w-[200px] uppercase"
-                  aria-label="Learn about auto submit service"
+                  aria-label="Build a directory site with DirectoryKit"
                 >
-                  <Send className="h-4 w-4" strokeWidth={2} />
-                  Auto submit
+                  <Rocket className="h-4 w-4" strokeWidth={2} />
+                  Build a Directory
                 </button>
               </div>
             </section>
