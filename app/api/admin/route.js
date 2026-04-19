@@ -245,8 +245,8 @@ async function getProjects(searchParams) {
       pagination: {
         page,
         limit,
-        total,
-        pages: Math.ceil(total / limit),
+        totalCount: total,
+        totalPages: Math.ceil(total / limit),
       },
     },
   });
