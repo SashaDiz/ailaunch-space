@@ -172,8 +172,8 @@ export default async function RootLayout({ children }) {
         )}
       </head>
       <body className="antialiased" suppressHydrationWarning={true}>
-        <PixelBackground />
         <Providers initialTheme={initialTheme}>
+          <PixelBackground />
           <div className="relative z-10">{children}</div>
           <BuildWithBadge />
         </Providers>
