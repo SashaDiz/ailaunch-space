@@ -554,7 +554,7 @@ export default function SettingsPage() {
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div 
-            className="fixed inset-0 bg-foreground/50 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm"
             onClick={() => {
               if (!isDeleting) {
                 setShowDeleteModal(false);

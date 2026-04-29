@@ -4,7 +4,6 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import {
   Rocket,
-  Bot,
   Globe,
   Home,
   Crown,
@@ -19,10 +18,8 @@ import {
   LayoutGrid,
   FileText,
   Trophy,
-  CheckCircle2,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { siteConfig } from "@/config/site.config";
 
 /** Icon names that can be passed from Server Components (serializable) */
 export type PricingIconName =
@@ -40,9 +37,7 @@ export type PricingIconName =
   | "Monitor"
   | "LayoutGrid"
   | "FileText"
-  | "Trophy"
-  | "Bot"
-  | "CheckCircle2";
+  | "Trophy";
 
 const ICON_MAP: Record<PricingIconName, LucideIcon> = {
   Globe,
@@ -60,8 +55,6 @@ const ICON_MAP: Record<PricingIconName, LucideIcon> = {
   LayoutGrid,
   FileText,
   Trophy,
-  Bot,
-  CheckCircle2,
 };
 
 export interface PricingPlanFeature {
@@ -82,7 +75,6 @@ export interface PricingPlan {
   limitations: string[];
   popular: boolean;
   cta: string;
-  externalLink?: string;
   /** Custom price label (e.g. "/month") — overrides default logic */
   priceLabel?: string;
   /** Show "Starts at $X/month" (e.g. for promote plan) */
@@ -107,9 +99,6 @@ export function PricingCard({
 }: PricingCardProps) {
   const router = useRouter();
   const handleClick = (e: React.MouseEvent) => {
-    if (plan.externalLink) {
-      return;
-    }
     e.preventDefault();
     if (plan.href) {
       router.push(plan.href);
@@ -146,7 +135,7 @@ export function PricingCard({
                 <span className="text-5xl font-bold text-foreground">
                   {plan.price === 0 ? "Free" : plan.price < 0 ? "Custom" : `$${plan.price}`}
                 </span>
-                {plan.price > 0 && plan.id !== "listbott" && (
+                {plan.price > 0 && (
                   <span className="text-muted-foreground ml-2 text-base">
                     {plan.priceLabel || "/ launch"}
                   </span>
@@ -216,62 +205,21 @@ export function PricingCard({
           )}
         </div>
 
-        {plan.externalLink ? (
-          <div className="w-full mt-auto">
-            <a
-              href={plan.externalLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full block"
-            >
-              <button
-                type="button"
-                className={`w-full py-3 px-6 rounded-[var(--radius)] font-semibold text-sm no-underline transition duration-300 hover:-translate-y-1 hover:shadow-[0_4px_0_rgba(0,0,0,1)] flex items-center justify-center gap-2 ${
-                  plan.popular
-                    ? "bg-primary text-primary-foreground border border-primary"
-                    : "bg-background text-foreground border border-foreground"
-                }`}
-                style={plan.popular ? { boxShadow: "var(--card-shadow)" } : undefined}
-              >
-                {plan.id === "listbott" && (
-                  <Bot className="w-4 h-4" strokeWidth={2} />
-                )}
-                {plan.popular && plan.id !== "listbott" && (
-                  <Rocket className="w-4 h-4" strokeWidth={2} />
-                )}
-                {plan.cta}
-              </button>
-            </a>
-            {plan.id === "listbott" && (
-              <div className="mt-3 text-center">
-                <a
-                  href={`https://listingbott.com/?ref=${siteConfig.refParameter}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-muted-foreground hover:text-foreground underline"
-                >
-                  Learn more about ListingBott
-                </a>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="w-full mt-auto">
-            <button
-              type="button"
-              onClick={handleClick}
-              className={`w-full py-3 px-6 rounded-[var(--radius)] font-semibold text-sm no-underline transition duration-300 hover:-translate-y-1 hover:shadow-[0_4px_0_rgba(0,0,0,1)] flex items-center justify-center gap-2 ${
-                plan.popular
-                  ? "bg-primary text-primary-foreground border border-primary"
-                  : "bg-background text-foreground border border-foreground"
-              }`}
-              style={plan.popular ? { boxShadow: "var(--card-shadow)" } : undefined}
-            >
-              {plan.popular && <Rocket className="w-4 h-4" strokeWidth={2} />}
-              {plan.cta}
-            </button>
-          </div>
-        )}
+        <div className="w-full mt-auto">
+          <button
+            type="button"
+            onClick={handleClick}
+            className={`w-full py-3 px-6 rounded-[var(--radius)] font-semibold text-sm no-underline transition duration-300 hover:-translate-y-1 hover:shadow-[0_4px_0_rgba(0,0,0,1)] flex items-center justify-center gap-2 ${
+              plan.popular
+                ? "bg-primary text-primary-foreground border border-primary"
+                : "bg-background text-foreground border border-foreground"
+            }`}
+            style={plan.popular ? { boxShadow: "var(--card-shadow)" } : undefined}
+          >
+            {plan.popular && <Rocket className="w-4 h-4" strokeWidth={2} />}
+            {plan.cta}
+          </button>
+        </div>
       </div>
     </div>
   );

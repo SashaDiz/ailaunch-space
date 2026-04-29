@@ -121,83 +121,68 @@ export async function downgradeToNofollow(projectId, adminId) {
 }
 
 /**
- * Award dofollow links to weekly competition winners
- * @param {string} competitionId - The competition ID (e.g., "2024-W01")
- * @returns {Promise<Array>} Array of updated projects
+ * Grant dofollow to a Standard project after admin approval.
+ * Requires `backlink_verified === true` (set by /api/verify-badge).
  */
-export async function awardDofollowToWeeklyWinners(competitionId) {
-  // Get the competition
-  const competition = await db.findOne("competitions", {
-    competition_id: competitionId,
-    type: "weekly",
-  });
+export async function grantDofollowOnApproval(projectId, adminId) {
+  const project = await db.findOne("apps", { id: projectId });
 
-  if (!competition) {
-    throw new Error("Competition not found");
+  if (!project) {
+    throw new Error("Project not found");
   }
 
-  // Get top 3 standard plan submissions by votes
-  const topThree = await db.find("apps", {
-    weekly_competition_id: competition.id, // UUID reference, not TEXT competition_id
-    plan: "standard", // Only standard (FREE) plans compete for dofollow
-    status: "live",
-  }, {
-    sort: { upvotes: -1, premium_badge: -1, created_at: -1 }, // Sort by upvotes DESC, then premium badge, then date DESC
-    limit: 3
-  });
-
-  if (topThree.length === 0) {
-    return [];
+  if (project.plan !== "standard") {
+    throw new Error("grantDofollowOnApproval only applies to standard plan projects");
   }
 
-  const updatedProjects = [];
-
-  // Award dofollow to each winner
-  for (let i = 0; i < topThree.length; i++) {
-    const position = i + 1; // 1, 2, or 3
-    const project = topThree[i];
-
-    const updateData = {
-      link_type: "dofollow",
-      dofollow_status: true,
-      dofollow_reason: "weekly_winner",
-      dofollow_awarded_at: new Date(),
-      weekly_winner: true,
-      weekly_position: position,
-      // updated_at is handled by DB triggers
-    };
-
-    await db.updateOne("apps", { id: project.id }, { $set: updateData });
-
-    // Log the action
-    await logLinkTypeChange(
-      project.id,
-      "nofollow",
-      "dofollow",
-      "system",
-      `weekly_winner_position_${position}`
-    );
-
-    updatedProjects.push({ ...project, ...updateData });
+  if (!project.backlink_verified) {
+    throw new Error("Cannot grant dofollow: badge has not been verified for this project");
   }
 
-  // Update competition with winner IDs
-  await db.updateOne(
-    "competitions",
-    { id: competition.id },
-    {
-      $set: {
-        status: "completed",
-        completed_at: new Date(),
-        winner_id: topThree[0].id,
-        runner_up_ids: topThree.slice(1).map(d => d.id),
-        top_three_ids: topThree.map(d => d.id),
-        // updated_at is handled by DB triggers
-      },
-    }
-  );
+  if (project.link_type === "dofollow") {
+    return project;
+  }
 
-  return updatedProjects;
+  const updateData = {
+    link_type: "dofollow",
+    dofollow_status: true,
+    dofollow_reason: "verified_badge",
+    dofollow_awarded_at: new Date(),
+  };
+
+  await db.updateOne("apps", { id: projectId }, { $set: updateData });
+  await logLinkTypeChange(projectId, project.link_type || "nofollow", "dofollow", adminId, "verified_badge");
+
+  return { ...project, ...updateData };
+}
+
+/**
+ * Revert a Standard project's dofollow when its badge is no longer detected.
+ */
+export async function revokeDofollowForMissingBadge(projectId) {
+  const project = await db.findOne("apps", { id: projectId });
+
+  if (!project) {
+    throw new Error("Project not found");
+  }
+
+  if (project.link_type !== "dofollow" || project.dofollow_reason !== "verified_badge") {
+    return project;
+  }
+
+  const updateData = {
+    link_type: "nofollow",
+    dofollow_status: false,
+    dofollow_reason: null,
+    dofollow_awarded_at: null,
+    backlink_verified: false,
+    backlink_last_checked_at: new Date(),
+  };
+
+  await db.updateOne("apps", { id: projectId }, { $set: updateData });
+  await logLinkTypeChange(projectId, "dofollow", "nofollow", "system", "badge_removed");
+
+  return { ...project, ...updateData };
 }
 
 /**
@@ -205,13 +190,14 @@ export async function awardDofollowToWeeklyWinners(competitionId) {
  * @returns {Promise<Object>} Link type statistics
  */
 export async function getLinkTypeStats() {
-  const [totalProjects, dofollowCount, nofollowCount, weeklyWinners, manualUpgrades, premiumDofollow] = await Promise.all([
+  const [totalProjects, dofollowCount, nofollowCount, verifiedBadge, manualUpgrades, premiumDofollow, weeklyWinners] = await Promise.all([
     db.count("apps", { status: "live" }),
     db.count("apps", { status: "live", link_type: "dofollow" }),
     db.count("apps", { status: "live", link_type: "nofollow" }),
-    db.count("apps", { status: "live", dofollow_reason: "weekly_winner" }),
+    db.count("apps", { status: "live", dofollow_reason: "verified_badge" }),
     db.count("apps", { status: "live", dofollow_reason: "manual_upgrade" }),
     db.count("apps", { status: "live", dofollow_reason: "premium_plan" }),
+    db.count("apps", { status: "live", dofollow_reason: "weekly_winner" }),
   ]);
 
   return {
@@ -219,9 +205,10 @@ export async function getLinkTypeStats() {
     dofollow: dofollowCount,
     nofollow: nofollowCount,
     breakdown: {
-      weekly_winners: weeklyWinners,
+      verified_badge: verifiedBadge,
       manual_upgrades: manualUpgrades,
       premium_plans: premiumDofollow,
+      weekly_winners: weeklyWinners,
     },
     percentages: {
       dofollow: totalProjects > 0 ? ((dofollowCount / totalProjects) * 100).toFixed(2) : 0,
@@ -277,10 +264,10 @@ export function checkDofollowEligibility(project) {
     };
   }
 
-  if (project.weekly_winner) {
+  if (project.link_type === "dofollow" && project.dofollow_reason === "verified_badge") {
     return {
       eligible: true,
-      reason: `Weekly winner (Position ${project.weekly_position})`,
+      reason: "Verified badge embedded on user's site",
       requiresAction: false,
     };
   }
@@ -293,9 +280,17 @@ export function checkDofollowEligibility(project) {
     };
   }
 
+  if (project.plan === "standard" && project.backlink_verified) {
+    return {
+      eligible: true,
+      reason: "Badge verified - awaiting admin approval",
+      requiresAction: true,
+    };
+  }
+
   return {
     eligible: false,
-    reason: "Standard plan - requires weekly win or manual upgrade",
+    reason: "Standard plan - install our badge on your site to qualify for dofollow",
     requiresAction: true,
   };
 }

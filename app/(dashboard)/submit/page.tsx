@@ -123,37 +123,27 @@ const PLANS = {
     name: "Standard Launch",
     price: 0,
     currency: "USD",
-    description: "Perfect for new projects and startups",
+    description: "Free dofollow backlink in exchange for our badge",
     icon: Globe,
     features: [
-      { text: "Live on homepage for 7 days", icon: Home },
-      { text: "15 slots weekly (limited availability)", icon: Crown },
-      { text: "Badge for top 3 ranking products", icon: Trophy },
-      {
-        text:
-          "Dofollow backlink from DR36+ domain (only if you win Top 3 & place embed badge)",
-        icon: LinkIcon,
-      },
-      { text: "Standard launch queue", icon: Clock },
-      { text: "Basic community exposure", icon: Megaphone },
+      { text: "Free dofollow backlink — install our badge on your site, we verify automatically", icon: LinkIcon },
+      { text: "Admin review (24–48h)", icon: Clock },
+      { text: "Listed in the directory alongside paid projects", icon: Megaphone },
     ],
     limitations: [],
-    popular: false, // Premium is now the popular option
+    popular: false,
   },
   premium: {
     id: "premium",
     name: "Premium Launch",
-    price: 11.99,
+    price: 4.99,
     currency: "USD",
-    description: "Maximum exposure for established AI projects",
+    description: "Pay once, no badge required, featured at the top",
     icon: Medal,
     features: [
-      { text: "Extended homepage exposure (14 days)", icon: Home },
-      { text: "Priority placement in top categories", icon: Crown },
-      { text: "Badge for top 3 ranking products", icon: Trophy },
-      { text: "Guaranteed dofollow backlink from DR36+ domain (automatic, no competition needed)", icon: LinkIcon },
-      { text: "Skip the queue (10 extra slots weekly)", icon: Clock },
-      { text: "Enhanced social media promotion", icon: Megaphone },
+      { text: "Guaranteed dofollow backlink — no badge required", icon: LinkIcon },
+      { text: "Featured placement above free listings", icon: Crown },
+      { text: "Priority review (skip the standard queue)", icon: Clock },
       { text: "Premium badge for credibility", icon: Star },
       { text: "Featured in newsletter to subscribers", icon: Rocket },
     ],
@@ -607,21 +597,20 @@ function ProjectInfoStep({
                   <span className="text-sm font-medium">Pricing Model</span>
                 </div>
                 <div className="relative inline-flex items-center bg-muted rounded-lg p-1 w-full">
-                  <div 
-                    className="absolute top-1 bottom-1 w-1/3 bg-card rounded-md shadow-sm transition-transform duration-200 ease-in-out"
+                  <div
+                    className="absolute top-1 bottom-1 w-[calc((100%-0.5rem)/3)] bg-primary rounded-md shadow-sm transition-transform duration-200 ease-in-out"
                     style={{
-                      transform: formData.pricing === "Free" 
-                        ? "translateX(0)" 
-                        : formData.pricing === "Freemium" 
-                        ? "translateX(100%)" 
+                      transform: formData.pricing === "Free"
+                        ? "translateX(0)"
+                        : formData.pricing === "Freemium"
+                        ? "translateX(100%)"
                         : "translateX(200%)",
-                      backgroundColor: formData.pricing ? "#000000" : "#000000"
                     }}
                   />
                   {["Free", "Freemium", "Paid"].map((option) => (
                     <label
                       key={option}
-                      className="relative flex-1 text-center cursor-pointer transition-colors duration-200"
+                      className="relative flex-1 text-center cursor-pointer"
                     >
                       <input
                         type="radio"
@@ -636,12 +625,9 @@ function ProjectInfoStep({
                       <span
                         className={`block py-2 px-4 text-sm font-medium rounded-md transition-colors duration-200 ${
                           formData.pricing === option
-                            ? "text-background"
+                            ? "text-primary-foreground"
                             : "text-muted-foreground hover:text-foreground"
                         }`}
-                        style={{
-                          color: formData.pricing === option ? 'hsl(var(--background))' : undefined
-                        }}
                       >
                         {option}
                       </span>
@@ -1992,9 +1978,9 @@ function SubmitPageContent() {
           ...formData,
           screenshots: (formData.screenshots || []).filter(Boolean),
           approved: false, // Default to unapproved as per spec
-          backlink_verified: null,
+          backlink_verified: badgeVerified,
           payment_status: false, // Standard plans don't require payment
-          dofollow_status: false, // Will be set to true after approval for Premium plans
+          dofollow_status: false, // Granted by admin on approval if backlink_verified is true
         };
 
         const response = await fetch("/api/projects", {
@@ -2214,6 +2200,24 @@ function SubmitPageContent() {
           <div className="p-6">
             {renderStepContent()}
 
+            {/* Badge verification — required for Standard plan to earn dofollow */}
+            {currentStep === STEPS.length && formData.plan === "standard" && !isEditMode && (
+              <div className="mt-8 pt-6 border-t border-border">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-foreground mb-1">
+                    Embed our badge on your site
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Standard listings get a free dofollow backlink in exchange for displaying our badge on your website. Paste the code below on your homepage, then click Verify. Submit unlocks once verification passes.
+                  </p>
+                </div>
+                <FeaturedBadgeEmbed
+                  websiteUrl={formData.website_url}
+                  onVerificationComplete={(ok: boolean) => setBadgeVerified(ok)}
+                />
+              </div>
+            )}
+
             {/* Navigation Buttons */}
             <div className="flex justify-between items-center mt-8 pt-6 border-t border-border">
               <div>
@@ -2286,7 +2290,7 @@ function SubmitPageContent() {
                         : isEditMode
                         ? "Update Project"
                         : formData.plan === "premium"
-                        ? "Proceed to Payment ($11.99)"
+                        ? "Proceed to Payment ($4.99)"
                         : "Submit Project"}
                     </button>
                   </div>

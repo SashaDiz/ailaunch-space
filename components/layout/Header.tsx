@@ -406,7 +406,7 @@ export function Header() {
         <div className="fixed inset-0 z-[100] lg:hidden">
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-foreground/50 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm"
             onClick={closeMobileMenu}
           />
 

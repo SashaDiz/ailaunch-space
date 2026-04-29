@@ -5,7 +5,11 @@ import { Copy, CheckCircle2, Loader2, AlertCircle, CheckCircle } from "lucide-re
 import toast from "react-hot-toast";
 import { siteConfig } from "@/config/site.config";
 
-const siteDomain = siteConfig.url.replace(/https?:\/\//, '');
+// Always use the production URL for the embed code so users don't paste a localhost link
+// when copying the snippet during local development.
+const PUBLIC_SITE_URL = "https://ailaunch.space";
+const PUBLIC_SITE_NAME = "AILaunchSpace";
+const siteDomain = "ailaunch.space";
 
 /**
  * FeaturedBadgeEmbed Component
@@ -23,10 +27,10 @@ export default function FeaturedBadgeEmbed({
   const [verificationResult, setVerificationResult] = useState(null);
 
   const badgePath = `/assets/Badges/featured${isDarkTheme ? '-dark' : ''}.svg`;
-  const badgeUrl = `${siteConfig.url}${badgePath}`;
+  const badgeUrl = `${PUBLIC_SITE_URL}${badgePath}`;
 
-  const embedCode = `<a href="${siteConfig.url}/" target="_blank" rel="noopener noreferrer" style="text-decoration: none; display: inline-block;">
-  <img src="${badgeUrl}" alt="Featured on ${siteDomain}" width="225" height="61" style="display: block;" />
+  const embedCode = `<a href="${PUBLIC_SITE_URL}/" target="_blank" rel="noopener noreferrer" style="text-decoration: none; display: inline-block;">
+  <img src="${badgeUrl}" alt="Featured on ${PUBLIC_SITE_NAME}" width="225" height="61" style="display: block;" />
 </a>`;
 
   const handleCopyCode = async () => {
@@ -156,7 +160,7 @@ export default function FeaturedBadgeEmbed({
       {/* Badge Preview */}
       <div className="mb-6">
         <p className="text-muted-foreground font-medium mb-3">Badge preview:</p>
-        <div className={`inline-block p-4 rounded-xl border border-border ${isDarkTheme ? 'bg-foreground/90' : 'bg-muted'}`}>
+        <div className="inline-block p-4 rounded-xl border border-border bg-transparent">
           <a
             href={`${siteConfig.url}/`}
             target="_blank"
@@ -242,9 +246,10 @@ export default function FeaturedBadgeEmbed({
       {/* Info Box */}
       <div className="mt-6 p-4 bg-foreground/5 border border-foreground/20 rounded-xl">
         <p className="text-sm text-foreground font-medium">
-          <strong>Why is this required?</strong> Adding a dofollow badge helps both of us!
-          You get a high-quality backlink from {siteDomain}, and we grow together.
-          Make sure the link does NOT have <code className="bg-muted px-1 rounded">rel="nofollow"</code>.
+          <strong>Why is this required?</strong> Standard listings are free in exchange for a
+          dofollow link back to {PUBLIC_SITE_NAME}. We verify the badge automatically before
+          your project goes live, and re-check periodically. Make sure the link does NOT have{" "}
+          <code className="bg-muted px-1 rounded">rel="nofollow"</code>.
         </p>
       </div>
     </div>

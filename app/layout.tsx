@@ -3,6 +3,7 @@ import Script from "next/script";
 import { JetBrains_Mono } from "next/font/google";
 import { Providers } from '@/components/shared/Providers';
 import { PixelBackground } from '@/components/shared/PixelBackground';
+import { BuildWithBadge } from '@/components/layout/BuildWithBadge';
 import { siteConfig } from '@/config/site.config';
 import { analyticsConfig } from '@/config/analytics.config';
 import { getSupabaseAdmin } from '@/lib/supabase/client';
@@ -174,6 +175,7 @@ export default async function RootLayout({ children }) {
         <PixelBackground />
         <Providers initialTheme={initialTheme}>
           <div className="relative z-10">{children}</div>
+          <BuildWithBadge />
         </Providers>
         {/* Google Analytics */}
         {analyticsConfig.googleAnalytics && (

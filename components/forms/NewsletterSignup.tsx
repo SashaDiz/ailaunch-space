@@ -286,7 +286,7 @@ export function NewsletterPopup({
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
       <Card className="max-w-md w-full relative shadow-xl">
         <Button
           onClick={handleClose}

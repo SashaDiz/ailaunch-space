@@ -828,7 +828,7 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
       {/* Screenshot Gallery Modal */}
       {isGalleryOpen && project.screenshots && project.screenshots.length > 0 && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/70 px-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 px-4"
           role="dialog"
           aria-modal="true"
           aria-label="Project screenshots"
@@ -983,7 +983,7 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
       {/* Post-submission Auto-Submit Modal */}
       {showAutoSubmitModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/60 backdrop-blur-sm px-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="auto-submit-modal-title"

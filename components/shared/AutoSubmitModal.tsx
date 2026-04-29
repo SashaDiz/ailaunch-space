@@ -46,7 +46,7 @@ export function AutoSubmitModal({ isOpen, onClose }) {
 
   const modalContent = (
     <div
-      className="fixed inset-0 bg-foreground/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300"
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300"
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"

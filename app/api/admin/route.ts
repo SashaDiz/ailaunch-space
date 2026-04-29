@@ -907,6 +907,15 @@ async function approveProject(request, session) {
       updateData.homepage_end_date = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
     }
 
+    // Standard plan: grant dofollow if user verified our badge on their site.
+    // Otherwise the project goes live with nofollow until they install/verify.
+    if (project.plan === 'standard' && project.backlink_verified === true) {
+      updateData.link_type = 'dofollow';
+      updateData.dofollow_status = true;
+      updateData.dofollow_reason = 'verified_badge';
+      updateData.dofollow_awarded_at = new Date();
+    }
+
     // If premium plan, set premium badge and dofollow status
     // BUT only if payment was completed - premium projects without payment should remain nofollow
     if (project.plan === 'premium' && project.payment_status === true) {

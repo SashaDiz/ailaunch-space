@@ -22,27 +22,27 @@ import {
 const faqSchemaData = [
   {
     question: `What is ${siteConfig.name} and how does it work?`,
-    answer: `${siteConfig.name} is a ${siteConfig.tagline.toLowerCase()}. Submit your directory or project, get valuable backlinks, and compete for weekly recognition. Think Product Hunt but specifically for directories and tiny projects. Your submission goes live on the homepage for 7 days (14 days for Premium).`,
+    answer: `${siteConfig.name} is a ${siteConfig.tagline.toLowerCase()}. Submit your project, get a dofollow backlink, and reach makers browsing the directory. Two ways in: install our badge on your site for a free listing, or pay once for a featured placement at the top.`,
   },
   {
     question: "What information do you need for my submission?",
-    answer: "We need: project name and website URL, short description (10-200 chars) and full description (50-3000 chars), category selection and logo URL, contact email. Optional: screenshots, video URL, maker details, and Twitter handle. All submissions go through a review process before going live.",
+    answer: "We need: project name and website URL, short description (10-200 chars) and full description (50-3000 chars), category selection and logo URL, contact email. Optional: screenshots, video URL, maker details, and Twitter handle. All submissions go through admin review before going live.",
   },
   {
-    question: "What are the different launch plans available?",
-    answer: "Standard Launch (FREE): 15 shared weekly slots, 7 days on homepage, can earn dofollow backlinks by winning top 3. Premium Launch ($19): Guaranteed dofollow backlinks, extended 14-day homepage exposure, skips the queue, premium badge and priority placement, 10 dedicated slots beyond shared ones.",
+    question: "What are the two ways to get listed?",
+    answer: "Standard (FREE): install our badge on your site → we verify automatically → admin approves → you get a dofollow backlink. Premium ($4.99 one-time): pay, no badge required, featured placement above free listings, priority review.",
   },
   {
-    question: "What's the difference between Standard and Premium submissions?",
-    answer: "Standard (FREE): 15 shared weekly slots, nofollow backlink by default, can earn dofollow plus badge if wins top 3, 7 days on homepage. Premium ($19): Guaranteed dofollow backlink by default, skips review queue, premium badge and priority placement, extended 14-day homepage exposure, 10 dedicated slots beyond shared ones.",
+    question: "What's the difference between Standard and Premium?",
+    answer: "Standard (FREE) requires you to embed our badge on your site to qualify for the dofollow backlink. Premium ($4.99) is a one-time payment that gives you a guaranteed dofollow backlink with no badge required, featured placement above free listings, and priority review.",
   },
   {
-    question: "Can I upgrade my Standard (free) launch to Premium?",
-    answer: "Yes! You can upgrade your Standard launch to Premium at any time from your dashboard. When you upgrade, your submission will receive guaranteed dofollow backlinks, premium badge and priority placement, and extended 14-day homepage exposure.",
+    question: "Can I upgrade my Standard (free) submission to Premium?",
+    answer: "Yes — you can upgrade from your dashboard at any time. Upgrading removes the badge requirement and moves your listing to the featured placement above free listings.",
   },
   {
     question: "How long does the submission review process take?",
-    answer: "Standard Submissions are typically reviewed within 24-48 hours and enter the standard queue. Premium Submissions get priority review and skip the queue entirely. All submissions must be approved by our team before going live on the homepage.",
+    answer: "Standard submissions are typically reviewed within 24-48 hours after the badge is verified. Premium submissions skip the queue and get priority review. All submissions must be approved by our team before going live.",
   },
   {
     question: "How does the draft system work for Premium submissions?",
@@ -70,7 +70,7 @@ const faqSections = [
   {
     question: `What is ${siteConfig.name} and how does it work?`,
     answer:
-          `${siteConfig.name} is a ${siteConfig.tagline.toLowerCase()}. Submit your directory or project, get valuable backlinks, and compete for weekly recognition. Think Product Hunt but specifically for directories and tiny projects. Your submission goes live on the homepage for 7 days (14 days for Premium).`,
+          `${siteConfig.name} is a ${siteConfig.tagline.toLowerCase()}. Submit your project, get a dofollow backlink, and reach makers browsing the directory. Two ways in: install our badge on your site for a free listing, or pay once for a featured placement at the top.`,
       },
       {
         question: "What information do you need for my submission?",
@@ -121,13 +121,13 @@ const faqSections = [
               <ul className="space-y-1.5 text-sm text-muted-foreground ml-7">
                 <li>• 15 shared weekly slots</li>
                 <li>• 7 days on homepage</li>
-                <li>• Can earn dofollow backlinks by winning top 3</li>
+                <li>• Free dofollow backlink in exchange for installing our badge on your site (we verify, admin approves)</li>
               </ul>
             </div>
             <div className="bg-foreground rounded-xl p-4 border-2 border-foreground">
               <div className="flex items-center gap-2 mb-2">
                 <Crown className="w-5 h-5 text-background" />
-                <h4 className="font-semibold text-background">Premium Launch ($19)</h4>
+                <h4 className="font-semibold text-background">Premium Launch ($4.99)</h4>
               </div>
               <ul className="space-y-1.5 text-sm text-background ml-7">
                 <li>• Guaranteed dofollow backlinks</li>
@@ -157,11 +157,11 @@ const faqSections = [
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-muted-foreground/60 mt-0.5 flex-shrink-0" />
-                    <span>Nofollow backlink by default</span>
+                    <span>Free dofollow backlink — install our badge on your site, we verify automatically</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-muted-foreground/60 mt-0.5 flex-shrink-0" />
-                    <span>Can earn dofollow + badge if wins top 3 (place embed badge on your website required)</span>
+                    <span>Submit button stays disabled until your badge passes verification</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-muted-foreground/60 mt-0.5 flex-shrink-0" />
@@ -172,12 +172,12 @@ const faqSections = [
               <div className="bg-foreground rounded-xl p-4 border-2 border-foreground">
                 <h4 className="font-semibold text-background mb-3 flex items-center gap-2">
                   <Crown className="w-4 h-4" />
-                  Premium ($19)
+                  Premium ($4.99)
                 </h4>
                 <ul className="space-y-2 text-sm text-background">
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-background mt-0.5 flex-shrink-0" />
-                    <span>Guaranteed dofollow backlink by default</span>
+                    <span>Guaranteed dofollow backlink by default — no badge required</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-background mt-0.5 flex-shrink-0" />
@@ -199,7 +199,7 @@ const faqSections = [
               </div>
             </div>
             <p className="text-muted-foreground text-sm pt-2">
-              Both plans can earn badges for top 3 ranking.
+              Both plans compete for top 3 weekly recognition. Standard projects must keep our badge embedded on their site to retain the dofollow link — we re-verify periodically.
             </p>
           </div>
         ),

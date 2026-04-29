@@ -21,7 +21,7 @@ export const advertisingConfig = {
     /** Polar discount ID to apply when all three placements are selected */
     allThreeDiscountCouponId: process.env.POLAR_DISCOUNT_ID_PROMO_ALL_THREE || null,
     /** Minimum placement price (used for "starts at" on pricing page) */
-    minPricePerMonth: 19,
+    minPricePerMonth: 9,
     placements: {
       banner: {
         id: 'banner',
@@ -43,7 +43,7 @@ export const advertisingConfig = {
         id: 'detail_page',
         name: 'Project Page Ad Card',
         description: 'Promoted card in the sidebar of project detail pages',
-        pricePerMonth: 19,
+        pricePerMonth: 9,
         priceId: process.env.POLAR_PRODUCT_ID_PROMO_DETAIL || null,
         maxActive: 2,
       },

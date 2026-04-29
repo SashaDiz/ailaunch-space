@@ -189,6 +189,8 @@ CREATE TABLE IF NOT EXISTS public.apps (
   plan TEXT NOT NULL CHECK (plan IN ('standard', 'premium')),
   backlink_url TEXT,
   backlink_verified BOOLEAN DEFAULT false,
+  backlink_verified_at TIMESTAMP WITH TIME ZONE,
+  backlink_last_checked_at TIMESTAMP WITH TIME ZONE,
 
   -- Approval system
   approved BOOLEAN DEFAULT false,
@@ -197,7 +199,7 @@ CREATE TABLE IF NOT EXISTS public.apps (
   -- Link type management
   dofollow_status BOOLEAN DEFAULT false,
   link_type TEXT DEFAULT 'nofollow' CHECK (link_type IN ('nofollow', 'dofollow')),
-  dofollow_reason TEXT CHECK (dofollow_reason IN ('weekly_winner', 'manual_upgrade', 'premium_plan')),
+  dofollow_reason TEXT CHECK (dofollow_reason IN ('verified_badge', 'manual_upgrade', 'premium_plan', 'weekly_winner')),
   dofollow_awarded_at TIMESTAMP WITH TIME ZONE,
 
   -- Premium features
