@@ -26,7 +26,7 @@ export default function FeaturedBadgeEmbed({
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationResult, setVerificationResult] = useState(null);
 
-  const badgePath = `/assets/Badges/featured${isDarkTheme ? '-dark' : ''}.svg`;
+  const badgePath = `/assets/badges/featured${isDarkTheme ? '-dark' : ''}.svg`;
   const badgeUrl = `${PUBLIC_SITE_URL}${badgePath}`;
 
   const embedCode = `<a href="${PUBLIC_SITE_URL}/" target="_blank" rel="noopener noreferrer" style="text-decoration: none; display: inline-block;">
