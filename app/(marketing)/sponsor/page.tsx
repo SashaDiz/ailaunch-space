@@ -96,7 +96,7 @@ function SponsorPageContent() {
   // Success state
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-card flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <Card className="max-w-md w-full mx-4">
           <CardContent className="p-8 text-center">
             <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
@@ -116,7 +116,7 @@ function SponsorPageContent() {
   // Canceled state
   if (isCanceled) {
     return (
-      <div className="min-h-screen bg-card flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <Card className="max-w-md w-full mx-4">
           <CardContent className="p-8 text-center">
             <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
@@ -134,9 +134,9 @@ function SponsorPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-card">
+    <div className="min-h-screen bg-transparent">
       {/* Hero */}
-      <div className="bg-card py-8 pt-16">
+      <div className="bg-transparent py-8 pt-16">
         <div className="container-classic text-center">
           <div className="mb-8">
             <div className="inline-flex items-center justify-center px-4 py-2 text-foreground rounded-full font-semibold text-sm bg-muted">

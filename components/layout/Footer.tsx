@@ -8,7 +8,7 @@ import { siteConfig } from "@/config/site.config";
 
 export function Footer() {
   return (
-    <footer className="bg-background-muted border-t border-border">
+    <footer className="bg-transparent border-t border-border">
       <div className="container-classic py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
@@ -125,7 +125,7 @@ export function Footer() {
                   href="https://alexanderosso.com/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-foreground transition-colors underline-offset-4 hover:underline"
+                  className="text-primary font-semibold transition-colors underline-offset-4 hover:underline hover:text-primary/80"
                 >
                   Alex Osso
                 </a>

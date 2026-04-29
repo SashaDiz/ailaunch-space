@@ -252,7 +252,7 @@ export default function EditProjectPage() {
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2">Project not found</h2>
           <p className="text-muted-foreground mb-4">
@@ -268,7 +268,7 @@ export default function EditProjectPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-transparent">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-8">

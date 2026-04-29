@@ -1,12 +1,20 @@
 import "./globals.css";
 import Script from "next/script";
+import { JetBrains_Mono } from "next/font/google";
 import { Providers } from '@/components/shared/Providers';
+import { PixelBackground } from '@/components/shared/PixelBackground';
 import { siteConfig } from '@/config/site.config';
 import { analyticsConfig } from '@/config/analytics.config';
 import { getSupabaseAdmin } from '@/lib/supabase/client';
 import { buildThemeInlineCSS } from '@/lib/theme-utils';
 import { getLocale } from 'next-intl/server';
 import { i18nConfig } from '@/config/i18n.config';
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-jetbrains',
+  display: 'swap',
+});
 
 const fullTitle = `${siteConfig.name} - ${siteConfig.tagline}`;
 
@@ -128,14 +136,13 @@ export default async function RootLayout({ children }) {
   };
 
   return (
-    <html lang={locale} className="scroll-smooth" data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html
+      lang={locale}
+      className={`${jetbrainsMono.variable} scroll-smooth`}
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+    >
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Lato:ital,wght@0,300;0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Merriweather:wght@400;700&family=Montserrat:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&family=Oxanium:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Syne:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet"
-        />
         <link rel="icon" href={siteConfig.favicon} sizes="any" />
         <link rel="icon" href="/assets/favicon/favicon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/assets/favicon/apple-touch-icon.png" />
@@ -164,8 +171,9 @@ export default async function RootLayout({ children }) {
         )}
       </head>
       <body className="antialiased" suppressHydrationWarning={true}>
+        <PixelBackground />
         <Providers initialTheme={initialTheme}>
-          {children}
+          <div className="relative z-10">{children}</div>
         </Providers>
         {/* Google Analytics */}
         {analyticsConfig.googleAnalytics && (

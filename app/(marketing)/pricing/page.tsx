@@ -120,9 +120,9 @@ const plans = [
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-card">
+    <div className="min-h-screen bg-transparent">
       {/* Hero Section */}
-      <div className="bg-card py-8 pt-16">
+      <div className="bg-transparent py-8 pt-16">
         <div className="container-classic text-center">
           <div className="mb-8">
             <div className="inline-flex items-center justify-center px-4 py-2 text-foreground rounded-full font-semibold text-sm bg-muted">

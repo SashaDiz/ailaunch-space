@@ -114,7 +114,7 @@ export default function PublicProfilePage() {
 
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-transparent">
       <div className="container-classic py-8">
         {/* Breadcrumb */}
         <Breadcrumb className="mb-6">

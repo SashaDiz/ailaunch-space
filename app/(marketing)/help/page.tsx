@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function HelpPage() {
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-transparent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">Help Center</h1>

@@ -43,14 +43,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (loading || checking || !isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="relative z-10 min-h-screen flex items-center justify-center bg-background">
         <div className="animate-pulse text-muted-foreground">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="relative z-10 min-h-screen bg-background">
       <AdminSidebar
         collapsed={collapsed}
         onCollapsedChange={setCollapsed}

@@ -62,5 +62,5 @@ export const siteConfig: SiteConfig = {
   ],
   language: 'en',
   locale: 'en_US',
-  themeColor: '#ED0D79',
+  themeColor: '#FF8533',
 };

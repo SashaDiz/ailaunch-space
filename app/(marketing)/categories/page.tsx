@@ -70,7 +70,7 @@ export default async function CategoriesPage() {
   );
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-transparent">
       <div className="container-classic py-12">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-8">

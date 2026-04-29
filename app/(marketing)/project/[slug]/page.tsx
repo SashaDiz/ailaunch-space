@@ -153,7 +153,7 @@ export default async function ProjectDetailPage({ params }) {
       />
       <Suspense
         fallback={
-          <div className="min-h-screen bg-background">
+          <div className="min-h-screen bg-transparent">
             <LoadingSpinner fullScreen={true} message="Loading project..." />
           </div>
         }

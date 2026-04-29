@@ -10,7 +10,7 @@ export async function generateMetadata() {
 
 export default function CookiesPage() {
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-transparent">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <h1 className="text-4xl font-bold mb-8">Cookie Policy</h1>
         

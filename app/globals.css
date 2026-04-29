@@ -1,36 +1,5 @@
-/* Nohemi — AI Launch Space brand sans-serif */
-@font-face {
-  font-family: "Nohemi";
-  src: url("/assets/fonts/Nohemi-Light.woff2") format("woff2"),
-       url("/assets/fonts/Nohemi-Light.woff") format("woff");
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Nohemi";
-  src: url("/assets/fonts/Nohemi-Regular.woff2") format("woff2"),
-       url("/assets/fonts/Nohemi-Regular.woff") format("woff");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Nohemi";
-  src: url("/assets/fonts/Nohemi-Medium.woff2") format("woff2"),
-       url("/assets/fonts/Nohemi-Medium.woff") format("woff");
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Nohemi";
-  src: url("/assets/fonts/Nohemi-Bold.woff2") format("woff2"),
-       url("/assets/fonts/Nohemi-Bold.woff") format("woff");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
+/* JetBrains Mono loaded via next/font in app/layout.tsx,
+   exposed as the CSS variable --font-jetbrains. */
 
 @tailwind base;
 @tailwind components;
@@ -43,10 +12,10 @@
 
 @layer base {
   :root {
-    /* Typography — use var(--font-sans) so themes can override */
-    --font-sans: "Nohemi", ui-sans-serif, system-ui, sans-serif;
-    --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    /* Typography — JetBrains Mono throughout */
+    --font-sans: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, monospace;
+    --font-serif: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, monospace;
+    --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, monospace;
     --font-family-sans: var(--font-sans);
     --tracking-normal: 0em;
     --spacing: 0.25rem;
@@ -61,27 +30,33 @@
     --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
     --button-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 
-    /* shadcn/ui semantic tokens (HSL values without hsl() wrapper) */
+    /* shadcn/ui semantic tokens (HSL — authority-hunt cyber palette, light mode) */
     --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 331 90% 49%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 270 80% 50%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 263 70% 50%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 331 90% 49%;
-    --radius: 0.75rem;
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 222 47% 11%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 270 80% 50%;
+    --radius: 0.25rem;
+
+    /* Cyber border / glow tokens */
+    --cyber-glow-color: 222 47% 11%;
+    --cyber-glow-orange-color: 270 80% 50%;
+    --cyber-border-color: 214 32% 70%;
+    --cyber-border-orange-color: 270 80% 50%;
 
     /* Status colors */
     --success: 160 84% 39%;
@@ -91,47 +66,53 @@
     --info: 199 89% 48%;
     --info-foreground: 0 0% 100%;
 
-    /* Brand accent (cyan from DaisyUI accent) */
     --brand-accent: 187 92% 41%;
 
-    /* Sidebar (shadcn default) */
-    --sidebar: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Sidebar */
+    --sidebar: 210 20% 96%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 270 80% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 20% 92%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 270 80% 50%;
 
-    /* Chart colors (tweakcn compatibility) */
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    /* Chart colors */
+    --chart-1: 270 80% 50%;
+    --chart-2: 222 47% 11%;
+    --chart-3: 25 100% 55%;
+    --chart-4: 160 100% 40%;
+    --chart-5: 0 84% 60%;
   }
 
   .dark {
-    --background: 0 0% 6.5%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 8%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 8%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 331 90% 60%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 263 70% 65%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 331 90% 60%;
+    /* authority-hunt cyber palette, dark mode (orange + cyan on near-black) */
+    --background: 220 20% 4%;
+    --foreground: 160 100% 70%;
+    --card: 220 15% 8%;
+    --card-foreground: 160 100% 70%;
+    --popover: 220 15% 8%;
+    --popover-foreground: 160 100% 70%;
+    --primary: 25 100% 55%;
+    --primary-foreground: 220 20% 4%;
+    --secondary: 220 15% 12%;
+    --secondary-foreground: 160 100% 70%;
+    --muted: 220 15% 12%;
+    --muted-foreground: 160 30% 55%;
+    --accent: 160 100% 40%;
+    --accent-foreground: 220 20% 4%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 160 40% 15%;
+    --input: 220 15% 12%;
+    --ring: 160 100% 40%;
+
+    /* Cyber tokens — synced with accent / primary */
+    --cyber-glow-color: 160 100% 40%;
+    --cyber-glow-orange-color: 25 100% 55%;
+    --cyber-border-color: 160 40% 25%;
+    --cyber-border-orange-color: 25 100% 55%;
 
     --success: 160 60% 45%;
     --success-foreground: 0 0% 100%;
@@ -140,26 +121,50 @@
     --info: 199 89% 48%;
     --info-foreground: 0 0% 100%;
 
-    --brand-accent: 187 92% 41%;
+    --brand-accent: 160 100% 40%;
 
-    --sidebar: 0 0% 6.5%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 0 0% 98%;
-    --sidebar-primary-foreground: 240 5.9% 10%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar: 220 20% 4%;
+    --sidebar-foreground: 160 100% 70%;
+    --sidebar-primary: 25 100% 55%;
+    --sidebar-primary-foreground: 220 20% 4%;
+    --sidebar-accent: 220 15% 12%;
+    --sidebar-accent-foreground: 160 100% 70%;
+    --sidebar-border: 160 40% 15%;
+    --sidebar-ring: 160 100% 40%;
 
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --chart-1: 25 100% 55%;
+    --chart-2: 160 100% 40%;
+    --chart-3: 270 80% 60%;
+    --chart-4: 199 89% 48%;
+    --chart-5: 0 84% 60%;
   }
 
   /* Preset theme variables are applied via injection from config/themes.config.ts (SiteThemeProvider / useColorTheme). */
 }
+
+/* ============================================
+   CYBER UTILITIES (authority-hunt port)
+   ============================================ */
+.cyber-border { border: 1px solid hsl(var(--cyber-border-color)); }
+.cyber-border-orange { border: 1px solid hsl(var(--cyber-border-orange-color)); }
+
+/* Animated text accents */
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+@keyframes text-flicker {
+  0%, 92%, 94%, 97%, 100% { opacity: 1; }
+  93% { opacity: 0.7; }
+  96% { opacity: 0.8; }
+}
+.animate-flicker { animation: text-flicker 4s infinite; }
+.animate-glow-pulse { animation: glow-pulse 3s ease-in-out infinite; }
+.animate-scanline { animation: scanline 8s linear infinite; }
 
 @layer base {
   * {

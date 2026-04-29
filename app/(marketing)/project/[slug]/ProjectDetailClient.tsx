@@ -259,7 +259,7 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-transparent">
         <div className="container-classic py-8">
           <div className="text-center py-16">
             <h1 className="text-2xl font-bold mb-4">Project Not Found</h1>
@@ -341,7 +341,7 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-transparent">
       <div className="container-classic py-8">
         {/* Breadcrumb */}
         <Breadcrumb className="mb-6">

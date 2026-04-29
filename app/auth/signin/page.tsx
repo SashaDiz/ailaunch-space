@@ -131,8 +131,8 @@ function SignInContent() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen bg-transparent flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full rounded-[var(--radius)] border border-border/40 bg-background/80 backdrop-blur-md shadow-xl p-8 space-y-6">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-foreground mb-2">
             Welcome back
@@ -164,9 +164,9 @@ function SignInContent() {
           </div>
         )}
 
-        {/* Sign In Form */}
-        <div className="rounded-xl bg-background shadow-xl border border-border">
-          <div className="p-6">
+        {/* Sign In Form (transparent — outer card handles the backdrop) */}
+        <div>
+          <div className="">
             <div className="space-y-4">
               {/* Google Sign In */}
               <button

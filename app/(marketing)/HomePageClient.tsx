@@ -441,7 +441,7 @@ function HomePage({
             className="text-center pt-4 sm:pt-8 pb-4 sm:pb-8 w-full"
           >
             <h1 className="text-3xl sm:text-4xl lg:text-4xl xl:text-5xl leading-tight text-foreground mb-2 sm:mb-3">
-              Discover AI tools built by indie founders
+              <span className="animate-flicker">Discover</span> AI tools built by indie founders
             </h1>
             <p className="text-base sm:text-md font-normal text-muted-foreground mb-4 sm:mb-6 max-w-xl mx-auto">
               {siteConfig.description}

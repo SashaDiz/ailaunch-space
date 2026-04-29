@@ -2080,7 +2080,7 @@ function SubmitPageContent() {
 
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-transparent">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-8">
@@ -2323,7 +2323,7 @@ class ErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="min-h-screen bg-transparent flex items-center justify-center">
           <div className="text-center max-w-md mx-auto p-6">
             <div className="flex items-center gap-3 rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive mb-4">
               <svg
@@ -2384,7 +2384,7 @@ export default function SubmitPage() {
   } catch (error) {
     console.error("Submit page error:", error);
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
           <div className="flex items-center gap-3 rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive mb-4">
             <svg
