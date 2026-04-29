@@ -1,0 +1,52 @@
+---
+description: Supabase/DB layer usage patterns
+globs:
+  - lib/supabase/**/*.ts
+  - app/api/**/*.ts
+---
+
+# Supabase & DB layer
+
+## The `db` abstraction
+
+All data access goes through the singleton `db` in `@/lib/supabase/database`. It wraps Supabase with a MongoDB-style API. The singleton uses the **service role** — so it **bypasses RLS**. Treat `db` as privileged.
+
+```ts
+import { db } from "@/lib/supabase/database";
+
+await db.findOne("apps", { slug });
+await db.find("apps", { status: "live" }, { sort: { upvotes: -1 }, limit: 10, projection: { slug: 1 } });
+await db.insertOne("apps", { ... });
+await db.updateOne("apps", { id }, { $set: { status: "approved" } });
+await db.updateOne("apps", { id }, { $inc: { upvotes: 1 } }); // read-modify-write, not atomic
+await db.deleteOne("apps", { id });
+await db.count("apps", { status: "live" });
+await db.rpc("function_name", { param: value });
+```
+
+Operators: `$and $or $in $gt $gte $lt $lte $regex $exists $ne $not $overlaps $contains` (query); `$set $inc` (update).
+
+**Do NOT pass `created_at` or `updated_at`.** DB triggers manage them; passing them will either error or silently overwrite.
+
+**`$inc` is not atomic** — it's a read-modify-write. For counters that can race (upvotes under load), call a Postgres function via `db.rpc` instead.
+
+**JSONB array columns** (`categories`, `tags`) use `.overlaps()` under the hood. `$in` still works but means "any overlap", not "strictly contained".
+
+## Tables not in the `db` layer
+
+These exist in `supabase/schema.sql` but are not wired into `db`: `changelog`, `email_notifications`, `site_settings`, `link_type_changes`. For these, use `getSupabaseAdmin()` directly.
+
+## Clients
+
+- `getSupabaseClient()` — browser, anon key, **respects RLS**. Use in client components.
+- `getSupabaseAdmin()` — server, service role, **bypasses RLS**. Use in API routes and server helpers. Never ship service-role calls to the browser.
+
+## Auth helpers
+
+- `getServerSession()` / `getCurrentUser()` / `isAuthenticated()` / `isAdmin()` — in `@/lib/supabase/auth-helpers`. All use `supabase.auth.getUser()` internally (JWT server-validated).
+- `checkIsAdmin(userId)` — in `@/lib/supabase/auth`. **Canonical admin check** — verifies both `is_admin === true` and `role === 'admin'`. `isAdmin()` delegates to it.
+- `getSession` re-exported from `@/lib/supabase/auth` is a safe alias for `getServerSession` — it does NOT call Supabase's raw `getSession()`.
+
+## RLS assumptions
+
+All tables have RLS enabled in `supabase/schema.sql`. RLS policies use `role = 'admin'` to grant admin access — this is why `checkIsAdmin` must stay consistent with the schema policy. If you add a new admin-only table, add both the RLS policy AND update `checkIsAdmin` accordingly.

@@ -11,6 +11,16 @@ out/
 
 # OS files
 .DS_Store
+._*
+.AppleDouble
+.fseventsd/
+.Spotlight-V100/
+.TemporaryItems/
+.Trashes/
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
 
 # Log files
 *.log
@@ -33,3 +43,4 @@ coverage/
 junit.xml
 test-report.json
 .vercel
+_legacy/

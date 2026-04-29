@@ -1,0 +1,52 @@
+---
+description: React component conventions (shadcn/ui + Tailwind + next-themes)
+globs:
+  - components/**/*.tsx
+  - app/**/*.tsx
+---
+
+# Component conventions
+
+## Server vs client
+
+- **Default to server components.** Add `"use client"` only when the file uses hooks (`useState`, `useEffect`, context consumers), browser APIs (`window`, `localStorage`), or event handlers.
+- Never add `"use client"` to a file that only renders JSX — it forces a client boundary unnecessarily.
+
+## shadcn/ui primitives
+
+- All primitives live in `components/ui/` (new-york style). Import them: `import { Button } from "@/components/ui/button"`.
+- Do NOT install raw Radix components directly. If a primitive is missing, generate it via shadcn CLI or copy an existing one as a template.
+- Use `cn()` from `@/lib/utils` for conditional/merged class names. Never concatenate className strings with `+`.
+
+## Theming (three layers)
+
+1. **Light/dark mode** via `next-themes` — `class="dark"` on `<html>`. Use `useTheme()` from `next-themes` to read/set.
+2. **Color preset** via `data-color-theme` attribute on `<html>`. 14 themes in `config/themes.config.ts`. Switching updates CSS variables.
+3. **Admin custom theme** stored in DB, applied by `SiteThemeProvider` in `components/shared/SiteThemeProvider.tsx`.
+
+Color variables are raw HSL (e.g. `"0 100% 60%"`), used as `hsl(var(--primary))`. Never hardcode hex/rgb in components — reference the CSS variable via Tailwind tokens (`bg-primary`, `text-foreground`, etc.).
+
+## Props & typing
+
+- Prop interfaces end with `Props`: `interface ImageUploadProps { ... }`.
+- Component files are kebab-case for shadcn primitives (`button.tsx`), PascalCase for feature components (`ProductCard.tsx`). Follow the existing convention in the directory you're editing.
+- Default export for page/feature components; named export for utility components and hooks.
+
+## State & data
+
+- Forms: `react-hook-form` + Zod resolver. Pull the schema from `@/lib/validations/schemas`.
+- Auth session: `useUser()` from `@/hooks/use-user`. Don't re-query Supabase for the session from components.
+- Toasts: `react-hot-toast` — `toast.success(...)`, `toast.error(...)`.
+- Never call the `db` layer from components. Always go through API routes or server components.
+
+## Images
+
+- `next/image` with `unoptimized={true}` (project convention — see `next.config.ts`).
+- For user-uploaded images, go through `@/components/forms/ImageUpload` — it handles S3, MIME sniffing, and size limits (1MB).
+
+## Forbidden
+
+- No `console.log`/`info`/`debug` in components.
+- No inline styles for colors/spacing — use Tailwind tokens.
+- No emojis in UI copy unless the user asks.
+- No `dangerouslySetInnerHTML` without an explicit reason + sanitization.

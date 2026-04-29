@@ -1,0 +1,100 @@
+{
+  "common": {
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "loading": "Loading...",
+    "search": "Search projects...",
+    "noResults": "No results found",
+    "backToHome": "Back to Homepage",
+    "learnMore": "Learn More",
+    "signIn": "Sign In",
+    "signOut": "Sign Out"
+  },
+  "nav": {
+    "home": "Home",
+    "pricing": "Pricing",
+    "blog": "Blog",
+    "categories": "Categories",
+    "faq": "FAQ",
+    "contact": "Contact",
+    "advertise": "Advertise",
+    "admin": "Admin",
+    "dashboard": "Dashboard",
+    "settings": "Settings",
+    "profile": "Profile",
+    "browse": "Browse"
+  },
+  "homepage": {
+    "title": "Discover and list your project",
+    "subtitle": "Submit your product to our catalog and reach builders and innovators.",
+    "submitProject": "Submit",
+    "autoSubmit": "Auto submit",
+    "latestProjects": "Latest Projects",
+    "noProjectsFound": "No projects found yet.",
+    "beFirstToSubmit": "Be the first to submit!",
+    "joinBuilders": "Join {count}+ builders to get discovered",
+    "filters": {
+      "allCategories": "All categories",
+      "allPricing": "All pricing",
+      "sortBy": "Sort by"
+    }
+  },
+  "project": {
+    "notFound": "Project Not Found",
+    "notFoundDescription": "The project you're looking for doesn't exist or has been removed.",
+    "screenshots": "Screenshots",
+    "about": "About {name}",
+    "demoVideo": "Demo Video",
+    "projectDetails": "Project Details",
+    "relatedProjects": "Related Projects",
+    "pricing": "Pricing",
+    "status": "Status",
+    "plan": "Plan",
+    "launchDate": "Launch Date",
+    "views": "Views",
+    "maker": "Maker",
+    "createdBy": "Created by",
+    "showMore": "Show full description",
+    "showLess": "Show less",
+    "visitWebsite": "Visit Website",
+    "underReview": "Under Review",
+    "premium": "Premium",
+    "live": "Live",
+    "scheduled": "Scheduled",
+    "past": "Past"
+  },
+  "pricing": {
+    "title": "Pricing",
+    "subtitle": "Choose the plan that fits your needs"
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Get answers to common questions about our project launch platform",
+    "stillHaveQuestions": "Still have questions?",
+    "contactUs": "Contact Us",
+    "contactDescription": "Contact us directly and we'll be happy to help"
+  },
+  "footer": {
+    "platform": "Platform",
+    "resources": "Resources",
+    "newsletter": "Newsletter",
+    "browse": "Browse",
+    "submitProject": "Submit Project",
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "cookies": "Cookies"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "signOut": "Sign Out",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "continueWithGoogle": "Continue with Google"
+  }
+}

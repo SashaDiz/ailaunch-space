@@ -1,36 +1,44 @@
 -- ============================================================================
--- AI Launch Space - Supabase Database Schema
+-- DirectoryKit — Complete Database Schema
 -- ============================================================================
--- This schema migrates MongoDB collections to PostgreSQL tables
--- Execute this in your Supabase SQL Editor
+-- Single-file schema for setting up the database from scratch.
+-- Run this entire file to create all tables, indexes, RLS policies, triggers,
+-- functions, and seed data. No migrations needed.
 --
--- PERFORMANCE OPTIMIZATIONS:
--- 1. All auth.uid() calls wrapped in (SELECT auth.uid()) for query plan caching
--- 2. All RLS policies specify TO clause (authenticated/anon) to avoid unnecessary checks
--- 3. Indexes added on all columns used in RLS policy filters
--- 4. SECURITY DEFINER functions used for complex permission checks
--- 5. Composite indexes for multi-column RLS conditions
+-- SETUP FROM SCRATCH
+-- ------------------
+-- 1. Create a Supabase project at https://supabase.com
+-- 2. In the dashboard: Project Settings → API — copy URL, anon key, service_role key
+-- 3. Go to SQL Editor → New query
+-- 4. Paste this entire file and click "Run"
+-- 5. Copy .env.example to .env.local and fill in Supabase credentials
+-- 6. Run: pnpm dev
 --
--- SECURITY NOTES:
--- - All tables have Row Level Security (RLS) enabled
--- - Use service_role key for webhook handlers and admin operations that bypass RLS
--- - Never expose service_role key to the client
+-- ALTERNATIVE: Supabase CLI
+-- -------------------------
+-- If using Supabase CLI locally:
+--   supabase init
+--   supabase start
+--   psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -f supabase/schema.sql
+--
+-- This script is idempotent — safe to run multiple times (uses IF NOT EXISTS, ON CONFLICT).
 -- ============================================================================
 
--- Enable necessary extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pg_trgm"; -- For text search
+-- ============================================================================
+-- EXTENSIONS
+-- ============================================================================
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";   -- UUID generation
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";     -- Trigram text search
 
 -- ============================================================================
--- USERS TABLE
+-- 1. USERS TABLE
 -- ============================================================================
--- Note: Supabase Auth manages auth.users table
--- We extend it with a public.users table for additional profile data
 
 CREATE TABLE IF NOT EXISTS public.users (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  
-  -- Profile information
+
+  -- Profile
   first_name TEXT,
   last_name TEXT,
   full_name TEXT,
@@ -41,37 +49,34 @@ CREATE TABLE IF NOT EXISTS public.users (
   linkedin TEXT,
   location TEXT,
   avatar_url TEXT,
-  
-  -- Platform-specific fields
+
+  -- Platform stats
   total_submissions INTEGER DEFAULT 0,
-  total_votes INTEGER DEFAULT 0,
   reputation INTEGER DEFAULT 0,
   role TEXT DEFAULT 'user' CHECK (role IN ('user', 'admin', 'moderator')),
-  
-  -- Competition stats
-  weekly_wins INTEGER DEFAULT 0,
-  total_wins INTEGER DEFAULT 0,
-  
+
   -- Status
   is_active BOOLEAN DEFAULT true,
   is_banned BOOLEAN DEFAULT false,
   banned_until TIMESTAMP WITH TIME ZONE,
-  
+  is_admin BOOLEAN DEFAULT false,
+
+  -- Notification preferences
+  notification_preferences JSONB DEFAULT '{"weekly_digest": true, "winner_reminder": true, "account_creation": true, "account_deletion": true, "marketing_emails": true, "submission_decline": true, "competition_winners": true, "submission_approval": true, "weekly_competition_entry": true}'::jsonb,
+
   -- Timestamps
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   last_login_at TIMESTAMP WITH TIME ZONE
 );
 
--- Indexes for users
-CREATE INDEX idx_users_role ON public.users(role);
-CREATE INDEX idx_users_is_active ON public.users(is_active);
-CREATE INDEX idx_users_created_at ON public.users(created_at DESC);
--- Index for RLS policy performance (critical for auth.uid() lookups)
-CREATE INDEX idx_users_id ON public.users(id);
+CREATE INDEX IF NOT EXISTS idx_users_id ON public.users(id);
+CREATE INDEX IF NOT EXISTS idx_users_role ON public.users(role);
+CREATE INDEX IF NOT EXISTS idx_users_is_active ON public.users(is_active);
+CREATE INDEX IF NOT EXISTS idx_users_created_at ON public.users(created_at DESC);
 
 -- ============================================================================
--- CATEGORIES TABLE
+-- 2. CATEGORIES TABLE
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS public.categories (
@@ -85,268 +90,218 @@ CREATE TABLE IF NOT EXISTS public.categories (
   app_count INTEGER DEFAULT 0,
   featured BOOLEAN DEFAULT false,
   sort_order INTEGER DEFAULT 0,
+  sphere TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Indexes for categories
-CREATE INDEX idx_categories_slug ON public.categories(slug);
-CREATE INDEX idx_categories_featured ON public.categories(featured);
-CREATE INDEX idx_categories_sort_order ON public.categories(sort_order);
+CREATE INDEX IF NOT EXISTS idx_categories_slug ON public.categories(slug);
+CREATE INDEX IF NOT EXISTS idx_categories_featured ON public.categories(featured);
+CREATE INDEX IF NOT EXISTS idx_categories_sort_order ON public.categories(sort_order);
 
 -- ============================================================================
--- COMPETITIONS TABLE
+-- 3. COMPETITIONS TABLE
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS public.competitions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  competition_id TEXT NOT NULL UNIQUE, -- e.g., "2024-W01"
+  competition_id TEXT NOT NULL UNIQUE,
   type TEXT NOT NULL CHECK (type IN ('weekly')),
-  
+
   -- Timing
   start_date TIMESTAMP WITH TIME ZONE NOT NULL,
   end_date TIMESTAMP WITH TIME ZONE NOT NULL,
-  timezone TEXT DEFAULT 'PST',
-  
+  timezone TEXT DEFAULT 'UTC',
+
   -- Status
   status TEXT DEFAULT 'upcoming' CHECK (status IN ('upcoming', 'active', 'completed', 'cancelled')),
-  
+
   -- Entries
-  total_submissions INTEGER DEFAULT 0, -- Total submissions from both standard and premium
-  standard_submissions INTEGER DEFAULT 0, -- Count of standard plan submissions (for analytics)
-  premium_submissions INTEGER DEFAULT 0, -- Count of premium plan submissions (for analytics)
-  
-  -- Limits
-  -- Slot System:
-  -- - Standard and Premium SHARE the first 15 slots (max_standard_slots)
-  -- - Premium gets 10 EXTRA slots beyond the shared slots (total 25 slots for premium)
-  -- - Standard can submit: total_submissions < 15
-  -- - Premium can submit: total_submissions < 25
-  max_standard_slots INTEGER DEFAULT 15, -- Shared slots for both plans
-  max_premium_slots INTEGER DEFAULT 25, -- Total slots available for premium (15 shared + 10 extra)
-  
+  total_submissions INTEGER DEFAULT 0,
+  standard_submissions INTEGER DEFAULT 0,
+  premium_submissions INTEGER DEFAULT 0,
+
+  -- Slot limits
+  max_standard_slots INTEGER DEFAULT 15,
+  max_premium_slots INTEGER DEFAULT 10,
+
   -- Results
   total_votes INTEGER DEFAULT 0,
   total_participants INTEGER DEFAULT 0,
   winner_id UUID,
   runner_up_ids UUID[],
   top_three_ids UUID[],
-  
+
   -- Metadata
   theme TEXT,
   description TEXT,
   prize_description TEXT,
-  
+
   -- Timestamps
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   completed_at TIMESTAMP WITH TIME ZONE
 );
 
--- Indexes for competitions
-CREATE INDEX idx_competitions_competition_id ON public.competitions(competition_id);
-CREATE INDEX idx_competitions_type ON public.competitions(type);
-CREATE INDEX idx_competitions_status ON public.competitions(status);
-CREATE INDEX idx_competitions_start_date ON public.competitions(start_date);
-CREATE INDEX idx_competitions_end_date ON public.competitions(end_date);
+CREATE INDEX IF NOT EXISTS idx_competitions_competition_id ON public.competitions(competition_id);
+CREATE INDEX IF NOT EXISTS idx_competitions_type ON public.competitions(type);
+CREATE INDEX IF NOT EXISTS idx_competitions_status ON public.competitions(status);
+CREATE INDEX IF NOT EXISTS idx_competitions_start_date ON public.competitions(start_date);
+CREATE INDEX IF NOT EXISTS idx_competitions_end_date ON public.competitions(end_date);
 
 -- ============================================================================
--- APPS (PROJECTS) TABLE
+-- 4. APPS (PROJECTS) TABLE
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS public.apps (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  
-  -- Basic Information
+
+  -- Basic information
   name TEXT NOT NULL,
   slug TEXT NOT NULL UNIQUE,
   short_description TEXT NOT NULL,
   full_description TEXT,
-  
-  -- URLs and Media
+
+  -- URLs and media
   website_url TEXT NOT NULL,
   logo_url TEXT,
   screenshots TEXT[],
   video_url TEXT,
-  
-  -- Categorization
+
+  -- Categorisation
   categories TEXT[] NOT NULL,
   pricing TEXT,
   tags TEXT[],
-  
-  -- Launch Information
+
+  -- Launch information
   launch_week TEXT,
   launch_month TEXT,
   launch_date TIMESTAMP WITH TIME ZONE,
   scheduled_launch BOOLEAN DEFAULT false,
-  
-  -- Contact and Ownership
+
+  -- Contact and ownership
   contact_email TEXT NOT NULL,
   submitted_by UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   maker_name TEXT,
   maker_twitter TEXT,
-  
-  -- Plan and Features
+
+  -- Plan and features
   plan TEXT NOT NULL CHECK (plan IN ('standard', 'premium')),
-  plan_price NUMERIC DEFAULT 0,
   backlink_url TEXT,
   backlink_verified BOOLEAN DEFAULT false,
-  
+
   -- Approval system
   approved BOOLEAN DEFAULT false,
   payment_status BOOLEAN DEFAULT false,
-  
-  -- Link Type Management
+
+  -- Link type management
   dofollow_status BOOLEAN DEFAULT false,
   link_type TEXT DEFAULT 'nofollow' CHECK (link_type IN ('nofollow', 'dofollow')),
   dofollow_reason TEXT CHECK (dofollow_reason IN ('weekly_winner', 'manual_upgrade', 'premium_plan')),
   dofollow_awarded_at TIMESTAMP WITH TIME ZONE,
-  
+
   -- Premium features
   premium_badge BOOLEAN DEFAULT false,
   skip_queue BOOLEAN DEFAULT false,
   social_promotion BOOLEAN DEFAULT false,
   guaranteed_backlinks INTEGER DEFAULT 0,
-  
-  -- Status and Moderation
+
+  -- Status and moderation
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'live', 'archived', 'scheduled', 'draft')),
   is_draft BOOLEAN DEFAULT false,
   rejection_reason TEXT,
   featured BOOLEAN DEFAULT false,
-  homepage_featured BOOLEAN DEFAULT false,
-  
+
+  -- Payment tracking
+  checkout_session_id TEXT,
+  payment_initiated_at TIMESTAMP WITH TIME ZONE,
+  order_id TEXT,
+  payment_date TIMESTAMP WITH TIME ZONE,
+
   -- Competition tracking
   weekly_competition_id UUID REFERENCES public.competitions(id) ON DELETE SET NULL,
   entered_weekly BOOLEAN DEFAULT true,
-  
-  -- Engagement Metrics
+
+  -- Engagement metrics
   views INTEGER DEFAULT 0,
   upvotes INTEGER DEFAULT 0,
   clicks INTEGER DEFAULT 0,
   total_engagement INTEGER DEFAULT 0,
-  
-  -- Ranking and Competition
-  -- TODO: Implement advanced ranking system
-  -- These columns are ready for future ranking algorithms
-  weekly_ranking INTEGER,
-  overall_ranking INTEGER,
-  ranking_score NUMERIC DEFAULT 0,
-  weekly_score NUMERIC DEFAULT 0,
-  
+
+  -- Ratings and social
+  average_rating NUMERIC DEFAULT 0,
+  ratings_count INTEGER DEFAULT 0,
+  comments_count INTEGER DEFAULT 0,
+  bookmarks_count INTEGER DEFAULT 0,
+
   -- Competition results
   weekly_winner BOOLEAN DEFAULT false,
   weekly_position INTEGER,
-  
+
   -- Homepage presence
   homepage_start_date TIMESTAMP WITH TIME ZONE,
   homepage_end_date TIMESTAMP WITH TIME ZONE,
   homepage_duration INTEGER DEFAULT 7,
-  
+
   -- SEO
   meta_title TEXT,
   meta_description TEXT,
-  
+
   -- Timestamps
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  published_at TIMESTAMP WITH TIME ZONE,
-  launched_at TIMESTAMP WITH TIME ZONE
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Indexes for apps
-CREATE INDEX idx_apps_slug ON public.apps(slug);
-CREATE INDEX idx_apps_status ON public.apps(status);
-CREATE INDEX idx_apps_plan ON public.apps(plan);
-CREATE INDEX idx_apps_is_draft ON public.apps(is_draft);
-CREATE INDEX idx_apps_submitted_by ON public.apps(submitted_by);
-CREATE INDEX idx_apps_launch_week ON public.apps(launch_week);
-CREATE INDEX idx_apps_launch_month ON public.apps(launch_month);
-CREATE INDEX idx_apps_weekly_competition_id ON public.apps(weekly_competition_id);
-CREATE INDEX idx_apps_categories ON public.apps USING GIN(categories);
-CREATE INDEX idx_apps_created_at ON public.apps(created_at DESC);
-CREATE INDEX idx_apps_upvotes ON public.apps(upvotes DESC);
-CREATE INDEX idx_apps_weekly_score ON public.apps(weekly_score DESC);
--- Composite index for RLS policy performance (status + submitted_by)
-CREATE INDEX idx_apps_status_submitted_by ON public.apps(status, submitted_by);
+CREATE INDEX IF NOT EXISTS idx_apps_slug ON public.apps(slug);
+CREATE INDEX IF NOT EXISTS idx_apps_status ON public.apps(status);
+CREATE INDEX IF NOT EXISTS idx_apps_plan ON public.apps(plan);
+CREATE INDEX IF NOT EXISTS idx_apps_is_draft ON public.apps(is_draft);
+CREATE INDEX IF NOT EXISTS idx_apps_submitted_by ON public.apps(submitted_by);
+CREATE INDEX IF NOT EXISTS idx_apps_launch_week ON public.apps(launch_week);
+CREATE INDEX IF NOT EXISTS idx_apps_launch_month ON public.apps(launch_month);
+CREATE INDEX IF NOT EXISTS idx_apps_weekly_competition_id ON public.apps(weekly_competition_id);
+CREATE INDEX IF NOT EXISTS idx_apps_categories ON public.apps USING GIN(categories);
+CREATE INDEX IF NOT EXISTS idx_apps_created_at ON public.apps(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_apps_upvotes ON public.apps(upvotes DESC);
+CREATE INDEX IF NOT EXISTS idx_apps_status_submitted_by ON public.apps(status, submitted_by);
+CREATE INDEX IF NOT EXISTS idx_apps_average_rating ON public.apps(average_rating DESC);
 
--- Full-text search index
-CREATE INDEX idx_apps_search ON public.apps USING GIN(
+-- Full-text search
+CREATE INDEX IF NOT EXISTS idx_apps_search ON public.apps USING GIN(
   to_tsvector('english', name || ' ' || COALESCE(short_description, '') || ' ' || COALESCE(full_description, ''))
 );
 
 -- ============================================================================
--- VOTES TABLE
--- ============================================================================
-
-CREATE TABLE IF NOT EXISTS public.votes (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
-  app_id UUID NOT NULL REFERENCES public.apps(id) ON DELETE CASCADE,
-  
-  -- Competition tracking
-  weekly_competition_id UUID REFERENCES public.competitions(id) ON DELETE SET NULL,
-  
-  -- Vote details
-  vote_type TEXT DEFAULT 'upvote' CHECK (vote_type IN ('upvote')),
-  vote_weight INTEGER DEFAULT 1,
-  
-  -- Security
-  ip_address TEXT,
-  user_agent TEXT,
-  
-  -- Timestamps
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  
-  -- Ensure one vote per user per app
-  UNIQUE(user_id, app_id)
-);
-
--- Indexes for votes
-CREATE INDEX idx_votes_user_id ON public.votes(user_id) TABLESPACE pg_default;
-CREATE INDEX idx_votes_app_id ON public.votes(app_id);
-CREATE INDEX idx_votes_weekly_competition_id ON public.votes(weekly_competition_id);
-CREATE INDEX idx_votes_created_at ON public.votes(created_at DESC);
-
--- ============================================================================
--- PAYMENTS TABLE
+-- 5. PAYMENTS TABLE
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS public.payments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   app_id UUID REFERENCES public.apps(id) ON DELETE SET NULL,
-  
-  -- Payment details
   plan TEXT NOT NULL CHECK (plan IN ('premium')),
   amount NUMERIC NOT NULL,
   currency TEXT DEFAULT 'USD',
   payment_method TEXT,
   payment_id TEXT UNIQUE,
   invoice_id TEXT,
-  
-  -- Status
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'failed', 'refunded', 'cancelled')),
-  
-  -- Metadata
   metadata JSONB,
   failure_reason TEXT,
   refund_reason TEXT,
-  
-  -- Timestamps
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   paid_at TIMESTAMP WITH TIME ZONE,
   refunded_at TIMESTAMP WITH TIME ZONE
 );
 
--- Indexes for payments
-CREATE INDEX idx_payments_user_id ON public.payments(user_id) TABLESPACE pg_default;
-CREATE INDEX idx_payments_app_id ON public.payments(app_id);
-CREATE INDEX idx_payments_status ON public.payments(status);
-CREATE INDEX idx_payments_payment_id ON public.payments(payment_id);
+CREATE INDEX IF NOT EXISTS idx_payments_user_id ON public.payments(user_id);
+CREATE INDEX IF NOT EXISTS idx_payments_app_id ON public.payments(app_id);
+CREATE INDEX IF NOT EXISTS idx_payments_status ON public.payments(status);
+CREATE INDEX IF NOT EXISTS idx_payments_payment_id ON public.payments(payment_id);
 
 -- ============================================================================
--- NEWSLETTER TABLE
+-- 7. NEWSLETTER TABLE
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS public.newsletter (
@@ -354,215 +309,277 @@ CREATE TABLE IF NOT EXISTS public.newsletter (
   email TEXT NOT NULL UNIQUE,
   name TEXT,
   status TEXT DEFAULT 'subscribed' CHECK (status IN ('subscribed', 'unsubscribed', 'pending', 'bounced')),
-  
-  -- Source tracking
   source TEXT,
   utm_source TEXT,
   utm_campaign TEXT,
-  
-  -- Preferences
   preferences JSONB DEFAULT '{"weekly_digest": true, "new_launches": true, "featured_apps": true, "competition_updates": true, "partner_promotions": false}'::jsonb,
-  
-  -- Engagement
   last_opened TIMESTAMP WITH TIME ZONE,
   total_opens INTEGER DEFAULT 0,
   total_clicks INTEGER DEFAULT 0,
-  
-  -- Timestamps
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   subscribed_at TIMESTAMP WITH TIME ZONE,
   unsubscribed_at TIMESTAMP WITH TIME ZONE
 );
 
--- Indexes for newsletter
-CREATE INDEX idx_newsletter_email ON public.newsletter(email);
-CREATE INDEX idx_newsletter_status ON public.newsletter(status);
+CREATE INDEX IF NOT EXISTS idx_newsletter_email ON public.newsletter(email);
+CREATE INDEX IF NOT EXISTS idx_newsletter_status ON public.newsletter(status);
 
 -- ============================================================================
--- SIDEBAR CONTENT TABLE
--- ============================================================================
-
-CREATE TABLE IF NOT EXISTS public.sidebar_content (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  
-  -- Content details
-  title TEXT NOT NULL,
-  description TEXT,
-  content_type TEXT NOT NULL CHECK (content_type IN ('partner', 'guide', 'promotion', 'announcement')),
-  
-  -- Visual elements
-  image_url TEXT,
-  logo_url TEXT,
-  background_color TEXT,
-  text_color TEXT,
-  
-  -- Links and CTAs
-  cta_text TEXT,
-  cta_url TEXT,
-  external_link BOOLEAN DEFAULT true,
-  
-  -- Targeting
-  position INTEGER DEFAULT 0,
-  active BOOLEAN DEFAULT true,
-  start_date TIMESTAMP WITH TIME ZONE,
-  end_date TIMESTAMP WITH TIME ZONE,
-  
-  -- Analytics
-  impressions INTEGER DEFAULT 0,
-  clicks INTEGER DEFAULT 0,
-  ctr NUMERIC DEFAULT 0,
-  
-  -- Revenue
-  monthly_fee NUMERIC DEFAULT 0,
-  revenue_share NUMERIC DEFAULT 0,
-  
-  -- Metadata
-  tags TEXT[],
-  notes TEXT,
-  
-  -- Timestamps
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Indexes for sidebar_content
-CREATE INDEX idx_sidebar_content_active ON public.sidebar_content(active);
-CREATE INDEX idx_sidebar_content_position ON public.sidebar_content(position);
-CREATE INDEX idx_sidebar_content_content_type ON public.sidebar_content(content_type);
-CREATE INDEX idx_sidebar_content_dates ON public.sidebar_content(start_date, end_date);
-
--- ============================================================================
--- BACKLINKS TABLE
--- ============================================================================
-
-CREATE TABLE IF NOT EXISTS public.backlinks (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  app_id UUID NOT NULL REFERENCES public.apps(id) ON DELETE CASCADE,
-  
-  -- Link details
-  source_url TEXT NOT NULL,
-  target_url TEXT NOT NULL,
-  anchor_text TEXT,
-  link_type TEXT NOT NULL CHECK (link_type IN ('homepage', 'top3', 'premium')),
-  
-  -- Status
-  active BOOLEAN DEFAULT true,
-  verified BOOLEAN DEFAULT false,
-  last_checked TIMESTAMP WITH TIME ZONE,
-  
-  -- SEO metrics
-  domain_authority INTEGER,
-  page_authority INTEGER,
-  link_juice NUMERIC DEFAULT 1,
-  
-  -- Timestamps
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  removed_at TIMESTAMP WITH TIME ZONE
-);
-
--- Indexes for backlinks
-CREATE INDEX idx_backlinks_app_id ON public.backlinks(app_id);
-CREATE INDEX idx_backlinks_link_type ON public.backlinks(link_type);
-CREATE INDEX idx_backlinks_active ON public.backlinks(active);
-CREATE INDEX idx_backlinks_verified ON public.backlinks(verified);
-
--- ============================================================================
--- ANALYTICS TABLE
+-- 8. ANALYTICS TABLE
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS public.analytics (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  
-  -- Target tracking
   target_type TEXT NOT NULL CHECK (target_type IN ('app', 'competition', 'sidebar', 'general')),
   target_id UUID,
-  
-  -- Time tracking
   date DATE NOT NULL,
   hour INTEGER CHECK (hour >= 0 AND hour <= 23),
-  
-  -- Metrics
   views INTEGER DEFAULT 0,
   clicks INTEGER DEFAULT 0,
   upvotes INTEGER DEFAULT 0,
   unique_visitors INTEGER DEFAULT 0,
   bounce_rate NUMERIC DEFAULT 0,
   time_on_page INTEGER DEFAULT 0,
-  
-  -- Demographics (stored as JSONB for flexibility)
   referrers JSONB,
   countries JSONB,
   devices JSONB,
   browsers JSONB,
-  
-  -- Competition specific
   competition_votes INTEGER DEFAULT 0,
   competition_participants INTEGER DEFAULT 0,
-  
-  -- Timestamps
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Indexes for analytics
-CREATE INDEX idx_analytics_target ON public.analytics(target_type, target_id, date);
-CREATE INDEX idx_analytics_date ON public.analytics(date DESC);
+CREATE INDEX IF NOT EXISTS idx_analytics_target ON public.analytics(target_type, target_id, date);
+CREATE INDEX IF NOT EXISTS idx_analytics_date ON public.analytics(date DESC);
 
 -- ============================================================================
--- LINK TYPE CHANGES TABLE
+-- 9. LINK TYPE CHANGES TABLE
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS public.link_type_changes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   project_id UUID NOT NULL REFERENCES public.apps(id) ON DELETE CASCADE,
-  
-  -- Change details
   from_type TEXT NOT NULL CHECK (from_type IN ('nofollow', 'dofollow')),
   to_type TEXT NOT NULL CHECK (to_type IN ('nofollow', 'dofollow')),
-  changed_by TEXT NOT NULL, -- User ID or "system"
+  changed_by TEXT NOT NULL,
   reason TEXT NOT NULL,
-  
-  -- Timestamps
   timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Indexes for link_type_changes
-CREATE INDEX idx_link_type_changes_project_id ON public.link_type_changes(project_id);
-CREATE INDEX idx_link_type_changes_timestamp ON public.link_type_changes(timestamp DESC);
-CREATE INDEX idx_link_type_changes_changed_by ON public.link_type_changes(changed_by);
+CREATE INDEX IF NOT EXISTS idx_link_type_changes_project_id ON public.link_type_changes(project_id);
+CREATE INDEX IF NOT EXISTS idx_link_type_changes_timestamp ON public.link_type_changes(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_link_type_changes_changed_by ON public.link_type_changes(changed_by);
 
 -- ============================================================================
--- EXTERNAL WEBHOOKS TABLE
+-- 10. CHANGELOG TABLE
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.changelog (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  version TEXT,
+  description TEXT,
+  content TEXT NOT NULL,
+  type TEXT DEFAULT 'feature' CHECK (type IN ('feature', 'bugfix', 'improvement', 'breaking', 'announcement')),
+  published BOOLEAN DEFAULT false,
+  featured BOOLEAN DEFAULT false,
+  author_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  published_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_changelog_published ON public.changelog(published);
+CREATE INDEX IF NOT EXISTS idx_changelog_featured ON public.changelog(featured);
+CREATE INDEX IF NOT EXISTS idx_changelog_type ON public.changelog(type);
+CREATE INDEX IF NOT EXISTS idx_changelog_published_at ON public.changelog(published_at DESC);
+
+-- ============================================================================
+-- 11. EMAIL NOTIFICATIONS TABLE
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.email_notifications (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  email_type TEXT NOT NULL CHECK (email_type IN (
+    'account_creation', 'account_deletion', 'weekly_competition_entry',
+    'submission_received', 'submission_approval', 'submission_decline',
+    'launch_week_reminder', 'competition_week_start', 'competition_week_end',
+    'competition_winners', 'winner_reminder', 'winner_backlink_reminder',
+    'weekly_digest', 'marketing_emails'
+  )),
+  app_id UUID REFERENCES public.apps(id) ON DELETE CASCADE,
+  competition_id UUID REFERENCES public.competitions(id) ON DELETE CASCADE,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'failed', 'bounced')),
+  sent_at TIMESTAMP WITH TIME ZONE,
+  error_message TEXT,
+  resend_email_id TEXT,
+  metadata JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_email_notifications_user_id ON public.email_notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_email_notifications_email_type ON public.email_notifications(email_type);
+CREATE INDEX IF NOT EXISTS idx_email_notifications_status ON public.email_notifications(status);
+CREATE INDEX IF NOT EXISTS idx_email_notifications_created_at ON public.email_notifications(created_at DESC);
+
+-- ============================================================================
+-- 12. EXTERNAL WEBHOOKS TABLE
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS public.external_webhooks (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   webhook_id TEXT NOT NULL UNIQUE,
-  
-  -- Webhook details
   url TEXT NOT NULL,
   secret TEXT,
   events TEXT[] NOT NULL,
   active BOOLEAN DEFAULT true,
-  
-  -- Stats
   stats JSONB DEFAULT '{"total_sent": 0, "successful": 0, "failed": 0}'::jsonb,
-  
-  -- Timestamps
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Indexes for external_webhooks
-CREATE INDEX idx_external_webhooks_active ON public.external_webhooks(active);
-CREATE INDEX idx_external_webhooks_events ON public.external_webhooks USING GIN(events);
+CREATE INDEX IF NOT EXISTS idx_external_webhooks_active ON public.external_webhooks(active);
+CREATE INDEX IF NOT EXISTS idx_external_webhooks_events ON public.external_webhooks USING GIN(events);
 
 -- ============================================================================
--- TRIGGERS FOR UPDATED_AT
+-- 13. PARTNERS TABLE
 -- ============================================================================
 
--- Create a function to update updated_at timestamp
+CREATE TABLE IF NOT EXISTS public.partners (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  description TEXT NOT NULL,
+  logo TEXT NOT NULL,
+  website_url TEXT,
+  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  checkout_session_id TEXT,
+  stripe_subscription_id TEXT,
+  stripe_customer_id TEXT,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'cancelled', 'past_due', 'paused')),
+  subscription_started_at TIMESTAMP WITH TIME ZONE,
+  subscription_ends_at TIMESTAMP WITH TIME ZONE,
+  current_period_start TIMESTAMP WITH TIME ZONE,
+  current_period_end TIMESTAMP WITH TIME ZONE,
+  position INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_partners_user_id ON public.partners(user_id);
+CREATE INDEX IF NOT EXISTS idx_partners_status ON public.partners(status);
+CREATE INDEX IF NOT EXISTS idx_partners_stripe_subscription_id ON public.partners(stripe_subscription_id);
+CREATE INDEX IF NOT EXISTS idx_partners_position ON public.partners(position);
+
+-- ============================================================================
+-- 14. SITE SETTINGS TABLE
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.site_settings (
+  key TEXT PRIMARY KEY,
+  value JSONB NOT NULL DEFAULT '{}',
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- ============================================================================
+-- 15. BOOKMARKS TABLE
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.bookmarks (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  app_id UUID NOT NULL REFERENCES public.apps(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, app_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_bookmarks_user_id ON public.bookmarks(user_id);
+CREATE INDEX IF NOT EXISTS idx_bookmarks_app_id ON public.bookmarks(app_id);
+CREATE INDEX IF NOT EXISTS idx_bookmarks_created_at ON public.bookmarks(created_at DESC);
+
+-- ============================================================================
+-- 16. RATINGS TABLE
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.ratings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  app_id UUID NOT NULL REFERENCES public.apps(id) ON DELETE CASCADE,
+  rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, app_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_ratings_user_id ON public.ratings(user_id);
+CREATE INDEX IF NOT EXISTS idx_ratings_app_id ON public.ratings(app_id);
+CREATE INDEX IF NOT EXISTS idx_ratings_created_at ON public.ratings(created_at DESC);
+
+-- ============================================================================
+-- 17. COMMENTS TABLE
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.comments (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  app_id UUID NOT NULL REFERENCES public.apps(id) ON DELETE CASCADE,
+  content TEXT NOT NULL CHECK (char_length(content) >= 1 AND char_length(content) <= 2000),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_comments_user_id ON public.comments(user_id);
+CREATE INDEX IF NOT EXISTS idx_comments_app_id ON public.comments(app_id);
+CREATE INDEX IF NOT EXISTS idx_comments_created_at ON public.comments(created_at DESC);
+
+-- ============================================================================
+-- 18. PROMOTIONS TABLE (paid advertising placements)
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.promotions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  app_id UUID REFERENCES public.apps(id) ON DELETE SET NULL,
+  name TEXT NOT NULL,
+  short_description TEXT NOT NULL,
+  logo_url TEXT NOT NULL,
+  website_url TEXT NOT NULL,
+  cta_text TEXT DEFAULT NULL,
+  placement_banner BOOLEAN DEFAULT false,
+  placement_catalog BOOLEAN DEFAULT false,
+  placement_detail_page BOOLEAN DEFAULT false,
+  monthly_price NUMERIC NOT NULL DEFAULT 0,
+  checkout_session_id TEXT,
+  stripe_subscription_id TEXT,
+  stripe_customer_id TEXT,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'cancelled', 'past_due', 'paused', 'rejected')),
+  subscription_started_at TIMESTAMP WITH TIME ZONE,
+  subscription_ends_at TIMESTAMP WITH TIME ZONE,
+  current_period_start TIMESTAMP WITH TIME ZONE,
+  current_period_end TIMESTAMP WITH TIME ZONE,
+  impressions INTEGER DEFAULT 0,
+  clicks INTEGER DEFAULT 0,
+  admin_notes TEXT,
+  position INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_promotions_user_id ON public.promotions(user_id);
+CREATE INDEX IF NOT EXISTS idx_promotions_app_id ON public.promotions(app_id);
+CREATE INDEX IF NOT EXISTS idx_promotions_status ON public.promotions(status);
+CREATE INDEX IF NOT EXISTS idx_promotions_stripe_subscription_id ON public.promotions(stripe_subscription_id);
+CREATE INDEX IF NOT EXISTS idx_promotions_placement_banner ON public.promotions(placement_banner) WHERE placement_banner = true;
+CREATE INDEX IF NOT EXISTS idx_promotions_placement_catalog ON public.promotions(placement_catalog) WHERE placement_catalog = true;
+CREATE INDEX IF NOT EXISTS idx_promotions_placement_detail_page ON public.promotions(placement_detail_page) WHERE placement_detail_page = true;
+CREATE INDEX IF NOT EXISTS idx_promotions_position ON public.promotions(position);
+
+-- ============================================================================
+-- TRIGGERS — auto-update updated_at
+-- ============================================================================
+
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -571,36 +588,64 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Apply trigger to all tables with updated_at
+DROP TRIGGER IF EXISTS update_users_updated_at ON public.users;
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON public.users
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_categories_updated_at ON public.categories;
 CREATE TRIGGER update_categories_updated_at BEFORE UPDATE ON public.categories
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_competitions_updated_at ON public.competitions;
 CREATE TRIGGER update_competitions_updated_at BEFORE UPDATE ON public.competitions
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_apps_updated_at ON public.apps;
 CREATE TRIGGER update_apps_updated_at BEFORE UPDATE ON public.apps
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_payments_updated_at ON public.payments;
 CREATE TRIGGER update_payments_updated_at BEFORE UPDATE ON public.payments
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_newsletter_updated_at ON public.newsletter;
 CREATE TRIGGER update_newsletter_updated_at BEFORE UPDATE ON public.newsletter
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_sidebar_content_updated_at BEFORE UPDATE ON public.sidebar_content
+DROP TRIGGER IF EXISTS update_changelog_updated_at ON public.changelog;
+CREATE TRIGGER update_changelog_updated_at BEFORE UPDATE ON public.changelog
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_backlinks_updated_at BEFORE UPDATE ON public.backlinks
+DROP TRIGGER IF EXISTS update_email_notifications_updated_at ON public.email_notifications;
+CREATE TRIGGER update_email_notifications_updated_at BEFORE UPDATE ON public.email_notifications
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_external_webhooks_updated_at ON public.external_webhooks;
 CREATE TRIGGER update_external_webhooks_updated_at BEFORE UPDATE ON public.external_webhooks
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_partners_updated_at ON public.partners;
+CREATE TRIGGER update_partners_updated_at BEFORE UPDATE ON public.partners
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_promotions_updated_at ON public.promotions;
+CREATE TRIGGER update_promotions_updated_at BEFORE UPDATE ON public.promotions
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_site_settings_updated_at ON public.site_settings;
+CREATE TRIGGER update_site_settings_updated_at BEFORE UPDATE ON public.site_settings
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_ratings_updated_at ON public.ratings;
+CREATE TRIGGER update_ratings_updated_at BEFORE UPDATE ON public.ratings
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_comments_updated_at ON public.comments;
+CREATE TRIGGER update_comments_updated_at BEFORE UPDATE ON public.comments
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 -- ============================================================================
--- ROW LEVEL SECURITY (RLS) POLICIES
+-- ROW LEVEL SECURITY (RLS)
 -- ============================================================================
 
 -- Enable RLS on all tables
@@ -608,284 +653,426 @@ ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.competitions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.apps ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.votes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.newsletter ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.sidebar_content ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.backlinks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.analytics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.link_type_changes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.external_webhooks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.changelog ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.email_notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.partners ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.promotions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.bookmarks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ratings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 
--- Users: Users can read their own data, admins can read all
-CREATE POLICY "Users can view own profile" ON public.users
-  FOR SELECT
-  TO authenticated
-  USING ((SELECT auth.uid()) = id OR EXISTS (
-    SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'
-  ));
+-- ---------------------------------------------------------------------------
+-- Users
+-- ---------------------------------------------------------------------------
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='users' AND policyname='Users can view own profile') THEN
+    CREATE POLICY "Users can view own profile" ON public.users FOR SELECT TO authenticated
+      USING ((SELECT auth.uid()) = id OR EXISTS (SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'));
+  END IF;
+END $$;
 
-CREATE POLICY "Users can update own profile" ON public.users
-  FOR UPDATE
-  TO authenticated
-  USING ((SELECT auth.uid()) = id);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='users' AND policyname='Users can update own profile') THEN
+    CREATE POLICY "Users can update own profile" ON public.users FOR UPDATE TO authenticated
+      USING ((SELECT auth.uid()) = id);
+  END IF;
+END $$;
 
--- Note: User INSERT is handled by Supabase Auth triggers, not direct inserts
-CREATE POLICY "Users can insert own profile" ON public.users
-  FOR INSERT
-  TO authenticated
-  WITH CHECK ((SELECT auth.uid()) = id);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='users' AND policyname='Users can insert own profile') THEN
+    CREATE POLICY "Users can insert own profile" ON public.users FOR INSERT TO authenticated
+      WITH CHECK ((SELECT auth.uid()) = id);
+  END IF;
+END $$;
 
--- Categories: Public read, admin write
-CREATE POLICY "Categories are viewable by everyone" ON public.categories
-  FOR SELECT
-  USING (true);
+-- ---------------------------------------------------------------------------
+-- Categories — public read, admin write
+-- ---------------------------------------------------------------------------
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='categories' AND policyname='Categories are viewable by everyone') THEN
+    CREATE POLICY "Categories are viewable by everyone" ON public.categories FOR SELECT USING (true);
+  END IF;
+END $$;
 
-CREATE POLICY "Only admins can modify categories" ON public.categories
-  FOR ALL
-  TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'
-  ));
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='categories' AND policyname='Only admins can modify categories') THEN
+    CREATE POLICY "Only admins can modify categories" ON public.categories FOR ALL TO authenticated
+      USING (EXISTS (SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'));
+  END IF;
+END $$;
 
--- Competitions: Public read, admin write
-CREATE POLICY "Competitions are viewable by everyone" ON public.competitions
-  FOR SELECT
-  USING (true);
+-- ---------------------------------------------------------------------------
+-- Competitions — public read, admin write
+-- ---------------------------------------------------------------------------
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='competitions' AND policyname='Competitions are viewable by everyone') THEN
+    CREATE POLICY "Competitions are viewable by everyone" ON public.competitions FOR SELECT USING (true);
+  END IF;
+END $$;
 
-CREATE POLICY "Only admins can modify competitions" ON public.competitions
-  FOR ALL
-  TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'
-  ));
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='competitions' AND policyname='Only admins can modify competitions') THEN
+    CREATE POLICY "Only admins can modify competitions" ON public.competitions FOR ALL TO authenticated
+      USING (EXISTS (SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'));
+  END IF;
+END $$;
 
--- Apps: Public read live apps, users can read their own, admin can read all
-CREATE POLICY "Live apps are viewable by everyone" ON public.apps
-  FOR SELECT
-  USING (
-    status = 'live' 
-    OR status = 'approved'
-  );
+-- ---------------------------------------------------------------------------
+-- Apps — public read (live/approved), owner read/write, admin read/write
+-- ---------------------------------------------------------------------------
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='apps' AND policyname='Live apps are viewable by everyone') THEN
+    CREATE POLICY "Live apps are viewable by everyone" ON public.apps FOR SELECT
+      USING (status IN ('live', 'approved', 'past'));
+  END IF;
+END $$;
 
-CREATE POLICY "Users can view own apps" ON public.apps
-  FOR SELECT
-  TO authenticated
-  USING ((SELECT auth.uid()) = submitted_by);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='apps' AND policyname='Users can view own apps') THEN
+    CREATE POLICY "Users can view own apps" ON public.apps FOR SELECT TO authenticated
+      USING ((SELECT auth.uid()) = submitted_by);
+  END IF;
+END $$;
 
-CREATE POLICY "Admins can view all apps" ON public.apps
-  FOR SELECT
-  TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'
-  ));
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='apps' AND policyname='Admins can view all apps') THEN
+    CREATE POLICY "Admins can view all apps" ON public.apps FOR SELECT TO authenticated
+      USING (EXISTS (SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'));
+  END IF;
+END $$;
 
-CREATE POLICY "Users can insert their own apps" ON public.apps
-  FOR INSERT
-  TO authenticated
-  WITH CHECK ((SELECT auth.uid()) = submitted_by);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='apps' AND policyname='Users can insert their own apps') THEN
+    CREATE POLICY "Users can insert their own apps" ON public.apps FOR INSERT TO authenticated
+      WITH CHECK ((SELECT auth.uid()) = submitted_by);
+  END IF;
+END $$;
 
-CREATE POLICY "Users can update their own apps" ON public.apps
-  FOR UPDATE
-  TO authenticated
-  USING ((SELECT auth.uid()) = submitted_by);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='apps' AND policyname='Users can update their own apps') THEN
+    CREATE POLICY "Users can update their own apps" ON public.apps FOR UPDATE TO authenticated
+      USING ((SELECT auth.uid()) = submitted_by);
+  END IF;
+END $$;
 
-CREATE POLICY "Admins can update all apps" ON public.apps
-  FOR UPDATE
-  TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'
-  ));
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='apps' AND policyname='Admins can update all apps') THEN
+    CREATE POLICY "Admins can update all apps" ON public.apps FOR UPDATE TO authenticated
+      USING (EXISTS (SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'));
+  END IF;
+END $$;
 
--- Votes: Users can see their own votes and vote counts
-CREATE POLICY "Users can view own votes" ON public.votes
-  FOR SELECT
-  TO authenticated
-  USING ((SELECT auth.uid()) = user_id);
+-- ---------------------------------------------------------------------------
+-- Payments — owner read, admin all
+-- ---------------------------------------------------------------------------
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='payments' AND policyname='Users can view own payments') THEN
+    CREATE POLICY "Users can view own payments" ON public.payments FOR SELECT TO authenticated
+      USING ((SELECT auth.uid()) = user_id);
+  END IF;
+END $$;
 
-CREATE POLICY "Users can insert own votes" ON public.votes
-  FOR INSERT
-  TO authenticated
-  WITH CHECK ((SELECT auth.uid()) = user_id);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='payments' AND policyname='Admins can view all payments') THEN
+    CREATE POLICY "Admins can view all payments" ON public.payments FOR SELECT TO authenticated
+      USING (EXISTS (SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'));
+  END IF;
+END $$;
 
-CREATE POLICY "Users can delete own votes" ON public.votes
-  FOR DELETE
-  TO authenticated
-  USING ((SELECT auth.uid()) = user_id);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='payments' AND policyname='Only admins can modify payments') THEN
+    CREATE POLICY "Only admins can modify payments" ON public.payments FOR ALL TO authenticated
+      USING (EXISTS (SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'));
+  END IF;
+END $$;
 
--- Payments: Users can see their own payments, admins can see all
-CREATE POLICY "Users can view own payments" ON public.payments
-  FOR SELECT
-  TO authenticated
-  USING ((SELECT auth.uid()) = user_id);
+-- ---------------------------------------------------------------------------
+-- Newsletter — public insert, admin read
+-- ---------------------------------------------------------------------------
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='newsletter' AND policyname='Anyone can subscribe to newsletter') THEN
+    CREATE POLICY "Anyone can subscribe to newsletter" ON public.newsletter FOR INSERT WITH CHECK (true);
+  END IF;
+END $$;
 
-CREATE POLICY "Admins can view all payments" ON public.payments
-  FOR SELECT
-  TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'
-  ));
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='newsletter' AND policyname='Only admins can view newsletter') THEN
+    CREATE POLICY "Only admins can view newsletter" ON public.newsletter FOR SELECT TO authenticated
+      USING (EXISTS (SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'));
+  END IF;
+END $$;
 
--- Note: Payment INSERT operations should use service role key from webhook handlers
-CREATE POLICY "Only admins can modify payments" ON public.payments
-  FOR ALL
-  TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'
-  ));
+-- ---------------------------------------------------------------------------
+-- Analytics — admin only
+-- ---------------------------------------------------------------------------
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='analytics' AND policyname='Only admins can access analytics') THEN
+    CREATE POLICY "Only admins can access analytics" ON public.analytics FOR ALL TO authenticated
+      USING (EXISTS (SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'));
+  END IF;
+END $$;
 
--- Newsletter: Public insert, admin read/update
-CREATE POLICY "Anyone can subscribe to newsletter" ON public.newsletter
-  FOR INSERT
-  WITH CHECK (true);
+-- ---------------------------------------------------------------------------
+-- Link type changes — admin only
+-- ---------------------------------------------------------------------------
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='link_type_changes' AND policyname='Only admins can access link type changes') THEN
+    CREATE POLICY "Only admins can access link type changes" ON public.link_type_changes FOR ALL TO authenticated
+      USING (EXISTS (SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'));
+  END IF;
+END $$;
 
-CREATE POLICY "Only admins can view newsletter" ON public.newsletter
-  FOR SELECT
-  TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'
-  ));
+-- ---------------------------------------------------------------------------
+-- External webhooks — admin only
+-- ---------------------------------------------------------------------------
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='external_webhooks' AND policyname='Only admins can access webhooks') THEN
+    CREATE POLICY "Only admins can access webhooks" ON public.external_webhooks FOR ALL TO authenticated
+      USING (EXISTS (SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'));
+  END IF;
+END $$;
 
--- Sidebar content: Public read active, admin write
-CREATE POLICY "Active sidebar content viewable by everyone" ON public.sidebar_content
-  FOR SELECT
-  USING (active = true);
+-- ---------------------------------------------------------------------------
+-- Changelog — public read (published), admin all
+-- ---------------------------------------------------------------------------
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='changelog' AND policyname='Published changelog viewable by everyone') THEN
+    CREATE POLICY "Published changelog viewable by everyone" ON public.changelog FOR SELECT USING (published = true);
+  END IF;
+END $$;
 
-CREATE POLICY "Admins can view all sidebar content" ON public.sidebar_content
-  FOR SELECT
-  TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'
-  ));
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='changelog' AND policyname='Admins can view all changelog') THEN
+    CREATE POLICY "Admins can view all changelog" ON public.changelog FOR SELECT TO authenticated
+      USING (EXISTS (SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'));
+  END IF;
+END $$;
 
-CREATE POLICY "Only admins can modify sidebar content" ON public.sidebar_content
-  FOR ALL
-  TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'
-  ));
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='changelog' AND policyname='Only admins can modify changelog') THEN
+    CREATE POLICY "Only admins can modify changelog" ON public.changelog FOR ALL TO authenticated
+      USING (EXISTS (SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'));
+  END IF;
+END $$;
 
--- Backlinks: Public read, admin write
-CREATE POLICY "Active backlinks viewable by everyone" ON public.backlinks
-  FOR SELECT
-  USING (active = true);
+-- ---------------------------------------------------------------------------
+-- Email notifications — admin only
+-- ---------------------------------------------------------------------------
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='email_notifications' AND policyname='Only admins can access email notifications') THEN
+    CREATE POLICY "Only admins can access email notifications" ON public.email_notifications FOR ALL TO authenticated
+      USING (EXISTS (SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'));
+  END IF;
+END $$;
 
-CREATE POLICY "Admins can view all backlinks" ON public.backlinks
-  FOR SELECT
-  TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'
-  ));
+-- ---------------------------------------------------------------------------
+-- Partners — public read (active), owner read/write, admin read/write
+-- ---------------------------------------------------------------------------
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='partners' AND policyname='Active partners viewable by everyone') THEN
+    CREATE POLICY "Active partners viewable by everyone" ON public.partners FOR SELECT
+      USING (status = 'active');
+  END IF;
+END $$;
 
-CREATE POLICY "Only admins can modify backlinks" ON public.backlinks
-  FOR ALL
-  TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'
-  ));
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='partners' AND policyname='Users can view own partners') THEN
+    CREATE POLICY "Users can view own partners" ON public.partners FOR SELECT TO authenticated
+      USING ((SELECT auth.uid()) = user_id);
+  END IF;
+END $$;
 
--- Analytics: Admin only
-CREATE POLICY "Only admins can access analytics" ON public.analytics
-  FOR ALL
-  TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'
-  ));
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='partners' AND policyname='Users can insert own partners') THEN
+    CREATE POLICY "Users can insert own partners" ON public.partners FOR INSERT TO authenticated
+      WITH CHECK ((SELECT auth.uid()) = user_id);
+  END IF;
+END $$;
 
--- Link type changes: Admin only
-CREATE POLICY "Only admins can access link type changes" ON public.link_type_changes
-  FOR ALL
-  TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'
-  ));
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='partners' AND policyname='Users can update own partners') THEN
+    CREATE POLICY "Users can update own partners" ON public.partners FOR UPDATE TO authenticated
+      USING ((SELECT auth.uid()) = user_id);
+  END IF;
+END $$;
 
--- External webhooks: Admin only
-CREATE POLICY "Only admins can access webhooks" ON public.external_webhooks
-  FOR ALL
-  TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'
-  ));
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='partners' AND policyname='Admins can view all partners') THEN
+    CREATE POLICY "Admins can view all partners" ON public.partners FOR SELECT TO authenticated
+      USING (EXISTS (SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'));
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='partners' AND policyname='Admins can update all partners') THEN
+    CREATE POLICY "Admins can update all partners" ON public.partners FOR UPDATE TO authenticated
+      USING (EXISTS (SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'));
+  END IF;
+END $$;
+
+-- ---------------------------------------------------------------------------
+-- Promotions — public read (active), owner read/write, admin all
+-- ---------------------------------------------------------------------------
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='promotions' AND policyname='Active promotions viewable by everyone') THEN
+    CREATE POLICY "Active promotions viewable by everyone" ON public.promotions FOR SELECT
+      USING (status = 'active');
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='promotions' AND policyname='Users can view own promotions') THEN
+    CREATE POLICY "Users can view own promotions" ON public.promotions FOR SELECT TO authenticated
+      USING ((SELECT auth.uid()) = user_id);
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='promotions' AND policyname='Users can insert own promotions') THEN
+    CREATE POLICY "Users can insert own promotions" ON public.promotions FOR INSERT TO authenticated
+      WITH CHECK ((SELECT auth.uid()) = user_id);
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='promotions' AND policyname='Users can update own promotions') THEN
+    CREATE POLICY "Users can update own promotions" ON public.promotions FOR UPDATE TO authenticated
+      USING ((SELECT auth.uid()) = user_id);
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='promotions' AND policyname='Admins can view all promotions') THEN
+    CREATE POLICY "Admins can view all promotions" ON public.promotions FOR SELECT TO authenticated
+      USING (EXISTS (SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'));
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='promotions' AND policyname='Admins can update all promotions') THEN
+    CREATE POLICY "Admins can update all promotions" ON public.promotions FOR UPDATE TO authenticated
+      USING (EXISTS (SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'));
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='promotions' AND policyname='Admins can delete all promotions') THEN
+    CREATE POLICY "Admins can delete all promotions" ON public.promotions FOR DELETE TO authenticated
+      USING (EXISTS (SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'));
+  END IF;
+END $$;
+
+-- ---------------------------------------------------------------------------
+-- Site settings — public read, admin write
+-- ---------------------------------------------------------------------------
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='site_settings' AND policyname='Site settings are viewable by everyone') THEN
+    CREATE POLICY "Site settings are viewable by everyone" ON public.site_settings FOR SELECT USING (true);
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='site_settings' AND policyname='Only admins can modify site settings') THEN
+    CREATE POLICY "Only admins can modify site settings" ON public.site_settings FOR ALL TO authenticated
+      USING (EXISTS (SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND (role = 'admin' OR is_admin = true)))
+      WITH CHECK (EXISTS (SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND (role = 'admin' OR is_admin = true)));
+  END IF;
+END $$;
+
+-- ---------------------------------------------------------------------------
+-- Bookmarks — users manage own
+-- ---------------------------------------------------------------------------
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='bookmarks' AND policyname='Users can view own bookmarks') THEN
+    CREATE POLICY "Users can view own bookmarks" ON public.bookmarks FOR SELECT TO authenticated
+      USING ((SELECT auth.uid()) = user_id);
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='bookmarks' AND policyname='Users can insert own bookmarks') THEN
+    CREATE POLICY "Users can insert own bookmarks" ON public.bookmarks FOR INSERT TO authenticated
+      WITH CHECK ((SELECT auth.uid()) = user_id);
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='bookmarks' AND policyname='Users can delete own bookmarks') THEN
+    CREATE POLICY "Users can delete own bookmarks" ON public.bookmarks FOR DELETE TO authenticated
+      USING ((SELECT auth.uid()) = user_id);
+  END IF;
+END $$;
+
+-- ---------------------------------------------------------------------------
+-- Ratings — public read, users manage own
+-- ---------------------------------------------------------------------------
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='ratings' AND policyname='Ratings are viewable by everyone') THEN
+    CREATE POLICY "Ratings are viewable by everyone" ON public.ratings FOR SELECT USING (true);
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='ratings' AND policyname='Users can insert own ratings') THEN
+    CREATE POLICY "Users can insert own ratings" ON public.ratings FOR INSERT TO authenticated
+      WITH CHECK ((SELECT auth.uid()) = user_id);
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='ratings' AND policyname='Users can update own ratings') THEN
+    CREATE POLICY "Users can update own ratings" ON public.ratings FOR UPDATE TO authenticated
+      USING ((SELECT auth.uid()) = user_id);
+  END IF;
+END $$;
+
+-- ---------------------------------------------------------------------------
+-- Comments — public read, authenticated insert, author/owner/admin delete
+-- ---------------------------------------------------------------------------
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='comments' AND policyname='Comments are viewable by everyone') THEN
+    CREATE POLICY "Comments are viewable by everyone" ON public.comments FOR SELECT USING (true);
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='comments' AND policyname='Users can insert own comments') THEN
+    CREATE POLICY "Users can insert own comments" ON public.comments FOR INSERT TO authenticated
+      WITH CHECK ((SELECT auth.uid()) = user_id);
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='comments' AND policyname='Users can delete own comments') THEN
+    CREATE POLICY "Users can delete own comments" ON public.comments FOR DELETE TO authenticated
+      USING ((SELECT auth.uid()) = user_id);
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='comments' AND policyname='Project owners can delete comments on their projects') THEN
+    CREATE POLICY "Project owners can delete comments on their projects" ON public.comments FOR DELETE TO authenticated
+      USING (EXISTS (SELECT 1 FROM public.apps a WHERE a.id = comments.app_id AND a.submitted_by = auth.uid()));
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='comments' AND policyname='Admins can delete all comments') THEN
+    CREATE POLICY "Admins can delete all comments" ON public.comments FOR DELETE TO authenticated
+      USING (EXISTS (SELECT 1 FROM public.users WHERE id = (SELECT auth.uid()) AND role = 'admin'));
+  END IF;
+END $$;
 
 -- ============================================================================
--- SEED DATA
+-- AUTH TRIGGERS — auto-create user profile on sign-up
 -- ============================================================================
 
--- Insert default categories with new structure
-INSERT INTO public.categories (name, slug, description, css_class, color, sort_order, featured) VALUES
-  -- Business & Finance
-  ('Finance & FinTech', 'finance-fintech', 'Financial technology and fintech solutions', 'category-finance', '#10b981', 1, true),
-  ('HR & Recruitment', 'hr-recruitment', 'Human resources and recruitment tools', 'category-hr', '#059669', 2, false),
-  ('Marketing & Sales', 'marketing-sales', 'Marketing automation and sales tools', 'category-marketing', '#047857', 3, true),
-  ('Startup & Small Business', 'startup-small-business', 'Tools for startups and small businesses', 'category-startup', '#065f46', 4, false),
-  ('Business Intelligence & Analytics', 'business-intelligence-analytics', 'BI tools and business analytics', 'category-bi', '#064e3b', 5, false),
-  ('Customer Service & Support', 'customer-service-support', 'Customer support and service tools', 'category-support', '#022c22', 6, false),
-  
-  -- Consumer & Lifestyle
-  ('Education & Learning', 'education-learning', 'Educational tools and learning platforms', 'category-education', '#3b82f6', 7, true),
-  ('Health & Wellness', 'health-wellness', 'Health, fitness and wellness applications', 'category-health', '#2563eb', 8, true),
-  ('Productivity', 'productivity', 'Productivity and workflow optimization tools', 'category-productivity', '#1d4ed8', 9, true),
-  ('Personal Assistant Tools', 'personal-assistant-tools', 'AI-powered personal assistant applications', 'category-assistant', '#1e40af', 10, false),
-  
-  -- Content & Creativity
-  ('Design & Art', 'design-art', 'Design tools and creative applications', 'category-design', '#ec4899', 11, true),
-  ('Video & Content Creation', 'video-content-creation', 'Video editing and content creation tools', 'category-video', '#db2777', 12, true),
-  ('Music & Audio', 'music-audio', 'Music production and audio editing tools', 'category-music', '#be185d', 13, false),
-  ('Writing & Copywriting', 'writing-copywriting', 'Writing and copywriting assistance tools', 'category-writing', '#9d174d', 14, false),
-  ('Image Generation', 'image-generation', 'AI-powered image generation tools', 'category-image-gen', '#831843', 15, true),
-  ('Animation & VFX', 'animation-vfx', 'Animation and visual effects software', 'category-animation', '#6b21a8', 16, false),
-  
-  -- Developer & Tech
-  ('Developer Tools', 'developer-tools', 'Development tools and programming resources', 'category-dev', '#8b5cf6', 17, true),
-  ('AI & Machine Learning', 'ai-machine-learning', 'AI/ML development and research tools', 'category-ai', '#7c3aed', 18, true),
-  ('Data Management', 'data-management', 'Data storage, processing and management tools', 'category-data', '#6d28d9', 19, false),
-  ('API & Integration Tools', 'api-integration-tools', 'API development and integration platforms', 'category-api', '#5b21b6', 20, false),
-  ('No-Code/Low-Code', 'no-code-low-code', 'No-code and low-code development platforms', 'category-nocode', '#4c1d95', 21, false),
-  ('Automation Tools', 'automation-tools', 'Workflow automation and process optimization', 'category-automation', '#3d1a78', 22, false),
-  
-  -- E-commerce & Retail
-  ('E-commerce', 'ecommerce', 'E-commerce platforms and online store tools', 'category-ecommerce', '#f59e0b', 23, true),
-  ('Customer Analytics', 'customer-analytics', 'Customer behavior and analytics tools', 'category-customer-analytics', '#d97706', 24, false),
-  ('Recommendation Systems', 'recommendation-systems', 'AI-powered recommendation engines', 'category-recommendations', '#b45309', 25, false),
-  ('Chatbots & Virtual Assistants', 'chatbots-virtual-assistants', 'Customer service chatbots and virtual assistants', 'category-chatbots', '#92400e', 26, false),
-  
-  -- Entertainment & Media
-  ('Gaming', 'gaming', 'Gaming platforms and game development tools', 'category-gaming', '#ef4444', 27, true),
-  ('Social Media Tools', 'social-media-tools', 'Social media management and marketing tools', 'category-social', '#dc2626', 28, false),
-  ('Streaming & Podcasting', 'streaming-podcasting', 'Streaming platforms and podcasting tools', 'category-streaming', '#b91c1c', 29, false),
-  
-  -- Industry-Specific
-  ('Healthcare & MedTech', 'healthcare-medtech', 'Healthcare technology and medical applications', 'category-healthcare', '#06b6d4', 30, true),
-  ('Legal & Compliance', 'legal-compliance', 'Legal technology and compliance tools', 'category-legal', '#0891b2', 31, false),
-  ('Real Estate & PropTech', 'real-estate-proptech', 'Real estate technology and property tools', 'category-realestate', '#0e7490', 32, false),
-  ('Research & Academia', 'research-academia', 'Research tools and academic applications', 'category-research', '#155e75', 33, false),
-  
-  -- Language & Communication
-  ('Translation & Localization', 'translation-localization', 'Translation and localization services', 'category-translation', '#f97316', 34, false),
-  ('Text Analysis & NLP', 'text-analysis-nlp', 'Natural language processing and text analysis', 'category-nlp', '#ea580c', 35, false),
-  ('Voice & Speech', 'voice-speech', 'Voice recognition and speech processing tools', 'category-voice', '#c2410c', 36, false),
-  ('Chatbots & Conversational AI', 'chatbots-conversational-ai', 'Conversational AI and chatbot platforms', 'category-conversational', '#9a3412', 37, false),
-  
-  -- Vision & Recognition
-  ('Computer Vision', 'computer-vision', 'Computer vision and image recognition tools', 'category-vision', '#84cc16', 38, false),
-  ('Image Recognition', 'image-recognition', 'Image recognition and analysis platforms', 'category-image-recognition', '#65a30d', 39, false),
-  ('Video Analysis', 'video-analysis', 'Video analysis and processing tools', 'category-video-analysis', '#4d7c0f', 40, false),
-  ('OCR & Document Processing', 'ocr-document-processing', 'Optical character recognition and document processing', 'category-ocr', '#365314', 41, false),
-  
-  -- Other
-  ('Cybersecurity', 'cybersecurity', 'Cybersecurity and security tools', 'category-security', '#6b7280', 42, true),
-  ('Sustainability & Impact', 'sustainability-impact', 'Sustainability and social impact tools', 'category-sustainability', '#4b5563', 43, false),
-  ('Research Tools', 'research-tools', 'General research and analysis tools', 'category-research-tools', '#374151', 44, false),
-  ('General AI Tools', 'general-ai-tools', 'General-purpose AI tools and platforms', 'category-general-ai', '#1f2937', 45, false)
-ON CONFLICT (slug) DO NOTHING;
-
--- ============================================================================
--- AUTOMATIC USER CREATION TRIGGER
--- ============================================================================
-
--- Function to automatically create a user in public.users when they sign up
--- This ensures the foreign key constraint on apps.submitted_by is satisfied
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -894,113 +1081,147 @@ SET search_path = ''
 AS $$
 BEGIN
   INSERT INTO public.users (
-    id,
-    full_name,
-    first_name,
-    role,
-    total_submissions,
-    total_votes,
-    reputation,
-    is_active,
-    created_at,
-    updated_at,
-    last_login_at
-  )
-  VALUES (
+    id, full_name, first_name, avatar_url, role,
+    total_submissions, reputation,
+    is_active, is_admin, notification_preferences,
+    created_at, updated_at, last_login_at
+  ) VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', SPLIT_PART(NEW.email, '@', 1)),
     COALESCE(NEW.raw_user_meta_data->>'first_name', SPLIT_PART(NEW.email, '@', 1)),
-    'user',
-    0,
-    0,
-    0,
-    true,
-    NOW(),
-    NOW(),
-    NOW()
+    COALESCE(NEW.raw_user_meta_data->>'avatar_url', NEW.raw_user_meta_data->>'picture', NULL),
+    'user', 0, 0, true, false,
+    '{"weekly_digest": true, "winner_reminder": true, "account_creation": true, "account_deletion": true, "marketing_emails": true, "submission_decline": true, "competition_winners": true, "submission_approval": true, "weekly_competition_entry": true}'::jsonb,
+    NOW(), NOW(), NOW()
   )
   ON CONFLICT (id) DO UPDATE SET
     full_name = COALESCE(EXCLUDED.full_name, public.users.full_name),
     first_name = COALESCE(EXCLUDED.first_name, public.users.first_name),
+    avatar_url = COALESCE(EXCLUDED.avatar_url, public.users.avatar_url),
     last_login_at = NOW(),
     updated_at = NOW();
-  
+
   RETURN NEW;
 END;
 $$;
 
--- Trigger to call handle_new_user when a new user signs up
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_new_user();
 
--- ============================================================================
--- HELPFUL FUNCTIONS
--- ============================================================================
-
--- Function to check if current user is admin (for RLS performance optimization)
-CREATE OR REPLACE FUNCTION is_admin()
-RETURNS BOOLEAN AS $$
+-- Sync avatar / name when OAuth metadata changes
+CREATE OR REPLACE FUNCTION public.handle_user_update()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+  new_avatar_url TEXT;
 BEGIN
-  RETURN EXISTS (
-    SELECT 1 FROM public.users 
-    WHERE id = auth.uid() AND role = 'admin'
+  new_avatar_url := COALESCE(
+    NEW.raw_user_meta_data->>'avatar_url',
+    NEW.raw_user_meta_data->>'picture'
   );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 
--- Function to get current active weekly competition
-CREATE OR REPLACE FUNCTION get_active_weekly_competition()
-RETURNS UUID AS $$
-BEGIN
-  RETURN (
-    SELECT id FROM public.competitions
-    WHERE type = 'weekly'
-      AND status = 'active'
-      AND start_date <= NOW()
-      AND end_date >= NOW()
-    ORDER BY start_date DESC
-    LIMIT 1
-  );
-END;
-$$ LANGUAGE plpgsql;
+  UPDATE public.users
+  SET
+    avatar_url = CASE
+      WHEN new_avatar_url IS NOT NULL THEN new_avatar_url
+      ELSE public.users.avatar_url
+    END,
+    full_name = COALESCE(
+      NEW.raw_user_meta_data->>'full_name',
+      NEW.raw_user_meta_data->>'name',
+      public.users.full_name
+    ),
+    first_name = COALESCE(
+      NEW.raw_user_meta_data->>'first_name',
+      public.users.first_name
+    ),
+    last_login_at = NOW(),
+    updated_at = NOW()
+  WHERE id = NEW.id;
 
--- Function to increment app views
-CREATE OR REPLACE FUNCTION increment_app_views(app_uuid UUID)
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS on_auth_user_updated ON auth.users;
+CREATE TRIGGER on_auth_user_updated
+  AFTER UPDATE OF raw_user_meta_data ON auth.users
+  FOR EACH ROW
+  WHEN (OLD.raw_user_meta_data IS DISTINCT FROM NEW.raw_user_meta_data)
+  EXECUTE FUNCTION public.handle_user_update();
+
+-- ============================================================================
+-- HELPER FUNCTIONS
+-- ============================================================================
+
+-- Recalculate app average rating from all ratings
+CREATE OR REPLACE FUNCTION recalculate_app_rating(target_app_id UUID)
 RETURNS VOID AS $$
 BEGIN
   UPDATE public.apps
-  SET views = views + 1,
-      total_engagement = total_engagement + 1
-  WHERE id = app_uuid;
-END;
-$$ LANGUAGE plpgsql;
-
--- Function to increment app clicks
-CREATE OR REPLACE FUNCTION increment_app_clicks(app_uuid UUID)
-RETURNS VOID AS $$
-BEGIN
-  UPDATE public.apps
-  SET clicks = clicks + 1,
-      total_engagement = total_engagement + 1
-  WHERE id = app_uuid;
+  SET
+    average_rating = COALESCE((
+      SELECT ROUND(AVG(rating)::numeric, 2)
+      FROM public.ratings
+      WHERE app_id = target_app_id
+    ), 0),
+    ratings_count = (
+      SELECT COUNT(*)::integer
+      FROM public.ratings
+      WHERE app_id = target_app_id
+    )
+  WHERE id = target_app_id;
 END;
 $$ LANGUAGE plpgsql;
 
 -- ============================================================================
--- COMPLETION
+-- STORAGE BUCKET
 -- ============================================================================
+-- Creates the default storage bucket for image uploads (logos, screenshots).
+-- The bucket name must match SUPABASE_S3_BUCKET in your .env.local (default: "storage").
+-- If this fails, enable Storage in Supabase Dashboard → Storage first.
 
--- Verify schema
 DO $$
 BEGIN
-  RAISE NOTICE 'Schema created successfully!';
-  RAISE NOTICE 'Next steps:';
-  RAISE NOTICE '1. Verify all tables were created';
-  RAISE NOTICE '2. Set up authentication in Supabase dashboard';
-  RAISE NOTICE '3. Enable email provider in Auth settings';
-  RAISE NOTICE '4. Update your application code to use Supabase';
+  INSERT INTO storage.buckets (id, name, public)
+  VALUES ('storage', 'storage', true)
+  ON CONFLICT (id) DO NOTHING;
+EXCEPTION
+  WHEN undefined_table THEN
+    RAISE NOTICE 'Storage schema not ready. Enable Storage in Dashboard → Storage, then run: INSERT INTO storage.buckets (id, name, public) VALUES (''storage'', ''storage'', true) ON CONFLICT (id) DO NOTHING;';
 END $$;
 
+-- ============================================================================
+-- SEED DATA — starter categories
+-- ============================================================================
+-- These match config/directory.config.ts seedCategories.
+-- Replace or extend them with categories relevant to your directory niche.
+
+INSERT INTO public.categories (name, slug, description, sphere, sort_order) VALUES
+  ('SaaS',             'saas',             'Software as a Service products',    'Software', 1),
+  ('Developer Tools',  'developer-tools',  'Tools and utilities for developers','Software', 2),
+  ('Design',           'design',           'Design tools and resources',        'Creative', 3),
+  ('Marketing',        'marketing',        'Marketing and growth tools',        'Business', 4),
+  ('Other',            'other',            'Projects that do not fit existing categories', 'Other', 99)
+ON CONFLICT (slug) DO NOTHING;
+
+-- ============================================================================
+-- DONE
+-- ============================================================================
+
+DO $$
+BEGIN
+  RAISE NOTICE 'DirectoryKit schema created successfully.';
+  RAISE NOTICE '';
+  RAISE NOTICE 'Next steps:';
+  RAISE NOTICE '  1. Authentication → Providers: Enable Email (required), Google OAuth (optional)';
+  RAISE NOTICE '  2. Storage → Create bucket "storage" if not present (for logos, screenshots)';
+  RAISE NOTICE '  3. Copy .env.example to .env.local and add Supabase URL, anon key, service_role key';
+  RAISE NOTICE '  4. Run: pnpm dev';
+END $$;

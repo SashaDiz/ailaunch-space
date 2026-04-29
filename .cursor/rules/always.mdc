@@ -1,0 +1,33 @@
+---
+description: Always-on project guardrails for DirectoryKit
+alwaysApply: true
+---
+
+# DirectoryKit — global rules
+
+**Before editing anything, read `AGENTS.md` (symlink to `CLAUDE.md`) for the full architectural map.** It documents the DB abstraction, feature flags, auth, styling, and payment flows.
+
+## Hard rules
+
+- **Path alias:** Always import via `@/*` (maps to project root). Never use deep relative paths (`../../../lib/...`).
+- **Zod is the source of truth.** Entity types in `types/` are derived with `z.infer<typeof Schema>` from `lib/validations/schemas.ts`. To change a type, edit the schema first.
+- **Admin check:** Use `checkIsAdmin` from `@/lib/supabase/auth` (checks both `is_admin` boolean AND `role === 'admin'`). The wrapper `isAdmin` in `@/lib/supabase/auth-helpers` delegates to it — both are safe; anything else is not.
+- **No `console.log`/`console.info`/`console.debug` in source code** (lib, app, components, hooks, config, types, i18n). `console.warn` and `console.error` are fine. ESLint enforces this — pre-commit hook will fail. CLI scripts under `scripts/` are exempt.
+- **Server auth:** In API routes and server components, verify auth with `supabase.auth.getUser()` (server-validated JWT). `getSession` exported from `@/lib/supabase/auth` is safe because it wraps `getUser` — don't replace it with Supabase's raw `getSession()`.
+- **Feature flags gate API routes:** When adding a new feature route, call `featureGuard(flag)` from `@/lib/features` at the top and return its response if non-null.
+- **DB access:** Use `db` from `@/lib/supabase/database` (MongoDB-style API). Don't pass `created_at`/`updated_at` — DB triggers handle those.
+- **Secrets:** Never read `.env.local` or `.env`. Never commit files containing real credentials.
+
+## Tooling
+
+- Package manager: `pnpm` (v10.4+). Do not use `npm` or `yarn`.
+- Dev/build: webpack mode (`--webpack` flag), not Turbopack.
+- Type checking: `npx tsc --noEmit`. Lint: `pnpm lint`.
+- Before claiming a change is done: run `pnpm lint` and `pnpm build` (or `/verify` in Claude Code).
+
+## Style
+
+- TypeScript `strict: false` project-wide. Still prefer explicit types for function signatures and public exports.
+- shadcn/ui for primitives; `cn()` from `@/lib/utils` for class merging.
+- No emojis in code, comments, or strings unless the user explicitly asks.
+- Keep comments minimal; explain *why*, not *what*.
