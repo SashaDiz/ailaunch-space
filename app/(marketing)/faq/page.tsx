@@ -46,7 +46,7 @@ const faqSchemaData = [
   },
   {
     question: "How does the draft system work for Premium submissions?",
-    answer: "When you select Premium but don't complete payment, your submission is saved as a draft. Drafts don't count toward weekly slot limits until payment is confirmed. You can resume drafts from your dashboard, modify details, or even switch to Standard plan. If you resubmit with the same details, old drafts are automatically replaced.",
+    answer: "When you select Premium but don't complete payment, your submission is saved as a draft. Drafts don't count toward your launch slot limits until payment is confirmed. You can resume drafts from your dashboard, modify details, or even switch to Standard plan. If you resubmit with the same details, old drafts are automatically replaced.",
   },
   {
     question: "Can I edit my submission after it's submitted?",
@@ -58,7 +58,7 @@ const faqSchemaData = [
   },
   {
     question: "Can I track my submission's performance?",
-    answer: "Yes! You can track everything in real-time from your dashboard: views, competition standings, submission status (draft, pending, scheduled, live, etc.), and ranking position during the competition period.",
+    answer: "Yes! You can track everything in real-time from your dashboard: views, submission status (draft, pending, scheduled, live, etc.), and engagement on your listing.",
   },
 ];
 
@@ -119,7 +119,7 @@ const faqSections = [
                 <h4 className="font-semibold text-foreground">Standard Launch (FREE)</h4>
               </div>
               <ul className="space-y-1.5 text-sm text-muted-foreground ml-7">
-                <li>• 15 shared weekly slots</li>
+                <li>• 15 shared launch slots</li>
                 <li>• 7 days on homepage</li>
                 <li>• Free dofollow backlink in exchange for installing our badge on your site (we verify, admin approves)</li>
               </ul>
@@ -153,7 +153,7 @@ const faqSections = [
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-muted-foreground/60 mt-0.5 flex-shrink-0" />
-                    <span>15 shared weekly slots</span>
+                    <span>15 shared launch slots</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-muted-foreground/60 mt-0.5 flex-shrink-0" />
@@ -199,7 +199,7 @@ const faqSections = [
               </div>
             </div>
             <p className="text-muted-foreground text-sm pt-2">
-              Both plans compete for top 3 weekly recognition. Standard projects must keep our badge embedded on their site to retain the dofollow link — we re-verify periodically.
+              Standard projects must keep our badge embedded on their site to retain the dofollow link — we re-verify periodically.
             </p>
           </div>
         ),
@@ -271,7 +271,7 @@ const faqSections = [
             <ul className="space-y-2">
               <li className="flex items-start gap-2">
                 <FileText className="w-5 h-5 text-foreground mt-0.5 flex-shrink-0" />
-                <span className="text-muted-foreground">Drafts don't count toward weekly slot limits until payment is confirmed</span>
+                <span className="text-muted-foreground">Drafts don't count toward your launch slot limits until payment is confirmed</span>
               </li>
               <li className="flex items-start gap-2">
                 <Settings className="w-5 h-5 text-foreground mt-0.5 flex-shrink-0" />
@@ -339,16 +339,12 @@ const faqSections = [
                 <span className="text-muted-foreground">Views</span>
               </li>
               <li className="flex items-start gap-2">
-                <Star className="w-5 h-5 text-foreground mt-0.5 flex-shrink-0" />
-                <span className="text-muted-foreground">Competition standings</span>
-              </li>
-              <li className="flex items-start gap-2">
                 <FileText className="w-5 h-5 text-foreground mt-0.5 flex-shrink-0" />
                 <span className="text-muted-foreground">Submission status (draft, pending, scheduled, live, etc.)</span>
               </li>
               <li className="flex items-start gap-2">
-                <Crown className="w-5 h-5 text-foreground mt-0.5 flex-shrink-0" />
-                <span className="text-muted-foreground">Ranking position during the competition period</span>
+                <Star className="w-5 h-5 text-foreground mt-0.5 flex-shrink-0" />
+                <span className="text-muted-foreground">Engagement on your listing</span>
               </li>
             </ul>
           </div>

@@ -111,7 +111,7 @@ export const emailTemplates = {
                   Hi ${data.userName || 'there'}!
                 </h2>
                 <p style="color: #374151; margin: 0; font-size: 16px;">
-                  Your account has been successfully created. You're now ready to launch your directory or tiny project and compete for top positions!
+                  Your account has been successfully created. You're now ready to launch your directory or tiny project and get featured in our curated directory!
                 </p>
               </div>
 
@@ -119,8 +119,8 @@ export const emailTemplates = {
                 <h3 style="margin: 0 0 15px 0; color: #000000; font-size: 18px;">What you can do now:</h3>
                 <ul style="margin: 0; padding-left: 20px; color: #374151;">
                   <li style="margin-bottom: 8px;">Submit your directory or project for review</li>
-                  <li style="margin-bottom: 8px;">Compete in weekly competitions</li>
-                  <li style="margin-bottom: 8px;">Earn dofollow backlinks by winning</li>
+                  <li style="margin-bottom: 8px;">Get featured in our curated directory</li>
+                  <li style="margin-bottom: 8px;">Earn dofollow backlinks by listing your project</li>
                   <li>Track your performance in your dashboard</li>
                 </ul>
               </div>
@@ -206,16 +206,16 @@ export const emailTemplates = {
 `
   },
 
-  // Competition notifications
+  // Listing live notifications
   weeklyCompetitionEntry: {
-    subject: (projectName) => `🚀 ${projectName} entered the weekly competition!`,
+    subject: (projectName) => `🚀 ${projectName} is now live in the directory!`,
     html: (data) => `
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1">
-          <title>Competition Entry Confirmed</title>
+          <title>Listing Live</title>
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #000000; margin: 0; padding: 0; background-color: #ffffff;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -223,50 +223,49 @@ export const emailTemplates = {
               <div style="text-align: center; margin-bottom: 30px;">
                 ${getLogoHtml(data)}
                 <h1 style="color: #000000; margin: 0; font-size: 28px; font-weight: 700;">
-                  Competition Entry Confirmed! 🚀
+                  Your listing is live! 🚀
                 </h1>
               </div>
-              
+
               <div style="text-align: center; margin-bottom: 30px;">
                 <h2 style="color: #000000; margin: 0 0 10px 0; font-size: 22px;">
-                  ${data.projectName} is now competing!
+                  ${data.projectName} is now live!
                 </h2>
                 <p style="color: #374151; margin: 0; font-size: 16px;">
-                  Your project has been entered into this week's competition and is now live for voting.
+                  Your project is now live in our directory for the community to discover.
                 </p>
               </div>
 
               <div style="background: #000000; color: white; border-radius: 12px; padding: 24px; margin: 30px 0; text-align: center;">
-                <h3 style="margin: 0 0 15px 0; font-size: 20px;">Competition Details</h3>
+                <h3 style="margin: 0 0 15px 0; font-size: 20px;">Listing Details</h3>
                 <div style="display: flex; justify-content: space-around; text-align: center;">
                   <div>
                     <div style="font-size: 24px; font-weight: bold;">${data.competitionWeek}</div>
-                    <div style="font-size: 14px; opacity: 0.9;">Competition Week</div>
+                    <div style="font-size: 14px; opacity: 0.9;">Launch Week</div>
                   </div>
                   <div>
                     <div style="font-size: 24px; font-weight: bold;">${data.endDate}</div>
-                    <div style="font-size: 14px; opacity: 0.9;">Ends</div>
+                    <div style="font-size: 14px; opacity: 0.9;">Featured until</div>
                   </div>
                 </div>
               </div>
 
               <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; margin: 30px 0;">
-                <h3 style="margin: 0 0 15px 0; color: #000000; font-size: 18px;">What winners will get:</h3>
+                <h3 style="margin: 0 0 15px 0; color: #000000; font-size: 18px;">What you get from your listing:</h3>
                 <ul style="margin: 0; padding-left: 20px; color: #374151;">
-                  <li style="margin-bottom: 8px;">🏆 Winner badge for your website (positions #1, #2, or #3)</li>
-                  <li style="margin-bottom: 8px;">🔗 High-authority dofollow backlink from ${siteConfig.name}</li>
+                  <li style="margin-bottom: 8px;">🌟 Featured exposure on the homepage and category pages</li>
+                  <li style="margin-bottom: 8px;">🔗 Dofollow backlink from ${siteConfig.name} once your badge is verified</li>
                   <li style="margin-bottom: 8px;">📈 SEO boost from the valuable backlink</li>
                   <li>✨ Recognition and credibility for your project</li>
                 </ul>
               </div>
 
               <div style="background: #f9fafb; border-left: 4px solid #000000; padding: 20px; margin: 30px 0;">
-                <h3 style="margin: 0 0 10px 0; color: #000000; font-size: 16px;">What's required for winners to get a backlink:</h3>
+                <h3 style="margin: 0 0 10px 0; color: #000000; font-size: 16px;">What's required to keep your dofollow backlink:</h3>
                 <ul style="margin: 0; padding-left: 20px; color: #374151; font-size: 14px;">
-                  <li style="margin-bottom: 8px;">Finish in the top 3 positions (#1, #2, or #3) in the weekly competition</li>
-                  <li style="margin-bottom: 8px;">Add the winner badge to your website within 7 days of winning</li>
+                  <li style="margin-bottom: 8px;">Add our badge to your website within 7 days of going live</li>
                   <li style="margin-bottom: 8px;">The badge must be visible on your live website (not just in code)</li>
-                  <li>The dofollow link will be activated within 24 hours after we verify the badge is added</li>
+                  <li>The dofollow link will be activated within 24 hours after we verify the badge is added, and we re-verify periodically</li>
                 </ul>
               </div>
 
@@ -295,16 +294,16 @@ export const emailTemplates = {
     `
   },
 
-  // Competition notifications (batch for multiple projects)
+  // Listing live notifications (batch for multiple projects)
   weeklyCompetitionEntryBatch: {
-    subject: () => `🚀 Your projects entered this week's competition!`,
+    subject: () => `🚀 Your projects are now live in the directory!`,
     html: (data) => `
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1">
-          <title>Competition Entry Confirmed</title>
+          <title>Listings Live</title>
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #000000; margin: 0; padding: 0; background-color: #ffffff;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -312,26 +311,26 @@ export const emailTemplates = {
               <div style="text-align: center; margin-bottom: 30px;">
                 ${getLogoHtml(data)}
                 <h1 style="color: #000000; margin: 0; font-size: 28px; font-weight: 700;">
-                  Competition Entries Confirmed! 🚀
+                  Your listings are live! 🚀
                 </h1>
               </div>
-              
+
               <div style="text-align: center; margin-bottom: 20px;">
                 <p style="color: #374151; margin: 0; font-size: 16px;">
-                  Your projects have been entered into this week's competition and are now live for voting.
+                  Your projects are now live in our directory for the community to discover.
                 </p>
               </div>
 
               <div style="background: #000000; color: white; border-radius: 12px; padding: 24px; margin: 30px 0; text-align: center;">
-                <h3 style="margin: 0 0 15px 0; font-size: 20px;">Competition Details</h3>
+                <h3 style="margin: 0 0 15px 0; font-size: 20px;">Listing Details</h3>
                 <div style="display: flex; justify-content: space-around; text-align: center;">
                   <div>
                     <div style="font-size: 24px; font-weight: bold;">${data.competitionWeek}</div>
-                    <div style="font-size: 14px; opacity: 0.9;">Competition Week</div>
+                    <div style="font-size: 14px; opacity: 0.9;">Launch Week</div>
                   </div>
                   <div>
                     <div style="font-size: 24px; font-weight: bold;">${data.endDate}</div>
-                    <div style="font-size: 14px; opacity: 0.9;">Ends</div>
+                    <div style="font-size: 14px; opacity: 0.9;">Featured until</div>
                   </div>
                 </div>
               </div>
@@ -348,23 +347,22 @@ export const emailTemplates = {
               </div>
 
               <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; margin: 30px 0;">
-                <h3 style="margin: 0 0 15px 0; color: #000000; font-size: 18px;">What winners will get:</h3>
+                <h3 style="margin: 0 0 15px 0; color: #000000; font-size: 18px;">What you get from your listings:</h3>
                 <ul style="margin: 0; padding-left: 20px; color: #374151;">
-                  <li style="margin-bottom: 8px;">🏆 Winner badge for your website (positions #1, #2, or #3)</li>
-                  <li style="margin-bottom: 8px;">🔗 High-authority dofollow backlink from ${siteConfig.name}</li>
+                  <li style="margin-bottom: 8px;">🌟 Featured exposure on the homepage and category pages</li>
+                  <li style="margin-bottom: 8px;">🔗 Dofollow backlink from ${siteConfig.name} once your badge is verified</li>
                   <li style="margin-bottom: 8px;">📈 SEO boost from the valuable backlink</li>
-                  <li>✨ Recognition and credibility for your project</li>
+                  <li>✨ Recognition and credibility for your projects</li>
                 </ul>
               </div>
 
               <div style="background: #f9fafb; border-left: 4px solid #000000; padding: 20px; margin: 30px 0;">
-                <h3 style="margin: 0 0 10px 0; color: #000000; font-size: 16px;">What's required for winners to get a backlink:</h3>
+                <h3 style="margin: 0 0 10px 0; color: #000000; font-size: 16px;">What's required to keep your dofollow backlink:</h3>
                 <ul style="margin: 0; padding-left: 20px; color: #374151; font-size: 14px;">
-                  <li style="margin-bottom: 8px;">Finish in the top 3 positions (#1, #2, or #3) in the weekly competition</li>
-                  <li style="margin-bottom: 8px;">Add the winner badge to your website within 7 days of winning</li>
+                  <li style="margin-bottom: 8px;">Add our badge to your website within 7 days of going live</li>
                   <li style="margin-bottom: 8px;">The badge must be visible on your live website (not just in code)</li>
                   <li style="margin-bottom: 8px;"><strong>Important:</strong> The badge embed code must NOT include <code style="background: #e5e7eb; padding: 2px 4px; border-radius: 3px; font-size: 12px;">rel="nofollow"</code> to maintain the dofollow backlink</li>
-                  <li>The dofollow link will be activated within 24 hours after we verify the badge is added</li>
+                  <li>The dofollow link will be activated within 24 hours after we verify the badge is added, and we re-verify periodically</li>
                 </ul>
               </div>
 
@@ -628,10 +626,10 @@ export const emailTemplates = {
                       ? `We've reserved your slot for ${
                           data.competitionWeek
                             ? `Week ${data.competitionWeek}`
-                            : 'the competition week you selected'
+                            : 'the launch week you selected'
                         }. It will go live on ${
                           data.competitionStartDate || 'your scheduled start date'
-                        }, and we'll notify you before voting opens.`
+                        }, and we'll notify you when your listing goes live.`
                       : `Your project has been approved and is now visible on ${siteConfig.name}.`
                   }
                 </p>
@@ -659,8 +657,8 @@ export const emailTemplates = {
                   <li style="margin-bottom: 8px;">
                     ${
                       data.projectStatus === 'scheduled'
-                        ? 'Your project will automatically go live at the start of your scheduled competition week'
-                        : 'Your project is now live and accepting votes'
+                        ? 'Your project will automatically go live at the start of your scheduled launch week'
+                        : 'Your project is now live in the directory'
                     }
                   </li>
                   <li style="margin-bottom: 8px;">
@@ -675,7 +673,7 @@ export const emailTemplates = {
                     ${
                       data.projectStatus === 'scheduled'
                         ? 'Update your listing anytime before launch to make the best first impression'
-                        : 'Compete in weekly competitions for top 3 positions'
+                        : 'Get featured in our curated directory'
                     }
                   </li>
                 </ul>
@@ -813,7 +811,7 @@ export const emailTemplates = {
                 <ul style="margin: 0; padding-left: 20px; color: #374151; font-size: 14px;">
                   <li style="margin-bottom: 8px;">Our team will review your submission within 24-48 hours</li>
                   <li style="margin-bottom: 8px;">You'll receive an email once your project is approved or if we need changes</li>
-                  <li style="margin-bottom: 8px;">If approved, we'll schedule your project for your selected competition week and notify you before it goes live</li>
+                  <li style="margin-bottom: 8px;">If approved, we'll schedule your project for your selected launch week and notify you before it goes live</li>
                   <li>You can track your submission status in your dashboard</li>
                 </ul>
               </div>
@@ -877,23 +875,23 @@ export const emailTemplates = {
               
               <div style="text-align: center; margin-bottom: 30px;">
                 <h2 style="color: #000000; margin: 0 0 10px 0; font-size: 22px;">
-                  ${data.projectName} is competing this week
+                  ${data.projectName} is live this week
                 </h2>
                 <p style="color: #374151; margin: 0; font-size: 16px;">
-                  Your project is now live and competing for votes! This is your chance to make it to the top 3.
+                  Your project is now live in the directory and ready for discovery.
                 </p>
               </div>
 
               <div style="background: #000000; color: white; border-radius: 12px; padding: 24px; margin: 30px 0; text-align: center;">
-                <h3 style="margin: 0 0 15px 0; font-size: 20px;">Competition Details</h3>
+                <h3 style="margin: 0 0 15px 0; font-size: 20px;">Listing Details</h3>
                 <div style="display: flex; justify-content: space-around; text-align: center;">
                   <div>
                     <div style="font-size: 24px; font-weight: bold;">${data.competitionWeek}</div>
-                    <div style="font-size: 14px; opacity: 0.9;">Competition Week</div>
+                    <div style="font-size: 14px; opacity: 0.9;">Launch Week</div>
                   </div>
                   <div>
                     <div style="font-size: 24px; font-weight: bold;">${data.endDate}</div>
-                    <div style="font-size: 14px; opacity: 0.9;">Ends</div>
+                    <div style="font-size: 14px; opacity: 0.9;">Featured until</div>
                   </div>
                 </div>
               </div>
@@ -901,28 +899,27 @@ export const emailTemplates = {
               <div style="background: #f9fafb; border-left: 4px solid #000000; padding: 20px; margin: 30px 0;">
                 <h3 style="margin: 0 0 10px 0; color: #000000; font-size: 16px;">Action Required:</h3>
                 <p style="margin: 0; color: #374151; font-size: 14px;">
-                  <strong>Start promoting your launch now!</strong> The more people who discover and vote for your project, the better your chances of winning.
+                  <strong>Start promoting your launch now!</strong> The more people who discover your project, the more traction it gains.
                 </p>
               </div>
 
               <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; margin: 30px 0;">
-                <h3 style="margin: 0 0 15px 0; color: #000000; font-size: 18px;">What winners will get:</h3>
+                <h3 style="margin: 0 0 15px 0; color: #000000; font-size: 18px;">What you get from your listing:</h3>
                 <ul style="margin: 0; padding-left: 20px; color: #374151;">
-                  <li style="margin-bottom: 8px;">🏆 Winner badge for your website (positions #1, #2, or #3)</li>
-                  <li style="margin-bottom: 8px;">🔗 High-authority dofollow backlink from ${siteConfig.name}</li>
+                  <li style="margin-bottom: 8px;">🌟 Featured exposure on the homepage and category pages</li>
+                  <li style="margin-bottom: 8px;">🔗 Dofollow backlink from ${siteConfig.name} once your badge is verified</li>
                   <li style="margin-bottom: 8px;">📈 SEO boost from the valuable backlink</li>
                   <li>✨ Recognition and credibility for your project</li>
                 </ul>
               </div>
 
               <div style="background: #f9fafb; border-left: 4px solid #000000; padding: 20px; margin: 30px 0;">
-                <h3 style="margin: 0 0 10px 0; color: #000000; font-size: 16px;">What's required for winners to get a backlink:</h3>
+                <h3 style="margin: 0 0 10px 0; color: #000000; font-size: 16px;">What's required to keep your dofollow backlink:</h3>
                 <ul style="margin: 0; padding-left: 20px; color: #374151; font-size: 14px;">
-                  <li style="margin-bottom: 8px;">Finish in the top 3 positions (#1, #2, or #3) in the weekly competition</li>
-                  <li style="margin-bottom: 8px;">Add the winner badge to your website within 7 days of winning</li>
+                  <li style="margin-bottom: 8px;">Add our badge to your website within 7 days of going live</li>
                   <li style="margin-bottom: 8px;">The badge must be visible on your live website (not just in code)</li>
                   <li style="margin-bottom: 8px;"><strong>Important:</strong> The badge embed code must NOT include <code style="background: #e5e7eb; padding: 2px 4px; border-radius: 3px; font-size: 12px;">rel="nofollow"</code> to maintain the dofollow backlink</li>
-                  <li>The dofollow link will be activated within 24 hours after we verify the badge is added</li>
+                  <li>The dofollow link will be activated within 24 hours after we verify the badge is added, and we re-verify periodically</li>
                 </ul>
               </div>
 
@@ -951,16 +948,16 @@ export const emailTemplates = {
     `
   },
 
-  // Competition week start notification (promo email)
+  // Launch week start notification (promo email)
   competitionWeekStart: {
-    subject: () => `🏆 New competition week started - Discover premium launches!`,
+    subject: () => `🚀 New launches this week - Discover premium projects!`,
     html: (data) => `
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1">
-          <title>New Competition Week</title>
+          <title>New Launches This Week</title>
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #000000; margin: 0; padding: 0; background-color: #ffffff;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -969,16 +966,16 @@ export const emailTemplates = {
                 ${getLogoHtml(data)}
                 <div style="font-size: 48px; margin-bottom: 10px;">🏆</div>
                 <h1 style="color: #000000; margin: 0; font-size: 28px; font-weight: 700;">
-                  New Competition Week!
+                  New Launches This Week!
                 </h1>
               </div>
-              
+
               <div style="text-align: center; margin-bottom: 30px;">
                 <h2 style="color: #000000; margin: 0 0 10px 0; font-size: 22px;">
                   Week ${data.competitionWeek} is now live
                 </h2>
                 <p style="color: #374151; margin: 0; font-size: 16px;">
-                  Discover amazing new directories and tiny projects and vote for your favorites. Premium launches are featured this week!
+                  Discover amazing new directories and tiny projects. Premium launches are featured this week!
                 </p>
               </div>
 
@@ -1014,7 +1011,7 @@ export const emailTemplates = {
               <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; margin: 30px 0;">
                 <h3 style="margin: 0 0 15px 0; color: #000000; font-size: 18px;">How to participate:</h3>
                 <ul style="margin: 0; padding-left: 20px; color: #374151;">
-                  <li style="margin-bottom: 8px;">Vote for your favorite directories and projects</li>
+                  <li style="margin-bottom: 8px;">Save your favorite directories and projects</li>
                   <li style="margin-bottom: 8px;">Share projects you love on social media</li>
                   <li style="margin-bottom: 8px;">Submit your own directory or project for next week</li>
                   <li>Join the community discussions</li>
@@ -1036,7 +1033,7 @@ export const emailTemplates = {
 
               <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; text-align: center;">
                 <p style="color: #6b7280; font-size: 14px; margin: 0;">
-                  Happy voting and good luck to all participants!<br>
+                  Happy exploring!<br>
                   You can manage or turn off email notifications anytime in your account settings.<br>
                   ${emailConfig.teamSignature}
                 </p>
@@ -1124,7 +1121,7 @@ export const emailTemplates = {
               <div style="background: #f9fafb; border-left: 4px solid #000000; padding: 20px; margin: 30px 0;">
                 <h3 style="margin: 0 0 10px 0; color: #000000; font-size: 16px;">What's Next?</h3>
                 <p style="margin: 0; color: #374151; font-size: 14px;">
-                  <strong>New competition starts Monday!</strong> Submit your directory or project for next week's competition and compete for the top 3 positions.
+                  <strong>New launches go live every Monday!</strong> Submit your directory or project for next week and get featured in our curated directory.
                 </p>
               </div>
 

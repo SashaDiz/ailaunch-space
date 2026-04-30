@@ -46,7 +46,7 @@ export default function PrivacyPage() {
             <h3 className="text-xl font-semibold mb-3">2.2 Information Collected Automatically</h3>
             <p className="text-muted-foreground mb-4">When you use our Platform, we automatically collect certain information:</p>
             <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-4">
-              <li><strong>Usage Data:</strong> Pages visited, time spent, clicks, votes, submissions</li>
+              <li><strong>Usage Data:</strong> Pages visited, time spent, clicks, submissions</li>
               <li><strong>Device Information:</strong> IP address, browser type, operating system, device identifiers</li>
               <li><strong>Log Data:</strong> Access times, pages viewed, referring URLs, error logs</li>
               <li><strong>Analytics Data:</strong> User behavior patterns, performance metrics, engagement statistics</li>
@@ -71,14 +71,14 @@ export default function PrivacyPage() {
             <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-4">
               <li>Provide, maintain, and improve our Platform and services</li>
               <li>Process and display your project submissions</li>
-              <li>Enable voting and competition participation</li>
+              <li>Enable directory listing and discovery features</li>
               <li>Provide customer support and respond to inquiries</li>
               <li>Process payments and manage premium subscriptions</li>
             </ul>
 
             <h3 className="text-xl font-semibold mb-3">3.2 Communication</h3>
             <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-4">
-              <li>Send you updates about your submissions and competitions</li>
+              <li>Send you updates about your submissions and listing status</li>
               <li>Provide newsletters and marketing communications (with your consent)</li>
               <li>Notify you of important changes to our services or policies</li>
               <li>Respond to your comments, questions, and support requests</li>

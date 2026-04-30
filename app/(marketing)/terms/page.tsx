@@ -38,7 +38,7 @@ export default function TermsPage() {
             </p>
             <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-4">
               <li>Project submission and listing services</li>
-              <li>Weekly competitions and voting systems</li>
+              <li>Curated directory listings and discovery</li>
               <li>Premium submission services with enhanced features</li>
               <li>Community exposure and feedback systems</li>
               <li>Newsletter and communication services</li>
@@ -79,7 +79,7 @@ export default function TermsPage() {
               We offer two submission plans:
             </p>
             <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-4">
-              <li><strong>Standard Plan (Free):</strong> Basic project listing with community voting eligibility</li>
+              <li><strong>Standard Plan (Free):</strong> Basic project listing in the curated directory</li>
               <li><strong>Premium Plan ($15):</strong> Enhanced features including priority placement, extended homepage exposure, premium badge, and enhanced social media promotion</li>
             </ul>
 
@@ -118,7 +118,7 @@ export default function TermsPage() {
             </p>
             <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-4">
               <li>Change of mind after service delivery</li>
-              <li>Dissatisfaction with voting results or community response</li>
+              <li>Dissatisfaction with directory placement or community response</li>
               <li>Project rejection due to content policy violations</li>
               <li>Technical issues on your end (broken links, inaccessible websites, etc.)</li>
               <li>Requests made more than 7 days after payment</li>
