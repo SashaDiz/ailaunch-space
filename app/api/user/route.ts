@@ -3,14 +3,9 @@ import { getSupabaseAdmin } from '@/lib/supabase/client';
 import { db } from '@/lib/supabase/database';
 import { getSession } from '@/lib/supabase/auth';
 import { notificationManager } from '@/lib/notifications';
-import { isDemoMode, DEMO_USER_ID, demoWriteResponse } from '@/lib/demo';
 
 // User authentication middleware
 async function checkUserAuth() {
-  if (isDemoMode()) {
-    return { session: { user: { id: DEMO_USER_ID, email: 'demo@ailaunch.space' } } };
-  }
-
   const session = await getSession();
 
   if (!session?.user?.id) {
@@ -590,9 +585,6 @@ async function getUserProfile(session) {
 
 // PUT /api/user - Update user profile
 export async function PUT(request) {
-  const demo = demoWriteResponse();
-  if (demo) return demo;
-
   try {
     const authCheck = await checkUserAuth();
     if ('error' in authCheck) return authCheck.error;
@@ -688,9 +680,6 @@ export async function PUT(request) {
 
 // DELETE /api/user - Delete user account and all associated data
 export async function DELETE(request) {
-  const demo = demoWriteResponse();
-  if (demo) return demo;
-
   try {
     const authCheck = await checkUserAuth();
     if ('error' in authCheck) return authCheck.error;

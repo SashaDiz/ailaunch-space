@@ -7,7 +7,6 @@ import Link from "next/link";
 import { Mail, ChevronLeft } from "lucide-react";
 import { useSupabase } from '@/components/shared/SupabaseProvider';
 import { useUser } from '@/hooks/use-user';
-import { isDemoMode } from '@/lib/demo';
 import { siteConfig } from "@/config/site.config";
 import toast from "react-hot-toast";
 
@@ -40,9 +39,7 @@ function SignInContent() {
     if (user) {
       // Clear the redirect URL from sessionStorage
       sessionStorage.removeItem("redirectAfterSignIn");
-      // In demo mode, default to admin panel instead of homepage
-      const target = isDemoMode() && callbackUrl === "/" ? "/admin" : callbackUrl;
-      router.push(target);
+      router.push(callbackUrl);
     }
   }, [user, callbackUrl, router]);
 

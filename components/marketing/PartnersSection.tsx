@@ -12,11 +12,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { featuresConfig } from "@/config/features.config";
 
-// No placeholders — only show partners returned from /api/partners.
-// Admin can add real partners through the admin panel; until then the section
-// just renders the "Become a sponsor" CTA tile.
-const PLACEHOLDER_SPONSORS: Array<{ id: string; name: string; description: string; logo: string; website_url: string }> = [];
-
 export function PartnersSection() {
   const [partners, setPartners] = useState<
     { id: string; name: string; description: string; logo: string; website_url: string }[]
@@ -46,7 +41,7 @@ export function PartnersSection() {
 
   if (!featuresConfig.partners) return null;
 
-  const displayPartners = partners.length > 0 ? partners.slice(0, 8) : PLACEHOLDER_SPONSORS;
+  const displayPartners = partners.slice(0, 8);
   const showBecomeButton = displayPartners.length < 8;
 
   if (loading) {

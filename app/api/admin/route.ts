@@ -17,15 +17,10 @@ import {
   bulkUpdateLinkTypes,
 } from '@/lib/link-type-manager';
 import { verifyStripeSession, isStripeConfigured, getStripeRevenue } from '@/lib/payments/polar';
-import { demoAdminAuth, demoWriteResponse } from '@/lib/demo';
 
 // Admin authentication middleware
 // Supports both Supabase session (for browser) and CRON_SECRET (for API calls)
 async function checkAdminAuth(request) {
-  // Demo mode: bypass auth entirely
-  const demo = demoAdminAuth();
-  if (demo) return demo;
-
   // Check for CRON_SECRET authentication (for API/script access)
   const authHeader = request.headers.get('authorization');
   const hasCronSecret = authHeader === `Bearer ${process.env.CRON_SECRET}`;
@@ -113,9 +108,6 @@ export async function GET(request) {
 
 // PUT /api/admin?type=projects&id=...
 export async function PUT(request) {
-  const demo = demoWriteResponse();
-  if (demo) return demo;
-
   try {
     const authCheck = await checkAdminAuth(request);
     if ('error' in authCheck) return authCheck.error;
@@ -144,9 +136,6 @@ export async function PUT(request) {
 
 // POST /api/admin - Handle various admin actions
 export async function POST(request) {
-  const demo = demoWriteResponse();
-  if (demo) return demo;
-
   try {
     const authCheck = await checkAdminAuth(request);
     if ('error' in authCheck) return authCheck.error;
@@ -186,9 +175,6 @@ export async function POST(request) {
 
 // DELETE /api/admin?type=projects&id=...
 export async function DELETE(request) {
-  const demo = demoWriteResponse();
-  if (demo) return demo;
-
   try {
     const authCheck = await checkAdminAuth(request);
     if ('error' in authCheck) return authCheck.error;

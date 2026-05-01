@@ -14,7 +14,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { siteConfig } from "@/config/site.config";
 import { featuresConfig } from '@/config/features.config';
 import { directoryConfig } from '@/config/directory.config';
-import { marketingConfig } from '@/config/marketing.config';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -364,19 +363,6 @@ function HomePage({
           promotion_id: p.id,
           cta_text: p.cta_text,
         }));
-      }
-
-      if (promoCards.length === 0 && marketingConfig.mockPromotion?.enabled) {
-        const mock = marketingConfig.mockPromotion;
-        promoCards = [{
-          id: 'mock-promo',
-          name: mock.name,
-          slug: 'mock-promo',
-          logo_url: mock.logoUrl,
-          short_description: mock.shortDescription,
-          website_url: mock.websiteUrl,
-          cta_text: mock.ctaText,
-        }];
       }
 
       setFeaturedPremium([...promoCards, ...premium]);

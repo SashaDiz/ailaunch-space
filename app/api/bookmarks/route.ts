@@ -4,7 +4,6 @@ import { cookies } from "next/headers";
 import { getSupabasePublishableKey, getSupabaseUrl } from "@/lib/supabase/env";
 import { db } from "@/lib/supabase/database";
 import { featureGuard } from "@/lib/features";
-import { isDemoMode, DEMO_USER_ID, demoWriteResponse } from "@/lib/demo";
 
 // GET /api/bookmarks - Get current user's bookmarked projects
 export async function GET(request: Request) {
@@ -28,15 +27,10 @@ export async function GET(request: Request) {
       getSupabasePublishableKey()!,
       { cookies: { get(name: string) { return cookieStore.get(name)?.value; } } }
     );
-    let user: any;
-    if (isDemoMode()) {
-      user = { id: DEMO_USER_ID };
-    } else {
-      const { data } = await supabase.auth.getUser();
-      user = data.user;
-      if (!user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
+    const { data } = await supabase.auth.getUser();
+    const user = data.user;
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -67,9 +61,6 @@ export async function GET(request: Request) {
 
 // POST /api/bookmarks - Add a bookmark
 export async function POST(request: Request) {
-  const demo = demoWriteResponse();
-  if (demo) return demo;
-
   try {
     const guard = featureGuard("bookmarks");
     if (guard) return guard;
@@ -119,9 +110,6 @@ export async function POST(request: Request) {
 
 // DELETE /api/bookmarks - Remove a bookmark
 export async function DELETE(request: Request) {
-  const demo = demoWriteResponse();
-  if (demo) return demo;
-
   try {
     const guard = featureGuard("bookmarks");
     if (guard) return guard;

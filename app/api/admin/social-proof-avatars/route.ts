@@ -4,16 +4,12 @@ import { cookies } from "next/headers";
 import { getSupabasePublishableKey, getSupabaseUrl } from "@/lib/supabase/env";
 import { getSupabaseAdmin } from "@/lib/supabase/client";
 import { checkIsAdmin } from "@/lib/supabase/auth";
-import { demoAdminAuth, demoWriteResponse } from "@/lib/demo";
 
 const SETTINGS_KEY = "social_proof_avatars";
 
 type SocialProofAvatarsValue = { userIds: string[] };
 
 async function checkAdminAuth(request: Request) {
-  const demo = demoAdminAuth();
-  if (demo) return demo;
-
   const cookieStore = await cookies();
   const supabase = createServerClient(
     getSupabaseUrl()!,
@@ -69,9 +65,6 @@ export async function GET(request: Request) {
 
 /** PUT — Save selected user IDs for social proof avatars */
 export async function PUT(request: Request) {
-  const demo = demoWriteResponse();
-  if (demo) return demo;
-
   try {
     const authCheck = await checkAdminAuth(request);
     if ('error' in authCheck) return authCheck.error;

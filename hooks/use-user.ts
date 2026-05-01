@@ -2,14 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useSupabase } from '@/components/shared/SupabaseProvider';
-import { isDemoMode, DEMO_AUTH_USER } from '@/lib/demo';
-
-const _demoMode = isDemoMode();
 
 export function useUser() {
   const { supabase } = useSupabase();
-  const [user, setUser] = useState(() => (_demoMode ? DEMO_AUTH_USER : null));
-  const [loading, setLoading] = useState(() => (_demoMode ? false : true));
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const syncUser = (sessionUser) => {
     setUser((prev) => {
@@ -30,9 +27,6 @@ export function useUser() {
   };
 
   useEffect(() => {
-    // In demo mode, skip Supabase auth entirely
-    if (_demoMode) return;
-
     // Get initial session
     const getUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -53,4 +47,3 @@ export function useUser() {
 
   return { user, loading };
 }
-

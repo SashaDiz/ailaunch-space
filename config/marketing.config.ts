@@ -21,13 +21,4 @@ export const marketingConfig: MarketingConfig = {
     /** Alt text for the icon */
     iconAlt: 'AI Launch Space',
   },
-  /** Fallback promotion card shown in catalog grid and project sidebar when no paid promotions exist */
-  mockPromotion: {
-    enabled: true,
-    name: 'Promote your AI tool',
-    shortDescription: 'Get featured in our directory and reach thousands of indie founders.',
-    logoUrl: '/assets/logo.svg',
-    websiteUrl: '/sponsor',
-    ctaText: 'Become a sponsor',
-  },
 };

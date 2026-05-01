@@ -26,7 +26,6 @@ import { BookmarkButton } from '@/components/directory/BookmarkButton';
 import { StarRating } from '@/components/directory/StarRating';
 import { CommentSection } from '@/components/directory/CommentSection';
 import { isEnabled } from '@/lib/features';
-import { marketingConfig } from '@/config/marketing.config';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -132,19 +131,6 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
             promotion_id: p.id,
             cta_text: p.cta_text,
           }));
-        }
-
-        if (promoCards.length === 0 && marketingConfig.mockPromotion?.enabled) {
-          const mock = marketingConfig.mockPromotion;
-          promoCards = [{
-            id: 'mock-promo',
-            name: mock.name,
-            slug: 'mock-promo',
-            logo_url: mock.logoUrl,
-            short_description: mock.shortDescription,
-            website_url: mock.websiteUrl,
-            cta_text: mock.ctaText,
-          }];
         }
 
         // Deduplicate promo cards by advertiser name — show max 1 per advertiser

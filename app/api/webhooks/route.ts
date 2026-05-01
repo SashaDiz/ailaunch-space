@@ -5,12 +5,8 @@ import { getSupabasePublishableKey, getSupabaseUrl } from "@/lib/supabase/env";
 import { checkIsAdmin } from '@/lib/supabase/auth';
 import { db } from '@/lib/supabase/database';
 import { webhookEvents } from '@/lib/webhooks';
-import { demoAdminAuth } from '@/lib/demo';
 
 async function checkAdminAuth(request: Request) {
-  const demo = demoAdminAuth();
-  if (demo) return demo;
-
   const authHeader = request.headers.get('authorization');
   const hasCronSecret = authHeader === `Bearer ${process.env.CRON_SECRET}`;
   if (hasCronSecret) return { session: { user: { id: 'cron' } } };

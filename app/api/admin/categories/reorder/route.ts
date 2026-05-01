@@ -4,12 +4,8 @@ import { cookies } from "next/headers";
 import { getSupabasePublishableKey, getSupabaseUrl } from "@/lib/supabase/env";
 import { checkIsAdmin } from '@/lib/supabase/auth';
 import { db } from '@/lib/supabase/database';
-import { demoAdminAuth, demoWriteResponse } from '@/lib/demo';
 
 async function checkAdminAuth(request: Request) {
-  const demo = demoAdminAuth();
-  if (demo) return demo;
-
   const authHeader = request.headers.get('authorization');
   const hasCronSecret = authHeader === `Bearer ${process.env.CRON_SECRET}`;
   if (hasCronSecret) return { session: { user: { id: 'cron' } } };
@@ -32,9 +28,6 @@ async function checkAdminAuth(request: Request) {
 
 // POST /api/admin/categories/reorder — bulk reorder spheres and categories
 export async function POST(request: Request) {
-  const demo = demoWriteResponse();
-  if (demo) return demo;
-
   try {
     const authCheck = await checkAdminAuth(request);
     if ('error' in authCheck) return authCheck.error;

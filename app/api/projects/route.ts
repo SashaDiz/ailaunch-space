@@ -6,7 +6,6 @@ import { getSupabaseAdmin } from '@/lib/supabase/client';
 import { db } from '@/lib/supabase/database';
 import { webhookEvents } from '@/lib/webhooks';
 import { notificationManager } from '@/lib/notifications';
-import { demoWriteResponse } from '@/lib/demo';
 // import { ProjectSubmissionSchema } from '@/lib/validations/schemas';
 
 // GET /api/projects - Get AI projects with filtering and sorting
@@ -609,9 +608,6 @@ export async function GET(request) {
 
 // POST /api/projects - Create a new AI project (submission)
 export async function POST(request) {
-  const demo = demoWriteResponse();
-  if (demo) return demo;
-
   try {
     // Check rate limiting first
     const { checkRateLimit, createRateLimitResponse } = await import("@/lib/rate-limit");
@@ -1327,9 +1323,6 @@ export async function POST(request) {
 
 // PUT /api/projects - Update an AI project
 export async function PUT(request) {
-  const demo = demoWriteResponse();
-  if (demo) return demo;
-
   try {
     // Check authentication with proper cookie-based session
     const cookieStore = await cookies();

@@ -2,10 +2,8 @@ import { NextResponse } from "next/server";
 import { getSession } from '@/lib/supabase/auth';
 import { isAdmin } from '@/lib/supabase/auth-helpers';
 import { db } from '@/lib/supabase/database';
-import { isDemoMode, demoWriteResponse } from '@/lib/demo';
 
 async function checkAdmin() {
-  if (isDemoMode()) return true;
   const session = await getSession();
   if (!session?.user?.id) return false;
   return await isAdmin();
@@ -40,9 +38,6 @@ export async function GET(request: Request) {
 
 // PUT /api/admin/promotions - Update promotion
 export async function PUT(request: Request) {
-  const demo = demoWriteResponse();
-  if (demo) return demo;
-
   if (!(await checkAdmin())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
@@ -82,9 +77,6 @@ export async function PUT(request: Request) {
 
 // POST /api/admin/promotions - Create promotion directly (bypasses Stripe)
 export async function POST(request: Request) {
-  const demo = demoWriteResponse();
-  if (demo) return demo;
-
   if (!(await checkAdmin())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
@@ -135,9 +127,6 @@ export async function POST(request: Request) {
 
 // DELETE /api/admin/promotions - Delete promotion
 export async function DELETE(request: Request) {
-  const demo = demoWriteResponse();
-  if (demo) return demo;
-
   if (!(await checkAdmin())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }

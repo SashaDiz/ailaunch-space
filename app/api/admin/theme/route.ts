@@ -4,7 +4,6 @@ import { cookies } from "next/headers";
 import { getSupabasePublishableKey, getSupabaseUrl } from "@/lib/supabase/env";
 import { getSupabaseAdmin } from "@/lib/supabase/client";
 import { checkIsAdmin } from "@/lib/supabase/auth";
-import { demoWriteResponse } from "@/lib/demo";
 import type { FullThemeConfig } from "@/config/themes.config";
 
 const THEME_KEY = "theme";
@@ -48,9 +47,6 @@ export async function GET() {
 
 /** PUT /api/admin/theme — Save site theme (admin only) */
 export async function PUT(request: Request) {
-  const demo = demoWriteResponse();
-  if (demo) return demo;
-
   try {
     const cookieStore = await cookies();
     const supabaseAuth = createServerClient(

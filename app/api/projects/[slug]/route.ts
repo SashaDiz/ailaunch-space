@@ -256,8 +256,8 @@ export async function GET(request, { params }) {
 // PATCH /api/projects/[slug] - Update project (for owner/admin)
 export async function PATCH(request, { params }) {
   try {
-    const { slug } = params;
-    
+    const { slug } = await params;
+
     if (!slug) {
       return NextResponse.json(
         { error: "Slug parameter is required", code: "MISSING_SLUG" },
@@ -265,8 +265,45 @@ export async function PATCH(request, { params }) {
       );
     }
 
-    // CUSTOMIZE: Replace with proper auth check using getServerSession() or supabase.auth.getUser()
-    const session = { user: { id: "demo-user", name: "Demo User" } };
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      getSupabaseUrl(),
+      getSupabasePublishableKey(),
+      {
+        cookies: {
+          get(name) {
+            return cookieStore.get(name)?.value;
+          },
+        },
+      }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.id) {
+      return NextResponse.json(
+        { error: "Authentication required", code: "UNAUTHORIZED" },
+        { status: 401 }
+      );
+    }
+
+    const existingProject = await db.findOne("apps", { slug });
+    if (!existingProject) {
+      return NextResponse.json(
+        { error: "Project not found", code: "NOT_FOUND" },
+        { status: 404 }
+      );
+    }
+
+    if (existingProject.submitted_by !== user.id) {
+      const { checkIsAdmin } = await import("@/lib/supabase/auth");
+      const isAdmin = await checkIsAdmin(user.id);
+      if (!isAdmin) {
+        return NextResponse.json(
+          { error: "Forbidden", code: "FORBIDDEN" },
+          { status: 403 }
+        );
+      }
+    }
 
     const body = await request.json();
     const updates = { ...body }; // updated_at is handled by DB triggers
@@ -278,7 +315,6 @@ export async function PATCH(request, { params }) {
     delete updates.views;
     delete updates.createdAt;
 
-    // Find and update project
     const result = await db.updateOne(
       "apps",
       { slug },

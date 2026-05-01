@@ -93,18 +93,8 @@ export interface AdBannerConfig {
   iconAlt: string;
 }
 
-export interface MockPromotionConfig {
-  enabled: boolean;
-  name: string;
-  shortDescription: string;
-  logoUrl: string;
-  websiteUrl: string;
-  ctaText: string;
-}
-
 export interface MarketingConfig {
   adBanner: AdBannerConfig;
-  mockPromotion: MockPromotionConfig;
 }
 
 // ─── Auto-Submit Banner Configuration ───────────────────────────────────────
