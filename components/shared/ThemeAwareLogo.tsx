@@ -26,16 +26,27 @@ export function ThemeAwareLogo({
   priority = false,
   iconOnly = false,
 }: ThemeAwareLogoProps) {
+  // When iconOnly, use the dedicated square symbol mark (no wordmark) if one
+  // is configured; otherwise fall back to the full logo.
+  const iconLight = siteConfig.logo.iconLight ?? siteConfig.logo.light;
+  const iconDark = siteConfig.logo.iconDark ?? siteConfig.logo.dark;
+  const useIcon = iconOnly && Boolean(siteConfig.logo.iconLight);
+
+  const lightSrc = useIcon ? iconLight : siteConfig.logo.light;
+  const darkSrc = useIcon ? iconDark : siteConfig.logo.dark;
+
   const renderHeight = height;
-  const renderWidth = iconOnly
-    ? renderHeight
-    : (width ?? Math.round(renderHeight * ASPECT_RATIO));
+  const renderWidth = useIcon
+    ? renderHeight // symbol mark is square
+    : iconOnly
+      ? renderHeight
+      : (width ?? Math.round(renderHeight * ASPECT_RATIO));
 
   // For inverted (dark footer / light copy), always use the white logo.
   if (variant === "inverted") {
     return (
       <Image
-        src={siteConfig.logo.dark}
+        src={darkSrc}
         alt={`${siteConfig.name} logo`}
         width={renderWidth}
         height={renderHeight}
@@ -51,7 +62,7 @@ export function ThemeAwareLogo({
   return (
     <>
       <Image
-        src={siteConfig.logo.light}
+        src={lightSrc}
         alt={`${siteConfig.name} logo`}
         width={renderWidth}
         height={renderHeight}
@@ -59,7 +70,7 @@ export function ThemeAwareLogo({
         priority={priority}
       />
       <Image
-        src={siteConfig.logo.dark}
+        src={darkSrc}
         alt={`${siteConfig.name} logo`}
         width={renderWidth}
         height={renderHeight}

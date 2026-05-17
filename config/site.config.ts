@@ -21,6 +21,8 @@ export const siteConfig: SiteConfig = {
   logo: {
     light: '/assets/logo.svg',
     dark: '/assets/logo-white.svg',
+    iconLight: '/assets/ailaunch-embed.svg',
+    iconDark: '/assets/ailaunch-embed-white.svg',
   },
   favicon: '/assets/favicon/favicon.ico',
   ogImage: '/assets/og-image.png',

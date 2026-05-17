@@ -13,6 +13,9 @@ export interface SiteConfig {
   logo: {
     light: string;
     dark: string;
+    /** Icon-only / symbol mark (no wordmark) — used in collapsed sidebar, etc. */
+    iconLight?: string;
+    iconDark?: string;
   };
   /** Favicon path */
   favicon: string;

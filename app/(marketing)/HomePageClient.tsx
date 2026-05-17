@@ -104,7 +104,7 @@ function HomePage({
   const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { config: autoSubmitConfig } = useAutoSubmitConfig();
+  const { config: autoSubmitConfig, loading: autoSubmitLoading } = useAutoSubmitConfig();
 
   // Schema.org structured data for the homepage
   const baseUrl = siteConfig.url;
@@ -186,7 +186,7 @@ function HomePage({
 
   // Check if modal should be shown automatically (once per day)
   useEffect(() => {
-    if (!isClient || !autoSubmitConfig.enabled) return;
+    if (!isClient || autoSubmitLoading || !autoSubmitConfig.enabled) return;
 
     const checkAndShowModal = () => {
       const storageKey = "autoSubmitModalLastShown";
@@ -199,7 +199,7 @@ function HomePage({
     };
 
     checkAndShowModal();
-  }, [isClient, autoSubmitConfig.enabled]);
+  }, [isClient, autoSubmitLoading, autoSubmitConfig.enabled]);
 
   const handleModalClose = () => {
     const storageKey = "autoSubmitModalLastShown";

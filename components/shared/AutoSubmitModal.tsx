@@ -7,7 +7,7 @@ import { useAutoSubmitConfig } from "@/hooks/use-autosubmit-config";
 
 export function AutoSubmitModal({ isOpen, onClose }) {
   const [mounted, setMounted] = useState(false);
-  const { config } = useAutoSubmitConfig();
+  const { config, loading } = useAutoSubmitConfig();
 
   // Handle mounting for SSR compatibility
   useEffect(() => {
@@ -42,7 +42,9 @@ export function AutoSubmitModal({ isOpen, onClose }) {
     }
   };
 
-  if (!isOpen || !mounted || !config.enabled) return null;
+  // Don't render until the real config has loaded — prevents a flash of
+  // the default ListingBott fallback content before the saved config arrives.
+  if (!isOpen || !mounted || loading || !config.enabled) return null;
 
   const modalContent = (
     <div
