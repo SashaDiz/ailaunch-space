@@ -19,22 +19,30 @@ interface SponsorFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  /** When provided, the dialog edits this sponsor instead of creating a new one. */
+  sponsor?: any;
 }
 
-export function SponsorFormDialog({ open, onOpenChange, onSuccess }: SponsorFormDialogProps) {
-  const [form, setForm] = useState({
-    name: "",
-    description: "",
-    logo: "",
-    website_url: "",
-  });
+const EMPTY_FORM = { name: "", description: "", logo: "", website_url: "" };
+
+export function SponsorFormDialog({ open, onOpenChange, onSuccess, sponsor }: SponsorFormDialogProps) {
+  const isEdit = !!sponsor;
+  const [form, setForm] = useState({ ...EMPTY_FORM });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (open) {
-      setForm({ name: "", description: "", logo: "", website_url: "" });
+    if (!open) return;
+    if (sponsor) {
+      setForm({
+        name: sponsor.name || "",
+        description: sponsor.description || "",
+        logo: sponsor.logo || "",
+        website_url: sponsor.website_url || "",
+      });
+    } else {
+      setForm({ ...EMPTY_FORM });
     }
-  }, [open]);
+  }, [open, sponsor]);
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -49,12 +57,12 @@ export function SponsorFormDialog({ open, onOpenChange, onSuccess }: SponsorForm
     setSaving(true);
     try {
       const response = await fetch("/api/admin/sponsors", {
-        method: "POST",
+        method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(isEdit ? { id: sponsor.id, ...form } : form),
       });
-      if (!response.ok) throw new Error((await response.json()).error || "Failed to create");
-      toast.success("Sponsor created");
+      if (!response.ok) throw new Error((await response.json()).error || "Failed to save");
+      toast.success(isEdit ? "Sponsor updated" : "Sponsor created");
       onOpenChange(false);
       onSuccess();
     } catch (error: any) {
@@ -68,7 +76,7 @@ export function SponsorFormDialog({ open, onOpenChange, onSuccess }: SponsorForm
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create Sponsor</DialogTitle>
+          <DialogTitle>{isEdit ? "Edit Sponsor" : "Create Sponsor"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
           <div className="grid grid-cols-2 gap-4">
@@ -121,7 +129,7 @@ export function SponsorFormDialog({ open, onOpenChange, onSuccess }: SponsorForm
             </Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Create
+              {isEdit ? "Save" : "Create"}
             </Button>
           </div>
         </div>

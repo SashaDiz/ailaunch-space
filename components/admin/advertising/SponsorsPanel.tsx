@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion } from "motion/react";
-import { ExternalLink, Trash2, CheckCircle2, XCircle, Pause, PlusCircle } from "lucide-react";
+import { ExternalLink, Trash2, CheckCircle2, XCircle, Pause, PlusCircle, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -34,6 +34,7 @@ export function SponsorsPanel({ active }: { active: boolean }) {
     deleteItem,
   } = usePlacementList("/api/admin/sponsors", "sponsor");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<any>(null);
 
   return (
     <>
@@ -103,6 +104,14 @@ export function SponsorsPanel({ active }: { active: boolean }) {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditing(s)}
+                            aria-label="Edit sponsor"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="sm">Status</Button>
@@ -141,6 +150,13 @@ export function SponsorsPanel({ active }: { active: boolean }) {
       <SponsorFormDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
+        onSuccess={refetch}
+      />
+
+      <SponsorFormDialog
+        open={!!editing}
+        onOpenChange={(o) => !o && setEditing(null)}
+        sponsor={editing}
         onSuccess={refetch}
       />
     </>
