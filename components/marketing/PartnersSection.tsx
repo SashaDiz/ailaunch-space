@@ -86,7 +86,7 @@ export function PartnersSection() {
                     />
                   </a>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-[250px] text-center">
+                <TooltipContent side="bottom" sideOffset={8} showArrow className="max-w-[250px] text-center">
                   <p className="text-xs">{partner.description}</p>
                 </TooltipContent>
               </Tooltip>
