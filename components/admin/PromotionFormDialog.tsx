@@ -20,7 +20,12 @@ interface PromotionFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  /** When provided, the dialog edits this promotion instead of creating a new one. */
+  promotion?: any;
 }
+
+const BANNER_TEXT_MAX = 50;
+const CATALOG_DETAIL_TEXT_MAX = 100;
 
 const placementOptions = [
   {
@@ -40,35 +45,45 @@ const placementOptions = [
   },
 ];
 
-export function PromotionFormDialog({ open, onOpenChange, onSuccess }: PromotionFormDialogProps) {
-  const [form, setForm] = useState({
-    name: "",
-    short_description: "",
-    logo_url: "",
-    website_url: "",
-    cta_text: "",
-    placement_banner: false,
-    placement_catalog: false,
-    placement_detail_page: false,
-  });
+const EMPTY_FORM = {
+  name: "",
+  short_description: "",
+  logo_url: "",
+  website_url: "",
+  cta_text: "",
+  banner_text: "",
+  catalog_detail_text: "",
+  placement_banner: false,
+  placement_catalog: false,
+  placement_detail_page: false,
+};
+
+export function PromotionFormDialog({ open, onOpenChange, onSuccess, promotion }: PromotionFormDialogProps) {
+  const isEdit = !!promotion;
+  const [form, setForm] = useState({ ...EMPTY_FORM });
   const [saving, setSaving] = useState(false);
 
   const ctaMaxLength = advertisingConfig.promotions.ctaMaxLength;
 
   useEffect(() => {
-    if (open) {
+    if (!open) return;
+    if (promotion) {
       setForm({
-        name: "",
-        short_description: "",
-        logo_url: "",
-        website_url: "",
-        cta_text: "",
-        placement_banner: false,
-        placement_catalog: false,
-        placement_detail_page: false,
+        name: promotion.name || "",
+        short_description: promotion.short_description || "",
+        logo_url: promotion.logo_url || "",
+        website_url: promotion.website_url || "",
+        cta_text: promotion.cta_text || "",
+        banner_text: promotion.banner_text || "",
+        catalog_detail_text: promotion.catalog_detail_text || "",
+        placement_banner: !!promotion.placement_banner,
+        placement_catalog: !!promotion.placement_catalog,
+        placement_detail_page: !!promotion.placement_detail_page,
       });
+    } else {
+      setForm({ ...EMPTY_FORM });
     }
-  }, [open]);
+  }, [open, promotion]);
 
   const handleChange = (field: string, value: any) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -86,12 +101,12 @@ export function PromotionFormDialog({ open, onOpenChange, onSuccess }: Promotion
     setSaving(true);
     try {
       const response = await fetch("/api/admin/promotions", {
-        method: "POST",
+        method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(isEdit ? { id: promotion.id, ...form } : form),
       });
-      if (!response.ok) throw new Error((await response.json()).error || "Failed to create");
-      toast.success("Promotion created");
+      if (!response.ok) throw new Error((await response.json()).error || "Failed to save");
+      toast.success(isEdit ? "Promotion updated" : "Promotion created");
       onOpenChange(false);
       onSuccess();
     } catch (error: any) {
@@ -105,7 +120,7 @@ export function PromotionFormDialog({ open, onOpenChange, onSuccess }: Promotion
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create Promotion</DialogTitle>
+          <DialogTitle>{isEdit ? "Edit Promotion" : "Create Promotion"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
           <div className="grid grid-cols-2 gap-4">
@@ -170,6 +185,40 @@ export function PromotionFormDialog({ open, onOpenChange, onSuccess }: Promotion
           </div>
 
           <div className="space-y-2">
+            <Label>Top Banner Text</Label>
+            <Input
+              value={form.banner_text}
+              onChange={(e) => {
+                if (e.target.value.length <= BANNER_TEXT_MAX) {
+                  handleChange("banner_text", e.target.value);
+                }
+              }}
+              placeholder="Headline shown on the top banner"
+              maxLength={BANNER_TEXT_MAX}
+            />
+            <p className="text-xs text-muted-foreground text-right">
+              {form.banner_text.length}/{BANNER_TEXT_MAX}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Catalog &amp; Detail Text</Label>
+            <Input
+              value={form.catalog_detail_text}
+              onChange={(e) => {
+                if (e.target.value.length <= CATALOG_DETAIL_TEXT_MAX) {
+                  handleChange("catalog_detail_text", e.target.value);
+                }
+              }}
+              placeholder="Text shown on catalog cards and detail pages"
+              maxLength={CATALOG_DETAIL_TEXT_MAX}
+            />
+            <p className="text-xs text-muted-foreground text-right">
+              {form.catalog_detail_text.length}/{CATALOG_DETAIL_TEXT_MAX}
+            </p>
+          </div>
+
+          <div className="space-y-2">
             <Label>Placements *</Label>
             <div className="flex flex-wrap gap-4 pt-1">
               {placementOptions.map((opt) => {
@@ -208,7 +257,7 @@ export function PromotionFormDialog({ open, onOpenChange, onSuccess }: Promotion
             </Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Create
+              {isEdit ? "Save" : "Create"}
             </Button>
           </div>
         </div>

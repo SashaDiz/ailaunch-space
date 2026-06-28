@@ -22,6 +22,8 @@ export const DEFAULT_AUTOSUBMIT_CONFIG: AutoSubmitBannerConfig = {
   learnMoreUrl: `https://listingbott.com/?ref=${siteConfig.refParameter}`,
   learnMoreText: 'Learn more about ListingBott',
   dismissText: "No, I'll do it myself.",
+  triggerButtonText: 'Auto submit',
+  triggerButtonIcon: 'Bot',
   dashboardCtaText: 'Submit to 100+ directories',
   projectDetailHeading: 'Max out your visibility with Auto-Submit',
   projectDetailDescription:

@@ -113,6 +113,10 @@ export interface AutoSubmitBannerConfig {
   learnMoreUrl: string;
   learnMoreText: string;
   dismissText: string;
+  /** Label of the button that opens the banner (homepage hero). */
+  triggerButtonText: string;
+  /** Lucide icon name for that trigger button (see lib/autosubmit-icons). */
+  triggerButtonIcon: string;
   dashboardCtaText: string;
   projectDetailHeading: string;
   projectDetailDescription: string;

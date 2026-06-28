@@ -52,6 +52,8 @@ export async function GET(request: Request) {
         logo_url: p.logo_url,
         website_url: p.website_url,
         cta_text: p.cta_text,
+        banner_text: p.banner_text,
+        catalog_detail_text: p.catalog_detail_text,
         placement_banner: p.placement_banner,
         placement_catalog: p.placement_catalog,
         placement_detail_page: p.placement_detail_page,
@@ -81,6 +83,16 @@ const PromotionSubmissionSchema = z.object({
   cta_text: z
     .string()
     .max(20, "CTA text must be 20 characters or less")
+    .optional()
+    .nullable(),
+  banner_text: z
+    .string()
+    .max(50, "Top banner text must be 50 characters or less")
+    .optional()
+    .nullable(),
+  catalog_detail_text: z
+    .string()
+    .max(100, "Catalog & detail text must be 100 characters or less")
     .optional()
     .nullable(),
   app_id: z.string().uuid().optional().nullable(),
@@ -204,6 +216,8 @@ export async function POST(request: Request) {
       logo_url: data.logo_url,
       website_url: data.website_url,
       cta_text: data.cta_text || null,
+      banner_text: data.banner_text || null,
+      catalog_detail_text: data.catalog_detail_text || null,
       placement_banner: data.placement_banner,
       placement_catalog: data.placement_catalog,
       placement_detail_page: data.placement_detail_page,

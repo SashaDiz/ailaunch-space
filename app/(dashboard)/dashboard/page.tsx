@@ -836,17 +836,21 @@ function DashboardContent() {
                 <h2 className="text-sm sm:text-base font-semibold text-foreground">
                   {autoSubmitConfig.title}
                 </h2>
-                <p className="mt-1 text-xs sm:text-sm text-muted-foreground max-w-2xl">
-                  {autoSubmitConfig.description}
-                </p>
-                <Link
-                  href={autoSubmitConfig.learnMoreUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs sm:text-sm text-muted-foreground hover:text-foreground underline"
-                >
-                  {autoSubmitConfig.learnMoreText}
-                </Link>
+                {autoSubmitConfig.description && (
+                  <p className="mt-1 text-xs sm:text-sm text-muted-foreground max-w-2xl">
+                    {autoSubmitConfig.description}
+                  </p>
+                )}
+                {autoSubmitConfig.learnMoreUrl && autoSubmitConfig.learnMoreText && (
+                  <Link
+                    href={autoSubmitConfig.learnMoreUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs sm:text-sm text-muted-foreground hover:text-foreground underline"
+                  >
+                    {autoSubmitConfig.learnMoreText}
+                  </Link>
+                )}
               </div>
             </div>
             <div className="flex md:flex-shrink-0">

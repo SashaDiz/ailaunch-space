@@ -1011,12 +1011,16 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
               </div>
 
               <div className="mb-4 border-t border-border pt-4">
-                <h3 className="text-sm font-semibold text-foreground mb-2">
-                  {autoSubmitConfig.projectDetailHeading}
-                </h3>
-                <p className="text-sm text-foreground mb-4">
-                  {autoSubmitConfig.projectDetailDescription}
-                </p>
+                {autoSubmitConfig.projectDetailHeading && (
+                  <h3 className="text-sm font-semibold text-foreground mb-2">
+                    {autoSubmitConfig.projectDetailHeading}
+                  </h3>
+                )}
+                {autoSubmitConfig.projectDetailDescription && (
+                  <p className="text-sm text-foreground mb-4">
+                    {autoSubmitConfig.projectDetailDescription}
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-col gap-3 items-center justify-center">

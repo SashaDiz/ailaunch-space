@@ -52,7 +52,8 @@ export async function PUT(request: Request) {
 
     const allowedFields = [
       'status', 'name', 'short_description', 'logo_url', 'website_url',
-      'cta_text', 'placement_banner', 'placement_catalog', 'placement_detail_page',
+      'cta_text', 'banner_text', 'catalog_detail_text',
+      'placement_banner', 'placement_catalog', 'placement_detail_page',
       'position', 'admin_notes',
     ];
     const safeUpdates: Record<string, any> = {};
@@ -61,6 +62,11 @@ export async function PUT(request: Request) {
         safeUpdates[key] = updates[key];
       }
     }
+    // Enforce per-placement copy limits.
+    if (safeUpdates.banner_text != null)
+      safeUpdates.banner_text = String(safeUpdates.banner_text).slice(0, 50) || null;
+    if (safeUpdates.catalog_detail_text != null)
+      safeUpdates.catalog_detail_text = String(safeUpdates.catalog_detail_text).slice(0, 100) || null;
 
     if (Object.keys(safeUpdates).length === 0) {
       return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
@@ -86,6 +92,7 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     const { name, short_description, logo_url, website_url, cta_text,
+            banner_text, catalog_detail_text,
             placement_banner, placement_catalog, placement_detail_page } = body;
 
     if (!name?.trim()) {
@@ -111,6 +118,8 @@ export async function POST(request: Request) {
       logo_url: logo_url.trim(),
       website_url: website_url.trim(),
       cta_text: cta_text?.trim() || null,
+      banner_text: banner_text?.trim()?.slice(0, 50) || null,
+      catalog_detail_text: catalog_detail_text?.trim()?.slice(0, 100) || null,
       placement_banner: !!placement_banner,
       placement_catalog: !!placement_catalog,
       placement_detail_page: !!placement_detail_page,

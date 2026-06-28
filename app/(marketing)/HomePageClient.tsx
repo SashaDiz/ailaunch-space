@@ -17,7 +17,8 @@ import { directoryConfig } from '@/config/directory.config';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
-import { Rocket, Bot, PlusCircle, Search, X, ChevronDown } from "lucide-react";
+import { Rocket, PlusCircle, Search, X, ChevronDown } from "lucide-react";
+import { getAutoSubmitIcon } from "@/lib/autosubmit-icons";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -455,8 +456,11 @@ function HomePage({
                   boxShadow: "var(--button-shadow)",
                 }}
               >
-                <Bot className="h-4 w-4" strokeWidth={2} />
-                Auto submit
+                {(() => {
+                  const TriggerIcon = getAutoSubmitIcon(autoSubmitConfig.triggerButtonIcon);
+                  return <TriggerIcon className="h-4 w-4" strokeWidth={2} />;
+                })()}
+                {autoSubmitConfig.triggerButtonText || "Auto submit"}
               </Button>
               )}
             </div>

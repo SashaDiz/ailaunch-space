@@ -63,6 +63,8 @@ function PromotePageContent() {
   const [logoUrl, setLogoUrl] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [ctaText, setCtaText] = useState("");
+  const [bannerText, setBannerText] = useState("");
+  const [catalogDetailText, setCatalogDetailText] = useState("");
   const [placements, setPlacements] = useState({
     banner: false,
     catalog: false,
@@ -151,6 +153,8 @@ function PromotePageContent() {
           logo_url: logoUrl,
           website_url: websiteUrl,
           cta_text: ctaText || undefined,
+          banner_text: bannerText || undefined,
+          catalog_detail_text: catalogDetailText || undefined,
           placement_banner: placements.banner,
           placement_catalog: placements.catalog,
           placement_detail_page: placements.detailPage,
@@ -449,6 +453,58 @@ function PromotePageContent() {
                       />
                       <p className="text-xs text-muted-foreground mt-1 text-right">
                         {ctaText.length}/{ctaMaxLength}
+                      </p>
+                    </div>
+
+                    {/* Top Banner Text */}
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        Top Banner Text
+                      </label>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Info className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                        <p className="text-xs text-muted-foreground">
+                          Optional. Shown on the top banner placement. Max 50 characters.
+                        </p>
+                      </div>
+                      <input
+                        type="text"
+                        value={bannerText}
+                        onChange={(e) => {
+                          if (e.target.value.length <= 50) setBannerText(e.target.value);
+                        }}
+                        maxLength={50}
+                        className="w-full px-4 py-2.5 text-sm border border-border rounded-[var(--radius)] focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/20 focus-visible:outline-none bg-background text-foreground"
+                        placeholder="Headline for the top banner"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1 text-right">
+                        {bannerText.length}/50
+                      </p>
+                    </div>
+
+                    {/* Catalog & Detail Text */}
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        Catalog &amp; Detail Text
+                      </label>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Info className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                        <p className="text-xs text-muted-foreground">
+                          Optional. Shown on catalog cards and detail pages. Max 100 characters.
+                        </p>
+                      </div>
+                      <input
+                        type="text"
+                        value={catalogDetailText}
+                        onChange={(e) => {
+                          if (e.target.value.length <= 100) setCatalogDetailText(e.target.value);
+                        }}
+                        maxLength={100}
+                        className="w-full px-4 py-2.5 text-sm border border-border rounded-[var(--radius)] focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/20 focus-visible:outline-none bg-background text-foreground"
+                        placeholder="Text for catalog cards and detail pages"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1 text-right">
+                        {catalogDetailText.length}/100
                       </p>
                     </div>
                   </div>

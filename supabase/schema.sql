@@ -549,6 +549,8 @@ CREATE TABLE IF NOT EXISTS public.promotions (
   logo_url TEXT NOT NULL,
   website_url TEXT NOT NULL,
   cta_text TEXT DEFAULT NULL,
+  banner_text VARCHAR(50) DEFAULT NULL,
+  catalog_detail_text VARCHAR(100) DEFAULT NULL,
   placement_banner BOOLEAN DEFAULT false,
   placement_catalog BOOLEAN DEFAULT false,
   placement_detail_page BOOLEAN DEFAULT false,
@@ -1212,6 +1214,15 @@ INSERT INTO public.categories (name, slug, description, sphere, sort_order) VALU
   ('Marketing',        'marketing',        'Marketing and growth tools',        'Business', 4),
   ('Other',            'other',            'Projects that do not fit existing categories', 'Other', 99)
 ON CONFLICT (slug) DO NOTHING;
+
+-- ============================================================================
+-- PROMOTIONS: per-placement copy (added after initial release)
+-- banner_text  → shown on the Top banner placement (≤ 50 chars)
+-- catalog_detail_text → shown on Catalog cards and Detail pages (≤ 100 chars)
+-- ============================================================================
+
+ALTER TABLE public.promotions ADD COLUMN IF NOT EXISTS banner_text VARCHAR(50) DEFAULT NULL;
+ALTER TABLE public.promotions ADD COLUMN IF NOT EXISTS catalog_detail_text VARCHAR(100) DEFAULT NULL;
 
 -- ============================================================================
 -- BLOG POSTS (admin-authored articles)

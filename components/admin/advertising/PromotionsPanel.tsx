@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion } from "motion/react";
-import { ExternalLink, Trash2, CheckCircle2, XCircle, Pause, Monitor, LayoutGrid, FileText, PlusCircle } from "lucide-react";
+import { ExternalLink, Trash2, CheckCircle2, XCircle, Pause, Monitor, LayoutGrid, FileText, PlusCircle, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -57,6 +57,7 @@ export function PromotionsPanel({ active }: { active: boolean }) {
     deleteItem,
   } = usePlacementList("/api/admin/promotions", "promotion");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<any>(null);
 
   // Summary stats
   const activeCount = promotions.filter((p) => p.status === "active").length;
@@ -153,6 +154,14 @@ export function PromotionsPanel({ active }: { active: boolean }) {
                               <Button variant="ghost" size="sm"><ExternalLink className="w-4 h-4" /></Button>
                             </a>
                           )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditing(p)}
+                            aria-label="Edit promotion"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="sm">Status</Button>
@@ -191,6 +200,13 @@ export function PromotionsPanel({ active }: { active: boolean }) {
       <PromotionFormDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
+        onSuccess={refetch}
+      />
+
+      <PromotionFormDialog
+        open={!!editing}
+        onOpenChange={(o) => !o && setEditing(null)}
+        promotion={editing}
         onSuccess={refetch}
       />
     </>

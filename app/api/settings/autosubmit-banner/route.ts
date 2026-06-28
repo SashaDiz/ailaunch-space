@@ -88,6 +88,10 @@ export async function PUT(request: Request) {
       value.learnMoreText = body.learnMoreText.trim();
     if (typeof body.dismissText === "string")
       value.dismissText = body.dismissText.trim();
+    if (typeof body.triggerButtonText === "string")
+      value.triggerButtonText = body.triggerButtonText.trim();
+    if (typeof body.triggerButtonIcon === "string")
+      value.triggerButtonIcon = body.triggerButtonIcon.trim();
     if (typeof body.dashboardCtaText === "string")
       value.dashboardCtaText = body.dashboardCtaText.trim();
     if (typeof body.projectDetailHeading === "string")

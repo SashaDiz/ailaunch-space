@@ -62,12 +62,16 @@ export function AutoSubmitModal({ isOpen, onClose }) {
         <div className="p-4 sm:p-8">
           {/* Header */}
           <div className="flex justify-between items-start mb-6">
-            <h2
-              id="modal-title"
-              className="text-xl sm:text-2xl font-bold text-foreground pr-10"
-            >
-              {config.title}
-            </h2>
+            {config.title ? (
+              <h2
+                id="modal-title"
+                className="text-xl sm:text-2xl font-bold text-foreground pr-10"
+              >
+                {config.title}
+              </h2>
+            ) : (
+              <span id="modal-title" className="sr-only">Auto-submit</span>
+            )}
             <button
               onClick={onClose}
               className="absolute top-4 right-4 text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted rounded-lg transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-400"
@@ -78,24 +82,28 @@ export function AutoSubmitModal({ isOpen, onClose }) {
           </div>
 
           {/* Description */}
-          <p
-            id="modal-description"
-            className="text-base text-foreground mb-4 leading-relaxed pr-5"
-          >
-            {config.description}
-          </p>
-
-          {/* Learn More Link */}
-          <div className="mb-6">
-            <a
-              href={config.learnMoreUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-muted-foreground hover:text-foreground underline inline-flex items-center gap-1"
+          {config.description && (
+            <p
+              id="modal-description"
+              className="text-base text-foreground mb-4 leading-relaxed pr-5"
             >
-              {config.learnMoreText}
-            </a>
-          </div>
+              {config.description}
+            </p>
+          )}
+
+          {/* Learn More Link — only when both URL and text are set */}
+          {config.learnMoreUrl && config.learnMoreText && (
+            <div className="mb-6">
+              <a
+                href={config.learnMoreUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-muted-foreground hover:text-foreground underline inline-flex items-center gap-1"
+              >
+                {config.learnMoreText}
+              </a>
+            </div>
+          )}
 
           {/* Benefits List */}
           {config.benefits.length > 0 && (
@@ -114,22 +122,26 @@ export function AutoSubmitModal({ isOpen, onClose }) {
 
           {/* Action Buttons */}
           <div className="flex flex-col gap-4 items-center justify-center">
-            <a
-              href={config.checkoutUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold text-sm no-underline transition duration-300 hover:-translate-y-1 hover:shadow-[0_4px_0_rgba(0,0,0,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900 min-h-[48px] uppercase"
-              onClick={onClose}
-            >
-              <Bot className="w-4 h-4" strokeWidth={2} />
-              {config.ctaText}
-            </a>
-            <button
-              onClick={onClose}
-              className="text-muted-foreground hover:text-foreground underline text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-400 min-h-[24px]"
-            >
-              {config.dismissText}
-            </button>
+            {config.checkoutUrl && config.ctaText && (
+              <a
+                href={config.checkoutUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold text-sm no-underline transition duration-300 hover:-translate-y-1 hover:shadow-[0_4px_0_rgba(0,0,0,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900 min-h-[48px] uppercase"
+                onClick={onClose}
+              >
+                <Bot className="w-4 h-4" strokeWidth={2} />
+                {config.ctaText}
+              </a>
+            )}
+            {config.dismissText && (
+              <button
+                onClick={onClose}
+                className="text-muted-foreground hover:text-foreground underline text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-400 min-h-[24px]"
+              >
+                {config.dismissText}
+              </button>
+            )}
           </div>
         </div>
       </div>
