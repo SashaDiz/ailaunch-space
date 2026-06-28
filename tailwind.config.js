@@ -101,6 +101,10 @@ export default {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
+      transitionTimingFunction: {
+        // Shared "out-expo" easing for Base UI microanimations (matches lib/motion.ts)
+        'out-expo': 'cubic-bezier(0.16, 1, 0.3, 1)',
+      },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',
         'slide-up': 'slideUp 0.3s ease-out',

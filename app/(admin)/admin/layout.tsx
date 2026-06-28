@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@/hooks/use-user";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
+import { AdminPageHeader, AdminHeaderActionsProvider } from "@/components/admin/AdminPageHeader";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -59,7 +60,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       />
       <div className={cn("transition-all duration-200", collapsed ? "lg:pl-16" : "lg:pl-64")}>
         <AdminHeader onMobileMenuToggle={() => setMobileOpen(!mobileOpen)} />
-        <main className="p-4 sm:p-6">{children}</main>
+        <main className="p-4 sm:p-6">
+          <AdminHeaderActionsProvider>
+            <AdminPageHeader />
+            {children}
+          </AdminHeaderActionsProvider>
+        </main>
       </div>
     </div>
   );

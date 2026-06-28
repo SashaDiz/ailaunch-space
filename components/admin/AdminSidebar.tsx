@@ -3,24 +3,12 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  BarChart3,
-  Folder,
-  Tags,
-  Users,
-  Palette,
-  ExternalLink,
-  PanelLeftClose,
-  PanelLeft,
-  Handshake,
-  Megaphone,
-  Sparkles,
-  X,
-} from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
+import { ExternalLink, PanelLeftClose, PanelLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { siteConfig } from "@/config/site.config";
+import { adminNavItems as navItems, getActiveNavItem } from "@/lib/admin-nav";
+import { springSnappy } from "@/lib/motion";
 import { ThemeAwareLogo } from "@/components/shared/ThemeAwareLogo";
-import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
@@ -33,17 +21,6 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 
-const navItems = [
-  { name: "Dashboard", href: "/admin", icon: BarChart3, exact: true },
-  { name: "Listings", href: "/admin/projects", icon: Folder, exact: false },
-  { name: "Categories", href: "/admin/categories", icon: Tags, exact: false },
-  { name: "Sponsors", href: "/admin/sponsors", icon: Handshake, exact: false },
-  { name: "Promotions", href: "/admin/promotions", icon: Megaphone, exact: false },
-  { name: "Marketing", href: "/admin/marketing", icon: Sparkles, exact: false },
-  { name: "Users", href: "/admin/users", icon: Users, exact: false },
-  { name: "Theme", href: "/admin/theme", icon: Palette, exact: false },
-];
-
 interface AdminSidebarProps {
   collapsed: boolean;
   onCollapsedChange: (collapsed: boolean) => void;
@@ -55,15 +32,17 @@ function SidebarContent({
   collapsed,
   onCollapsedChange,
   onLinkClick,
+  instanceId,
 }: {
   collapsed: boolean;
   onCollapsedChange?: (collapsed: boolean) => void;
   onLinkClick?: () => void;
+  /** Namespaces the layoutId so the desktop and mobile sidebars don't share an indicator. */
+  instanceId: string;
 }) {
   const pathname = usePathname();
-
-  const isActive = (item: (typeof navItems)[0]) =>
-    item.exact ? pathname === item.href : pathname.startsWith(item.href);
+  const reduce = useReducedMotion();
+  const activeHref = getActiveNavItem(pathname)?.href ?? null;
 
   return (
     <div className="flex flex-col h-full">
@@ -84,23 +63,33 @@ function SidebarContent({
         <TooltipProvider delayDuration={0}>
           {navItems.map((item) => {
             const Icon = item.icon;
-            const active = isActive(item);
+            const active = item.href === activeHref;
             return (
               <Tooltip key={item.name}>
                 <TooltipTrigger asChild>
                   <Link
                     href={item.href}
                     onClick={onLinkClick}
+                    aria-current={active ? "page" : undefined}
                     className={cn(
-                      "flex items-center gap-3 rounded-[var(--radius)] px-3 py-2.5 text-sm font-medium transition-colors",
+                      "relative flex items-center gap-3 rounded-[var(--radius)] px-3 py-2.5 text-sm font-medium transition-colors",
                       active
-                        ? "bg-foreground text-background"
+                        ? "text-background"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted",
                       collapsed && "justify-center px-2"
                     )}
                   >
-                    <Icon className="h-4 w-4 flex-shrink-0" />
-                    {!collapsed && <span>{item.name}</span>}
+                    {active && (
+                      <motion.span
+                        layoutId={`admin-nav-active-${instanceId}`}
+                        className="absolute inset-0 rounded-[var(--radius)] bg-foreground"
+                        transition={reduce ? { duration: 0 } : springSnappy}
+                      />
+                    )}
+                    <span className={cn("relative flex items-center gap-3", collapsed && "justify-center")}>
+                      <Icon className="h-4 w-4 flex-shrink-0" />
+                      {!collapsed && <span>{item.name}</span>}
+                    </span>
                   </Link>
                 </TooltipTrigger>
                 {collapsed && (
@@ -164,6 +153,7 @@ export function AdminSidebar({ collapsed, onCollapsedChange, mobileOpen, onMobil
         <SidebarContent
           collapsed={collapsed}
           onCollapsedChange={onCollapsedChange}
+          instanceId="desktop"
         />
       </aside>
 
@@ -174,6 +164,7 @@ export function AdminSidebar({ collapsed, onCollapsedChange, mobileOpen, onMobil
           <SidebarContent
             collapsed={false}
             onLinkClick={onMobileClose}
+            instanceId="mobile"
           />
         </SheetContent>
       </Sheet>

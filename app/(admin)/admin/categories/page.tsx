@@ -6,6 +6,8 @@ import toast from "react-hot-toast";
 import { CategoryFormDialog } from '@/components/admin/CategoryFormDialog';
 import { SphereFormDialog } from '@/components/admin/SphereFormDialog';
 import { SphereList } from '@/components/admin/SphereList';
+import { AdminPageActions } from '@/components/admin/AdminPageHeader';
+import { AdminRowsSkeleton } from '@/components/admin/AdminSkeletons';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -136,23 +138,17 @@ export default function AdminCategoriesPage() {
 
   return (
     <>
-      <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold mb-1 text-foreground">Categories</h1>
-          <p className="text-muted-foreground">Manage directory spheres and categories.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setSphereFormOpen(true)} className="gap-2">
-            <FolderPlus className="w-4 h-4" /> Add Sphere
-          </Button>
-          <Button onClick={() => { setEditingCategory(null); setDefaultSphere(undefined); setFormOpen(true); }} className="gap-2">
-            <Plus className="w-4 h-4" /> Add Category
-          </Button>
-        </div>
-      </div>
+      <AdminPageActions>
+        <Button variant="outline" onClick={() => setSphereFormOpen(true)} className="gap-2">
+          <FolderPlus className="w-4 h-4" /> Add Sphere
+        </Button>
+        <Button onClick={() => { setEditingCategory(null); setDefaultSphere(undefined); setFormOpen(true); }} className="gap-2">
+          <Plus className="w-4 h-4" /> Add Category
+        </Button>
+      </AdminPageActions>
 
       {loading ? (
-        <div className="p-8 text-center text-muted-foreground">Loading...</div>
+        <AdminRowsSkeleton />
       ) : (
         <SphereList
           categories={categories}

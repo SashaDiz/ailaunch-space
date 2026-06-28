@@ -216,6 +216,16 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Base UI portals: keeps fixed-position popups anchored correctly on iOS 26+ Safari */
+  position: relative;
+}
+
+/* Base UI portal stacking: establish an isolated stacking context on the app root
+   so Dialog/Popover/Menu/Tooltip popups render above page content without z-index wars */
+body > #__next,
+#root,
+[data-app-root] {
+  isolation: isolate;
 }
 
 /* Headings use --font-sans (Nohemi) by default — themes can override via --font-serif */

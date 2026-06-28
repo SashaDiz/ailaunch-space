@@ -10,6 +10,8 @@ import {
   Users,
   Globe,
 } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
+import { staggerContainer, fadeInUpItem, springSnappy } from "@/lib/motion";
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Select,
@@ -23,35 +25,45 @@ import {
   DailyVisitsChart,
   DailyVisitorsChart,
 } from '@/components/admin/DashboardCharts';
+import { AdminStatsSkeleton } from '@/components/admin/AdminSkeletons';
+import { AdminPageActions } from '@/components/admin/AdminPageHeader';
 
 function StatCard({
   icon: Icon,
   title,
   value,
   description,
+  reduce,
 }: {
   icon: React.ElementType;
   title: string;
   value: string | number;
   description?: string;
+  reduce?: boolean | null;
 }) {
   return (
-    <Card className="hover:border-foreground transition duration-300 ease-in-out">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-muted-foreground text-sm font-medium">{title}</p>
-            <h3 className="text-2xl font-bold text-foreground mt-1">{value}</h3>
-            {description && (
-              <p className="text-xs text-muted-foreground mt-1">{description}</p>
-            )}
+    <motion.div
+      variants={fadeInUpItem}
+      whileHover={reduce ? undefined : { y: -2 }}
+      transition={springSnappy}
+    >
+      <Card className="group transition-colors duration-200 hover:border-foreground">
+        <CardContent className="p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-muted-foreground text-sm font-medium">{title}</p>
+              <h3 className="text-2xl font-bold tabular-nums text-foreground mt-1">{value}</h3>
+              {description && (
+                <p className="text-xs text-muted-foreground mt-1">{description}</p>
+              )}
+            </div>
+            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-muted text-foreground transition-colors group-hover:bg-foreground group-hover:text-background">
+              <Icon className="h-[18px] w-[18px]" />
+            </div>
           </div>
-          <div className="w-12 h-12 bg-foreground/10 rounded-xl flex items-center justify-center">
-            <Icon className="w-6 h-6 text-foreground" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -69,6 +81,7 @@ export default function AdminPage() {
   const [stats, setStats] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState("30d");
+  const reduce = useReducedMotion();
 
   useEffect(() => {
     fetchAdminStats(timeRange);
@@ -91,13 +104,7 @@ export default function AdminPage() {
 
   return (
     <>
-      <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold mb-1 text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Monitor platform activity and performance.
-          </p>
-        </div>
+      <AdminPageActions>
         <Select value={timeRange} onValueChange={setTimeRange}>
           <SelectTrigger className="w-[180px]">
             <SelectValue />
@@ -108,35 +115,26 @@ export default function AdminPage() {
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </AdminPageActions>
 
       {loading ? (
-        <div className="space-y-8">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {[...Array(6)].map((_, i) => (
-              <Card key={i}>
-                <CardContent className="p-6">
-                  <div className="animate-pulse">
-                    <div className="bg-muted h-4 w-20 mb-2 rounded" />
-                    <div className="bg-muted h-8 w-16 mb-2 rounded" />
-                    <div className="bg-muted h-3 w-24 rounded" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
+        <AdminStatsSkeleton />
       ) : (
         <div className="space-y-8">
           {/* Stat Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
-            <StatCard icon={Folder} title="Total Projects" value={stats.totalProjects || 0} />
-            <StatCard icon={Clock} title="Pending" value={stats.pendingProjects || 0} />
-            <StatCard icon={Users} title="Users" value={stats.totalUsers || 0} />
-            <StatCard icon={Globe} title="Visits" value={(stats.totalVisits || 0).toLocaleString()} />
-            <StatCard icon={Eye} title="Views" value={(stats.totalViews || 0).toLocaleString()} />
-            <StatCard icon={MousePointerClick} title="Clicks" value={(stats.totalClicks || 0).toLocaleString()} />
-          </div>
+          <motion.div
+            className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4"
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+          >
+            <StatCard icon={Folder} title="Total Projects" value={stats.totalProjects || 0} reduce={reduce} />
+            <StatCard icon={Clock} title="Pending" value={stats.pendingProjects || 0} reduce={reduce} />
+            <StatCard icon={Users} title="Users" value={stats.totalUsers || 0} reduce={reduce} />
+            <StatCard icon={Globe} title="Visits" value={(stats.totalVisits || 0).toLocaleString()} reduce={reduce} />
+            <StatCard icon={Eye} title="Views" value={(stats.totalViews || 0).toLocaleString()} reduce={reduce} />
+            <StatCard icon={MousePointerClick} title="Clicks" value={(stats.totalClicks || 0).toLocaleString()} reduce={reduce} />
+          </motion.div>
 
           {/* Quick Actions */}
           {stats.pendingProjects > 0 && (
@@ -157,7 +155,12 @@ export default function AdminPage() {
           )}
 
           {/* Charts Row — aligned with 6-column stat cards grid */}
-          <div className="grid grid-cols-1 xl:grid-cols-6 gap-4 xl:min-h-[650px]">
+          <motion.div
+            className="grid grid-cols-1 xl:grid-cols-6 gap-4 xl:min-h-[650px]"
+            initial={reduce ? false : { opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+          >
             <div className="xl:col-span-4">
               <EnhancedRevenueChart
                 data={stats.revenueOverTime || []}
@@ -176,7 +179,7 @@ export default function AdminPage() {
                 totalVisitors={stats.totalVisits || 0}
               />
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </>

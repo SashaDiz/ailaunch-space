@@ -23,6 +23,7 @@ import toast from "react-hot-toast";
 import Pagination from '@/components/shared/Pagination';
 import { ProjectFormDialog } from '@/components/admin/ProjectFormDialog';
 import { CsvImportDialog } from '@/components/admin/CsvImportDialog';
+import { AdminPageActions } from '@/components/admin/AdminPageHeader';
 import { siteConfig } from "@/config/site.config";
 import { getLogoDevUrl } from "@/lib/utils";
 import {
@@ -995,30 +996,22 @@ export default function AdminProjectsPage() {
 
   return (
     <>
-      {/* Header */}
-        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold mb-2 text-foreground">Listings Management</h1>
-            <p className="text-muted-foreground">
-              Review, approve, and manage project submissions.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCsvImportOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-background text-foreground border border-border font-semibold rounded-lg hover:bg-muted transition text-sm whitespace-nowrap"
-            >
-              <FileSpreadsheet className="w-4 h-4" />
-              Import CSV
-            </button>
-            <button
-              onClick={() => { setEditingProject(null); setFormDialogOpen(true); }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition text-sm whitespace-nowrap"
-            >
-              + Add Listing
-            </button>
-          </div>
-        </div>
+      {/* Header actions portal into the shared AdminPageHeader */}
+      <AdminPageActions>
+        <button
+          onClick={() => setCsvImportOpen(true)}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-background text-foreground border border-border font-semibold rounded-lg hover:bg-muted transition text-sm whitespace-nowrap"
+        >
+          <FileSpreadsheet className="w-4 h-4" />
+          Import CSV
+        </button>
+        <button
+          onClick={() => { setEditingProject(null); setFormDialogOpen(true); }}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition text-sm whitespace-nowrap"
+        >
+          + Add Listing
+        </button>
+      </AdminPageActions>
 
 
         {/* Filters */}

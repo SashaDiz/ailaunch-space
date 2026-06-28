@@ -171,7 +171,7 @@ export default async function RootLayout({ children }) {
           />
         )}
       </head>
-      <body className="antialiased" suppressHydrationWarning={true}>
+      <body className="antialiased" data-app-root suppressHydrationWarning={true}>
         <Providers initialTheme={initialTheme}>
           <PixelBackground />
           <div className="relative z-10">{children}</div>

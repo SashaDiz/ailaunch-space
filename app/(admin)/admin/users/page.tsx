@@ -134,11 +134,6 @@ export default function AdminUsersPage() {
 
   return (
     <>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-1 text-foreground">Users</h1>
-        <p className="text-muted-foreground">Manage platform users, roles, and access.</p>
-      </div>
-
       {/* Filters */}
       <Card className="mb-6">
         <CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">

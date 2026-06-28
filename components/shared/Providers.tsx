@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import { SupabaseProvider } from "./SupabaseProvider";
 import { SiteThemeProvider, type SiteTheme } from "./SiteThemeProvider";
 import { SiteTracker } from "./SiteTracker";
+import { DisplaySettingsProvider } from "./DisplaySettingsProvider";
 import { Toaster } from "react-hot-toast";
 
 export function Providers({ children, initialTheme }: { children: React.ReactNode; initialTheme?: SiteTheme | null }) {
@@ -16,6 +17,7 @@ export function Providers({ children, initialTheme }: { children: React.ReactNod
     >
       <SupabaseProvider>
         <SiteThemeProvider initialTheme={initialTheme}>
+          <DisplaySettingsProvider>
           <SiteTracker />
           {children}
         <Toaster
@@ -58,6 +60,7 @@ export function Providers({ children, initialTheme }: { children: React.ReactNod
           zIndex: 9999,
         }}
       />
+          </DisplaySettingsProvider>
         </SiteThemeProvider>
     </SupabaseProvider>
     </ThemeProvider>

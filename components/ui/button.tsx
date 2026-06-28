@@ -1,11 +1,13 @@
+"use client"
+
 import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
+import { useRender } from "@base-ui/react/use-render"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-[color,background-color,border-color,box-shadow,transform] duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -37,19 +39,32 @@ const buttonVariants = cva(
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
+  /**
+   * Render the button as its child element (e.g. a Next.js `<Link>`), merging
+   * props and styles onto it. Backed by Base UI's `useRender` (replaces the
+   * Radix `Slot`/`asChild` mechanism). Tap feedback is a CSS `active:scale`
+   * so it applies to the composed element too.
+   */
   asChild?: boolean
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button"
-    return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        {...props}
-      />
-    )
+  ({ className, variant, size, asChild = false, type, children, ...props }, ref) => {
+    const classes = cn(buttonVariants({ variant, size, className }))
+
+    const element = useRender({
+      render:
+        asChild && React.isValidElement(children)
+          ? (children as React.ReactElement)
+          : <button type={type ?? "button"} />,
+      ref,
+      props: asChild
+        ? { ...props, className: classes }
+        : { ...props, className: classes, children },
+      defaultTagName: "button",
+    })
+
+    return element as React.ReactElement
   }
 )
 Button.displayName = "Button"

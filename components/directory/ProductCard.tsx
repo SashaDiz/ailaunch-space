@@ -10,6 +10,7 @@ import { StarRating } from "./StarRating";
 import { siteConfig } from "@/config/site.config";
 import { isEnabled } from "@/lib/features";
 import { getLogoDevUrl } from "@/lib/utils";
+import { useDisplaySettings } from "@/hooks/use-display-settings";
 
 // Format relative time (e.g. "2 days ago")
 function formatRelativeTime(dateInput: string | Date | undefined): string {
@@ -68,6 +69,14 @@ export function ProductCard({
 }) {
   const [isMobile, setIsMobile] = useState(false);
 
+  // Site-wide display settings (admin "Design" panel) control which elements
+  // appear on catalog cards. Defaults preserve the current look (logo on, image off).
+  const display = useDisplaySettings();
+  const showLogo = display.card.showLogo;
+  const showImage = display.card.showImage;
+  const coverImage =
+    (Array.isArray(project.screenshots) && project.screenshots[0]) || null;
+
   // Detect screen size for auto view mode
   useEffect(() => {
     const checkScreenSize = () => {
@@ -112,24 +121,38 @@ export function ProductCard({
             boxShadow: "var(--card-shadow)",
           }}
         >
+          {/* Optional cover image (controlled by Design → Layout settings) */}
+          {showImage && coverImage && (
+            <div className="relative w-full aspect-video overflow-hidden rounded-[var(--radius)] border border-border bg-muted">
+              <Image
+                src={coverImage}
+                alt=""
+                fill
+                className="object-cover"
+              />
+            </div>
+          )}
+
           {/* Row 1: Logo + Title & badges (same row) */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-[var(--radius)] border border-border flex-shrink-0 bg-muted">
-              {(project.logo_url || getLogoDevUrl(project.website_url)) ? (
-                <Image
-                  src={project.logo_url || getLogoDevUrl(project.website_url)}
-                  alt=""
-                  width={32}
-                  height={32}
-                  className="rounded-[var(--radius)] object-cover w-full h-full"
-                  style={{ width: "100%", height: "100%" }}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-sm font-bold text-foreground">
-                  {project.name?.[0] ?? "?"}
-                </div>
-              )}
-            </div>
+            {showLogo && (
+              <div className="w-10 h-10 rounded-[var(--radius)] border border-border flex-shrink-0 bg-muted">
+                {(project.logo_url || getLogoDevUrl(project.website_url)) ? (
+                  <Image
+                    src={project.logo_url || getLogoDevUrl(project.website_url)}
+                    alt=""
+                    width={32}
+                    height={32}
+                    className="rounded-[var(--radius)] object-cover w-full h-full"
+                    style={{ width: "100%", height: "100%" }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-sm font-bold text-foreground">
+                    {project.name?.[0] ?? "?"}
+                  </div>
+                )}
+              </div>
+            )}
             <div className="flex-1">
               <div className="flex flex-col items-start flex-wrap">
                 <h3 className="text-base font-bold text-foreground">
@@ -219,7 +242,8 @@ export function ProductCard({
       >
         <div className="flex items-start space-x-3 flex-1 w-full md:w-auto">
         {/* Logo */}
-        <div className="w-[64px] h-[64px] md:w-[96px] md:h-[96px] border rounded-lg border-border overflow-hidden flex-shrink-0">
+        {showLogo && (
+          <div className="w-[64px] h-[64px] md:w-[96px] md:h-[96px] border rounded-lg border-border overflow-hidden flex-shrink-0">
             {(project.logo_url || getLogoDevUrl(project.website_url)) ? (
               <Image
                 src={project.logo_url || getLogoDevUrl(project.website_url)}
@@ -235,6 +259,7 @@ export function ProductCard({
               </div>
             )}
           </div>
+        )}
 
           {/* Content */}
           <div className="flex-1 min-w-0">
