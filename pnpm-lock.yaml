@@ -20,6 +20,9 @@ importers:
       '@base-ui/react':
         specifier: ^1.5.0
         version: 1.6.0(@date-fns/tz@1.4.1)(@types/react@19.2.7)(date-fns@4.1.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      '@datafast/ai-crawl':
+        specifier: ^1.0.7
+        version: 1.0.7
       '@date-fns/tz':
         specifier: ^1.0.0
         version: 1.4.1
@@ -437,6 +440,9 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+  '@datafast/ai-crawl@1.0.7':
+    resolution: {integrity: sha512-lsW0UsJgiasTmqofyROBJEa0UiXHIRt5jsjugRNdYnbHDEJ7t2MI9uCvMrPFTR93U1MMuGuxQbMXZSnu/yTE4A==}
 
   '@date-fns/tz@1.4.1':
     resolution: {integrity: sha512-P5LUNhtbj6YfI3iJjw5EL9eUAG6OitD0W3fWQcpQjDRc/QIsL0tRNuO1PcDvPccWL1fSTXXdE1ds+l95DV/OFA==}
@@ -3793,6 +3799,8 @@ snapshots:
       use-sync-external-store: 1.6.0(react@19.2.1)
     optionalDependencies:
       '@types/react': 19.2.7
+
+  '@datafast/ai-crawl@1.0.7': {}
 
   '@date-fns/tz@1.4.1': {}
 

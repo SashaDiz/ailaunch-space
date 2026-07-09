@@ -23,6 +23,7 @@
     "@ai-sdk/openai": "^3.0.30",
     "@aws-sdk/client-s3": "^3.910.0",
     "@base-ui/react": "^1.5.0",
+    "@datafast/ai-crawl": "^1.0.7",
     "@date-fns/tz": "^1.0.0",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",

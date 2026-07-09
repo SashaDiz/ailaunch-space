@@ -4,7 +4,17 @@ import { Mail } from "lucide-react";
 import { NewsletterSignup } from "@/components/forms/NewsletterSignup";
 import { SocialFollow } from "@/components/shared/SocialShare";
 import { ThemeAwareLogo } from "@/components/shared/ThemeAwareLogo";
+import { DataFastWidget } from "@/components/shared/DataFastWidget";
 import { siteConfig } from "@/config/site.config";
+
+const OTHER_PROJECTS = [
+  { name: "PosteAhora", href: "https://posteahora.com/" },
+  { name: "Mulu", href: "https://www.mulujournal.app/" },
+  { name: "Winery Hotels", href: "https://winery-hotels.com/" },
+  { name: "Directory Launch", href: "https://directory-launch.com/" },
+  { name: "Momentum", href: "https://getmomentum.online" },
+  { name: "TravelApps", href: "https://besttravelapps.online/" },
+];
 
 export function Footer() {
   return (
@@ -104,8 +114,34 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Newsletter */}
+          {/* Other Projects */}
           <div>
+            <h3 className="font-semibold text-lg mb-4 text-foreground leading-none">
+              Other Projects
+            </h3>
+            <ul className="space-y-2 text-sm">
+              {OTHER_PROJECTS.map((project) => (
+                <li key={project.href}>
+                  <a
+                    href={project.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {project.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Second row: DataFast widget (left) + newsletter (right) */}
+        <div className="border-t border-border mt-12 pt-8 flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
+          <div className="w-full lg:w-auto">
+            <DataFastWidget />
+          </div>
+          <div className="w-full lg:max-w-sm">
             <NewsletterSignup
               variant="footer"
               source="footer"

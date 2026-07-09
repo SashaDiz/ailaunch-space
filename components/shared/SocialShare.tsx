@@ -8,13 +8,27 @@ import {
   Link,
   Check,
   Copy,
-  Twitter,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site.config";
+
+// Current X (formerly Twitter) logo — lucide ships only the legacy bird.
+function XIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 1200 1227"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      className={className}
+    >
+      <path d="M714.163 519.284L1160.89 0H1055.03L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H105.866L515.491 750.218L842.672 1226.37H1200L714.163 519.284ZM569.165 687.828L521.697 619.934L144.011 79.6944H306.615L611.412 515.685L658.88 583.579L1055.08 1150.3H892.476L569.165 687.828Z" />
+    </svg>
+  );
+}
 
 export function SocialShare({
   projectId,
@@ -170,7 +184,7 @@ export function SocialShare({
           className="text-[#1DA1F2] hover:bg-[#1DA1F2]/10"
           title="Share on X"
         >
-          <Twitter className={iconSize} />
+          <XIcon className={iconSize} />
         </Button>
         <Button
           variant="ghost"
@@ -212,7 +226,7 @@ export function SocialShare({
             style={{ boxShadow: "var(--button-shadow)" }}
             title="Share on X"
           >
-            <Twitter className="w-4 h-4" />
+            <XIcon className="w-4 h-4" />
           </Button>
           <Button
             variant="ghost"
@@ -288,7 +302,7 @@ export function SocialShare({
                 className="justify-start text-[#1DA1F2] hover:bg-[#1DA1F2]/10"
                 style={{ boxShadow: "var(--button-shadow)" }}
               >
-                <Twitter className="w-4 h-4 mr-2" />
+                <XIcon className="w-4 h-4 mr-2" />
                 X
               </Button>
 
@@ -357,7 +371,7 @@ export function SocialFollow({
     {
       name: "X",
       url: siteConfig.social.twitter ? `https://x.com/${siteConfig.social.twitter.replace('@', '')}` : "#",
-      icon: Twitter,
+      icon: XIcon,
       color: "text-muted-foreground",
       bgColor: "hover:text-foreground hover:bg-accent",
     },

@@ -6,7 +6,15 @@ import { Check, ChevronDown, ChevronUp } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-const Select = SelectPrimitive.Root
+// Default to non-modal so opening the dropdown does NOT lock body scroll.
+// Base UI's modal scroll lock rewrites <html>/<body> overflow + sets
+// `body { position: relative; height: 100dvh }`, which changes the scroll
+// container and makes Chrome drop the sticky header's backdrop-filter (blur).
+// Callers can still pass `modal` to override.
+const Select = (
+  props: React.ComponentProps<typeof SelectPrimitive.Root>
+) => <SelectPrimitive.Root modal={false} {...props} />
+Select.displayName = "Select"
 
 const SelectGroup = SelectPrimitive.Group
 
@@ -19,7 +27,9 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background transition-colors data-[placeholder]:text-muted-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+      // Default (resting) look matches the `all`/`newest` triggers: transparent bg.
+      // Hover/press match the outline Button (Categories): bg-accent + subtle scale.
+      "flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background transition-[color,background-color,border-color,box-shadow,transform] duration-150 hover:bg-accent hover:text-accent-foreground active:scale-[0.98] data-[placeholder]:text-muted-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
       className
     )}
     {...props}

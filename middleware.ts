@@ -1,9 +1,17 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
+import type { NextFetchEvent, NextRequest } from 'next/server';
+import { trackAICrawlerRequest } from '@datafast/ai-crawl';
 import { i18nConfig } from '@/config/i18n.config';
 import { getSupabasePublishableKey, getSupabaseUrl } from '@/lib/supabase/env';
 
-export async function middleware(request) {
+export async function middleware(request: NextRequest, event: NextFetchEvent) {
+  // DataFast bot/AI-crawler traffic tracking (server-side).
+  // Fire-and-forget — do NOT await; DataFast uses event.waitUntil internally.
+  trackAICrawlerRequest(request, event, {
+    websiteId: 'dfid_K2susEcvm7yr9F7rh2aII',
+  });
+
   let response = NextResponse.next({
     request,
   });
