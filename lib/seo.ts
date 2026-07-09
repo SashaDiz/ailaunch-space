@@ -1,5 +1,6 @@
 // SEO utilities and helpers
 import { siteConfig } from '@/config/site.config';
+import { featuresConfig } from '@/config/features.config';
 
 export const seoConfig = {
   siteName: siteConfig.name,
@@ -277,33 +278,67 @@ export async function generateSitemapData(db) {
     console.error("Error generating sitemap for projects:", error);
   }
 
-  // Category pages
+  // Category landing pages — every category that has at least one live project
+  // (empty categories are thin pages and are skipped). Real /categories/{slug}
+  // URLs, not the homepage.
   try {
     const categories = await db.find(
       "categories",
-      { featured: true },
+      {},
       {
-        projection: { slug: 1, updated_at: 1 },
+        projection: { slug: 1, name: 1, updated_at: 1 },
       }
     );
 
-    categories.forEach(category => {
+    for (const category of categories) {
+      const identifiers = [category.name, category.slug].filter(Boolean);
+      const liveCount = await db.count("apps", {
+        status: "live",
+        categories: { $overlaps: identifiers },
+      });
+      if (liveCount === 0) continue;
+
       // Handle both Date objects and string dates from database
-      const lastmod = category.updated_at 
-        ? (typeof category.updated_at === 'string' 
-            ? category.updated_at 
+      const lastmod = category.updated_at
+        ? (typeof category.updated_at === 'string'
+            ? category.updated_at
             : category.updated_at.toISOString())
         : now;
-      
+
       pages.push({
-        url: `${seoConfig.siteUrl}/`,
+        url: `${seoConfig.siteUrl}/categories/${category.slug}`,
         lastmod,
         changefreq: "weekly",
         priority: 0.7,
       });
-    });
+    }
   } catch (error) {
     console.error("Error generating sitemap for categories:", error);
+  }
+
+  // Blog posts (markdown + DB-authored), only when the blog feature is enabled.
+  if (featuresConfig.blog) {
+    try {
+      const { getAllPosts } = await import('@/lib/blog');
+      const posts = await getAllPosts();
+
+      posts.forEach(post => {
+        const lastmod = post.date
+          ? (typeof post.date === 'string'
+              ? post.date
+              : new Date(post.date).toISOString())
+          : now;
+
+        pages.push({
+          url: `${seoConfig.siteUrl}/blog/${post.slug}`,
+          lastmod,
+          changefreq: "monthly",
+          priority: 0.6,
+        });
+      });
+    } catch (error) {
+      console.error("Error generating sitemap for blog posts:", error);
+    }
   }
 
   // User profile pages (optional - only if you want to index user profiles)
@@ -358,7 +393,7 @@ ${pages
     page => {
       let urlEntry = `  <url>
     <loc>${escapeXml(page.url)}</loc>
-    <lastmod>${page.lastmod}</lastmod>
+    <lastmod>${escapeXml(String(page.lastmod))}</lastmod>
     <changefreq>${page.changefreq}</changefreq>
     <priority>${page.priority}</priority>`;
       

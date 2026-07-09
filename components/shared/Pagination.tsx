@@ -1,22 +1,42 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 
 /**
- * Accessible, responsive pagination component.
+ * Accessible, responsive pagination.
+ *
+ * Crawlability: when `buildHref` is provided, every page control renders as a
+ * real `<a href>` (via next/link) so search engines can follow pagination.
+ * Clicking still does client-side navigation (Link), which changes the URL and
+ * lets the server re-render the correct page. `onPageChange` is optional and
+ * runs alongside navigation (e.g. to scroll). If `buildHref` is omitted the
+ * component falls back to button-based navigation via `onPageChange`.
  *
  * Props:
  * - page: current page (1-based)
  * - totalPages: total number of pages
- * - onPageChange: (page: number) => void
+ * - buildHref: (page: number) => string — builds the href for a page
+ * - onPageChange: (page: number) => void — optional click side-effect / fallback
  * - ariaLabel: optional label for the pagination nav
  */
+interface PaginationProps {
+  page: number;
+  totalPages: number;
+  /** Builds the href for a page — enables real <a href> crawlable pagination. */
+  buildHref?: (page: number) => string;
+  /** Optional click side-effect, and the fallback when buildHref is absent. */
+  onPageChange?: (page: number) => void;
+  ariaLabel?: string;
+}
+
 export default function Pagination({
   page,
   totalPages,
+  buildHref,
   onPageChange,
   ariaLabel = "Pagination",
-}) {
+}: PaginationProps) {
   if (!totalPages || totalPages <= 1) return null;
 
   const clampedPage = Math.min(Math.max(page || 1, 1), totalPages);
@@ -52,14 +72,76 @@ export default function Pagination({
     return withGaps;
   };
 
-  const handleChange = (newPage) => {
-    const nextPage = Math.min(Math.max(newPage, 1), totalPages);
-    if (nextPage !== clampedPage) {
-      onPageChange(nextPage);
+  const pages = createPageRange();
+
+  /**
+   * Render a single control. When enabled and `buildHref` exists → <a href>.
+   * When disabled → inert <span>. Otherwise → <button> (fallback).
+   */
+  const control = (
+    targetPage: number,
+    content: React.ReactNode,
+    {
+      className,
+      ariaLabel: itemAriaLabel,
+      current,
+      disabled,
+    }: {
+      className: string;
+      ariaLabel: string;
+      current?: boolean;
+      disabled?: boolean;
     }
+  ) => {
+    if (disabled) {
+      return (
+        <span
+          className={`${className} opacity-50 cursor-not-allowed`}
+          aria-disabled="true"
+        >
+          {content}
+        </span>
+      );
+    }
+
+    if (buildHref) {
+      return (
+        <Link
+          href={buildHref(targetPage)}
+          className={className}
+          aria-label={itemAriaLabel}
+          aria-current={current ? "page" : undefined}
+          onClick={onPageChange ? () => onPageChange(targetPage) : undefined}
+        >
+          {content}
+        </Link>
+      );
+    }
+
+    return (
+      <button
+        type="button"
+        onClick={() => onPageChange && onPageChange(targetPage)}
+        className={className}
+        aria-label={itemAriaLabel}
+        aria-current={current ? "page" : undefined}
+      >
+        {content}
+      </button>
+    );
   };
 
-  const pages = createPageRange();
+  const prevPage = clampedPage - 1;
+  const nextPage = clampedPage + 1;
+
+  const numberBase =
+    "px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors";
+  const inactiveNumber = `${numberBase} text-muted-foreground bg-background border border-border hover:bg-muted`;
+  const activeNumber = `${numberBase} bg-primary text-primary-foreground`;
+  const arrowClass =
+    "px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-muted-foreground bg-background border border-border rounded-lg hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black";
+  const mobileArrowClass =
+    "flex-1 min-h-[44px] px-4 py-3 text-sm font-medium text-muted-foreground bg-background border border-border rounded-xl hover:bg-muted text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black";
 
   return (
     <nav
@@ -68,56 +150,36 @@ export default function Pagination({
     >
       {/* Mobile controls: Previous/Next only */}
       <div className="flex items-center justify-between gap-2 sm:hidden">
-        <button
-          type="button"
-          onClick={() => handleChange(clampedPage - 1)}
-          disabled={clampedPage <= 1}
-          className="flex-1 min-h-[44px] px-4 py-3 text-sm font-medium text-muted-foreground bg-background border border-border rounded-xl hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black"
-          aria-label="Go to previous page"
-        >
-          Previous
-        </button>
-        <button
-          type="button"
-          onClick={() => handleChange(clampedPage + 1)}
-          disabled={clampedPage >= totalPages}
-          className="flex-1 min-h-[44px] px-4 py-3 text-sm font-medium text-muted-foreground bg-background border border-border rounded-xl hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black"
-          aria-label="Go to next page"
-        >
-          Next
-        </button>
+        {control(prevPage, "Previous", {
+          className: mobileArrowClass,
+          ariaLabel: "Go to previous page",
+          disabled: clampedPage <= 1,
+        })}
+        {control(nextPage, "Next", {
+          className: mobileArrowClass,
+          ariaLabel: "Go to next page",
+          disabled: clampedPage >= totalPages,
+        })}
       </div>
 
       <div className="flex items-center justify-center sm:justify-end">
         <ul className="inline-flex items-center gap-1" role="list">
           <li className="hidden sm:block">
-            <button
-              type="button"
-              onClick={() => handleChange(clampedPage - 1)}
-              disabled={clampedPage <= 1}
-              className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-muted-foreground bg-background border border-border rounded-lg hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black"
-              aria-label="Go to previous page"
-            >
-              «
-            </button>
+            {control(prevPage, "«", {
+              className: arrowClass,
+              ariaLabel: "Go to previous page",
+              disabled: clampedPage <= 1,
+            })}
           </li>
 
           {pages.map((p) =>
             Number.isInteger(p) ? (
               <li key={`page-${p}`}>
-                <button
-                  type="button"
-                  onClick={() => handleChange(p)}
-                  className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors ${
-                    p === clampedPage
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground bg-background border border-border hover:bg-muted"
-                  }`}
-                  aria-label={`Go to page ${p}`}
-                  aria-current={p === clampedPage ? "page" : undefined}
-                >
-                  {p}
-                </button>
+                {control(p, p, {
+                  className: p === clampedPage ? activeNumber : inactiveNumber,
+                  ariaLabel: `Go to page ${p}`,
+                  current: p === clampedPage,
+                })}
               </li>
             ) : (
               <li
@@ -131,15 +193,11 @@ export default function Pagination({
           )}
 
           <li className="hidden sm:block">
-            <button
-              type="button"
-              onClick={() => handleChange(clampedPage + 1)}
-              disabled={clampedPage >= totalPages}
-              className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-muted-foreground bg-background border border-border rounded-lg hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black"
-              aria-label="Go to next page"
-            >
-              »
-            </button>
+            {control(nextPage, "»", {
+              className: arrowClass,
+              ariaLabel: "Go to next page",
+              disabled: clampedPage >= totalPages,
+            })}
           </li>
         </ul>
       </div>
@@ -154,5 +212,3 @@ export default function Pagination({
     </nav>
   );
 }
-
-

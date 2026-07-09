@@ -10,11 +10,13 @@ import { cn } from "@/lib/utils"
 // Base UI's modal scroll lock rewrites <html>/<body> overflow + sets
 // `body { position: relative; height: 100dvh }`, which changes the scroll
 // container and makes Chrome drop the sticky header's backdrop-filter (blur).
-// Callers can still pass `modal` to override.
-const Select = (
-  props: React.ComponentProps<typeof SelectPrimitive.Root>
-) => <SelectPrimitive.Root modal={false} {...props} />
-Select.displayName = "Select"
+// Callers can still pass `modal` to override. Kept generic so `value` /
+// `onValueChange` inference from Base UI's `Select.Root` is preserved.
+function Select<Value, Multiple extends boolean | undefined = false>(
+  props: SelectPrimitive.Root.Props<Value, Multiple>
+) {
+  return <SelectPrimitive.Root modal={false} {...props} />
+}
 
 const SelectGroup = SelectPrimitive.Group
 

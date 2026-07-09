@@ -1,19 +1,19 @@
 "use client";
 
-import React, { useState, useEffect, useRef, Suspense } from "react";
+import React, { useState, useEffect, useRef, useTransition, Suspense } from "react";
 import Link from "next/link";
 import { gsap } from "gsap";
 import { ProductCard } from '@/components/directory/ProductCard';
 import { PaidPlacementCard } from '@/components/directory/PaidPlacementCard';
 import { PartnersSection } from '@/components/marketing/PartnersSection';
-import { cn } from '@/lib/utils';
 import { AutoSubmitModal } from '@/components/shared/AutoSubmitModal';
 import { useAutoSubmitConfig } from '@/hooks/use-autosubmit-config';
 import { SocialProof } from '@/components/marketing/SocialProof';
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { siteConfig } from "@/config/site.config";
 import { featuresConfig } from '@/config/features.config';
 import { directoryConfig } from '@/config/directory.config';
+import { serializeCatalog, hasActiveFilter, type CatalogState } from '@/lib/catalog-url';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -38,7 +38,6 @@ import Pagination from "@/components/shared/Pagination";
 
 const SORT_OPTIONS = directoryConfig.sortOptions;
 const PRICING_OPTIONS = directoryConfig.pricingOptions;
-const PAGE_SIZE = directoryConfig.pageSize;
 
 /**
  * Merges projects with ad cards at fixed grid row positions on every page.
@@ -81,6 +80,7 @@ interface HomePageClientProps {
   initialCategories: { slug: string; name: string; app_count?: number; sphere?: string }[];
   initialGroupedCategories: Record<string, { slug: string; name: string; app_count?: number }[]>;
   initialPagination: { page: number; totalPages: number; totalCount: number };
+  initialState: CatalogState;
 }
 
 function HomePage({
@@ -88,24 +88,52 @@ function HomePage({
   initialCategories,
   initialGroupedCategories,
   initialPagination,
+  initialState,
 }: HomePageClientProps) {
-  const [projects, setProjects] = useState(initialProjects);
-  const [loading, setLoading] = useState(false);
+  // The grid and pagination are driven entirely by server props (per-URL SSR).
+  const projects = initialProjects;
+  const pagination = initialPagination;
+  const page = pagination.page ?? 1;
+  // Pagination is shown only for the unfiltered listing (filters render all items).
+  const showPagination =
+    !hasActiveFilter(initialState) && (pagination.totalPages ?? 0) > 1;
+
   const [featuredPremium, setFeaturedPremium] = useState([]);
   const [isClient, setIsClient] = useState(false);
   const [isAutoSubmitModalOpen, setIsAutoSubmitModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedPricing, setSelectedPricing] = useState("all");
-  const [sortBy, setSortBy] = useState("newest");
-  const [page, setPage] = useState(1);
-  const [pagination, setPagination] = useState<{ page?: number; totalPages?: number; totalCount?: number }>(initialPagination);
-  const [categories, setCategories] = useState<{ slug: string; name: string; app_count?: number }[]>(initialCategories);
-  const [groupedCategories, setGroupedCategories] = useState<Record<string, { slug: string; name: string; app_count?: number }[]>>(initialGroupedCategories);
+  const [isPending, startTransition] = useTransition();
+
+  // Filter UI state is initialized from server state and mirrored into the URL.
+  const [searchQuery, setSearchQuery] = useState(initialState.q);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(initialState.categories);
+  const [selectedPricing, setSelectedPricing] = useState(initialState.pricing);
+  const [sortBy, setSortBy] = useState(initialState.sort);
+  const [categories] = useState(initialCategories);
+  const [groupedCategories] = useState(initialGroupedCategories);
   const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { config: autoSubmitConfig, loading: autoSubmitLoading } = useAutoSubmitConfig();
+
+  const loading = isPending;
+
+  // Keep filter UI in sync with the URL/server state (e.g. back/forward nav).
+  const stateKey = serializeCatalog(
+    {
+      categories: initialState.categories,
+      pricing: initialState.pricing,
+      sort: initialState.sort,
+      q: initialState.q,
+      page: initialState.page,
+    },
+    "/"
+  );
+  useEffect(() => {
+    setSelectedCategories(initialState.categories);
+    setSelectedPricing(initialState.pricing);
+    setSortBy(initialState.sort);
+    setSearchQuery(initialState.q);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stateKey]);
 
   // Schema.org structured data for the homepage
   const baseUrl = siteConfig.url;
@@ -143,39 +171,37 @@ function HomePage({
   const socialProofRef = useRef(null);
   const plusIconRef = useRef(null);
 
-  // Initialize filters from URL params (e.g. /?category=AI&pricing=free)
-  useEffect(() => {
-    const categoryParam = searchParams.get("category");
-    const pricingParam = searchParams.get("pricing");
-    const sortParam = searchParams.get("sort");
+  /**
+   * Push the next catalog state into the URL (canonical serialization).
+   * The server re-renders the grid for the new URL — SSR and client agree.
+   */
+  const navigate = (override: Partial<CatalogState>) => {
+    const next = {
+      categories: selectedCategories,
+      pricing: selectedPricing,
+      sort: sortBy,
+      q: searchQuery.trim(),
+      page: 1,
+      ...override,
+    };
+    startTransition(() => {
+      router.push(serializeCatalog(next, "/"));
+    });
+  };
 
-    if (categoryParam) {
-      setSelectedCategories([categoryParam]);
-    }
-    if (pricingParam && PRICING_OPTIONS.some((p) => p.value === pricingParam)) {
-      setSelectedPricing(pricingParam);
-    }
-    if (sortParam && SORT_OPTIONS.some((s) => s.value === sortParam)) {
-      setSortBy(sortParam);
-    }
-  }, []);
+  const buildPageHref = (targetPage: number) =>
+    serializeCatalog(
+      {
+        categories: selectedCategories,
+        pricing: selectedPricing,
+        sort: sortBy,
+        q: searchQuery.trim(),
+        page: targetPage,
+      },
+      "/"
+    );
 
-  // When filters/sort change, reset to page 1
-  useEffect(() => {
-    setPage(1);
-  }, [searchQuery, selectedCategories.join(","), selectedPricing, sortBy]);
-
-  // Fetch projects when page or filters/sort change (skip initial load since we have server data)
-  const initialLoadRef = useRef(true);
-  useEffect(() => {
-    if (initialLoadRef.current) {
-      initialLoadRef.current = false;
-      return;
-    }
-    fetchProjects(page);
-  }, [page, searchQuery, selectedCategories.join(","), selectedPricing, sortBy]);
-
-  // Featured section (load once)
+  // Featured section (load once, client-only so ad randomization never runs on server)
   useEffect(() => {
     fetchFeatured();
   }, []);
@@ -307,37 +333,6 @@ function HomePage({
     }
   }, [isClient, projects, loading]);
 
-  const fetchProjects = async (pageNum: number) => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        page: pageNum.toString(),
-        limit: PAGE_SIZE.toString(),
-        sort: sortBy,
-        status: "live",
-      });
-      if (selectedCategories.length > 0) params.set("categories", selectedCategories.join(","));
-      if (selectedPricing !== "all") params.set("pricing", selectedPricing);
-      if (searchQuery.trim()) params.set("search", searchQuery.trim());
-
-      const response = await fetch(`/api/projects?${params}`);
-      if (response.ok) {
-        const data = await response.json();
-        setProjects(data.data.projects || []);
-        setPagination(data.data.pagination || {});
-      } else {
-        setProjects([]);
-        setPagination({});
-      }
-    } catch (error) {
-      console.error("Homepage: Failed to fetch projects:", error);
-      setProjects([]);
-      setPagination({});
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchFeatured = async () => {
     try {
       const [featuredRes, promoRes] = await Promise.all([
@@ -375,19 +370,30 @@ function HomePage({
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setPage(1);
-    fetchProjects(1);
-  };
-
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage);
-    fetchProjects(newPage);
+    navigate({ q: searchQuery.trim() });
   };
 
   const handleCategoryToggle = (slug: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
-    );
+    const next = selectedCategories.includes(slug)
+      ? selectedCategories.filter((s) => s !== slug)
+      : [...selectedCategories, slug];
+    setSelectedCategories(next);
+    navigate({ categories: next });
+  };
+
+  const handleClearCategories = () => {
+    setSelectedCategories([]);
+    navigate({ categories: [] });
+  };
+
+  const handlePricingChange = (v: string) => {
+    setSelectedPricing(v);
+    navigate({ pricing: v });
+  };
+
+  const handleSortChange = (v: string) => {
+    setSortBy(v);
+    navigate({ sort: v });
   };
 
   const handlePlusIconHover = () => {
@@ -513,7 +519,7 @@ function HomePage({
                             className="ml-1 rounded-full hover:bg-muted p-0.5"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setSelectedCategories([]);
+                              handleClearCategories();
                             }}
                           >
                             <X className="h-3 w-3" />
@@ -567,7 +573,7 @@ function HomePage({
                 </Popover>
 
                 {/* Pricing dropdown */}
-                <Select value={selectedPricing} onValueChange={(v) => setSelectedPricing(v)}>
+                <Select value={selectedPricing} onValueChange={handlePricingChange}>
                   <SelectTrigger className="w-[130px] h-10">
                     <SelectValue placeholder="Pricing" />
                   </SelectTrigger>
@@ -581,7 +587,7 @@ function HomePage({
                 </Select>
 
                 {/* Sort dropdown */}
-                <Select value={sortBy} onValueChange={(v) => setSortBy(v)}>
+                <Select value={sortBy} onValueChange={handleSortChange}>
                   <SelectTrigger className="w-[150px] h-10">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
@@ -636,12 +642,12 @@ function HomePage({
                     )
                   )}
                 </div>
-                {(pagination.totalPages ?? 0) > 1 && (
+                {showPagination && (
                   <div className="mt-8">
                     <Pagination
                       page={pagination.page ?? 1}
                       totalPages={pagination.totalPages ?? 1}
-                      onPageChange={handlePageChange}
+                      buildHref={buildPageHref}
                       ariaLabel="Homepage projects pagination"
                     />
                   </div>

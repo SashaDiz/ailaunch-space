@@ -260,167 +260,66 @@ export async function GET(request) {
     const sort = searchParams.get("sort") || "upvotes"; // 'upvotes', 'recent', 'views'
     const search = searchParams.get("search");
 
-    // Build query filter
-    const filter: Record<string, any> = { status };
-    
-    // Handle multiple categories (new approach)
-    if (categories) {
-      const categoryList = categories.split(',').filter(cat => cat.trim());
-      if (categoryList.length > 0) {
-        // For multiple categories, we need to find all matching categories first
-        const categoryDocs = await db.find("categories", {
-          $or: categoryList.map(cat => [
-            { slug: cat },
-            { name: cat }
-          ]).flat()
-        });
-        
-        if (categoryDocs.length > 0) {
-          // Create array of all possible category identifiers
-          const allCategoryIds = categoryDocs.reduce((acc, doc) => {
-            acc.push(doc.slug, doc.name);
-            return acc;
-          }, []);
-          
-          filter.categories = { $overlaps: allCategoryIds };
-        } else {
-          // Fallback to direct category slugs/names
-          filter.categories = { $overlaps: categoryList };
-        }
-      }
-    }
-    // Legacy single category support
-    else if (category && category !== "all") {
-      // Try to find the category by slug first, then by name
-      const categoryDoc = await db.findOne("categories", {
-        $or: [
-          { slug: category },
-          { name: category }
-        ]
-      });
-      
-      if (categoryDoc) {
-        // Use both slug and name for backward compatibility
-        filter.categories = { 
-          $overlaps: [categoryDoc.slug, categoryDoc.name] 
-        };
-      } else {
-        // Fallback to original category filter
-        filter.categories = { $overlaps: [category] };
-      }
-    }
+    // Build the catalog listing state. Categories come from the new `categories`
+    // param (comma-separated) or the legacy single `category`. The actual filter
+    // is built in lib/projects-query.ts, shared with the SSR catalog pages.
+    const categoryList = categories
+      ? categories.split(',').map((c) => c.trim()).filter(Boolean)
+      : category && category !== "all"
+        ? [category]
+        : [];
 
-    // Handle search filter with enhanced security
+    // Validate search input (the actual filter is built in getCatalogProjects).
     if (search) {
-      // Limit search query length to prevent DoS
       const MAX_SEARCH_LENGTH = 100;
       const trimmedSearch = search.trim();
-      
+
       if (trimmedSearch.length > MAX_SEARCH_LENGTH) {
         return NextResponse.json(
-          { 
-            error: `Search query too long. Maximum ${MAX_SEARCH_LENGTH} characters.`, 
+          {
+            error: `Search query too long. Maximum ${MAX_SEARCH_LENGTH} characters.`,
             code: "SEARCH_TOO_LONG"
           },
           { status: 400 }
         );
       }
-      
-      // Escape special regex characters to prevent ReDoS attacks
+
+      // Reject queries that are only special characters (nothing to match).
       const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const safeSearch = escapeRegex(trimmedSearch);
-      
-      // Additional validation: ensure search doesn't contain only special characters
-      if (safeSearch.replace(/\\/g, '').length === 0) {
+      if (escapeRegex(trimmedSearch).replace(/\\/g, '').length === 0) {
         return NextResponse.json(
-          { 
-            error: "Invalid search query.", 
+          {
+            error: "Invalid search query.",
             code: "INVALID_SEARCH"
           },
           { status: 400 }
         );
       }
-      
-      filter.$or = [
-        { name: { $regex: safeSearch, $options: "i" } },
-        { short_description: { $regex: safeSearch, $options: "i" } },
-      ];
     }
 
-    // Handle pricing filter
-    if (pricing && pricing !== "all") {
-      filter.$and = filter.$and || [];
-      switch (pricing) {
-        case "free":
-          filter.$and.push({
-            $or: [
-              { pricing: { $regex: /free/i } },
-              { pricing: { $exists: false } },
-              { pricing: "" }
-            ]
-          });
-          break;
-        case "freemium":
-          filter.$and.push({
-            pricing: { $regex: /freemium/i }
-          });
-          break;
-        case "paid":
-          filter.$and.push({
-            $and: [
-              { pricing: { $exists: true } },
-              { pricing: { $ne: "" } },
-              { pricing: { $not: { $regex: /free/i } } },
-              { pricing: { $not: { $regex: /^freemium$/i } } }
-            ]
-          });
-          break;
-      }
-    }
-
-    // Show all live projects (main listing) regardless of status (Scheduled/Live/Past).
-    // Date-based filtering for badges is done on the frontend.
-
-    // Build sort options from directory config (single source of truth)
-    const { getSortFields } = await import('@/config/directory.config');
-    const sortOptions = getSortFields(sort);
-
-    // Calculate skip for pagination
-    const skip = (page - 1) * limit;
-
-    // Get total count for pagination
-    let totalCount;
-    try {
-      totalCount = await db.count("apps", filter);
-    } catch (countError) {
-      console.error('Count query failed:', countError);
-      
-      // If this is a connection error, use 0 as fallback
-      if (countError.message && (countError.message.includes('502') || countError.message.includes('Bad Gateway'))) {
-        console.warn('Count query failed, using 0 as fallback');
-        totalCount = 0;
-      } else {
-        throw countError;
-      }
-    }
-    const totalPages = Math.ceil(totalCount / limit);
-
-    // Fetch AI projects with sorting
+    // Show all live projects (main listing) regardless of badge status.
+    // Fetch via the shared catalog query (same logic used by the SSR pages).
     let projects;
+    let totalCount;
+    let totalPages;
     try {
-      projects = await db.find(
-        "apps", 
-        filter,
-        {
-          sort: sortOptions,
-          limit,
-          skip,
-        }
-      );
+      const { getCatalogProjects } = await import('@/lib/projects-query');
+      const result = await getCatalogProjects({
+        categories: categoryList,
+        pricing,
+        sort,
+        q: search || '',
+        page,
+        limit,
+        status,
+      });
+      projects = result.projects;
+      totalCount = result.totalCount;
+      totalPages = result.totalPages;
     } catch (dbError) {
       console.error('Database query failed:', dbError);
-      
-      // If this is a connection error, return empty results with a warning
+
+      // On a Supabase connection error, degrade gracefully to empty results.
       if (dbError.message && (dbError.message.includes('502') || dbError.message.includes('Bad Gateway'))) {
         console.warn('Database connection failed, returning empty results');
         return NextResponse.json({
@@ -447,8 +346,7 @@ export async function GET(request) {
           },
         });
       }
-      
-      // Re-throw other database errors
+
       throw dbError;
     }
 
