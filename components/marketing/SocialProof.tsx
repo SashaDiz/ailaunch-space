@@ -3,11 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 
-const FALLBACK_AVATARS = Array.from({ length: 6 }, (_, i) => ({
-  id: `fallback-${i + 1}`,
-  avatar_url: `/assets/avatars/avatar-${i + 1}.png`,
-}));
-
 export function SocialProof({ className = "" }) {
   const [data, setData] = useState({ total: 0, users: [] as { id: string; avatar_url: string }[] });
   const [loading, setLoading] = useState(true);
@@ -27,8 +22,7 @@ export function SocialProof({ className = "" }) {
       .finally(() => setLoading(false));
   }, []);
 
-  const { total, users: realUsers } = data;
-  const users = realUsers.length > 0 ? realUsers : FALLBACK_AVATARS;
+  const { total, users } = data;
 
   const formatRoundedNumber = (num) => {
     if (num < 100) {
