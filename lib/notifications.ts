@@ -15,19 +15,21 @@ class NotificationManager {
   }
 
   /**
-   * Fetch active sponsors for email templates
+   * Fetch companies from active promotional banners for email templates.
+   * Pulls from paid promotions with the top-banner placement.
    */
-  async getActiveSponsors() {
-    if (!featuresConfig.partners) return [];
+  async getBannerPromotions() {
+    if (!featuresConfig.promotions) return [];
     try {
-      const sponsors = await db.find("partners", { status: "active" }, {
-        sort: { position: 1 },
-        limit: 8,
-      });
-      return sponsors.map((s: any) => ({
-        name: s.name,
-        logo: s.logo,
-        website_url: s.website_url,
+      const promotions = await db.find(
+        "promotions",
+        { status: "active", placement_banner: true },
+        { sort: { position: 1 }, limit: 8 }
+      );
+      return promotions.map((p: any) => ({
+        name: p.name,
+        logo: p.logo_url,
+        website_url: p.website_url,
       }));
     } catch {
       return [];
@@ -459,7 +461,7 @@ class NotificationManager {
    * @param {Object} params - Parameters
    */
   async sendCompetitionWeekStartNotification({ userEmail, competition, featuredProjects }) {
-    const sponsors = await this.getActiveSponsors();
+    const promotions = await this.getBannerPromotions();
     return await this.sendNotification({
       userId: null, // This is a newsletter-style notification
       emailType: 'competition_week_start',
@@ -470,7 +472,7 @@ class NotificationManager {
         premiumCount: featuredProjects.filter(p => p.premium_badge).length,
         totalCount: featuredProjects.length,
         featuredProjects: featuredProjects.slice(0, 5), // Show top 5 projects
-        sponsors,
+        promotions,
       }
     });
   }
@@ -480,7 +482,7 @@ class NotificationManager {
    * @param {Object} params - Parameters
    */
   async sendCompetitionWeekEndNotification({ userEmail, competition, winners, totalVotes, totalProjects }) {
-    const sponsors = await this.getActiveSponsors();
+    const promotions = await this.getBannerPromotions();
     return await this.sendNotification({
       userId: null, // This is a newsletter-style notification
       emailType: 'competition_week_end',
@@ -491,7 +493,7 @@ class NotificationManager {
         winners,
         totalVotes,
         totalProjects,
-        sponsors,
+        promotions,
       }
     });
   }

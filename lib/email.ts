@@ -61,23 +61,24 @@ const getLogoHtml = (data: any, options: Record<string, any> = {}) => {
 };
 
 /**
- * Generate "Sponsored by" HTML block for email templates.
- * Pass `data.sponsors` as an array of { name, logo, website_url }.
- * Returns empty string if no sponsors provided.
+ * Generate a "Promoted" HTML block for email templates.
+ * Pass `data.promotions` as an array of { name, logo, website_url }
+ * (companies from the active promotional banners).
+ * Returns empty string if no promotions provided.
  */
-const getSponsorsHtml = (data: any) => {
-  const sponsors = data?.sponsors;
-  if (!sponsors || !Array.isArray(sponsors) || sponsors.length === 0) return '';
+const getPromotionsHtml = (data: any) => {
+  const promotions = data?.promotions;
+  if (!promotions || !Array.isArray(promotions) || promotions.length === 0) return '';
 
-  const logos = sponsors.map((s: any) => `
-    <a href="${s.website_url || '#'}" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin: 0 8px 8px 0; text-decoration: none;">
-      <img src="${s.logo}" alt="${s.name}" width="80" height="28" style="max-width: 80px; max-height: 28px; height: auto; object-fit: contain; vertical-align: middle;" />
+  const logos = promotions.map((p: any) => `
+    <a href="${p.website_url || '#'}" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin: 0 8px 8px 0; text-decoration: none;">
+      <img src="${p.logo}" alt="${p.name}" width="80" height="28" style="max-width: 80px; max-height: 28px; height: auto; object-fit: contain; vertical-align: middle;" />
     </a>
   `).join('');
 
   return `
     <div style="border-top: 1px solid #e5e7eb; margin-top: 24px; padding-top: 16px; text-align: center;">
-      <p style="color: #9ca3af; font-size: 11px; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 0.5px;">Sponsored by</p>
+      <p style="color: #9ca3af; font-size: 11px; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 0.5px;">Promoted</p>
       <div>${logos}</div>
     </div>
   `;
@@ -1029,7 +1030,7 @@ export const emailTemplates = {
                 </a>
               </div>
 
-              ${getSponsorsHtml(data)}
+              ${getPromotionsHtml(data)}
 
               <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; text-align: center;">
                 <p style="color: #6b7280; font-size: 14px; margin: 0;">
@@ -1136,7 +1137,7 @@ export const emailTemplates = {
                 </a>
               </div>
 
-              ${getSponsorsHtml(data)}
+              ${getPromotionsHtml(data)}
 
               <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; text-align: center;">
                 <p style="color: #6b7280; font-size: 14px; margin: 0;">

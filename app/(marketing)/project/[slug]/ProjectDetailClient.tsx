@@ -981,7 +981,7 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
           }}
         >
           <div
-            className="relative w-full max-w-md rounded-[var(--radius)] border border-border bg-card shadow-2xl max-h-[90vh] overflow-y-auto"
+            className="relative w-full max-w-lg rounded-[var(--radius)] border border-border bg-card shadow-2xl max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <button

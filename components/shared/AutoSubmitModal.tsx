@@ -56,7 +56,7 @@ export function AutoSubmitModal({ isOpen, onClose }) {
       aria-describedby="modal-description"
     >
       <div
-        className="relative bg-card rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-border animate-in zoom-in-95 duration-300"
+        className="relative bg-card rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-border animate-in zoom-in-95 duration-300"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Optional image — spans the full banner width, only when a URL is set */}
