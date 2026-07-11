@@ -59,16 +59,16 @@ export function AutoSubmitModal({ isOpen, onClose }) {
         className="relative bg-card rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-border animate-in zoom-in-95 duration-300"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-4 sm:p-8">
-          {/* Optional image — only when a URL is set */}
-          {config.imageUrl && (
-            <img
-              src={config.imageUrl}
-              alt=""
-              className="w-full h-auto rounded-lg mb-6 object-cover"
-            />
-          )}
+        {/* Optional image — spans the full banner width, only when a URL is set */}
+        {config.imageUrl && (
+          <img
+            src={config.imageUrl}
+            alt=""
+            className="w-full h-auto object-cover"
+          />
+        )}
 
+        <div className="p-4 sm:p-8">
           {/* Header */}
           <div className="flex justify-between items-start mb-6">
             {config.title ? (

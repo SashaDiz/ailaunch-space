@@ -480,46 +480,48 @@ export function AutoSubmitBannerEditor() {
             Approximate preview of the popup modal content.
           </p>
 
-          <div className="border border-border rounded-[var(--radius)] p-6 bg-card max-w-md">
+          <div className="border border-border rounded-[var(--radius)] overflow-hidden bg-card max-w-md">
             {config.imageUrl && (
               <img
                 src={config.imageUrl}
                 alt=""
-                className="w-full h-auto rounded-lg mb-4 object-cover"
+                className="w-full h-auto object-cover"
               />
             )}
-            <h4 className="text-lg font-bold text-foreground mb-2">
-              {config.title || "Title"}
-            </h4>
-            <p className="text-sm text-foreground mb-3">
-              {config.description || "Description"}
-            </p>
-            <a
-              href={config.learnMoreUrl || "#"}
-              className="text-sm text-muted-foreground underline mb-4 block"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {config.learnMoreText || "Learn more"}
-            </a>
-            {config.benefits.length > 0 && (
-              <ul className="space-y-1.5 mb-4">
-                {config.benefits.map((b, i) => (
-                  <li key={i} className="flex items-start text-sm">
-                    <CheckCircle2 className="h-4 w-4 text-foreground mr-2 mt-0.5 flex-shrink-0" />
-                    <span className="text-foreground">{b}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <div className="flex flex-col gap-2 items-center">
-              <span className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-[var(--radius)] font-semibold text-sm uppercase">
-                <Bot className="h-4 w-4" />
-                {config.ctaText || "CTA"}
-              </span>
-              <span className="text-sm text-muted-foreground underline">
-                {config.dismissText || "Dismiss"}
-              </span>
+            <div className="p-6">
+              <h4 className="text-lg font-bold text-foreground mb-2">
+                {config.title || "Title"}
+              </h4>
+              <p className="text-sm text-foreground mb-3">
+                {config.description || "Description"}
+              </p>
+              <a
+                href={config.learnMoreUrl || "#"}
+                className="text-sm text-muted-foreground underline mb-4 block"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {config.learnMoreText || "Learn more"}
+              </a>
+              {config.benefits.length > 0 && (
+                <ul className="space-y-1.5 mb-4">
+                  {config.benefits.map((b, i) => (
+                    <li key={i} className="flex items-start text-sm">
+                      <CheckCircle2 className="h-4 w-4 text-foreground mr-2 mt-0.5 flex-shrink-0" />
+                      <span className="text-foreground">{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="flex flex-col gap-2 items-center">
+                <span className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-[var(--radius)] font-semibold text-sm uppercase">
+                  <Bot className="h-4 w-4" />
+                  {config.ctaText || "CTA"}
+                </span>
+                <span className="text-sm text-muted-foreground underline">
+                  {config.dismissText || "Dismiss"}
+                </span>
+              </div>
             </div>
           </div>
         </CardContent>

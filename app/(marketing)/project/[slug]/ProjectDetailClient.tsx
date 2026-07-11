@@ -984,23 +984,24 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
             className="relative w-full max-w-md rounded-[var(--radius)] border border-border bg-card shadow-2xl max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
+            <button
+              onClick={handleAutoSubmitModalClose}
+              className="absolute top-4 right-4 z-10 text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted rounded-[var(--radius)] transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-400"
+              aria-label="Close modal"
+            >
+              <X className="w-6 h-6" strokeWidth={2} />
+            </button>
+
+            {/* Optional image — spans the full banner width */}
+            {autoSubmitConfig.imageUrl && (
+              <img
+                src={autoSubmitConfig.imageUrl}
+                alt=""
+                className="w-full h-auto object-cover"
+              />
+            )}
+
             <div className="p-4 sm:p-8">
-              <button
-                onClick={handleAutoSubmitModalClose}
-                className="absolute top-4 right-4 text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted rounded-[var(--radius)] transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-400"
-                aria-label="Close modal"
-              >
-                <X className="w-6 h-6" strokeWidth={2} />
-              </button>
-
-              {autoSubmitConfig.imageUrl && (
-                <img
-                  src={autoSubmitConfig.imageUrl}
-                  alt=""
-                  className="w-full h-auto rounded-lg mb-6 object-cover"
-                />
-              )}
-
               <div className="mb-6">
                 <h2
                   id="auto-submit-modal-title"
