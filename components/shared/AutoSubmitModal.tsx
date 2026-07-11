@@ -60,6 +60,15 @@ export function AutoSubmitModal({ isOpen, onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-4 sm:p-8">
+          {/* Optional image — only when a URL is set */}
+          {config.imageUrl && (
+            <img
+              src={config.imageUrl}
+              alt=""
+              className="w-full h-auto rounded-lg mb-6 object-cover"
+            />
+          )}
+
           {/* Header */}
           <div className="flex justify-between items-start mb-6">
             {config.title ? (

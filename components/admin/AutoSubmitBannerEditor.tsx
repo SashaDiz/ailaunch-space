@@ -29,6 +29,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import ImageUpload from "@/components/forms/ImageUpload";
 import type { AutoSubmitBannerConfig } from "@/types/config";
 import { DEFAULT_AUTOSUBMIT_CONFIG } from "@/config/autosubmit.config";
 
@@ -166,6 +167,21 @@ export function AutoSubmitBannerEditor() {
               value={config.title}
               onChange={(e) => updateField("title", e.target.value)}
               placeholder="Submit your product to 100+ directories..."
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Image (optional)</Label>
+            <p className="text-sm text-muted-foreground">
+              Shown above the title in the popup modal. Leave empty to hide it.
+            </p>
+            <ImageUpload
+              value={config.imageUrl}
+              onChange={(url) => updateField("imageUrl", url)}
+              error={null}
+              label="Banner image"
+              maxSize={2}
+              formatHint="PNG, JPG or WebP up to 2MB"
             />
           </div>
 
@@ -465,6 +481,13 @@ export function AutoSubmitBannerEditor() {
           </p>
 
           <div className="border border-border rounded-[var(--radius)] p-6 bg-card max-w-md">
+            {config.imageUrl && (
+              <img
+                src={config.imageUrl}
+                alt=""
+                className="w-full h-auto rounded-lg mb-4 object-cover"
+              />
+            )}
             <h4 className="text-lg font-bold text-foreground mb-2">
               {config.title || "Title"}
             </h4>

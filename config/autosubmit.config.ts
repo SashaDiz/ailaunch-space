@@ -4,6 +4,7 @@ import { siteConfig } from '@/config/site.config';
 export const DEFAULT_AUTOSUBMIT_CONFIG: AutoSubmitBannerConfig = {
   enabled: true,
   title: 'Submit your product to 100+ directories with ListingBott',
+  imageUrl: '',
   description:
     'Boost your Domain Rating for 15+ and get more mentions and long-term SEO gains.',
   benefits: [

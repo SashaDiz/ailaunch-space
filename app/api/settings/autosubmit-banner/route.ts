@@ -71,6 +71,8 @@ export async function PUT(request: Request) {
     const value: Partial<AutoSubmitBannerConfig> = {};
     if (typeof body.enabled === "boolean") value.enabled = body.enabled;
     if (typeof body.title === "string") value.title = body.title.trim();
+    if (typeof body.imageUrl === "string")
+      value.imageUrl = body.imageUrl.trim();
     if (typeof body.description === "string")
       value.description = body.description.trim();
     if (Array.isArray(body.benefits)) {

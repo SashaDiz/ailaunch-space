@@ -993,6 +993,14 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
                 <X className="w-6 h-6" strokeWidth={2} />
               </button>
 
+              {autoSubmitConfig.imageUrl && (
+                <img
+                  src={autoSubmitConfig.imageUrl}
+                  alt=""
+                  className="w-full h-auto rounded-lg mb-6 object-cover"
+                />
+              )}
+
               <div className="mb-6">
                 <h2
                   id="auto-submit-modal-title"

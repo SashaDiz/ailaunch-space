@@ -105,6 +105,8 @@ export interface MarketingConfig {
 export interface AutoSubmitBannerConfig {
   enabled: boolean;
   title: string;
+  /** Optional image shown above the title in the popup modal. Empty = hidden. */
+  imageUrl: string;
   description: string;
   benefits: string[];
   ctaText: string;
