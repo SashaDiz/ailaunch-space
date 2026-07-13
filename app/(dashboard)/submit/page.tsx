@@ -2267,6 +2267,20 @@ function SubmitPageContent() {
                         Please verify badge placement to submit
                       </p>
                     )}
+                    {!isEditMode && (
+                      <p className="text-xs text-muted-foreground text-right max-w-xs">
+                        By submitting, you confirm your project complies with our{" "}
+                        <a
+                          href="/submission-policy"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary underline-offset-4 hover:underline"
+                        >
+                          Submission Policy
+                        </a>
+                        .
+                      </p>
+                    )}
                     <button
                       type="button"
                       onClick={handleSubmit}

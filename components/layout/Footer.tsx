@@ -101,6 +101,14 @@ export function Footer() {
                     FAQs
                   </Link>
                 </li>
+                <li>
+                  <Link
+                    href="/submission-policy"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Submission Policy
+                  </Link>
+                </li>
                 {/* CHANGELOG FEATURE DISABLED - COMMENTED OUT FOR FUTURE DEVELOPMENT
                 <li>
                   <Link

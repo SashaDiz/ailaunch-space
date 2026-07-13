@@ -745,6 +745,7 @@ export const emailTemplates = {
                 <h3 style="margin: 0 0 15px 0; color: #000000; font-size: 18px;">What to do next:</h3>
                 <ul style="margin: 0; padding-left: 20px; color: #374151;">
                   <li style="margin-bottom: 8px;">Review the feedback above</li>
+                  <li style="margin-bottom: 8px;">Check our <a href="${process.env.NEXT_PUBLIC_APP_URL}/submission-policy" style="color: #000000; text-decoration: underline;">Submission Policy</a> to make sure your project qualifies</li>
                   <li style="margin-bottom: 8px;">Make the necessary improvements</li>
                   <li style="margin-bottom: 8px;">Resubmit your project</li>
                   <li>Contact us if you have questions</li>

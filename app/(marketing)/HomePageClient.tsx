@@ -189,6 +189,20 @@ function HomePage({
     });
   };
 
+  // Debounced search: navigate as the user types, mirroring the other filters.
+  // Guard against re-firing when searchQuery is reset to the URL value by the
+  // state-sync effect above — only navigate when the trimmed query actually
+  // differs from what the server already rendered (prevents a redundant nav loop).
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+    if (trimmed === initialState.q) return;
+    const timer = setTimeout(() => {
+      navigate({ q: trimmed });
+    }, 350);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
+
   const buildPageHref = (targetPage: number) =>
     serializeCatalog(
       {
