@@ -191,6 +191,15 @@ export function Footer() {
             </div>
           </div>
         </div>
+
+        <a
+          href="https://dododirectory.com"
+          target="_blank"
+          rel="dofollow"
+          className="sr-only"
+        >
+          Featured on DodoDirectory
+        </a>
       </div>
     </footer>
   );
