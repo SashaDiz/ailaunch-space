@@ -1,10 +1,8 @@
 import React from "react";
 import Link from "next/link";
-import { Mail } from "lucide-react";
 import { NewsletterSignup } from "@/components/forms/NewsletterSignup";
 import { SocialFollow } from "@/components/shared/SocialShare";
 import { ThemeAwareLogo } from "@/components/shared/ThemeAwareLogo";
-import { DataFastWidget } from "@/components/shared/DataFastWidget";
 import { siteConfig } from "@/config/site.config";
 
 const OTHER_PROJECTS = [
@@ -20,9 +18,9 @@ export function Footer() {
   return (
     <footer className="bg-transparent border-t border-border">
       <div className="container-classic py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
           {/* Brand */}
-          <div className="space-y-4">
+          <div className="space-y-4 lg:max-w-xs">
             <Link href="/">
               <ThemeAwareLogo
                 variant="default"
@@ -42,106 +40,104 @@ export function Footer() {
             />
           </div>
 
-          {/* Platform */}
-          <div>
-            <h3 className="font-semibold text-lg mb-4 text-foreground leading-none">Platform</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link
-                  href="/#projects-section"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Browse
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/categories"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Categories
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/submit"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Submit Project
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/pricing"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Pricing
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Resources */}
-          <div>
-            <h3 className="font-semibold text-lg mb-4 text-foreground leading-none">Resources</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link
-                  href="/blog"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Blog
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/faq"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  FAQs
-                </Link>
-              </li>
-              {/* CHANGELOG FEATURE DISABLED - COMMENTED OUT FOR FUTURE DEVELOPMENT
-              <li>
-                <Link
-                  href="/changelog"
-                  className="text-background/70 hover:text-background transition-colors"
-                >
-                  Changelog
-                </Link>
-              </li>
-              */}
-            </ul>
-          </div>
-
-          {/* Other Projects */}
-          <div>
-            <h3 className="font-semibold text-lg mb-4 text-foreground leading-none">
-              Other Projects
-            </h3>
-            <ul className="space-y-2 text-sm">
-              {OTHER_PROJECTS.map((project) => (
-                <li key={project.href}>
-                  <a
-                    href={project.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
+          {/* Link columns — sized to content, not stretched to equal widths */}
+          <div className="flex flex-wrap gap-x-12 gap-y-8 sm:gap-x-16 lg:gap-x-20">
+            {/* Platform */}
+            <div>
+              <h3 className="font-semibold text-lg mb-4 text-foreground leading-none">Platform</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <Link
+                    href="/#projects-section"
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    {project.name}
-                  </a>
+                    Browse
+                  </Link>
                 </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+                <li>
+                  <Link
+                    href="/categories"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Categories
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/submit"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Submit Project
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/pricing"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Pricing
+                  </Link>
+                </li>
+              </ul>
+            </div>
 
-        {/* Second row: DataFast widget (left) + newsletter (right) */}
-        <div className="border-t border-border mt-12 pt-8 flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
-          <div className="w-full lg:w-auto">
-            <DataFastWidget />
+            {/* Resources */}
+            <div>
+              <h3 className="font-semibold text-lg mb-4 text-foreground leading-none">Resources</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <Link
+                    href="/blog"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Blog
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/faq"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    FAQs
+                  </Link>
+                </li>
+                {/* CHANGELOG FEATURE DISABLED - COMMENTED OUT FOR FUTURE DEVELOPMENT
+                <li>
+                  <Link
+                    href="/changelog"
+                    className="text-background/70 hover:text-background transition-colors"
+                  >
+                    Changelog
+                  </Link>
+                </li>
+                */}
+              </ul>
+            </div>
+
+            {/* Other Projects */}
+            <div>
+              <h3 className="font-semibold text-lg mb-4 text-foreground leading-none">
+                Other Projects
+              </h3>
+              <ul className="space-y-2 text-sm">
+                {OTHER_PROJECTS.map((project) => (
+                  <li key={project.href}>
+                    <a
+                      href={project.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {project.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-          <div className="w-full lg:max-w-sm">
+
+          {/* Stay Updated */}
+          <div className="w-full lg:w-auto lg:max-w-xs">
             <NewsletterSignup
               variant="footer"
               source="footer"

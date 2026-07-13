@@ -123,10 +123,10 @@ const PLANS = {
     name: "Standard Launch",
     price: 0,
     currency: "USD",
-    description: "Free dofollow backlink in exchange for our badge",
+    description: "Free listing in exchange for our badge",
     icon: Globe,
     features: [
-      { text: "Free dofollow backlink — install our badge on your site, we verify automatically", icon: LinkIcon },
+      { text: "Free listing with a link back to your site — install our badge, we verify automatically", icon: LinkIcon },
       { text: "Admin review (24–48h)", icon: Clock },
       { text: "Listed in the directory alongside paid projects", icon: Megaphone },
     ],
@@ -141,7 +141,7 @@ const PLANS = {
     description: "Pay once, no badge required, featured at the top",
     icon: Medal,
     features: [
-      { text: "Guaranteed dofollow backlink — no badge required", icon: LinkIcon },
+      { text: "Featured listing with a link back to your site — no badge required", icon: LinkIcon },
       { text: "Featured placement above free listings", icon: Crown },
       { text: "Priority review (skip the standard queue)", icon: Clock },
       { text: "Premium badge for credibility", icon: Star },
@@ -2188,7 +2188,7 @@ function SubmitPageContent() {
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   You've chosen the {formData.plan === "premium" ? "Premium" : "Standard"} launch plan. 
-                  {formData.plan === "premium" ? " You'll get guaranteed backlinks and skip the queue." : " You'll get standard launch benefits."}
+                  {formData.plan === "premium" ? " You'll get featured placement and skip the queue." : " You'll get standard launch benefits."}
                 </p>
               </div>
             </div>
@@ -2208,7 +2208,7 @@ function SubmitPageContent() {
                     Embed our badge on your site
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Standard listings get a free dofollow backlink in exchange for displaying our badge on your website. Paste the code below on your homepage, then click Verify. Submit unlocks once verification passes.
+                    Standard listings get a free listing with a link back to your site in exchange for displaying our badge on your website. Paste the code below on your homepage, then click Verify. Submit unlocks once verification passes.
                   </p>
                 </div>
                 <FeaturedBadgeEmbed

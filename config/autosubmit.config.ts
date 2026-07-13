@@ -25,6 +25,7 @@ export const DEFAULT_AUTOSUBMIT_CONFIG: AutoSubmitBannerConfig = {
   dismissText: "No, I'll do it myself.",
   triggerButtonText: 'Auto submit',
   triggerButtonIcon: 'Bot',
+  ctaButtonIcon: 'Bot',
   dashboardCtaText: 'Submit to 100+ directories',
   projectDetailHeading: 'Max out your visibility with Auto-Submit',
   projectDetailDescription:

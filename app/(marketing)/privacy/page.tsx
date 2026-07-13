@@ -18,7 +18,7 @@ export default function PrivacyPage() {
         <div className="prose max-w-none">
           <section className="mb-8">
             <p className="text-sm text-muted-foreground mb-8">
-              Last updated: October 2025
+              Last updated: July 2026
             </p>
             
             <h2 className="text-2xl font-semibold mb-4">1. Introduction</h2>
@@ -38,7 +38,7 @@ export default function PrivacyPage() {
             <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-4">
               <li><strong>Account Information:</strong> Name, email address, profile picture, bio, website, social media handles</li>
               <li><strong>Project Information:</strong> Project names, descriptions, URLs, screenshots, videos, categories, pricing information</li>
-              <li><strong>Payment Information:</strong> Billing details, transaction history (processed securely through Stripe)</li>
+              <li><strong>Payment Information:</strong> Billing details and transaction history are processed securely by Dodo Payments, our Merchant of Record. We do not store your full card details on our servers.</li>
               <li><strong>Communication Data:</strong> Messages, feedback, support requests</li>
               <li><strong>Newsletter Subscriptions:</strong> Email preferences and subscription status</li>
             </ul>
@@ -57,7 +57,7 @@ export default function PrivacyPage() {
             <p className="text-muted-foreground mb-4">We may receive information from third-party services:</p>
             <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-4">
               <li><strong>Authentication Providers:</strong> Supabase Auth for account creation and management</li>
-              <li><strong>Payment Processors:</strong> Stripe for transaction processing</li>
+              <li><strong>Payment Processors:</strong> Dodo Payments (Merchant of Record) for transaction processing</li>
               <li><strong>Analytics Services:</strong> Website analytics for performance and usage data where enabled</li>
               <li><strong>Social Media Platforms:</strong> When you connect your social accounts</li>
             </ul>
@@ -118,7 +118,7 @@ export default function PrivacyPage() {
             </p>
             <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-4">
               <li><strong>Supabase:</strong> Database and authentication services</li>
-              <li><strong>Stripe:</strong> Payment processing services</li>
+              <li><strong>Dodo Payments:</strong> Payment processing services as Merchant of Record</li>
               <li><strong>Email Services:</strong> Newsletter and communication delivery</li>
               <li><strong>Cloud Hosting:</strong> Infrastructure and hosting services</li>
             </ul>
@@ -220,21 +220,21 @@ export default function PrivacyPage() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">11. Third-Party Links</h2>
+            <h2 className="text-2xl font-semibold mb-4">10. Third-Party Links</h2>
             <p className="text-muted-foreground mb-4">
               Our Platform may contain links to third-party websites or services. We are not responsible for the privacy practices or content of these third parties. We encourage you to read the privacy policies of any third-party websites you visit.
             </p>
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">12. Changes to This Privacy Policy</h2>
+            <h2 className="text-2xl font-semibold mb-4">11. Changes to This Privacy Policy</h2>
             <p className="text-muted-foreground mb-4">
               We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the new Privacy Policy on this page and updating the "Last updated" date. We encourage you to review this Privacy Policy periodically for any changes.
             </p>
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">13. Contact Us</h2>
+            <h2 className="text-2xl font-semibold mb-4">12. Contact Us</h2>
             <p className="text-muted-foreground mb-4">
               If you have any questions about this Privacy Policy or our privacy practices, please contact us:
             </p>

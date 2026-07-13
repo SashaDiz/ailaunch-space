@@ -24,10 +24,10 @@ const plans = [
     name: "Standard Listing",
     price: 0,
     currency: "USD",
-    description: "Free dofollow backlink in exchange for our badge",
+    description: "Free listing in exchange for our badge",
     icon: "Globe" as const,
     features: [
-      { text: "Free dofollow backlink — install our badge on your site, we verify automatically", icon: "Link" as const },
+      { text: "Free listing with a link to your site — add our badge, we verify automatically", icon: "Link" as const },
       { text: "Admin review (24–48h)", icon: "Clock" as const },
       { text: "Listed in the directory alongside paid projects", icon: "Megaphone" as const },
     ],
@@ -43,7 +43,7 @@ const plans = [
     description: "Pay once, no badge required, featured at the top",
     icon: "Medal" as const,
     features: [
-      { text: "Guaranteed dofollow backlink — no badge required", icon: "Link" as const },
+      { text: "Featured listing with a link to your product — no badge required", icon: "Link" as const },
       { text: "Featured placement above free listings", icon: "Crown" as const },
       { text: "Priority review (skip the standard queue)", icon: "Clock" as const },
       { text: "Premium badge for credibility", icon: "Star" as const },

@@ -117,8 +117,16 @@ export interface AutoSubmitBannerConfig {
   dismissText: string;
   /** Label of the button that opens the banner (homepage hero). */
   triggerButtonText: string;
-  /** Lucide icon name for that trigger button (see lib/autosubmit-icons). */
+  /**
+   * Lucide icon name for the homepage trigger button (see lib/autosubmit-icons).
+   * Use "none" for no icon.
+   */
   triggerButtonIcon: string;
+  /**
+   * Lucide icon name for the modal / post-submission CTA button
+   * (see lib/autosubmit-icons). Use "none" for no icon.
+   */
+  ctaButtonIcon: string;
   dashboardCtaText: string;
   projectDetailHeading: string;
   projectDetailDescription: string;

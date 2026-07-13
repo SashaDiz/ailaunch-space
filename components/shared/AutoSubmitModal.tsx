@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, CheckCircle2, Bot } from "lucide-react";
+import { X, CheckCircle2 } from "lucide-react";
 import { useAutoSubmitConfig } from "@/hooks/use-autosubmit-config";
+import { getAutoSubmitIcon } from "@/lib/autosubmit-icons";
 
 export function AutoSubmitModal({ isOpen, onClose }) {
   const [mounted, setMounted] = useState(false);
@@ -139,7 +140,10 @@ export function AutoSubmitModal({ isOpen, onClose }) {
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold text-sm no-underline transition duration-300 hover:-translate-y-1 hover:shadow-[0_4px_0_rgba(0,0,0,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900 min-h-[48px] uppercase"
                 onClick={onClose}
               >
-                <Bot className="w-4 h-4" strokeWidth={2} />
+                {(() => {
+                  const CtaIcon = getAutoSubmitIcon(config.ctaButtonIcon);
+                  return CtaIcon ? <CtaIcon className="w-4 h-4" strokeWidth={2} /> : null;
+                })()}
                 {config.ctaText}
               </a>
             )}

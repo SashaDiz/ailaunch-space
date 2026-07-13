@@ -1,5 +1,4 @@
 import React from "react";
-import Link from "next/link";
 import { siteConfig } from "@/config/site.config";
 import { generateStructuredData } from "@/lib/seo";
 import {
@@ -10,7 +9,6 @@ import {
   HelpCircle,
   CheckCircle2,
   Clock,
-  Link as LinkIcon,
   Crown,
   Star,
   ArrowUp,
@@ -18,62 +16,23 @@ import {
   Mail,
 } from "lucide-react";
 
-// Plain-text FAQ data for JSON-LD schema (search engines can't parse JSX)
-const faqSchemaData = [
-  {
-    question: `What is ${siteConfig.name} and how does it work?`,
-    answer: `${siteConfig.name} is a ${siteConfig.tagline.toLowerCase()}. Submit your project, get a dofollow backlink, and reach makers browsing the directory. Two ways in: install our badge on your site for a free listing, or pay once for a featured placement at the top.`,
-  },
-  {
-    question: "What information do you need for my submission?",
-    answer: "We need: project name and website URL, short description (10-200 chars) and full description (50-3000 chars), category selection and logo URL, contact email. Optional: screenshots, video URL, maker details, and Twitter handle. All submissions go through admin review before going live.",
-  },
-  {
-    question: "What are the two ways to get listed?",
-    answer: "Standard (FREE): install our badge on your site → we verify automatically → admin approves → you get a dofollow backlink. Premium ($4.99 one-time): pay, no badge required, featured placement above free listings, priority review.",
-  },
-  {
-    question: "What's the difference between Standard and Premium?",
-    answer: "Standard (FREE) requires you to embed our badge on your site to qualify for the dofollow backlink. Premium ($4.99) is a one-time payment that gives you a guaranteed dofollow backlink with no badge required, featured placement above free listings, and priority review.",
-  },
-  {
-    question: "Can I upgrade my Standard (free) submission to Premium?",
-    answer: "Yes — you can upgrade from your dashboard at any time. Upgrading removes the badge requirement and moves your listing to the featured placement above free listings.",
-  },
-  {
-    question: "How long does the submission review process take?",
-    answer: "Standard submissions are typically reviewed within 24-48 hours after the badge is verified. Premium submissions skip the queue and get priority review. All submissions must be approved by our team before going live.",
-  },
-  {
-    question: "How does the draft system work for Premium submissions?",
-    answer: "When you select Premium but don't complete payment, your submission is saved as a draft. Drafts don't count toward your launch slot limits until payment is confirmed. You can resume drafts from your dashboard, modify details, or even switch to Standard plan. If you resubmit with the same details, old drafts are automatically replaced.",
-  },
-  {
-    question: "Can I edit my submission after it's submitted?",
-    answer: "Draft Submissions: You can edit draft submissions (unpaid Premium) from your dashboard. Live Submissions: Once a submission is approved and goes live, you cannot edit it. However, you can contact us if you need to make critical updates to your live submission.",
-  },
-  {
-    question: "What if I want to change from Premium to Standard plan?",
-    answer: "If you have a Premium draft that hasn't been paid for, you can switch to Standard plan from your dashboard. This will convert your draft to a Standard submission, remove the payment requirement, and you'll then enter the standard review queue.",
-  },
-  {
-    question: "Can I track my submission's performance?",
-    answer: "Yes! You can track everything in real-time from your dashboard: views, submission status (draft, pending, scheduled, live, etc.), and engagement on your listing.",
-  },
-];
-
+// Single source of truth for the FAQ. Each question carries a rich JSX `answer`
+// for display and a plain-text `schemaAnswer` for the JSON-LD schema (search
+// engines can't parse JSX). When `answer` is already a string, it doubles as
+// the schema answer.
 const faqSections = [
   {
     title: "Getting Started",
     icon: Rocket,
     questions: [
-  {
-    question: `What is ${siteConfig.name} and how does it work?`,
-    answer:
-          `${siteConfig.name} is a ${siteConfig.tagline.toLowerCase()}. Submit your project, get a dofollow backlink, and reach makers browsing the directory. Two ways in: install our badge on your site for a free listing, or pay once for a featured placement at the top.`,
+      {
+        question: `What is ${siteConfig.name} and how does it work?`,
+        answer: `${siteConfig.name} is a ${siteConfig.tagline.toLowerCase()}. Submit your project, get listed with a link back to your site, and reach makers browsing the directory. Two ways in: install our badge on your site for a free listing, or pay once for a featured placement at the top.`,
       },
       {
         question: "What information do you need for my submission?",
+        schemaAnswer:
+          "We need: project name and website URL, short description (10-200 chars) and full description (50-3000 chars), category selection and logo URL, and contact email. Optional: screenshots, video URL, maker details, and Twitter handle. All submissions go through admin review before going live.",
         answer: (
           <div className="space-y-3">
             <p className="text-muted-foreground">We need the following information:</p>
@@ -111,6 +70,8 @@ const faqSections = [
     questions: [
       {
         question: "What are the different launch plans available?",
+        schemaAnswer:
+          "Standard Launch (FREE): 15 shared slots, 7 days on the homepage, and a free listing with a link back to your site in exchange for installing our badge (we verify, admin approves). Premium Launch ($4.99, one-time): featured placement with a link back to your site, extended 14-day homepage exposure, priority review that skips the queue, a premium badge, and 10 dedicated slots. Standard projects must keep our badge embedded to retain their listing.",
         answer: (
           <div className="space-y-4">
             <div className="bg-muted rounded-xl p-4 border border-border">
@@ -121,7 +82,8 @@ const faqSections = [
               <ul className="space-y-1.5 text-sm text-muted-foreground ml-7">
                 <li>• 15 shared launch slots</li>
                 <li>• 7 days on homepage</li>
-                <li>• Free dofollow backlink in exchange for installing our badge on your site (we verify, admin approves)</li>
+                <li>• Free listing with a link back to your site in exchange for installing our badge (we verify, admin approves)</li>
+                <li>• Submit button stays disabled until your badge passes verification</li>
               </ul>
             </div>
             <div className="bg-foreground rounded-xl p-4 border-2 border-foreground">
@@ -130,82 +92,23 @@ const faqSections = [
                 <h4 className="font-semibold text-background">Premium Launch ($4.99)</h4>
               </div>
               <ul className="space-y-1.5 text-sm text-background ml-7">
-                <li>• Guaranteed dofollow backlinks</li>
+                <li>• Featured placement with a link back to your site — no badge required</li>
                 <li>• Extended 14-day homepage exposure</li>
-                <li>• Skips the queue</li>
+                <li>• Priority review that skips the queue</li>
                 <li>• Premium badge and priority placement</li>
                 <li>• 10 dedicated slots beyond shared ones</li>
               </ul>
             </div>
-          </div>
-        ),
-  },
-  {
-    question: "What's the difference between Standard and Premium submissions?",
-        answer: (
-          <div className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="bg-card rounded-xl p-4 border border-border">
-                <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                  <Rocket className="w-4 h-4" />
-                  Standard (FREE)
-                </h4>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-muted-foreground/60 mt-0.5 flex-shrink-0" />
-                    <span>15 shared launch slots</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-muted-foreground/60 mt-0.5 flex-shrink-0" />
-                    <span>Free dofollow backlink — install our badge on your site, we verify automatically</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-muted-foreground/60 mt-0.5 flex-shrink-0" />
-                    <span>Submit button stays disabled until your badge passes verification</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-muted-foreground/60 mt-0.5 flex-shrink-0" />
-                    <span>7 days on homepage</span>
-                  </li>
-                </ul>
-              </div>
-              <div className="bg-foreground rounded-xl p-4 border-2 border-foreground">
-                <h4 className="font-semibold text-background mb-3 flex items-center gap-2">
-                  <Crown className="w-4 h-4" />
-                  Premium ($4.99)
-                </h4>
-                <ul className="space-y-2 text-sm text-background">
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-background mt-0.5 flex-shrink-0" />
-                    <span>Guaranteed dofollow backlink by default — no badge required</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-background mt-0.5 flex-shrink-0" />
-                    <span>Skips review queue</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-background mt-0.5 flex-shrink-0" />
-                    <span>Premium badge and priority placement</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-background mt-0.5 flex-shrink-0" />
-                    <span>Extended 14-day homepage exposure</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-background mt-0.5 flex-shrink-0" />
-                    <span>10 dedicated slots beyond shared ones</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
             <p className="text-muted-foreground text-sm pt-2">
-              Standard projects must keep our badge embedded on their site to retain the dofollow link — we re-verify periodically.
+              Standard projects must keep our badge embedded on their site to retain their listing — we re-verify periodically.
             </p>
           </div>
         ),
       },
       {
         question: "Can I upgrade my Standard (free) launch to Premium?",
+        schemaAnswer:
+          "Yes — you can upgrade from your dashboard at any time. Upgrading removes the badge requirement and adds featured placement with a link back to your site, a premium badge, priority placement, and extended 14-day homepage exposure.",
         answer: (
           <div className="space-y-3">
             <p className="text-muted-foreground">
@@ -214,7 +117,7 @@ const faqSections = [
             <ul className="space-y-2">
               <li className="flex items-start gap-2">
                 <ArrowUp className="w-5 h-5 text-foreground mt-0.5 flex-shrink-0" />
-                <span className="text-muted-foreground">Guaranteed dofollow backlinks</span>
+                <span className="text-muted-foreground">Featured placement with a link back to your site</span>
               </li>
               <li className="flex items-start gap-2">
                 <Star className="w-5 h-5 text-foreground mt-0.5 flex-shrink-0" />
@@ -226,13 +129,15 @@ const faqSections = [
               </li>
             </ul>
             <p className="text-muted-foreground pt-2">
-              The upgrade process allows you to select a future launch week and complete payment securely. Once upgraded, your submission gets all Premium benefits including the dofollow backlink.
+              The upgrade process allows you to select a future launch week and complete payment securely. Once upgraded, your submission gets all Premium benefits including featured placement.
             </p>
           </div>
         ),
-  },
-  {
-    question: "How long does the submission review process take?",
+      },
+      {
+        question: "How long does the submission review process take?",
+        schemaAnswer:
+          "Standard submissions are typically reviewed within 24-48 hours and enter the standard queue. Premium submissions get priority review and skip the queue. All submissions must be approved by our team before going live.",
         answer: (
           <div className="space-y-3">
             <div className="flex items-start gap-3 bg-muted rounded-xl p-4 border border-border">
@@ -263,6 +168,8 @@ const faqSections = [
     questions: [
       {
         question: "How does the draft system work for Premium submissions?",
+        schemaAnswer:
+          "When you select Premium but don't complete payment, your submission is saved as a draft. Drafts don't count toward your launch slot limits until payment is confirmed. You can resume drafts from your dashboard, modify details, or switch to Standard plan. If you resubmit with the same details, old drafts are automatically replaced.",
         answer: (
           <div className="space-y-3">
             <p className="text-muted-foreground">
@@ -284,9 +191,11 @@ const faqSections = [
             </ul>
           </div>
         ),
-  },
-  {
-    question: "Can I edit my submission after it's submitted?",
+      },
+      {
+        question: "Can I edit my submission after it's submitted?",
+        schemaAnswer:
+          "You can edit draft submissions (unpaid Premium) from your dashboard. Once a submission is approved and goes live you cannot edit it, but you can contact us if you need to make critical updates.",
         answer: (
           <div className="space-y-3">
             <div className="bg-muted rounded-xl p-4 border border-border">
@@ -306,6 +215,8 @@ const faqSections = [
       },
       {
         question: "What if I want to change from Premium to Standard plan?",
+        schemaAnswer:
+          "If you have a Premium draft that hasn't been paid for, you can switch to Standard plan from your dashboard. This converts your draft to a Standard submission, removes the payment requirement, and enters you into the standard review queue.",
         answer: (
           <div className="space-y-3">
             <p className="text-muted-foreground">
@@ -330,6 +241,8 @@ const faqSections = [
       },
       {
         question: "Can I track my submission's performance?",
+        schemaAnswer:
+          "Yes! You can track everything in real-time from your dashboard: views, submission status (draft, pending, scheduled, live, etc.), and engagement on your listing.",
         answer: (
           <div className="space-y-3">
             <p className="text-muted-foreground font-semibold">Yes! You can track everything in real-time from your dashboard:</p>
@@ -353,6 +266,15 @@ const faqSections = [
     ],
   },
 ];
+
+// JSON-LD schema data, derived from the single source of truth above so the two
+// never drift apart.
+const faqSchemaData = faqSections.flatMap((section) =>
+  section.questions.map((faq) => ({
+    question: faq.question,
+    answer: faq.schemaAnswer ?? (typeof faq.answer === "string" ? faq.answer : ""),
+  }))
+);
 
 export function generateMetadata() {
   return {
@@ -408,7 +330,7 @@ export default function FAQPage() {
                 <h2 className="text-2xl font-bold text-foreground">
                   {section.title}
                 </h2>
-            </div>
+              </div>
               <div className="space-y-6">
                 {section.questions.map((faq, faqIndex) => (
                   <div
@@ -425,9 +347,9 @@ export default function FAQPage() {
                       ) : (
                         faq.answer
                       )}
-            </div>
-          </div>
-        ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             </section>
           );
@@ -443,15 +365,15 @@ export default function FAQPage() {
             Still have questions?
           </h2>
           <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-          Contact us directly and we'll be happy to help
-        </p>
-        <a
+            Contact us directly and we'll be happy to help
+          </p>
+          <a
             href={`mailto:${siteConfig.contact.email}`}
             className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-foreground text-background font-semibold rounded-lg hover:bg-foreground/90 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_4px_0_rgba(0,0,0,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-        >
+          >
             <Mail className="w-4 h-4" />
-          Contact Us
-        </a>
+            Contact Us
+          </a>
         </div>
       </div>
     </div>

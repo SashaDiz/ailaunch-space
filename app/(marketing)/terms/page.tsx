@@ -17,7 +17,7 @@ export default function TermsPage() {
         <div className="prose max-w-none">
           <section className="mb-8">
             <p className="text-sm text-muted-foreground mb-8">
-              Last updated: October 2025
+              Last updated: July 2026
             </p>
             
             <h2 className="text-2xl font-semibold mb-4">Legal Entity</h2>
@@ -40,6 +40,7 @@ export default function TermsPage() {
               <li>Project submission and listing services</li>
               <li>Curated directory listings and discovery</li>
               <li>Premium submission services with enhanced features</li>
+              <li>Sponsorship and promotional advertising placements (recurring)</li>
               <li>Community exposure and feedback systems</li>
               <li>Newsletter and communication services</li>
               <li>Analytics and performance tracking</li>
@@ -80,7 +81,7 @@ export default function TermsPage() {
             </p>
             <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-4">
               <li><strong>Standard Plan (Free):</strong> Basic project listing in the curated directory</li>
-              <li><strong>Premium Plan ($15):</strong> Enhanced features including priority placement, extended homepage exposure, premium badge, and enhanced social media promotion</li>
+              <li><strong>Premium Plan ($4.99, one-time):</strong> Enhanced features including featured placement, extended homepage exposure, premium badge, priority review, and newsletter inclusion</li>
             </ul>
 
             <h3 className="text-xl font-semibold mb-3">4.3 Content Moderation</h3>
@@ -100,7 +101,7 @@ export default function TermsPage() {
             <h2 className="text-2xl font-semibold mb-4">5. Payment Terms</h2>
             <h3 className="text-xl font-semibold mb-3">5.1 Premium Services</h3>
             <p className="text-muted-foreground mb-4">
-              Premium plan submissions require payment of $15 USD before processing. Payment is processed securely through our payment processor.
+              Premium plan submissions require a one-time payment of $4.99 USD before processing. Payments are processed securely by Dodo Payments, which acts as the Merchant of Record for transactions on the Platform. All prices are shown in US dollars.
             </p>
 
             <h3 className="text-xl font-semibold mb-3">5.2 Refund Policy</h3>
@@ -134,8 +135,18 @@ export default function TermsPage() {
 
             <h3 className="text-xl font-semibold mb-3">5.3 Payment Processing</h3>
             <p className="text-muted-foreground mb-4">
-              By making a payment, you authorize us to charge the specified amount to your chosen payment method. You are responsible for any applicable taxes.
+              By making a payment, you authorize us to charge the specified amount to your chosen payment method. Payments are processed securely by Dodo Payments as our Merchant of Record. You are responsible for any applicable taxes.
             </p>
+
+            <h3 className="text-xl font-semibold mb-3">5.4 Sponsorship &amp; Promotional Subscriptions</h3>
+            <p className="text-muted-foreground mb-4">
+              In addition to project listings, we offer optional recurring services: sponsorship placements and promotional ad placements (banner, catalog, and project-page spots). These are billed on a monthly recurring basis until cancelled. Pricing for each placement is shown on the relevant page before checkout.
+            </p>
+            <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-4">
+              <li><strong>Renewal:</strong> Subscriptions automatically renew each billing period at the then-current price unless cancelled before the renewal date.</li>
+              <li><strong>Cancellation:</strong> You may cancel at any time from your account or by contacting support. Cancellation stops future renewals; your placement remains active until the end of the current paid period.</li>
+              <li><strong>No partial-period refunds:</strong> Recurring fees already charged for the current period are non-refundable except where required by law or where we fail to deliver the placement (see 5.2).</li>
+            </ul>
           </section>
 
           <section className="mb-8">
@@ -208,7 +219,7 @@ export default function TermsPage() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">11. Governing Law</h2>
             <p className="text-muted-foreground mb-4">
-              These Terms shall be interpreted and governed by the laws of the United States, without regard to its conflict of law provisions. Our failure to enforce any right or provision of these Terms will not be considered a waiver of those rights.
+              These Terms shall be interpreted and governed by the laws of Georgia, where the operator is registered, without regard to its conflict of law provisions. Our failure to enforce any right or provision of these Terms will not be considered a waiver of those rights.
             </p>
           </section>
 

@@ -36,6 +36,15 @@ export const AUTOSUBMIT_ICONS: Record<string, LucideIcon> = {
 
 export const AUTOSUBMIT_ICON_NAMES = Object.keys(AUTOSUBMIT_ICONS);
 
-export function getAutoSubmitIcon(name?: string | null): LucideIcon {
+/** Sentinel value for the "no icon" option in the picker/config. */
+export const AUTOSUBMIT_ICON_NONE = "none";
+
+/**
+ * Resolve a stored icon name to a component.
+ * Returns `null` for the explicit "none" option (render no icon);
+ * unknown/empty names fall back to Bot.
+ */
+export function getAutoSubmitIcon(name?: string | null): LucideIcon | null {
+  if (name === AUTOSUBMIT_ICON_NONE) return null;
   return (name && AUTOSUBMIT_ICONS[name]) || Bot;
 }

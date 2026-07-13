@@ -14,7 +14,6 @@ import {
   Users,
   Crown,
   X,
-  Bot,
   Rocket,
 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -37,6 +36,7 @@ import {
 import UserProfileLink from '@/components/shared/UserProfileLink';
 import { useUser } from '@/hooks/use-user';
 import { useAutoSubmitConfig } from '@/hooks/use-autosubmit-config';
+import { getAutoSubmitIcon } from "@/lib/autosubmit-icons";
 import { siteConfig } from "@/config/site.config";
 import { getLogoDevUrl } from "@/lib/utils";
 
@@ -513,7 +513,7 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
                     {canUpgradeToPremium && (
                       <div className="w-full rounded-xl border border-border bg-muted p-3 text-right">
                         <p className="text-xs text-muted-foreground">
-                          Launch sooner get guaranteed dofollow backlinks.
+                          Launch sooner with featured placement and a link back to your site.
                         </p>
                         <button
                           type="button"
@@ -916,7 +916,7 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="mt-1 h-1.5 w-1.5 rounded-full bg-foreground" />
-                    <span>Get 3+ guaranteed high-authority backlinks.</span>
+                    <span>Get featured placement with a link back to your site.</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="mt-1 h-1.5 w-1.5 rounded-full bg-foreground" />
@@ -1040,7 +1040,10 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-foreground text-background rounded-lg font-semibold text-sm no-underline transition duration-300 hover:-translate-y-1 hover:shadow-[0_4px_0_rgba(0,0,0,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900 min-h-[48px] uppercase"
                   onClick={handleAutoSubmitModalClose}
                 >
-                  <Bot className="w-4 h-4" strokeWidth={2} />
+                  {(() => {
+                    const CtaIcon = getAutoSubmitIcon(autoSubmitConfig.ctaButtonIcon);
+                    return CtaIcon ? <CtaIcon className="w-4 h-4" strokeWidth={2} /> : null;
+                  })()}
                   {autoSubmitConfig.projectDetailCtaText}
                 </a>
                 <button

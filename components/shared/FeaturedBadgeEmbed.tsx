@@ -13,7 +13,7 @@ const siteDomain = "ailaunch.space";
 
 /**
  * FeaturedBadgeEmbed Component
- * Displays embed code for featured badge with dofollow backlink verification
+ * Displays embed code for featured badge with link-back verification
  * Used in the submission flow for standard (free) plan users
  */
 export default function FeaturedBadgeEmbed({
@@ -89,7 +89,7 @@ export default function FeaturedBadgeEmbed({
           Add Badge to Your Website
         </h3>
         <p className="text-muted-foreground">
-          Place this badge on your website homepage with a dofollow link to get your project listed.
+          Place this badge on your website homepage to get your project listed.
         </p>
       </div>
 
@@ -246,9 +246,10 @@ export default function FeaturedBadgeEmbed({
       {/* Info Box */}
       <div className="mt-6 p-4 bg-foreground/5 border border-foreground/20 rounded-xl">
         <p className="text-sm text-foreground font-medium">
-          <strong>Why is this required?</strong> Standard listings are free in exchange for a
-          dofollow link back to {PUBLIC_SITE_NAME}. We verify the badge automatically before
-          your project goes live, and re-check periodically. Make sure the link does NOT have{" "}
+          <strong>Why is this required?</strong> Standard listings are free in exchange for
+          displaying our badge with a link back to {PUBLIC_SITE_NAME}. We verify the badge
+          automatically before your project goes live, and re-check periodically. For the badge to
+          verify, make sure the link does NOT have{" "}
           <code className="bg-muted px-1 rounded">rel="nofollow"</code>.
         </p>
       </div>

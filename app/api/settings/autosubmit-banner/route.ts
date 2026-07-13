@@ -94,6 +94,8 @@ export async function PUT(request: Request) {
       value.triggerButtonText = body.triggerButtonText.trim();
     if (typeof body.triggerButtonIcon === "string")
       value.triggerButtonIcon = body.triggerButtonIcon.trim();
+    if (typeof body.ctaButtonIcon === "string")
+      value.ctaButtonIcon = body.ctaButtonIcon.trim();
     if (typeof body.dashboardCtaText === "string")
       value.dashboardCtaText = body.dashboardCtaText.trim();
     if (typeof body.projectDetailHeading === "string")

@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import {
   AUTOSUBMIT_ICON_NAMES,
+  AUTOSUBMIT_ICON_NONE,
   getAutoSubmitIcon,
 } from "@/lib/autosubmit-icons";
 import {
@@ -25,7 +26,6 @@ import {
   ArrowDown,
   Loader2,
   CheckCircle2,
-  Bot,
   RotateCcw,
 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -270,12 +270,15 @@ export function AutoSubmitBannerEditor() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value={AUTOSUBMIT_ICON_NONE}>
+                    <span className="text-muted-foreground">No icon</span>
+                  </SelectItem>
                   {AUTOSUBMIT_ICON_NAMES.map((name) => {
                     const Icon = getAutoSubmitIcon(name);
                     return (
                       <SelectItem key={name} value={name}>
                         <span className="flex items-center gap-2">
-                          <Icon className="h-4 w-4" />
+                          {Icon && <Icon className="h-4 w-4" />}
                           {name}
                         </span>
                       </SelectItem>
@@ -291,7 +294,7 @@ export function AutoSubmitBannerEditor() {
             <span className="inline-flex items-center gap-2 px-4 py-2 border border-border rounded-[var(--radius)] font-semibold text-sm uppercase">
               {(() => {
                 const Icon = getAutoSubmitIcon(config.triggerButtonIcon);
-                return <Icon className="h-4 w-4" />;
+                return Icon ? <Icon className="h-4 w-4" /> : null;
               })()}
               {config.triggerButtonText || "Auto submit"}
             </span>
@@ -396,6 +399,34 @@ export function AutoSubmitBannerEditor() {
                 placeholder="No, I'll do it myself."
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="ctaButtonIcon">Modal CTA Icon</Label>
+            <Select
+              value={config.ctaButtonIcon || "Bot"}
+              onValueChange={(v) => updateField("ctaButtonIcon", v)}
+            >
+              <SelectTrigger id="ctaButtonIcon">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={AUTOSUBMIT_ICON_NONE}>
+                  <span className="text-muted-foreground">No icon</span>
+                </SelectItem>
+                {AUTOSUBMIT_ICON_NAMES.map((name) => {
+                  const Icon = getAutoSubmitIcon(name);
+                  return (
+                    <SelectItem key={name} value={name}>
+                      <span className="flex items-center gap-2">
+                        {Icon && <Icon className="h-4 w-4" />}
+                        {name}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -515,7 +546,10 @@ export function AutoSubmitBannerEditor() {
               )}
               <div className="flex flex-col gap-2 items-center">
                 <span className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-[var(--radius)] font-semibold text-sm uppercase">
-                  <Bot className="h-4 w-4" />
+                  {(() => {
+                    const Icon = getAutoSubmitIcon(config.ctaButtonIcon);
+                    return Icon ? <Icon className="h-4 w-4" /> : null;
+                  })()}
                   {config.ctaText || "CTA"}
                 </span>
                 <span className="text-sm text-muted-foreground underline">

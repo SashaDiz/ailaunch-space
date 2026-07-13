@@ -464,7 +464,7 @@ function HomePage({
               >
                 {(() => {
                   const TriggerIcon = getAutoSubmitIcon(autoSubmitConfig.triggerButtonIcon);
-                  return <TriggerIcon className="h-4 w-4" strokeWidth={2} />;
+                  return TriggerIcon ? <TriggerIcon className="h-4 w-4" strokeWidth={2} /> : null;
                 })()}
                 {autoSubmitConfig.triggerButtonText || "Auto submit"}
               </Button>

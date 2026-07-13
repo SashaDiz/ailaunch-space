@@ -84,7 +84,7 @@ function WinnerReminder({ winningProjects }) {
               <strong>Pro Tip:</strong> {winningProjects.length === 1 
                 ? `Your project "${winningProjects[0].name}" won a competition! ` 
                 : `You have ${winningProjects.length} winning projects! `} 
-              Make sure to place the embed badge on your website to receive SEO benefits and boost your domain authority with the dofollow backlink.
+              Make sure to place the embed badge on your website to keep your listing active with a link back to your site.
             </p>
           </div>
         </div>
@@ -392,7 +392,7 @@ function ProjectCard({ project, onResumeDraft }) {
             <div className="flex items-start gap-3">
               <div className="flex-1">
                 <p className="text-xs font-semibold text-foreground">
-                  Launch sooner and get guaranteed dofollow backlinks.
+                  Launch sooner with featured placement and a link back to your site.
                 </p>
                 <div className="mt-2">
                   <button
@@ -428,9 +428,9 @@ function ProjectCard({ project, onResumeDraft }) {
                   </p>
                   <p className="text-xs text-warning mt-1 leading-snug">
                     {isUpgradePending
-                      ? "Complete payment to upgrade to premium and get guaranteed dofollow backlinks."
+                      ? "Complete payment to upgrade to premium and get featured placement."
                       : project.plan === "premium"
-                        ? "Complete payment to submit your premium launch and get guaranteed dofollow backlinks."
+                        ? "Complete payment to submit your premium launch and get featured placement."
                         : "This submission is saved as a draft. Complete it to launch your project."}
                   </p>
                   <div className="mt-2 flex space-x-2">
@@ -1108,7 +1108,7 @@ function DashboardContent() {
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="mt-1 h-1.5 w-1.5 rounded-full bg-foreground" />
-                      <span>Get 3+ guaranteed high-authority dofollow backlinks.</span>
+                      <span>Get featured placement with a link back to your site.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="mt-1 h-1.5 w-1.5 rounded-full bg-foreground" />

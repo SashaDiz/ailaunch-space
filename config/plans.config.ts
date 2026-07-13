@@ -37,7 +37,7 @@ export const plansConfig: PlansConfig = {
       name: 'Premium',
       price: 4.99,
       type: 'one-time',
-      description: 'Premium listing with guaranteed backlinks and priority placement',
+      description: 'Premium listing with featured placement and priority review',
       priceId: process.env.POLAR_PRODUCT_ID_PREMIUM || null,
       cta: 'Go Premium',
       highlighted: true,

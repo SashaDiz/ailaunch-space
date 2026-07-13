@@ -17,7 +17,7 @@ export default function CookiesPage() {
         <div className="prose max-w-none">
           <section className="mb-8">
             <p className="text-sm text-muted-foreground mb-8">
-              Last updated: October 2025
+              Last updated: July 2026
             </p>
             
             <h2 className="text-2xl font-semibold mb-4">1. What Are Cookies</h2>
@@ -141,7 +141,7 @@ export default function CookiesPage() {
 
             <h3 className="text-xl font-semibold mb-3">4.2 Payment Processing</h3>
             <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-4">
-              <li><strong>Stripe:</strong> Payment processing and transaction management</li>
+              <li><strong>Dodo Payments:</strong> Payment processing and transaction management (Merchant of Record)</li>
               <li><strong>Payment Gateways:</strong> Secure payment form functionality</li>
             </ul>
 
