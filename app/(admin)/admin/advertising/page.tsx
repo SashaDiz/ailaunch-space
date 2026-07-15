@@ -2,14 +2,16 @@
 
 import React, { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Handshake, Megaphone } from "lucide-react";
+import { Handshake, Megaphone, Sparkles } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { SponsorsPanel } from "@/components/admin/advertising/SponsorsPanel";
 import { PromotionsPanel } from "@/components/admin/advertising/PromotionsPanel";
+import { MarketingPanel } from "@/components/admin/advertising/MarketingPanel";
 
 const TABS = [
   { value: "sponsors", label: "Sponsors", icon: Handshake },
   { value: "promotions", label: "Promotions", icon: Megaphone },
+  { value: "promo-block", label: "Promo Block", icon: Sparkles },
 ] as const;
 
 const VALID_TABS = new Set(TABS.map((t) => t.value));
@@ -47,6 +49,9 @@ function AdvertisingTabs() {
       </TabsContent>
       <TabsContent value="promotions">
         <PromotionsPanel active={tab === "promotions"} />
+      </TabsContent>
+      <TabsContent value="promo-block">
+        <MarketingPanel />
       </TabsContent>
     </Tabs>
   );

@@ -1,5 +1,6 @@
 import { Rocket } from "lucide-react";
 import { PricingCard } from "@/components/marketing/PricingCard";
+import { DomainRatingBadge } from "@/components/marketing/DomainRatingBadge";
 import { advertisingConfig } from "@/config/advertising.config";
 import { siteConfig } from "@/config/site.config";
 
@@ -115,6 +116,9 @@ export default function PricingPage() {
           <p className="text-lg font-normal text-muted-foreground max-w-xl mx-auto">
             List your project, sponsor the platform, or promote with targeted ad placements.
           </p>
+          <div className="mt-6 flex justify-center">
+            <DomainRatingBadge />
+          </div>
         </div>
       </div>
 

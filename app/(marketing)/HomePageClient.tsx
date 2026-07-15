@@ -7,6 +7,10 @@ import { ProductCard } from '@/components/directory/ProductCard';
 import { PaidPlacementCard } from '@/components/directory/PaidPlacementCard';
 import { PartnersSection } from '@/components/marketing/PartnersSection';
 import { SocialProof } from '@/components/marketing/SocialProof';
+import { DomainRatingBadge } from '@/components/marketing/DomainRatingBadge';
+import { PromoBlockModal } from '@/components/shared/PromoBlockModal';
+import { usePromoBlockConfig } from '@/hooks/use-promo-block-config';
+import { getPromoBlockIcon } from "@/lib/promo-block-icons";
 import { useRouter } from "next/navigation";
 import { siteConfig } from "@/config/site.config";
 import { featuresConfig } from '@/config/features.config';
@@ -97,6 +101,7 @@ function HomePage({
 
   const [featuredPremium, setFeaturedPremium] = useState([]);
   const [isClient, setIsClient] = useState(false);
+  const [isPromoModalOpen, setIsPromoModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   // Filter UI state is initialized from server state and mirrored into the URL.
@@ -108,6 +113,7 @@ function HomePage({
   const [groupedCategories] = useState(initialGroupedCategories);
   const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false);
   const router = useRouter();
+  const { config: promoConfig, loading: promoLoading } = usePromoBlockConfig();
 
   const loading = isPending;
 
@@ -219,6 +225,22 @@ function HomePage({
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Show the promo block modal automatically (once per day) when enabled.
+  useEffect(() => {
+    if (!isClient || promoLoading || !promoConfig.enabled) return;
+    const storageKey = "promoBlockModalLastShown";
+    const lastShownDate = localStorage.getItem(storageKey);
+    const today = new Date().toDateString();
+    if (!lastShownDate || lastShownDate !== today) {
+      setIsPromoModalOpen(true);
+    }
+  }, [isClient, promoLoading, promoConfig.enabled]);
+
+  const handlePromoModalClose = () => {
+    localStorage.setItem("promoBlockModalLastShown", new Date().toDateString());
+    setIsPromoModalOpen(false);
+  };
 
   const handleSubmitClick = (e) => {
     e.preventDefault();
@@ -437,9 +459,25 @@ function HomePage({
                 <PlusCircle ref={plusIconRef} className="h-4 w-4" strokeWidth={2} />
                 Submit
               </Button>
+              {promoConfig.enabled && (
+                <Button
+                  variant="outline"
+                  onClick={() => setIsPromoModalOpen(true)}
+                  className="min-h-[48px] w-full sm:w-auto sm:min-w-[200px] uppercase"
+                  aria-label={promoConfig.triggerButtonText || "Learn more"}
+                  style={{ boxShadow: "var(--button-shadow)" }}
+                >
+                  {(() => {
+                    const TriggerIcon = getPromoBlockIcon(promoConfig.triggerButtonIcon);
+                    return TriggerIcon ? <TriggerIcon className="h-4 w-4" strokeWidth={2} /> : null;
+                  })()}
+                  {promoConfig.triggerButtonText || "Learn more"}
+                </Button>
+              )}
             </div>
             {/* Social proof */}
-            <div ref={socialProofRef} className="mt-6 sm:mt-8 flex flex-col items-center">
+            <div ref={socialProofRef} className="mt-6 sm:mt-8 flex flex-col items-center gap-4">
+              <DomainRatingBadge />
               <SocialProof />
             </div>
           </section>
@@ -641,6 +679,7 @@ function HomePage({
 
         </div>
       </div>
+      <PromoBlockModal isOpen={isPromoModalOpen} onClose={handlePromoModalClose} />
     </div>
   );
 }

@@ -35,6 +35,8 @@ import {
 } from "@/components/ui/breadcrumb";
 import UserProfileLink from '@/components/shared/UserProfileLink';
 import { useUser } from '@/hooks/use-user';
+import { usePromoBlockConfig } from '@/hooks/use-promo-block-config';
+import { PromoBlockModal } from '@/components/shared/PromoBlockModal';
 import { siteConfig } from "@/config/site.config";
 import { getLogoDevUrl } from "@/lib/utils";
 
@@ -42,6 +44,7 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
   const searchParams = useSearchParams();
   const submitted = searchParams.get("submitted") === "true";
   const { user } = useUser();
+  const { config: promoConfig } = usePromoBlockConfig();
 
   const [project, setProject] = useState(initialProject);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
@@ -53,6 +56,7 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
   const [upgradeError, setUpgradeError] = useState("");
   const [selectedWeekId, setSelectedWeekId] = useState("");
   const [featuredPremium, setFeaturedPremium] = useState([]);
+  const [showPromoModal, setShowPromoModal] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [descriptionOverflows, setDescriptionOverflows] = useState(false);
   const descriptionRef = useRef<HTMLDivElement>(null);
@@ -86,7 +90,19 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
         duration: 5000,
       }
     );
-  }, [submitted]);
+
+    // Offer the promo block once per project, only if an admin has enabled it.
+    if (typeof window === "undefined" || !project?.slug || !promoConfig.enabled) return;
+    const storageKey = `promoBlockModalShown_${project.slug}`;
+    try {
+      if (!window.localStorage.getItem(storageKey)) {
+        setShowPromoModal(true);
+        window.localStorage.setItem(storageKey, "true");
+      }
+    } catch {
+      setShowPromoModal(true);
+    }
+  }, [submitted, project?.slug, promoConfig.enabled]);
 
   useEffect(() => {
     async function fetchFeatured() {
@@ -946,6 +962,7 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
         </div>
       )}
 
+      <PromoBlockModal isOpen={showPromoModal} onClose={() => setShowPromoModal(false)} />
     </div>
   );
 }

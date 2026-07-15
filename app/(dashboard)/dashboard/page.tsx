@@ -18,6 +18,9 @@ import {
   Bookmark,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { PromoBlockModal } from '@/components/shared/PromoBlockModal';
+import { usePromoBlockConfig } from '@/hooks/use-promo-block-config';
+import { getPromoBlockIcon } from "@/lib/promo-block-icons";
 import { siteConfig } from "@/config/site.config";
 import { ProductCard } from "@/components/directory/ProductCard";
 import { isEnabled } from "@/lib/features";
@@ -506,6 +509,15 @@ function DashboardContent() {
   const [upgradeError, setUpgradeError] = useState("");
   const [selectedWeekId, setSelectedWeekId] = useState("");
   const [userProfile, setUserProfile] = useState(null);
+  const [isPromoModalOpen, setIsPromoModalOpen] = useState(false);
+  const { config: promoConfig } = usePromoBlockConfig();
+
+  // Offer the promo block right after a fresh submission (admin-enabled only).
+  useEffect(() => {
+    if (promoConfig.enabled && searchParams.get("submitted")) {
+      setIsPromoModalOpen(true);
+    }
+  }, [searchParams, promoConfig.enabled]);
 
   const handleResumeDraft = async (project) => {
     // For upgrade pending, create new checkout session and redirect to payment
@@ -770,6 +782,60 @@ function DashboardContent() {
           </p>
         </div>
 
+        {/* Promo block banner (admin-configured) */}
+        {promoConfig.enabled && (
+          <section className="mb-8" aria-label="Promotion">
+            <div
+              className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 rounded-[var(--radius)] border border-border bg-card px-4 py-4 sm:px-6 sm:py-5"
+              style={{ boxShadow: "var(--card-shadow)" }}
+            >
+              <div className="flex items-start gap-3">
+                {(() => {
+                  const Icon = getPromoBlockIcon(promoConfig.ctaButtonIcon);
+                  return Icon ? (
+                    <div className="mt-1 flex h-9 w-9 items-center justify-center rounded-full border border-border bg-foreground text-background shadow-sm">
+                      <Icon className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
+                    </div>
+                  ) : null;
+                })()}
+                <div>
+                  {promoConfig.title && (
+                    <h2 className="text-sm sm:text-base font-semibold text-foreground">
+                      {promoConfig.title}
+                    </h2>
+                  )}
+                  {promoConfig.description && (
+                    <p className="mt-1 text-xs sm:text-sm text-muted-foreground max-w-2xl">
+                      {promoConfig.description}
+                    </p>
+                  )}
+                  {promoConfig.learnMoreUrl && promoConfig.learnMoreText && (
+                    <Link
+                      href={promoConfig.learnMoreUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs sm:text-sm text-muted-foreground hover:text-foreground underline"
+                    >
+                      {promoConfig.learnMoreText}
+                    </Link>
+                  )}
+                </div>
+              </div>
+              {promoConfig.ctaUrl && (promoConfig.dashboardCtaText || promoConfig.ctaText) && (
+                <div className="flex md:flex-shrink-0">
+                  <a
+                    href={promoConfig.ctaUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-card text-foreground border-2 border-foreground rounded-[var(--radius)] font-semibold text-xs sm:text-sm no-underline transition duration-300 hover:-translate-y-1 hover:shadow-[0_4px_0_rgba(0,0,0,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring min-h-[44px] sm:min-h-[48px] min-w-[200px] text-center uppercase"
+                  >
+                    {promoConfig.dashboardCtaText || promoConfig.ctaText}
+                  </a>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* Tab Navigation */}
         <div className="border-b border-border mb-8">
@@ -1061,6 +1127,7 @@ function DashboardContent() {
           </div>
         )}
       </div>
+      <PromoBlockModal isOpen={isPromoModalOpen} onClose={() => setIsPromoModalOpen(false)} />
     </div>
   );
 }

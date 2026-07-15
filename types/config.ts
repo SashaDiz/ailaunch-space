@@ -100,6 +100,45 @@ export interface MarketingConfig {
   adBanner: AdBannerConfig;
 }
 
+// ─── Promo Block Configuration ───────────────────────────────────────────────
+
+/**
+ * Admin-configurable advertising block (banner + popup). All content lives in
+ * the DB (`site_settings.promo_block`); there are no hardcoded defaults.
+ */
+export interface PromoBlockConfig {
+  enabled: boolean;
+  title: string;
+  /** Optional image shown above the title in the popup modal. Empty = hidden. */
+  imageUrl: string;
+  description: string;
+  benefits: string[];
+  ctaText: string;
+  /** Destination URL for the CTA button (external link). */
+  ctaUrl: string;
+  price: string;
+  learnMoreUrl: string;
+  learnMoreText: string;
+  dismissText: string;
+  /** Label of the button that opens the block (homepage hero). */
+  triggerButtonText: string;
+  /**
+   * Lucide icon name for the homepage trigger button (see lib/promo-block-icons).
+   * Use "none" for no icon.
+   */
+  triggerButtonIcon: string;
+  /**
+   * Lucide icon name for the modal / CTA button (see lib/promo-block-icons).
+   * Use "none" for no icon.
+   */
+  ctaButtonIcon: string;
+  dashboardCtaText: string;
+  projectDetailHeading: string;
+  projectDetailDescription: string;
+  projectDetailCtaText: string;
+  projectDetailDismissText: string;
+}
+
 // ─── Payment Configuration ───────────────────────────────────────────────────
 
 export type PaymentProvider = 'dodo' | 'none';

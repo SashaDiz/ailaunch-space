@@ -49,6 +49,7 @@ export type {
   SortOption,
   PricingFilterOption,
   SeedCategory,
+  PromoBlockConfig,
 } from './config';
 
 // API types

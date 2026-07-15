@@ -1,6 +1,7 @@
 import React from "react";
 import { siteConfig } from "@/config/site.config";
 import { generateStructuredData } from "@/lib/seo";
+import { DomainRatingBadge } from "@/components/marketing/DomainRatingBadge";
 import {
   Rocket,
   DollarSign,
@@ -349,6 +350,9 @@ export default function FAQPage() {
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           Get answers to common questions about our project launch platform
         </p>
+        <div className="mt-6 flex justify-center">
+          <DomainRatingBadge />
+        </div>
       </div>
 
       <div className="space-y-12">
