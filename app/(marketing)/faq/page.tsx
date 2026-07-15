@@ -14,6 +14,8 @@ import {
   ArrowUp,
   FileText,
   Mail,
+  TrendingUp,
+  Link as LinkIcon,
 } from "lucide-react";
 
 // Single source of truth for the FAQ. Each question carries a rich JSX `answer`
@@ -71,7 +73,7 @@ const faqSections = [
       {
         question: "What are the different launch plans available?",
         schemaAnswer:
-          "Standard Launch (FREE): 15 shared slots, 7 days on the homepage, and a free listing with a link back to your site in exchange for installing our badge (we verify, admin approves). Premium Launch ($4.99, one-time): featured placement with a link back to your site, extended 14-day homepage exposure, priority review that skips the queue, a premium badge, and 10 dedicated slots. Standard projects must keep our badge embedded to retain their listing.",
+          "Standard Launch (FREE): 15 shared slots, 7 days on the homepage, and a free listing with a dofollow backlink in exchange for installing our badge (we verify, admin approves) — the dofollow link passes SEO value and helps grow your Domain Rating. Premium Launch ($4.99, one-time): featured placement with a guaranteed dofollow backlink that boosts your Domain Rating, extended 14-day homepage exposure, priority review that skips the queue, a premium badge, and 10 dedicated slots. Standard projects must keep our badge embedded to retain their listing and dofollow link.",
         answer: (
           <div className="space-y-4">
             <div className="bg-muted rounded-xl p-4 border border-border">
@@ -82,7 +84,8 @@ const faqSections = [
               <ul className="space-y-1.5 text-sm text-muted-foreground ml-7">
                 <li>• 15 shared launch slots</li>
                 <li>• 7 days on homepage</li>
-                <li>• Free listing with a link back to your site in exchange for installing our badge (we verify, admin approves)</li>
+                <li>• Free listing with a dofollow backlink in exchange for installing our badge (we verify, admin approves)</li>
+                <li>• Dofollow link passes SEO value and helps grow your Domain Rating</li>
                 <li>• Submit button stays disabled until your badge passes verification</li>
               </ul>
             </div>
@@ -92,7 +95,8 @@ const faqSections = [
                 <h4 className="font-semibold text-background">Premium Launch ($4.99)</h4>
               </div>
               <ul className="space-y-1.5 text-sm text-background ml-7">
-                <li>• Featured placement with a link back to your site — no badge required</li>
+                <li>• Featured placement with a guaranteed dofollow backlink — no badge required</li>
+                <li>• High-authority dofollow link that grows your Domain Rating</li>
                 <li>• Extended 14-day homepage exposure</li>
                 <li>• Priority review that skips the queue</li>
                 <li>• Premium badge and priority placement</li>
@@ -108,7 +112,7 @@ const faqSections = [
       {
         question: "Can I upgrade my Standard (free) launch to Premium?",
         schemaAnswer:
-          "Yes — you can upgrade from your dashboard at any time. Upgrading removes the badge requirement and adds featured placement with a link back to your site, a premium badge, priority placement, and extended 14-day homepage exposure.",
+          "Yes — you can upgrade from your dashboard at any time. Upgrading removes the badge requirement and adds featured placement with a guaranteed dofollow backlink that grows your Domain Rating, a premium badge, priority placement, and extended 14-day homepage exposure.",
         answer: (
           <div className="space-y-3">
             <p className="text-muted-foreground">
@@ -117,7 +121,7 @@ const faqSections = [
             <ul className="space-y-2">
               <li className="flex items-start gap-2">
                 <ArrowUp className="w-5 h-5 text-foreground mt-0.5 flex-shrink-0" />
-                <span className="text-muted-foreground">Featured placement with a link back to your site</span>
+                <span className="text-muted-foreground">Featured placement with a guaranteed dofollow backlink that grows your Domain Rating</span>
               </li>
               <li className="flex items-start gap-2">
                 <Star className="w-5 h-5 text-foreground mt-0.5 flex-shrink-0" />
@@ -156,6 +160,35 @@ const faqSections = [
             </div>
             <p className="text-muted-foreground text-sm pt-2">
               All submissions must be approved by our team before going live on the homepage.
+            </p>
+          </div>
+        ),
+      },
+      {
+        question: "Do I get a dofollow backlink, and will it help my SEO?",
+        schemaAnswer:
+          "Yes. Premium listings include a guaranteed dofollow backlink with no badge required. Standard (free) listings also get a dofollow backlink, granted once you install our badge and it passes verification. A dofollow link passes SEO authority from our domain to yours, which helps grow your Domain Rating (DR) and improves your search rankings over time. Standard projects must keep the badge embedded to retain the dofollow link.",
+        answer: (
+          <div className="space-y-3">
+            <p className="text-muted-foreground">
+              Yes — every listing links to your site, and that link is <span className="font-semibold text-foreground">dofollow</span>, so it passes SEO authority from our domain to yours and helps grow your Domain Rating (DR) over time.
+            </p>
+            <ul className="space-y-2">
+              <li className="flex items-start gap-2">
+                <LinkIcon className="w-5 h-5 text-foreground mt-0.5 flex-shrink-0" />
+                <span className="text-muted-foreground"><span className="font-semibold text-foreground">Premium:</span> guaranteed dofollow backlink, no badge required.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-5 h-5 text-foreground mt-0.5 flex-shrink-0" />
+                <span className="text-muted-foreground"><span className="font-semibold text-foreground">Standard:</span> dofollow backlink granted once you install our badge and it passes verification.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <TrendingUp className="w-5 h-5 text-foreground mt-0.5 flex-shrink-0" />
+                <span className="text-muted-foreground">A high-authority dofollow link helps your Domain Rating and search rankings grow.</span>
+              </li>
+            </ul>
+            <p className="text-muted-foreground text-sm pt-2">
+              Standard projects must keep our badge embedded to retain their listing and dofollow link — we re-verify periodically.
             </p>
           </div>
         ),

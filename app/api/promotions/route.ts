@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createPromotionCheckoutSession, isStripeConfigured } from '@/lib/payments/polar';
+import { createPromotionCheckoutSession, isDodoConfigured } from '@/lib/payments/dodo';
 import { getSession } from '@/lib/supabase/auth';
 import { db } from '@/lib/supabase/database';
 import { z } from "zod";
@@ -101,7 +101,7 @@ const PromotionSubmissionSchema = z.object({
   placement_detail_page: z.boolean().default(false),
 });
 
-// POST /api/promotions - Create promotion and Stripe checkout session
+// POST /api/promotions - Create promotion and Dodo Payments checkout session
 export async function POST(request: Request) {
   const guard = featureGuard('promotions');
   if (guard) return guard;
@@ -116,7 +116,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!isStripeConfigured()) {
+    if (!isDodoConfigured()) {
       return NextResponse.json(
         { error: "Payment provider is not configured.", code: "PAYMENT_PROVIDER_NOT_CONFIGURED" },
         { status: 500 }
@@ -176,7 +176,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // Build Stripe line items based on selected placements
+    // Build checkout line items based on selected placements
     const lineItems: { price: string; quantity: number }[] = [];
 
     if (data.placement_banner) {
@@ -221,7 +221,7 @@ export async function POST(request: Request) {
       placement_banner: data.placement_banner,
       placement_catalog: data.placement_catalog,
       placement_detail_page: data.placement_detail_page,
-      monthly_price: 0, // Will be set from Stripe session
+      monthly_price: 0, // Will be set from the checkout session
       status: "pending",
     });
 

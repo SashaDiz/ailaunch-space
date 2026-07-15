@@ -108,9 +108,8 @@ export function EnhancedRevenueChart({
       <div className="px-6 pb-4 pt-0 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
         <span className="inline-flex items-center gap-1">
           <svg className="w-3.5 h-3.5 shrink-0 text-blue-500" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm3.2 5.3l-3.5 3.5a.7.7 0 01-1 0L5.3 8.4a.7.7 0 011-1l1 1 3-3a.7.7 0 011 0 .7.7 0 010 1z"/></svg>
-          Revenue is verified with a
-          <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="6" fill="#635BFF"/><path d="M15.2 12.8c0-.9.7-1.3 1.9-1.3 1.7 0 3.8.5 5.5 1.4V8.2c-1.8-.7-3.7-1-5.5-1-4.5 0-7.5 2.4-7.5 6.3 0 6.2 8.5 5.2 8.5 7.8 0 1.1-.9 1.4-2.2 1.4-1.9 0-4.3-.8-6.2-1.8v4.8c2.1.9 4.2 1.3 6.2 1.3 4.6 0 7.8-2.3 7.8-6.3-.1-6.6-8.5-5.5-8.5-7.9z" fill="#fff"/></svg>
-          <span className="font-medium text-foreground">Stripe API key.</span>
+          Revenue is verified with the
+          <span className="font-medium text-foreground">Dodo Payments API.</span>
         </span>
         <span>Last updated: {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}, {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
       </div>

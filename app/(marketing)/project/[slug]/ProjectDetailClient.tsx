@@ -35,8 +35,6 @@ import {
 } from "@/components/ui/breadcrumb";
 import UserProfileLink from '@/components/shared/UserProfileLink';
 import { useUser } from '@/hooks/use-user';
-import { useAutoSubmitConfig } from '@/hooks/use-autosubmit-config';
-import { getAutoSubmitIcon } from "@/lib/autosubmit-icons";
 import { siteConfig } from "@/config/site.config";
 import { getLogoDevUrl } from "@/lib/utils";
 
@@ -44,7 +42,6 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
   const searchParams = useSearchParams();
   const submitted = searchParams.get("submitted") === "true";
   const { user } = useUser();
-  const { config: autoSubmitConfig } = useAutoSubmitConfig();
 
   const [project, setProject] = useState(initialProject);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
@@ -55,7 +52,6 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
   const [upgradeLoading, setUpgradeLoading] = useState(false);
   const [upgradeError, setUpgradeError] = useState("");
   const [selectedWeekId, setSelectedWeekId] = useState("");
-  const [showAutoSubmitModal, setShowAutoSubmitModal] = useState(false);
   const [featuredPremium, setFeaturedPremium] = useState([]);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [descriptionOverflows, setDescriptionOverflows] = useState(false);
@@ -90,19 +86,7 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
         duration: 5000,
       }
     );
-
-    if (typeof window === "undefined" || !project?.slug || !autoSubmitConfig.enabled) return;
-    try {
-      const storageKey = `autoSubmitModalShown_${project.slug}`;
-      const hasShown = window.localStorage.getItem(storageKey);
-      if (!hasShown) {
-        setShowAutoSubmitModal(true);
-        window.localStorage.setItem(storageKey, "true");
-      }
-    } catch (error) {
-      setShowAutoSubmitModal(true);
-    }
-  }, [submitted, project?.slug, autoSubmitConfig.enabled]);
+  }, [submitted]);
 
   useEffect(() => {
     async function fetchFeatured() {
@@ -284,10 +268,6 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
     setUpgradeWeeks([]);
     setUpgradeError("");
     setSelectedWeekId("");
-  };
-
-  const handleAutoSubmitModalClose = () => {
-    setShowAutoSubmitModal(false);
   };
 
   const handleConfirmUpgrade = async () => {
@@ -935,7 +915,7 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
               </div>
 
               <div className="flex items-center justify-between pt-2 text-xs text-muted-foreground">
-                <span>Secure payment is processed by Stripe.</span>
+                <span>Secure payment is processed by Dodo Payments.</span>
                 <span className="font-semibold text-foreground">$19 one-time</span>
               </div>
             </div>
@@ -966,98 +946,6 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
         </div>
       )}
 
-      {/* Post-submission Auto-Submit Modal */}
-      {showAutoSubmitModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="auto-submit-modal-title"
-          aria-describedby="auto-submit-modal-description"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              handleAutoSubmitModalClose();
-            }
-          }}
-        >
-          <div
-            className="relative w-full max-w-lg rounded-[var(--radius)] border border-border bg-card shadow-2xl max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={handleAutoSubmitModalClose}
-              className="absolute top-4 right-4 z-10 text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted rounded-[var(--radius)] transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-400"
-              aria-label="Close modal"
-            >
-              <X className="w-6 h-6" strokeWidth={2} />
-            </button>
-
-            {/* Optional image — spans the full banner width */}
-            {autoSubmitConfig.imageUrl && (
-              <img
-                src={autoSubmitConfig.imageUrl}
-                alt=""
-                className="w-full h-auto object-cover"
-              />
-            )}
-
-            <div className="p-4 sm:p-8">
-              <div className="mb-6">
-                <h2
-                  id="auto-submit-modal-title"
-                  className="text-xl sm:text-2xl font-bold text-foreground mb-2"
-                >
-                  Submission received
-                </h2>
-                <p
-                  id="auto-submit-modal-description"
-                  className="text-sm text-foreground"
-                >
-                  Thanks for submitting{" "}
-                  <span className="font-semibold">{project.name}</span>. We&apos;re
-                  reviewing it now. Once approved, we'll email you when it goes live.
-                </p>
-              </div>
-
-              <div className="mb-4 border-t border-border pt-4">
-                {autoSubmitConfig.projectDetailHeading && (
-                  <h3 className="text-sm font-semibold text-foreground mb-2">
-                    {autoSubmitConfig.projectDetailHeading}
-                  </h3>
-                )}
-                {autoSubmitConfig.projectDetailDescription && (
-                  <p className="text-sm text-foreground mb-4">
-                    {autoSubmitConfig.projectDetailDescription}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex flex-col gap-3 items-center justify-center">
-                <a
-                  href={autoSubmitConfig.checkoutUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-foreground text-background rounded-lg font-semibold text-sm no-underline transition duration-300 hover:-translate-y-1 hover:shadow-[0_4px_0_rgba(0,0,0,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900 min-h-[48px] uppercase"
-                  onClick={handleAutoSubmitModalClose}
-                >
-                  {(() => {
-                    const CtaIcon = getAutoSubmitIcon(autoSubmitConfig.ctaButtonIcon);
-                    return CtaIcon ? <CtaIcon className="w-4 h-4" strokeWidth={2} /> : null;
-                  })()}
-                  {autoSubmitConfig.projectDetailCtaText}
-                </a>
-                <button
-                  type="button"
-                  onClick={handleAutoSubmitModalClose}
-                  className="text-muted-foreground hover:text-foreground underline text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-400 min-h-[24px]"
-                >
-                  {autoSubmitConfig.projectDetailDismissText}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

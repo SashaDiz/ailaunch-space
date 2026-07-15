@@ -71,6 +71,7 @@ export async function buildCatalogFilter(
       filter.$or = [
         { name: { $regex: safeSearch, $options: 'i' } },
         { short_description: { $regex: safeSearch, $options: 'i' } },
+        { full_description: { $regex: safeSearch, $options: 'i' } },
       ];
     }
   }

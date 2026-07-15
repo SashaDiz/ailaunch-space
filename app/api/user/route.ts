@@ -99,7 +99,7 @@ async function getUserProjects(session, searchParams) {
       
       // CRITICAL: Also check by checkout_session_id if project has one
       // This handles cases where webhook hasn't processed yet but payment exists
-      // Also verify with Stripe API if payment was actually completed
+      // Also verify with the Dodo Payments API if payment was actually completed
       if (!hasPayment && project.checkout_session_id && project.plan === "premium") {
         // First check database for existing payment record
         const paymentByCheckout = await db.findOne("payments", {
@@ -119,8 +119,9 @@ async function getUserProjects(session, searchParams) {
           // No payment record found — verify with the payment provider.
           // Handles cases where the webhook failed but payment actually completed.
           try {
-            const { verifyStripeSession } = await import("@/lib/payments/polar");
-            const sessionCheck = await verifyStripeSession(project.checkout_session_id);
+            const { verifyDodoSession } = await import("@/lib/payments/dodo");
+            const { paymentPlans } = await import("@/config/plans.config");
+            const sessionCheck = await verifyDodoSession(project.checkout_session_id);
             const checkout = sessionCheck.session as Record<string, any>;
 
             if (sessionCheck.success) {
@@ -130,7 +131,9 @@ async function getUserProjects(session, searchParams) {
                 project.checkout_session_id;
               const sessionMetadata = (sessionCheck.metadata as Record<string, string>) || {};
               const customerEmail = checkout?.customer?.email as string | undefined;
-              const amount = (checkout.totalAmount as number | undefined) ?? 1500;
+              const amount =
+                (checkout.totalAmount as number | undefined) ??
+                Math.round(paymentPlans.premium.price * 100);
               const currency = (checkout.currency as string | undefined) ?? "usd";
 
               await db.insertOne("payments", {
@@ -143,7 +146,7 @@ async function getUserProjects(session, searchParams) {
                 invoice_id: project.checkout_session_id,
                 status: "completed",
                 metadata: {
-                  provider: "polar",
+                  provider: "dodo",
                   checkoutId: project.checkout_session_id,
                   customerEmail,
                   rawMetadata: sessionMetadata,
@@ -157,7 +160,7 @@ async function getUserProjects(session, searchParams) {
               needsFixing = true;
             }
           } catch (verifyError) {
-            console.warn("Failed to verify Polar checkout:", {
+            console.warn("Failed to verify Dodo checkout:", {
               projectId: project.id,
               checkoutSessionId: project.checkout_session_id,
               error: verifyError.message,

@@ -100,43 +100,9 @@ export interface MarketingConfig {
   adBanner: AdBannerConfig;
 }
 
-// ─── Auto-Submit Banner Configuration ───────────────────────────────────────
-
-export interface AutoSubmitBannerConfig {
-  enabled: boolean;
-  title: string;
-  /** Optional image shown above the title in the popup modal. Empty = hidden. */
-  imageUrl: string;
-  description: string;
-  benefits: string[];
-  ctaText: string;
-  checkoutUrl: string;
-  price: string;
-  learnMoreUrl: string;
-  learnMoreText: string;
-  dismissText: string;
-  /** Label of the button that opens the banner (homepage hero). */
-  triggerButtonText: string;
-  /**
-   * Lucide icon name for the homepage trigger button (see lib/autosubmit-icons).
-   * Use "none" for no icon.
-   */
-  triggerButtonIcon: string;
-  /**
-   * Lucide icon name for the modal / post-submission CTA button
-   * (see lib/autosubmit-icons). Use "none" for no icon.
-   */
-  ctaButtonIcon: string;
-  dashboardCtaText: string;
-  projectDetailHeading: string;
-  projectDetailDescription: string;
-  projectDetailCtaText: string;
-  projectDetailDismissText: string;
-}
-
 // ─── Payment Configuration ───────────────────────────────────────────────────
 
-export type PaymentProvider = 'polar' | 'stripe' | 'lemon' | 'paddle' | 'none';
+export type PaymentProvider = 'dodo' | 'none';
 
 export interface PlanFeatures {
   homepage_duration: number;

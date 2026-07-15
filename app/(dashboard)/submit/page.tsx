@@ -14,6 +14,7 @@ import {
   Crown,
   Trophy,
   Link as LinkIcon,
+  TrendingUp,
   Clock,
   Megaphone,
   Rocket,
@@ -126,7 +127,8 @@ const PLANS = {
     description: "Free listing in exchange for our badge",
     icon: Globe,
     features: [
-      { text: "Free listing with a link back to your site — install our badge, we verify automatically", icon: LinkIcon },
+      { text: "Free listing with a dofollow backlink — install our badge, we verify automatically", icon: LinkIcon },
+      { text: "Dofollow link grows your Domain Rating once your badge is verified", icon: TrendingUp },
       { text: "Admin review (24–48h)", icon: Clock },
       { text: "Listed in the directory alongside paid projects", icon: Megaphone },
     ],
@@ -138,10 +140,11 @@ const PLANS = {
     name: "Premium Launch",
     price: 4.99,
     currency: "USD",
-    description: "Pay once, no badge required, featured at the top",
+    description: "Pay once — guaranteed dofollow backlink, featured at the top",
     icon: Medal,
     features: [
-      { text: "Featured listing with a link back to your site — no badge required", icon: LinkIcon },
+      { text: "Featured listing with a guaranteed dofollow backlink — no badge required", icon: LinkIcon },
+      { text: "High-authority dofollow link that grows your Domain Rating", icon: TrendingUp },
       { text: "Featured placement above free listings", icon: Crown },
       { text: "Priority review (skip the standard queue)", icon: Clock },
       { text: "Premium badge for credibility", icon: Star },
@@ -1824,10 +1827,10 @@ function SubmitPageContent() {
             duration: 5000,
           });
 
-          // Open Stripe checkout in new window
+          // Open Dodo Payments checkout in new window
           const paymentWindow = window.open(
             checkoutResult.data.checkoutUrl,
-            "stripe-payment",
+            "dodo-payment",
             "width=800,height=900,scrollbars=yes,resizable=yes,status=yes,location=yes,toolbar=no,menubar=no"
           );
 

@@ -49,7 +49,6 @@ export type {
   SortOption,
   PricingFilterOption,
   SeedCategory,
-  AutoSubmitBannerConfig,
 } from './config';
 
 // API types

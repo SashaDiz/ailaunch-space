@@ -3,17 +3,16 @@ import type { PaymentsConfig } from '@/types/config';
 /**
  * Payment Provider Configuration
  *
- * Active provider: Polar.sh (Merchant of Record).
+ * Active provider: Dodo Payments (Merchant of Record).
  * Required env vars:
- *   POLAR_ACCESS_TOKEN, POLAR_WEBHOOK_SECRET, POLAR_PRODUCT_ID_PREMIUM
+ *   DODO_PAYMENTS_API_KEY, DODO_PAYMENTS_WEBHOOK_KEY, DODO_PRODUCT_ID_PREMIUM
  * Optional:
- *   POLAR_ORGANIZATION_ID    — needed for revenue stats in admin
- *   POLAR_SERVER             — 'sandbox' for test mode (default 'production')
- *   POLAR_PRODUCT_ID_PARTNER_SUBSCRIPTION
- *   POLAR_PRODUCT_ID_PROMO_BANNER / _CATALOG / _DETAIL
- *   POLAR_DISCOUNT_ID_PROMO_ALL_THREE
+ *   DODO_PAYMENTS_ENVIRONMENT  — 'test_mode' for sandbox (default 'live_mode')
+ *   DODO_PRODUCT_ID_PARTNER_SUBSCRIPTION
+ *   DODO_PRODUCT_ID_PROMO_BANNER / _CATALOG / _DETAIL
+ *   DODO_DISCOUNT_CODE_PROMO_ALL_THREE
  */
 export const paymentsConfig: PaymentsConfig = {
-  provider: 'polar',
+  provider: 'dodo',
   testMode: false,
 };

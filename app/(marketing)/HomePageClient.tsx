@@ -6,8 +6,6 @@ import { gsap } from "gsap";
 import { ProductCard } from '@/components/directory/ProductCard';
 import { PaidPlacementCard } from '@/components/directory/PaidPlacementCard';
 import { PartnersSection } from '@/components/marketing/PartnersSection';
-import { AutoSubmitModal } from '@/components/shared/AutoSubmitModal';
-import { useAutoSubmitConfig } from '@/hooks/use-autosubmit-config';
 import { SocialProof } from '@/components/marketing/SocialProof';
 import { useRouter } from "next/navigation";
 import { siteConfig } from "@/config/site.config";
@@ -18,7 +16,6 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
 import { Rocket, PlusCircle, Search, X, ChevronDown } from "lucide-react";
-import { getAutoSubmitIcon } from "@/lib/autosubmit-icons";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -100,7 +97,6 @@ function HomePage({
 
   const [featuredPremium, setFeaturedPremium] = useState([]);
   const [isClient, setIsClient] = useState(false);
-  const [isAutoSubmitModalOpen, setIsAutoSubmitModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   // Filter UI state is initialized from server state and mirrored into the URL.
@@ -112,7 +108,6 @@ function HomePage({
   const [groupedCategories] = useState(initialGroupedCategories);
   const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false);
   const router = useRouter();
-  const { config: autoSubmitConfig, loading: autoSubmitLoading } = useAutoSubmitConfig();
 
   const loading = isPending;
 
@@ -224,30 +219,6 @@ function HomePage({
   useEffect(() => {
     setIsClient(true);
   }, []);
-
-  // Check if modal should be shown automatically (once per day)
-  useEffect(() => {
-    if (!isClient || autoSubmitLoading || !autoSubmitConfig.enabled) return;
-
-    const checkAndShowModal = () => {
-      const storageKey = "autoSubmitModalLastShown";
-      const lastShownDate = localStorage.getItem(storageKey);
-      const today = new Date().toDateString();
-
-      if (!lastShownDate || lastShownDate !== today) {
-        setIsAutoSubmitModalOpen(true);
-      }
-    };
-
-    checkAndShowModal();
-  }, [isClient, autoSubmitLoading, autoSubmitConfig.enabled]);
-
-  const handleModalClose = () => {
-    const storageKey = "autoSubmitModalLastShown";
-    const today = new Date().toDateString();
-    localStorage.setItem(storageKey, today);
-    setIsAutoSubmitModalOpen(false);
-  };
 
   const handleSubmitClick = (e) => {
     e.preventDefault();
@@ -466,23 +437,6 @@ function HomePage({
                 <PlusCircle ref={plusIconRef} className="h-4 w-4" strokeWidth={2} />
                 Submit
               </Button>
-              {autoSubmitConfig.enabled && (
-              <Button
-                variant="outline"
-                onClick={() => setIsAutoSubmitModalOpen(true)}
-                className="min-h-[48px] w-full sm:w-auto sm:min-w-[200px] uppercase"
-                aria-label="Learn about auto submit service"
-                style={{
-                  boxShadow: "var(--button-shadow)",
-                }}
-              >
-                {(() => {
-                  const TriggerIcon = getAutoSubmitIcon(autoSubmitConfig.triggerButtonIcon);
-                  return TriggerIcon ? <TriggerIcon className="h-4 w-4" strokeWidth={2} /> : null;
-                })()}
-                {autoSubmitConfig.triggerButtonText || "Auto submit"}
-              </Button>
-              )}
             </div>
             {/* Social proof */}
             <div ref={socialProofRef} className="mt-6 sm:mt-8 flex flex-col items-center">
@@ -687,11 +641,6 @@ function HomePage({
 
         </div>
       </div>
-
-      <AutoSubmitModal
-        isOpen={isAutoSubmitModalOpen}
-        onClose={handleModalClose}
-      />
     </div>
   );
 }

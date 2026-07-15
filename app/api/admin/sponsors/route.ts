@@ -72,7 +72,7 @@ export async function PUT(request: Request) {
   }
 }
 
-// POST /api/admin/sponsors - Create sponsor directly (bypasses Stripe)
+// POST /api/admin/sponsors - Create sponsor directly (bypasses Dodo Payments)
 export async function POST(request: Request) {
   if (!(await checkAdmin())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });

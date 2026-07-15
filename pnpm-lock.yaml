@@ -41,9 +41,6 @@ importers:
       '@paper-design/shaders-react':
         specifier: ^0.0.71
         version: 0.0.71(@types/react@19.2.7)(react@19.2.1)
-      '@polar-sh/sdk':
-        specifier: ^0.47.1
-        version: 0.47.1
       '@radix-ui/react-label':
         specifier: ^2.1.8
         version: 2.1.8(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -110,6 +107,9 @@ importers:
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
+      dodopayments:
+        specifier: ^2.4.0
+        version: 2.42.2
       dotenv:
         specifier: ^17.2.1
         version: 17.2.1
@@ -158,6 +158,9 @@ importers:
       resend:
         specifier: ^6.1.2
         version: 6.1.2(@react-email/render@2.0.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1))
+      standardwebhooks:
+        specifier: ^1.0.0
+        version: 1.0.0
       tailwind-merge:
         specifier: ^3.4.0
         version: 3.4.0
@@ -977,9 +980,6 @@ packages:
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
-
-  '@polar-sh/sdk@0.47.1':
-    resolution: {integrity: sha512-fkz7wPLbqfuDmY9LxuXpE2uP2TAV6J0q/YN5hJ4UBxpjbkB0hKM6c4R35N89t83dfzMlG6EOlqOn+Rd1T6XrJQ==}
 
   '@polka/url@1.0.0-next.29':
     resolution: {integrity: sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==}
@@ -2093,6 +2093,10 @@ packages:
 
   dlv@1.1.3:
     resolution: {integrity: sha512-+HlytyjlPKnIG8XuRG8WvmBP8xs8P71y+SKKS6ZXWoEgLuePxtDoUEiH7WkdePWrQ5JBpE6aoVqfZfJUQkjXwA==}
+
+  dodopayments@2.42.2:
+    resolution: {integrity: sha512-XBF8zrnfkjAhX7OyrR3KauK6bH+oW3yZ+uqy6RBWI5XdZvrEtASabvvfHrBX3UGR3Bbxl3t1rkpcao+riKSOuw==}
+    hasBin: true
 
   dom-helpers@5.2.1:
     resolution: {integrity: sha512-nRCa7CK3VTrM2NmGkIy4cbK7IZlgBE/PYMn55rrXefr5xXDP0LdtfPnblFDoVdcAfslJ7or6iqAUnx0CCGIWQA==}
@@ -4275,11 +4279,6 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@polar-sh/sdk@0.47.1':
-    dependencies:
-      standardwebhooks: 1.0.0
-      zod: 3.25.76
-
   '@polka/url@1.0.0-next.29': {}
 
   '@posthog/core@1.23.1':
@@ -5462,6 +5461,10 @@ snapshots:
   didyoumean@1.2.2: {}
 
   dlv@1.1.3: {}
+
+  dodopayments@2.42.2:
+    dependencies:
+      standardwebhooks: 1.0.0
 
   dom-helpers@5.2.1:
     dependencies:

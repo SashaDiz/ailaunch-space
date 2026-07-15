@@ -16,7 +16,8 @@ import {
   getLinkTypeHistory,
   bulkUpdateLinkTypes,
 } from '@/lib/link-type-manager';
-import { verifyStripeSession, isStripeConfigured, getStripeRevenue } from '@/lib/payments/polar';
+import { verifyDodoSession, isDodoConfigured, getDodoRevenue } from '@/lib/payments/dodo';
+import { paymentPlans } from '@/config/plans.config';
 
 // Admin authentication middleware
 // Supports both Supabase session (for browser) and CRON_SECRET (for API calls)
@@ -154,8 +155,8 @@ export async function POST(request) {
         return await fixPremiumProjects(request);
       case "fix-paid-projects":
         return await fixPaidProjects(request);
-      case "check-stripe-sessions":
-        return await checkStripeSessions(request);
+      case "check-dodo-sessions":
+        return await checkDodoSessions(request);
       case "create-project":
         return await createProjectAdmin(request, authCheck.session);
       default:
@@ -500,9 +501,9 @@ async function getStats(searchParams) {
         uniqueVisitors: r.unique_visitors || 0,
       }));
 
-    // Revenue from Stripe — fetch from prevStartDate to get both periods in one call
-    const allCharges = isStripeConfigured()
-      ? await getStripeRevenue(prevStartDate || startDate).catch(() => [])
+    // Revenue from Dodo — fetch from prevStartDate to get both periods in one call
+    const allCharges = isDodoConfigured()
+      ? await getDodoRevenue(prevStartDate || startDate).catch(() => [])
       : [];
 
     const startTimestamp = startDate ? Math.floor(startDate.getTime() / 1000) : 0;
@@ -1675,13 +1676,13 @@ async function fixPaidProjects(request) {
   }
 }
 
-// Check Stripe sessions for projects with checkout_session_id but payment_status = false
+// Check Dodo checkout sessions for projects with checkout_session_id but payment_status = false
 // This handles cases where webhook didn't process payments correctly
-async function checkStripeSessions(request) {
+async function checkDodoSessions(request) {
   try {
-    if (!isStripeConfigured()) {
+    if (!isDodoConfigured()) {
       return NextResponse.json(
-        { error: "Stripe is not configured" },
+        { error: "Dodo Payments is not configured" },
         { status: 500 }
       );
     }
@@ -1722,14 +1723,14 @@ async function checkStripeSessions(request) {
       try {
         checkedCount++;
         
-        // Verify Polar checkout status
-        const sessionCheck = await verifyStripeSession(project.checkout_session_id);
+        // Verify Dodo checkout status
+        const sessionCheck = await verifyDodoSession(project.checkout_session_id);
         const checkout = sessionCheck.session as Record<string, any>;
 
         if (sessionCheck.success) {
-          // Polar reports a confirmed/succeeded checkout — apply the same
-          // outcome the webhook would have applied for a `premium_submission`
-          // order. We deliberately don't re-set per-tier perks here (badges,
+          // Dodo reports a succeeded payment — apply the same outcome the
+          // webhook would have applied for a `premium_submission` payment.
+          // We deliberately don't re-set per-tier perks here (badges,
           // dofollow links) — those are managed elsewhere by admin tooling.
           const paymentId =
             (checkout.orderId as string | undefined) ||
@@ -1737,7 +1738,9 @@ async function checkStripeSessions(request) {
             project.checkout_session_id;
           const metadata = (sessionCheck.metadata as Record<string, string>) || {};
           const customerEmail = checkout?.customer?.email as string | undefined;
-          const amount = (checkout.totalAmount as number | undefined) ?? 1500;
+          const amount =
+            (checkout.totalAmount as number | undefined) ??
+            Math.round(paymentPlans.premium.price * 100);
           const currency = (checkout.currency as string | undefined) ?? "usd";
 
           await db.updateOne(
@@ -1777,11 +1780,11 @@ async function checkStripeSessions(request) {
               invoice_id: project.checkout_session_id,
               status: "completed",
               metadata: {
-                provider: "polar",
+                provider: "dodo",
                 checkoutId: project.checkout_session_id,
                 customerEmail,
                 rawMetadata: metadata,
-                processedBy: "check-stripe-sessions",
+                processedBy: "check-dodo-sessions",
               },
               paid_at: new Date(),
             });
@@ -1815,9 +1818,9 @@ async function checkStripeSessions(request) {
     });
     
   } catch (error) {
-    console.error("Check Stripe sessions error:", error);
+    console.error("Check Dodo sessions error:", error);
     return NextResponse.json(
-      { error: "Failed to check Stripe sessions", details: error.message },
+      { error: "Failed to check Dodo sessions", details: error.message },
       { status: 500 }
     );
   }

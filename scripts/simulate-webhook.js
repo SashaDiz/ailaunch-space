@@ -1,76 +1,86 @@
 #!/usr/bin/env node
 
 /**
- * Simulate Stripe Webhook
+ * Simulate a Dodo Payments Webhook
  * Usage: pnpm webhook:simulate
  *
- * Sends a test webhook event to your local development server
- * to verify the Stripe webhook handler is working correctly.
+ * Sends a signed `payment.succeeded` event to your local dev server to verify
+ * the Dodo webhook handler (app/api/webhooks/dodo/route.ts) is working.
+ *
+ * Dodo uses the Standard Webhooks scheme (webhook-id / webhook-signature /
+ * webhook-timestamp headers). This script signs the payload with
+ * DODO_PAYMENTS_WEBHOOK_KEY the same way Dodo does.
  *
  * Make sure your dev server is running: pnpm dev
+ *
+ * Optional env:
+ *   SIMULATE_PROJECT_ID  — real premium app id to flip to paid
+ *   SIMULATE_USER_ID     — user id to attach to the payment record
  */
 
-const crypto = require('crypto');
+require('dotenv/config');
+const { Webhook } = require('standardwebhooks');
 
 const WEBHOOK_URL = process.env.NEXT_PUBLIC_APP_URL
-  ? `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/stripe`
-  : 'http://localhost:3000/api/webhooks/stripe';
+  ? `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/dodo`
+  : 'http://localhost:3000/api/webhooks/dodo';
 
-const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
-
-function createSignature(payload, secret) {
-  const timestamp = Math.floor(Date.now() / 1000);
-  const signedPayload = `${timestamp}.${payload}`;
-  const signature = crypto
-    .createHmac('sha256', secret)
-    .update(signedPayload)
-    .digest('hex');
-  return `t=${timestamp},v1=${signature}`;
-}
+const WEBHOOK_KEY = process.env.DODO_PAYMENTS_WEBHOOK_KEY;
 
 async function simulateWebhook() {
-  if (!WEBHOOK_SECRET) {
-    console.error('STRIPE_WEBHOOK_SECRET is not set in environment.');
-    console.log('Set it in .env.local to test webhook signature verification.');
-    console.log('\nSending without signature (will fail signature check)...\n');
+  if (!WEBHOOK_KEY) {
+    console.error('DODO_PAYMENTS_WEBHOOK_KEY is not set in environment.');
+    console.warn('Set it in .env.local to sign the test webhook. Without it the');
+    console.warn('handler will reject the request with a 403 (invalid signature).');
+    return;
   }
 
+  const webhookId = `msg_test_${Date.now()}`;
+  const timestamp = new Date();
+
   const testEvent = {
-    id: 'evt_test_' + Date.now(),
-    object: 'event',
-    type: 'checkout.session.completed',
+    business_id: 'bus_test',
+    type: 'payment.succeeded',
+    timestamp: timestamp.toISOString(),
     data: {
-      object: {
-        id: 'cs_test_' + Date.now(),
-        payment_status: 'paid',
-        amount_total: 4900,
-        currency: 'usd',
-        payment_intent: 'pi_test_' + Date.now(),
-        customer_details: {
-          email: 'test@example.com',
-        },
-        metadata: {
-          userId: 'test-user-id',
-          projectId: 'test-project-id',
-          planType: 'premium',
-        },
-        livemode: false,
+      payload_type: 'Payment',
+      payment_id: `pay_test_${Date.now()}`,
+      subscription_id: null,
+      status: 'succeeded',
+      currency: 'USD',
+      total_amount: 499,
+      customer: {
+        customer_id: 'cus_test',
+        email: 'test@example.com',
+        name: 'Test User',
       },
+      metadata: {
+        type: 'premium_submission',
+        userId: process.env.SIMULATE_USER_ID || 'test-user-id',
+        projectId: process.env.SIMULATE_PROJECT_ID || 'test-project-id',
+        planType: 'premium',
+      },
+      created_at: timestamp.toISOString(),
     },
   };
 
   const payload = JSON.stringify(testEvent);
+
+  // Standard Webhooks: the secret is base64-encoded (Dodo secrets are provided
+  // ready to pass to the Webhook constructor).
+  const wh = new Webhook(WEBHOOK_KEY);
+  const signature = wh.sign(webhookId, timestamp, payload);
+
   const headers = {
     'Content-Type': 'application/json',
+    'webhook-id': webhookId,
+    'webhook-timestamp': Math.floor(timestamp.getTime() / 1000).toString(),
+    'webhook-signature': signature,
   };
 
-  if (WEBHOOK_SECRET) {
-    headers['stripe-signature'] = createSignature(payload, WEBHOOK_SECRET);
-  }
-
-  console.log(`Sending test webhook to: ${WEBHOOK_URL}`);
-  console.log(`Event type: ${testEvent.type}`);
-  console.log(`Event ID: ${testEvent.id}\n`);
+  console.warn(`Sending test webhook to: ${WEBHOOK_URL}`);
+  console.warn(`Event type: ${testEvent.type}`);
+  console.warn(`Webhook ID: ${webhookId}\n`);
 
   try {
     const response = await fetch(WEBHOOK_URL, {
@@ -80,17 +90,17 @@ async function simulateWebhook() {
     });
 
     const data = await response.json().catch(() => response.text());
-    console.log(`Response status: ${response.status}`);
-    console.log('Response body:', JSON.stringify(data, null, 2));
+    console.warn(`Response status: ${response.status}`);
+    console.warn('Response body:', JSON.stringify(data, null, 2));
 
     if (response.ok) {
-      console.log('\nWebhook processed successfully!');
+      console.warn('\nWebhook processed successfully!');
     } else {
-      console.log('\nWebhook returned an error (this may be expected for test data).');
+      console.warn('\nWebhook returned an error (this may be expected for test data).');
     }
   } catch (err) {
     console.error('Failed to send webhook:', err.message);
-    console.log('\nMake sure your dev server is running: pnpm dev');
+    console.warn('\nMake sure your dev server is running: pnpm dev');
   }
 }
 

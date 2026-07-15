@@ -2,14 +2,14 @@
  * Advertising & Sponsorship Configuration
  *
  * Centralized settings for sponsors and paid promotion placements.
- * Polar product IDs must be created in the Polar Dashboard and set via env vars.
+ * Dodo product IDs must be created in the Dodo Payments Dashboard and set via env vars.
  */
 export const advertisingConfig = {
   sponsors: {
     /** Maximum number of active sponsors displayed */
     maxSponsors: 8,
-    /** Polar recurring product ID for sponsor subscription */
-    priceId: process.env.POLAR_PRODUCT_ID_PARTNER_SUBSCRIPTION || null,
+    /** Dodo recurring product ID for sponsor subscription */
+    priceId: process.env.DODO_PRODUCT_ID_PARTNER_SUBSCRIPTION || null,
   },
   promotions: {
     /** Maximum characters for custom CTA button text */
@@ -18,8 +18,8 @@ export const advertisingConfig = {
     ctaDefault: 'Visit {name}',
     /** Discount when all three placements are selected (0.3 = 30%) */
     allThreeDiscountPercent: 0.3,
-    /** Polar discount ID to apply when all three placements are selected */
-    allThreeDiscountCouponId: process.env.POLAR_DISCOUNT_ID_PROMO_ALL_THREE || null,
+    /** Dodo discount code to apply when all three placements are selected */
+    allThreeDiscountCouponId: process.env.DODO_DISCOUNT_CODE_PROMO_ALL_THREE || null,
     /** Minimum placement price (used for "starts at" on pricing page) */
     minPricePerMonth: 9,
     placements: {
@@ -28,7 +28,7 @@ export const advertisingConfig = {
         name: 'Top Banner Ad',
         description: 'Horizontal banner below the site header on every page',
         pricePerMonth: 69,
-        priceId: process.env.POLAR_PRODUCT_ID_PROMO_BANNER || null,
+        priceId: process.env.DODO_PRODUCT_ID_PROMO_BANNER || null,
         maxActive: 1,
       },
       catalog: {
@@ -36,7 +36,7 @@ export const advertisingConfig = {
         name: 'Catalog Ad Card',
         description: 'Promoted card mixed into the project catalog grid',
         pricePerMonth: 39,
-        priceId: process.env.POLAR_PRODUCT_ID_PROMO_CATALOG || null,
+        priceId: process.env.DODO_PRODUCT_ID_PROMO_CATALOG || null,
         maxActive: 2,
       },
       detailPage: {
@@ -44,7 +44,7 @@ export const advertisingConfig = {
         name: 'Project Page Ad Card',
         description: 'Promoted card in the sidebar of project detail pages',
         pricePerMonth: 9,
-        priceId: process.env.POLAR_PRODUCT_ID_PROMO_DETAIL || null,
+        priceId: process.env.DODO_PRODUCT_ID_PROMO_DETAIL || null,
         maxActive: 2,
       },
     },

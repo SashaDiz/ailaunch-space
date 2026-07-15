@@ -4,14 +4,14 @@ import { cookies } from "next/headers";
 import { getSupabasePublishableKey, getSupabaseUrl } from "@/lib/supabase/env";
 import { db } from "@/lib/supabase/database";
 import {
-  createStripeCheckoutSession,
-  isStripeConfigured,
-} from "@/lib/payments/polar";
+  createPremiumCheckoutSession,
+  isDodoConfigured,
+} from "@/lib/payments/dodo";
 
 // POST /api/projects/[slug]/upgrade — upgrade a free listing to premium
 export async function POST(request, { params }) {
   try {
-    if (!isStripeConfigured()) {
+    if (!isDodoConfigured()) {
       return NextResponse.json(
         {
           error: "Payment provider is not configured. Please contact support or try again later.",
@@ -106,7 +106,7 @@ export async function POST(request, { params }) {
     const successUrl = `${baseUrl}/dashboard?payment=success&projectId=${existingProject.id}`;
     const cancelUrl = `${baseUrl}/dashboard?payment=cancelled&projectId=${existingProject.id}`;
 
-    const checkout = await createStripeCheckoutSession({
+    const checkout = await createPremiumCheckoutSession({
       planType: "premium",
       customerEmail: user.email,
       projectId: existingProject.id,

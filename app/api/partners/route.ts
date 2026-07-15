@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createStripeSubscriptionCheckoutSession, isStripeConfigured } from '@/lib/payments/polar';
+import { createPartnerCheckoutSession, isDodoConfigured } from '@/lib/payments/dodo';
 import { getSession } from '@/lib/supabase/auth';
 import { db } from '@/lib/supabase/database';
 import { z } from "zod";
@@ -51,7 +51,7 @@ const PartnerSubmissionSchema = z.object({
   website_url: z.string().url("Please enter a valid website URL"),
 });
 
-// POST /api/partners - Create partner submission and Stripe checkout session
+// POST /api/partners - Create partner submission and Dodo Payments checkout session
 export async function POST(request) {
   const guard = featureGuard('partners');
   if (guard) return guard;
@@ -70,7 +70,7 @@ export async function POST(request) {
       );
     }
 
-    if (!isStripeConfigured()) {
+    if (!isDodoConfigured()) {
       return NextResponse.json(
         {
           error: "Payment provider is not configured. Please contact support.",
@@ -81,7 +81,7 @@ export async function POST(request) {
     }
 
     // Get partner subscription product ID from environment
-    const partnerPriceId = process.env.POLAR_PRODUCT_ID_PARTNER_SUBSCRIPTION;
+    const partnerPriceId = process.env.DODO_PRODUCT_ID_PARTNER_SUBSCRIPTION;
     if (!partnerPriceId) {
       return NextResponse.json(
         { 
@@ -129,11 +129,12 @@ export async function POST(request) {
     const successUrl = `${baseUrl}/sponsor?success=true`;
     const cancelUrl = `${baseUrl}/sponsor?canceled=true`;
 
-    // Create Stripe subscription checkout session
-    const checkout = await createStripeSubscriptionCheckoutSession({
+    // Create Dodo Payments subscription checkout session
+    const checkout = await createPartnerCheckoutSession({
       priceId: partnerPriceId,
       customerEmail: session.user.email,
       partnerData: {
+        id: partnerId,
         name: name ?? "",
         logo,
         description,

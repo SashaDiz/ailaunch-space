@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import {
-  createStripeCheckoutSession,
+  createPremiumCheckoutSession,
   paymentPlans,
-  isStripeConfigured,
-} from '@/lib/payments/polar';
+  isDodoConfigured,
+} from '@/lib/payments/dodo';
 import { db } from '@/lib/supabase/database';
 import { getSession } from '@/lib/supabase/auth';
 
-// POST /api/payments - Create a Stripe checkout session
+// POST /api/payments - Create a Dodo Payments checkout session
 export async function POST(request) {
   try {
     // Check authentication
@@ -87,11 +87,11 @@ export async function POST(request) {
       );
     }
 
-    // Ensure Polar is ready
-    if (!isStripeConfigured()) {
+    // Ensure Dodo Payments is ready
+    if (!isDodoConfigured()) {
       return NextResponse.json(
         {
-          error: "Polar is not configured. Please set POLAR_ACCESS_TOKEN, POLAR_PRODUCT_ID_PREMIUM, and POLAR_WEBHOOK_SECRET.",
+          error: "Dodo Payments is not configured. Please set DODO_PAYMENTS_API_KEY, DODO_PRODUCT_ID_PREMIUM, and DODO_PAYMENTS_WEBHOOK_KEY.",
           code: "PAYMENT_PROVIDER_NOT_CONFIGURED",
         },
         { status: 500 }
@@ -103,9 +103,9 @@ export async function POST(request) {
     const successUrl = `${baseUrl}/submit?payment=success&projectId=${projectId}`;
     const cancelUrl = `${baseUrl}/submit?payment=cancelled&step=1`;
 
-    // Create Stripe checkout session
+    // Create Dodo Payments checkout session
     try {
-      const checkout = await createStripeCheckoutSession({
+      const checkout = await createPremiumCheckoutSession({
         planType,
         customerEmail: emailToUse,
         projectId,
@@ -142,7 +142,7 @@ export async function POST(request) {
       });
 
     } catch (checkoutError) {
-      console.error('Polar checkout creation failed:', {
+      console.error('Dodo checkout creation failed:', {
         message: checkoutError.message,
         stack: checkoutError.stack,
       });

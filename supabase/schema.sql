@@ -458,8 +458,8 @@ CREATE TABLE IF NOT EXISTS public.partners (
   website_url TEXT,
   user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   checkout_session_id TEXT,
-  stripe_subscription_id TEXT,
-  stripe_customer_id TEXT,
+  subscription_id TEXT,
+  customer_id TEXT,
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'cancelled', 'past_due', 'paused')),
   subscription_started_at TIMESTAMP WITH TIME ZONE,
   subscription_ends_at TIMESTAMP WITH TIME ZONE,
@@ -472,7 +472,7 @@ CREATE TABLE IF NOT EXISTS public.partners (
 
 CREATE INDEX IF NOT EXISTS idx_partners_user_id ON public.partners(user_id);
 CREATE INDEX IF NOT EXISTS idx_partners_status ON public.partners(status);
-CREATE INDEX IF NOT EXISTS idx_partners_stripe_subscription_id ON public.partners(stripe_subscription_id);
+CREATE INDEX IF NOT EXISTS idx_partners_subscription_id ON public.partners(subscription_id);
 CREATE INDEX IF NOT EXISTS idx_partners_position ON public.partners(position);
 
 -- ============================================================================
@@ -556,8 +556,8 @@ CREATE TABLE IF NOT EXISTS public.promotions (
   placement_detail_page BOOLEAN DEFAULT false,
   monthly_price NUMERIC NOT NULL DEFAULT 0,
   checkout_session_id TEXT,
-  stripe_subscription_id TEXT,
-  stripe_customer_id TEXT,
+  subscription_id TEXT,
+  customer_id TEXT,
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'cancelled', 'past_due', 'paused', 'rejected')),
   subscription_started_at TIMESTAMP WITH TIME ZONE,
   subscription_ends_at TIMESTAMP WITH TIME ZONE,
@@ -574,7 +574,7 @@ CREATE TABLE IF NOT EXISTS public.promotions (
 CREATE INDEX IF NOT EXISTS idx_promotions_user_id ON public.promotions(user_id);
 CREATE INDEX IF NOT EXISTS idx_promotions_app_id ON public.promotions(app_id);
 CREATE INDEX IF NOT EXISTS idx_promotions_status ON public.promotions(status);
-CREATE INDEX IF NOT EXISTS idx_promotions_stripe_subscription_id ON public.promotions(stripe_subscription_id);
+CREATE INDEX IF NOT EXISTS idx_promotions_subscription_id ON public.promotions(subscription_id);
 CREATE INDEX IF NOT EXISTS idx_promotions_placement_banner ON public.promotions(placement_banner) WHERE placement_banner = true;
 CREATE INDEX IF NOT EXISTS idx_promotions_placement_catalog ON public.promotions(placement_catalog) WHERE placement_catalog = true;
 CREATE INDEX IF NOT EXISTS idx_promotions_placement_detail_page ON public.promotions(placement_detail_page) WHERE placement_detail_page = true;

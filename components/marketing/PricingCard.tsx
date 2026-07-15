@@ -11,6 +11,7 @@ import {
   Megaphone,
   Medal,
   Link as LinkIcon,
+  TrendingUp,
   Star,
   Handshake,
   Mail,
@@ -37,7 +38,8 @@ export type PricingIconName =
   | "Monitor"
   | "LayoutGrid"
   | "FileText"
-  | "Trophy";
+  | "Trophy"
+  | "TrendingUp";
 
 const ICON_MAP: Record<PricingIconName, LucideIcon> = {
   Globe,
@@ -55,6 +57,7 @@ const ICON_MAP: Record<PricingIconName, LucideIcon> = {
   LayoutGrid,
   FileText,
   Trophy,
+  TrendingUp,
 };
 
 export interface PricingPlanFeature {

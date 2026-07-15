@@ -385,7 +385,7 @@ export const PaymentSchema = z.object({
   plan: z.enum(["premium"]), // Only premium plan requires payment
   amount: z.number().positive(), // $15 for premium
   currency: z.string().default("USD"),
-  payment_method: z.string(), // stripe, paypal, etc.
+  payment_method: z.string(), // card, wallet, etc.
   payment_id: z.string(), // External payment ID
   invoice_id: z.string().optional(),
   

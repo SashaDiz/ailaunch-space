@@ -1,6 +1,6 @@
 // ─── Payment Adapter Types ───────────────────────────────────────────────────
-// These types define the interface for payment providers (Stripe, Lemon, Paddle).
-// Each provider implements the PaymentAdapter interface.
+// These types define the interface for the Dodo Payments provider.
+// The provider implements the PaymentAdapter interface.
 
 /** Parameters for creating a checkout session */
 export interface CheckoutParams {
@@ -67,7 +67,7 @@ export interface CouponResult {
 
 /**
  * Payment provider adapter interface.
- * Implement this interface for each payment provider (Stripe, LemonSqueezy, Paddle).
+ * Implemented by the Dodo Payments provider (lib/payments/dodo.ts).
  */
 export interface PaymentAdapter {
   /** Create a checkout session and return the redirect URL */

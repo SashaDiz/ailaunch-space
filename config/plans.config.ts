@@ -7,8 +7,8 @@ import type { PlansConfig } from '@/types/config';
  * The `priceId` must match your payment provider's price/product ID.
  *
  * To add a new plan:
- * 1. Create a price in your Stripe/Lemon/Paddle dashboard
- * 2. Add the plan object below with the price ID
+ * 1. Create a product in your Dodo Payments dashboard
+ * 2. Add the plan object below with the product ID
  * 3. The rest of the app auto-adapts (pricing page, submit flow, etc.)
  */
 export const plansConfig: PlansConfig = {
@@ -20,7 +20,7 @@ export const plansConfig: PlansConfig = {
       name: 'Standard',
       price: 0,
       type: 'free',
-      description: 'Free listing with basic features',
+      description: 'Free listing with a dofollow backlink once your badge is verified',
       priceId: null,
       cta: 'Get Started Free',
       features: {
@@ -37,8 +37,8 @@ export const plansConfig: PlansConfig = {
       name: 'Premium',
       price: 4.99,
       type: 'one-time',
-      description: 'Premium listing with featured placement and priority review',
-      priceId: process.env.POLAR_PRODUCT_ID_PREMIUM || null,
+      description: 'Featured placement, priority review, and a guaranteed dofollow backlink that grows your Domain Rating',
+      priceId: process.env.DODO_PRODUCT_ID_PREMIUM || null,
       cta: 'Go Premium',
       highlighted: true,
       features: {

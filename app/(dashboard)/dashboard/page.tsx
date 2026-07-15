@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useRef, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useUser } from '@/hooks/use-user';
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import gsap from "gsap";
 import {
   Plus,
   Eye,
@@ -16,12 +15,9 @@ import {
   BarChart3,
   X,
   Rocket,
-  Bot,
   Bookmark,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { AutoSubmitModal } from '@/components/shared/AutoSubmitModal';
-import { useAutoSubmitConfig } from '@/hooks/use-autosubmit-config';
 import { siteConfig } from "@/config/site.config";
 import { ProductCard } from "@/components/directory/ProductCard";
 import { isEnabled } from "@/lib/features";
@@ -496,8 +492,6 @@ function DashboardContent() {
   const { user, loading: authLoading } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { config: autoSubmitConfig } = useAutoSubmitConfig();
-  const promoRef = useRef(null);
   const [projects, setProjects] = useState([]);
   const [stats, setStats] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
@@ -511,48 +505,7 @@ function DashboardContent() {
   const [upgradeLoading, setUpgradeLoading] = useState(false);
   const [upgradeError, setUpgradeError] = useState("");
   const [selectedWeekId, setSelectedWeekId] = useState("");
-  const [isAutoSubmitModalOpen, setIsAutoSubmitModalOpen] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !promoRef.current) return;
-
-    const prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-    if (prefersReducedMotion) return;
-
-    const ctx = gsap.context(() => {
-      gsap.to(promoRef.current, {
-        scale: 1.02,
-        duration: 0.6,
-        ease: "power1.inOut",
-        yoyo: true,
-        repeat: -1,
-        repeatDelay: 20, // long pause between pulses
-        transformOrigin: "center center",
-      });
-    }, promoRef);
-
-    return () => {
-      ctx.revert();
-    };
-  }, []);
-
-  useEffect(() => {
-    const submitted = searchParams.get("submitted");
-    if (submitted) {
-      setIsAutoSubmitModalOpen(true);
-    }
-  }, [searchParams]);
-
-  const handleAutoSubmitModalClose = () => {
-    setIsAutoSubmitModalOpen(false);
-    const submitted = searchParams.get("submitted");
-    if (submitted) {
-      router.replace("/dashboard");
-    }
-  };
 
   const handleResumeDraft = async (project) => {
     // For upgrade pending, create new checkout session and redirect to payment
@@ -615,7 +568,7 @@ function DashboardContent() {
     fetchDashboardData();
   }, [user?.id, authLoading, router]);
 
-  // Handle payment status from Stripe redirects
+  // Handle payment status from Dodo Payments redirects
   useEffect(() => {
     const payment = searchParams.get("payment");
     const projectId = searchParams.get("projectId");
@@ -817,56 +770,6 @@ function DashboardContent() {
           </p>
         </div>
 
-        {/* Directory submission promo */}
-        {autoSubmitConfig.enabled && (
-        <section
-          className="mb-8"
-          aria-label="Directory submission service promotion"
-        >
-          <div
-            ref={promoRef}
-            className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 rounded-[var(--radius)] border border-border bg-card px-4 py-4 sm:px-6 sm:py-5"
-            style={{ boxShadow: "var(--card-shadow)" }}
-          >
-            <div className="flex items-start gap-3">
-              <div className="mt-1 flex h-9 w-9 items-center justify-center rounded-full border border-border bg-foreground text-background shadow-sm">
-                <Bot className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
-              </div>
-              <div>
-                <h2 className="text-sm sm:text-base font-semibold text-foreground">
-                  {autoSubmitConfig.title}
-                </h2>
-                {autoSubmitConfig.description && (
-                  <p className="mt-1 text-xs sm:text-sm text-muted-foreground max-w-2xl">
-                    {autoSubmitConfig.description}
-                  </p>
-                )}
-                {autoSubmitConfig.learnMoreUrl && autoSubmitConfig.learnMoreText && (
-                  <Link
-                    href={autoSubmitConfig.learnMoreUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs sm:text-sm text-muted-foreground hover:text-foreground underline"
-                  >
-                    {autoSubmitConfig.learnMoreText}
-                  </Link>
-                )}
-              </div>
-            </div>
-            <div className="flex md:flex-shrink-0">
-              <a
-                href={autoSubmitConfig.checkoutUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-card text-foreground border-2 border-foreground rounded-[var(--radius)] font-semibold text-xs sm:text-sm no-underline transition duration-300 hover:-translate-y-1 hover:shadow-[0_4px_0_rgba(0,0,0,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring min-h-[44px] sm:min-h-[48px] min-w-[200px] text-center uppercase"
-              >
-                <Bot className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
-                {autoSubmitConfig.dashboardCtaText}
-              </a>
-            </div>
-          </div>
-        </section>
-        )}
 
         {/* Tab Navigation */}
         <div className="border-b border-border mb-8">
@@ -1127,7 +1030,7 @@ function DashboardContent() {
                 </div>
 
                 <div className="flex items-center justify-between pt-2 text-xs text-muted-foreground">
-                  <span>Secure payment is processed by Stripe.</span>
+                  <span>Secure payment is processed by Dodo Payments.</span>
                   <span className="font-semibold text-foreground">$19 one-time</span>
                 </div>
               </div>
@@ -1158,10 +1061,6 @@ function DashboardContent() {
           </div>
         )}
       </div>
-      <AutoSubmitModal
-        isOpen={isAutoSubmitModalOpen}
-        onClose={handleAutoSubmitModalClose}
-      />
     </div>
   );
 }
