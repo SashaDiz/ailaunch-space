@@ -70,7 +70,7 @@ components/
   shared/         # Pagination, Providers, SiteThemeProvider, ErrorBoundary, LanguageSwitcher, LoadingSpinner, etc.
 types/            # TypeScript types (index.ts re-exports all; database.ts, config.ts, api.ts, payments.ts)
 app/
-  (admin)/admin/  # Route group: categories, changelog, projects, promotions, sponsors, theme, users
+  (admin)/admin/  # Route group: analytics, categories, changelog, projects, promotions, sponsors, theme, users
   auth/           # Auth routes: signin, callback (NOT a route group)
   (dashboard)/    # Route group: dashboard, submit, edit, profile, settings
   (marketing)/    # Route group: blog, pricing, faq, terms, privacy, contact, help, cookies, promote, sponsor, project/[slug], user/[id], categories
@@ -92,7 +92,7 @@ All customization lives in `config/`. To rebrand or toggle features, edit config
 | `features.config.ts` | Feature flags — disabling hides UI, returns 404 from API routes, skips cron |
 | `plans.config.ts` | Pricing tiers, features per plan, Stripe price IDs |
 | `themes.config.ts` | 14 color themes with HSL values, applied via CSS variables |
-| `analytics.config.ts` | GA, PostHog integration keys |
+| `analytics.config.ts` | GA, PostHog, DataFast integration keys |
 | `payments.config.ts` | Payment provider configuration |
 | `email.config.ts` | Email provider (Resend) configuration |
 | `directory.config.ts` | Page size, sort options, pricing filters, seed categories |
@@ -257,6 +257,16 @@ import { notificationManager } from '@/lib/notifications';
 
 Stripe integration in `lib/payments/stripe.ts`. One paid submission plan ("Premium", one-time $15) configured in `config/plans.config.ts`. Promotion/sponsor pricing is a separate system configured in `config/advertising.config.ts` with its own Stripe price IDs (`STRIPE_PRICE_ID_PROMO_BANNER`, `STRIPE_PRICE_ID_PROMO_CATALOG`, `STRIPE_PRICE_ID_PROMO_DETAIL`). Webhook handler at `app/api/webhooks/stripe/route.ts`. The `payments.config.ts` also supports Lemon Squeezy, Paddle, and a free-only ("none") mode.
 
+### Site analytics (DataFast)
+
+Traffic is tracked by [DataFast](https://datafa.st) — the client script is rendered in `app/layout.tsx` from `analyticsConfig.datafast`, and AI-crawler hits are tracked server-side in `middleware.ts` via `@datafast/ai-crawl`.
+
+`lib/datafast.ts` is the **server-only** read client for the DataFast REST API (`https://datafa.st/api/v1`): `getDataFastOverview`, `getDataFastTimeseries`, `getDataFastBreakdown`, `getDataFastRealtime`, plus `resolveRange()` which maps the dashboard presets (`24h`…`all`) to `startAt`/`endAt` + bucket `interval`. It reads `DATAFAST_API_KEY` and must never be imported into a client component (import types with `import type`).
+
+`app/api/admin/analytics/route.ts` is the only consumer — admin-guarded, rate-limited (`admin`), and `Promise.allSettled` per upstream call so one failing panel degrades alone. It returns `configured: false` (not an error) when `DATAFAST_API_KEY` is unset, and both `/admin` and `/admin/analytics` fall back to DB-derived visit stats in that case.
+
+`df_` keys are bound to a single website and must NOT send `websiteId`; `dft_` account tokens must. The client handles this automatically.
+
 ### Cron jobs
 
 Endpoints under `app/api/cron/` are secured with `Authorization: Bearer ${CRON_SECRET}` header. Currently only `account-notifications` exists in the filesystem. Cron schedules for `competitions` and `winner-reminders` are defined in `vercel.json` but the route handlers are not yet implemented.
@@ -289,7 +299,7 @@ Copy `.env.example` to `.env.local`. See `.env.example` for full list with descr
 
 **Required:** `NEXT_PUBLIC_APP_URL`, Supabase credentials (URL, publishable key, secret key — legacy anon / service-role keys are still accepted), S3 storage config, Stripe keys, Resend API key, `CRON_SECRET`.
 
-**Optional:** Google Analytics (`NEXT_PUBLIC_GA_MEASUREMENT_ID`), PostHog (`NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`), SEObot (`SEOBOT_API_KEY`), Discord webhook (`DISCORD_WEBHOOK_URL`), `SUPABASE_PROJECT_ID` (for `pnpm supabase:types`), promotion Stripe price IDs (`STRIPE_PRICE_ID_PROMO_BANNER`, `STRIPE_PRICE_ID_PROMO_CATALOG`, `STRIPE_PRICE_ID_PROMO_DETAIL`), ListingBott link (`NEXT_PUBLIC_LISTINGBOTT_URL`), Logo.dev (`NEXT_PUBLIC_LOGO_DEV_TOKEN`), AI config (`AI_PROVIDER`, `AI_MODEL`, `AI_API_KEY`), bundle analysis (`ANALYZE=true`).
+**Optional:** Google Analytics (`NEXT_PUBLIC_GA_MEASUREMENT_ID`), PostHog (`NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`), DataFast (`DATAFAST_API_KEY` — required for the `/admin/analytics` dashboard; `NEXT_PUBLIC_DATAFAST_WEBSITE_ID`, `NEXT_PUBLIC_DATAFAST_DOMAIN` override the tracking-script defaults), SEObot (`SEOBOT_API_KEY`), Discord webhook (`DISCORD_WEBHOOK_URL`), `SUPABASE_PROJECT_ID` (for `pnpm supabase:types`), promotion Stripe price IDs (`STRIPE_PRICE_ID_PROMO_BANNER`, `STRIPE_PRICE_ID_PROMO_CATALOG`, `STRIPE_PRICE_ID_PROMO_DETAIL`), ListingBott link (`NEXT_PUBLIC_LISTINGBOTT_URL`), Logo.dev (`NEXT_PUBLIC_LOGO_DEV_TOKEN`), AI config (`AI_PROVIDER`, `AI_MODEL`, `AI_API_KEY`), bundle analysis (`ANALYZE=true`).
 
 ## Known Limitations
 

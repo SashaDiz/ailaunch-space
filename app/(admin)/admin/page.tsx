@@ -79,28 +79,59 @@ const PERIOD_LABELS: Record<string, string> = {
 
 export default function AdminPage() {
   const [stats, setStats] = useState<any>({});
+  const [traffic, setTraffic] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState("30d");
   const reduce = useReducedMotion();
 
   useEffect(() => {
-    fetchAdminStats(timeRange);
+    fetchDashboard(timeRange);
   }, [timeRange]);
 
-  const fetchAdminStats = async (range: string) => {
+  const fetchDashboard = async (range: string) => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/admin?type=stats&range=${range}`);
-      if (response.ok) {
-        const data = await response.json();
+      // Platform counts + revenue come from our own DB/Dodo; site traffic comes
+      // live from DataFast. Fetch both together so the page paints once.
+      const [statsRes, trafficRes] = await Promise.all([
+        fetch(`/api/admin?type=stats&range=${range}`),
+        fetch(`/api/admin/analytics?range=${range}`),
+      ]);
+
+      if (statsRes.ok) {
+        const data = await statsRes.json();
         setStats(data.data || {});
       }
+
+      if (trafficRes.ok) {
+        const data = await trafficRes.json();
+        setTraffic(data.configured ? data : null);
+      } else {
+        setTraffic(null);
+      }
     } catch (error) {
-      console.error("Failed to fetch admin stats:", error);
+      console.error("Failed to fetch admin dashboard:", error);
     } finally {
       setLoading(false);
     }
   };
+
+  // DataFast is the source of truth for site traffic when connected; otherwise
+  // fall back to the visits recorded in our own analytics table.
+  const visitorSeries = traffic
+    ? (traffic.timeseries || []).map((p: any) => ({
+        date: p.date,
+        views: p.pageviews,
+        uniqueVisitors: p.visitors,
+      }))
+    : stats.visitsOverTime || [];
+
+  const totalVisitors = traffic
+    ? traffic.overview?.visitors ?? 0
+    : stats.totalVisits || 0;
+  const totalPageviews = traffic
+    ? traffic.overview?.pageviews ?? 0
+    : siteViewsTotal(stats.visitsOverTime);
 
   return (
     <>
@@ -131,9 +162,21 @@ export default function AdminPage() {
             <StatCard icon={Folder} title="Total Projects" value={stats.totalProjects || 0} reduce={reduce} />
             <StatCard icon={Clock} title="Pending" value={stats.pendingProjects || 0} reduce={reduce} />
             <StatCard icon={Users} title="Users" value={stats.totalUsers || 0} reduce={reduce} />
-            <StatCard icon={Globe} title="Visits" value={(stats.totalVisits || 0).toLocaleString()} reduce={reduce} />
-            <StatCard icon={Eye} title="Views" value={(stats.totalViews || 0).toLocaleString()} reduce={reduce} />
-            <StatCard icon={MousePointerClick} title="Clicks" value={(stats.totalClicks || 0).toLocaleString()} reduce={reduce} />
+            <StatCard
+              icon={Globe}
+              title="Visitors"
+              value={totalVisitors.toLocaleString()}
+              description={traffic ? "Live from DataFast" : undefined}
+              reduce={reduce}
+            />
+            <StatCard
+              icon={Eye}
+              title="Pageviews"
+              value={totalPageviews.toLocaleString()}
+              description={traffic ? "Live from DataFast" : undefined}
+              reduce={reduce}
+            />
+            <StatCard icon={MousePointerClick} title="Listing Clicks" value={(stats.totalClicks || 0).toLocaleString()} reduce={reduce} />
           </motion.div>
 
           {/* Quick Actions */}
@@ -170,14 +213,8 @@ export default function AdminPage() {
               />
             </div>
             <div className="xl:col-span-2 flex flex-col gap-4">
-              <DailyVisitsChart
-                data={stats.visitsOverTime || []}
-                totalViews={siteViewsTotal(stats.visitsOverTime)}
-              />
-              <DailyVisitorsChart
-                data={stats.visitsOverTime || []}
-                totalVisitors={stats.totalVisits || 0}
-              />
+              <DailyVisitsChart data={visitorSeries} totalViews={totalPageviews} />
+              <DailyVisitorsChart data={visitorSeries} totalVisitors={totalVisitors} />
             </div>
           </motion.div>
         </div>

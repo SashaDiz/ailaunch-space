@@ -192,6 +192,16 @@ export interface AnalyticsConfig {
     apiKey: string;
     host: string;
   };
+  /**
+   * DataFast (datafa.st) — privacy-friendly analytics with revenue attribution.
+   * `websiteId`/`domain` drive the client script; the server-side API key that
+   * powers the admin dashboards is read separately from `DATAFAST_API_KEY`
+   * and never exposed to the browser.
+   */
+  datafast?: {
+    websiteId: string;
+    domain: string;
+  };
 }
 
 // ─── Email Configuration ─────────────────────────────────────────────────────

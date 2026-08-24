@@ -24,4 +24,13 @@ export const analyticsConfig: AnalyticsConfig = {
       host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com',
     },
   }),
+
+  // DataFast (datafa.st) — traffic + revenue attribution.
+  // The tracking script needs the website id; the admin dashboard additionally
+  // needs a server-only `DATAFAST_API_KEY` (see lib/datafast.ts).
+  datafast: {
+    websiteId:
+      process.env.NEXT_PUBLIC_DATAFAST_WEBSITE_ID || 'dfid_K2susEcvm7yr9F7rh2aII',
+    domain: process.env.NEXT_PUBLIC_DATAFAST_DOMAIN || 'www.ailaunch.space',
+  },
 };

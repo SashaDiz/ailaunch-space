@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  Activity,
   Folder,
   Tags,
   Users,
@@ -36,6 +37,14 @@ export const adminNavItems: AdminNavItem[] = [
     exact: true,
     title: "Dashboard",
     subtitle: "Monitor platform activity and performance.",
+  },
+  {
+    name: "Analytics",
+    href: "/admin/analytics",
+    icon: Activity,
+    exact: false,
+    title: "Analytics",
+    subtitle: "Live traffic and revenue attribution from DataFast.",
   },
   {
     name: "Listings",

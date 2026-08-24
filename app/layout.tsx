@@ -178,12 +178,14 @@ export default async function RootLayout({ children }) {
           <BuildWithBadge />
         </Providers>
         {/* DataFast analytics */}
-        <Script
-          src="https://datafa.st/js/script.js"
-          data-website-id="dfid_K2susEcvm7yr9F7rh2aII"
-          data-domain="www.ailaunch.space"
-          strategy="afterInteractive"
-        />
+        {analyticsConfig.datafast && (
+          <Script
+            src="https://datafa.st/js/script.js"
+            data-website-id={analyticsConfig.datafast.websiteId}
+            data-domain={analyticsConfig.datafast.domain}
+            strategy="afterInteractive"
+          />
+        )}
         {/* Google Analytics */}
         {analyticsConfig.googleAnalytics && (
           <>
