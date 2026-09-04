@@ -1,4 +1,5 @@
 import { siteConfig } from '@/config/site.config';
+import { safeFetchText, SsrfBlockedError } from '@/lib/safe-fetch';
 
 const siteDomain = new URL(siteConfig.url).hostname.replace('www.', '');
 const escapedDomain = siteDomain.replace(/\./g, '\\.');
@@ -32,23 +33,29 @@ export async function verifyBadgeOnUrl(rawUrl: string): Promise<BadgeVerificatio
     };
   }
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-
-  let response: Response;
+  // The URL here is whatever the submitter typed, so it goes through the
+  // SSRF-hardened fetcher: `http://169.254.169.254/…` and `http://127.0.0.1:6379`
+  // are perfectly valid http URLs, and a public host can 302 to either of them.
+  // safeFetchText re-resolves and re-checks every hop, and caps time and bytes.
+  let response: { ok: boolean; status: number; text: string };
   try {
-    response = await fetch(url.toString(), {
-      signal: controller.signal,
+    response = await safeFetchText(url.toString(), {
+      timeoutMs: FETCH_TIMEOUT_MS,
+      maxBytes: 512 * 1024,
       headers: {
         'User-Agent':
           `Mozilla/5.0 (compatible; ${siteConfig.name.replace(/\s/g, '')}Bot/1.0; +${siteConfig.url})`,
         Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       },
-      redirect: 'follow',
     });
   } catch (err: any) {
-    clearTimeout(timeoutId);
-    if (err?.name === 'AbortError') {
+    if (err instanceof SsrfBlockedError) {
+      return {
+        outcome: { kind: 'invalid_url', message: 'That address cannot be reached from here.' },
+        checkedUrl: url.toString(),
+      };
+    }
+    if (err?.name === 'AbortError' || err?.name === 'TimeoutError') {
       return { outcome: { kind: 'fetch_error', reason: 'timeout' }, checkedUrl: url.toString() };
     }
     return {
@@ -56,7 +63,6 @@ export async function verifyBadgeOnUrl(rawUrl: string): Promise<BadgeVerificatio
       checkedUrl: url.toString(),
     };
   }
-  clearTimeout(timeoutId);
 
   if (!response.ok) {
     return {
@@ -65,8 +71,7 @@ export async function verifyBadgeOnUrl(rawUrl: string): Promise<BadgeVerificatio
     };
   }
 
-  const html = await response.text();
-  return { outcome: parseHtmlForBadge(html), checkedUrl: url.toString() };
+  return { outcome: parseHtmlForBadge(response.text), checkedUrl: url.toString() };
 }
 
 export function parseHtmlForBadge(html: string): BadgeVerificationOutcome {

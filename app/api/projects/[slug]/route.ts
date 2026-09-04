@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import { getSupabasePublishableKey, getSupabaseUrl } from "@/lib/supabase/env";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { db } from '@/lib/supabase/database';
 
 // GET /api/projects/[slug] - Get project by slug or ID
@@ -32,18 +30,7 @@ export async function GET(request, { params }) {
     }
 
     // Check authentication for access control
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      getSupabaseUrl(),
-      getSupabasePublishableKey(),
-      {
-        cookies: {
-          get(name) {
-            return cookieStore.get(name)?.value;
-          },
-        },
-      }
-    );
+    const supabase = await createSupabaseServerClient();
 
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -265,18 +252,7 @@ export async function PATCH(request, { params }) {
       );
     }
 
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      getSupabaseUrl(),
-      getSupabasePublishableKey(),
-      {
-        cookies: {
-          get(name) {
-            return cookieStore.get(name)?.value;
-          },
-        },
-      }
-    );
+    const supabase = await createSupabaseServerClient();
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user?.id) {
@@ -294,15 +270,14 @@ export async function PATCH(request, { params }) {
       );
     }
 
-    if (existingProject.submitted_by !== user.id) {
-      const { checkIsAdmin } = await import("@/lib/supabase/auth");
-      const isAdmin = await checkIsAdmin(user.id);
-      if (!isAdmin) {
-        return NextResponse.json(
-          { error: "Forbidden", code: "FORBIDDEN" },
-          { status: 403 }
-        );
-      }
+    const { checkIsAdmin } = await import("@/lib/supabase/auth");
+    const isAdmin = await checkIsAdmin(user.id);
+
+    if (existingProject.submitted_by !== user.id && !isAdmin) {
+      return NextResponse.json(
+        { error: "Forbidden", code: "FORBIDDEN" },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();
@@ -313,7 +288,41 @@ export async function PATCH(request, { params }) {
     delete updates.slug;
     delete updates.upvotes;
     delete updates.views;
+    delete updates.clicks;
     delete updates.createdAt;
+    delete updates.created_at;
+
+    // Fields an owner must not set on their own listing. Without this, the
+    // route accepted whatever the body contained: an owner could approve their
+    // own submission (`status`, `approved`), award themselves the paid plan and
+    // its perks (`plan`, `premium_badge`, `payment_status`, `dofollow_status`),
+    // or hand the listing to somebody else (`submitted_by`). Admins keep the
+    // full surface — that is what the admin API is for.
+    if (!isAdmin) {
+      const ADMIN_ONLY_FIELDS = [
+        "status",
+        "approved",
+        "submitted_by",
+        "featured",
+        "plan",
+        "premium_badge",
+        "payment_status",
+        "skip_queue",
+        "social_promotion",
+        "guaranteed_backlinks",
+        "link_type",
+        "dofollow_status",
+        "dofollow_reason",
+        "dofollow_awarded_at",
+        "backlink_verified",
+        "backlink_verified_at",
+        "weekly_competition_id",
+        "checkout_session_id",
+        "order_id",
+        "payment_date",
+      ];
+      for (const field of ADMIN_ONLY_FIELDS) delete updates[field];
+    }
 
     const result = await db.updateOne(
       "apps",

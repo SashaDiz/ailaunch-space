@@ -1,15 +1,16 @@
-import { createServerClient } from '@supabase/ssr';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { getSupabasePublishableKey, getSupabaseUrl } from '@/lib/supabase/env';
+import { safeRedirectPath } from '@/lib/safe-redirect';
 
 export async function GET(request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
   const error = requestUrl.searchParams.get('error');
   const error_description = requestUrl.searchParams.get('error_description');
-  const nextParam = requestUrl.searchParams.get('next') || '/';
-  const next = nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : '/';
+  // Same-origin, path-relative targets only. The inline check this replaces
+  // missed the backslash form ("/\\evil.example", which some browsers read as
+  // "//") and control characters.
+  const next = safeRedirectPath(requestUrl.searchParams.get('next'), '/');
 
   // Handle OAuth errors
   if (error) {
@@ -19,30 +20,7 @@ export async function GET(request) {
 
   if (code) {
     try {
-      const cookieStore = await cookies();
-      
-      // Create a Supabase SSR client with proper cookie handling using getAll/setAll
-      const supabase = createServerClient(
-        getSupabaseUrl(),
-        getSupabasePublishableKey(),
-        {
-          cookies: {
-            getAll() {
-              return cookieStore.getAll();
-            },
-            setAll(cookiesToSet) {
-              try {
-                cookiesToSet.forEach(({ name, value, options }) => {
-                  cookieStore.set(name, value, options);
-                });
-              } catch (error) {
-                // Handle cookie setting errors
-                console.error('Error setting cookies:', error);
-              }
-            },
-          },
-        }
-      );
+      const supabase = await createSupabaseServerClient();
 
       // Exchange code for session - this must happen ASAP
       const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);

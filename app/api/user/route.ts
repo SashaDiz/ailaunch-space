@@ -674,7 +674,7 @@ export async function PUT(request) {
     return NextResponse.json(
       { 
         error: "Failed to update profile",
-        details: error.message 
+        details: undefined 
       },
       { status: 500 }
     );
@@ -733,7 +733,7 @@ export async function DELETE(request) {
     return NextResponse.json(
       { 
         error: "Failed to delete account",
-        details: error.message 
+        details: undefined 
       },
       { status: 500 }
     );

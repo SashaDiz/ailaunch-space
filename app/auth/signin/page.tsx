@@ -8,6 +8,7 @@ import { Mail, ChevronLeft } from "lucide-react";
 import { useSupabase } from '@/components/shared/SupabaseProvider';
 import { useUser } from '@/hooks/use-user';
 import { siteConfig } from "@/config/site.config";
+import { safeRedirectPath } from '@/lib/safe-redirect';
 import toast from "react-hot-toast";
 
 function SignInContent() {
@@ -26,8 +27,10 @@ function SignInContent() {
     const urlCallback = searchParams.get("callbackUrl");
     const sessionCallback = sessionStorage.getItem("redirectAfterSignIn");
     
-    // Prioritize URL param, then sessionStorage, then default to "/"
-    const redirect = urlCallback || sessionCallback || "/";
+    // Prioritize URL param, then sessionStorage, then default to "/".
+    // Passed through safeRedirectPath so `?callbackUrl=https://evil.example`
+    // cannot bounce a visitor off this domain right after they sign in.
+    const redirect = safeRedirectPath(urlCallback || sessionCallback, "/");
     setCallbackUrl(redirect);
   }, [searchParams]);
 

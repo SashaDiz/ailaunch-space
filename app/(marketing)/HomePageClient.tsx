@@ -10,6 +10,7 @@ import { SocialProof } from '@/components/marketing/SocialProof';
 import { DomainRatingBadge } from '@/components/marketing/DomainRatingBadge';
 import { PromoBlockModal } from '@/components/shared/PromoBlockModal';
 import { usePromoBlockConfig } from '@/hooks/use-promo-block-config';
+import { jsonLdSafe } from '@/lib/seo-client';
 import { getPromoBlockIcon } from "@/lib/promo-block-icons";
 import { useRouter } from "next/navigation";
 import { siteConfig } from "@/config/site.config";
@@ -429,7 +430,7 @@ function HomePage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(homepageSchema),
+          __html: jsonLdSafe(homepageSchema),
         }}
       />
       {/* Decorative asymmetric blob with dramatic morphing - only on main page */}

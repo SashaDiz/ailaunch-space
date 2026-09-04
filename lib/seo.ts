@@ -416,9 +416,17 @@ ${pages
   return xml;
 }
 
-// Escape XML special characters
-function escapeXml(unsafe) {
-  return unsafe.replace(/[<>&'"]/g, function (c) {
+/**
+ * Escape XML special characters.
+ *
+ * Null-safe, and strips the control characters that are illegal in XML 1.0 —
+ * one of those anywhere in a title or slug makes the whole sitemap unparseable,
+ * and a `null` used to throw here rather than render as an empty element.
+ */
+export function escapeXml(unsafe: unknown): string {
+  return String(unsafe ?? '')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
+    .replace(/[<>&'"]/g, function (c) {
     switch (c) {
       case '<': return '&lt;';
       case '>': return '&gt;';

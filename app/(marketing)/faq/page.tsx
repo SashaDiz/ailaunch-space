@@ -1,6 +1,7 @@
 import React from "react";
 import { siteConfig } from "@/config/site.config";
 import { generateStructuredData } from "@/lib/seo";
+import { jsonLdSafe } from "@/lib/seo-client";
 import { DomainRatingBadge } from "@/components/marketing/DomainRatingBadge";
 import {
   Rocket,
@@ -336,7 +337,7 @@ export default function FAQPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(faqStructuredData),
+          __html: jsonLdSafe(faqStructuredData),
         }}
       />
 

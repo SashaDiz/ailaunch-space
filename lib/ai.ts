@@ -1,5 +1,7 @@
 import { isEnabled } from '@/lib/features';
 import { aiConfig } from '@/config/ai.config';
+import { siteConfig } from '@/config/site.config';
+import { safeFetchText } from '@/lib/safe-fetch';
 
 class AIDisabledError extends Error {
   constructor() {
@@ -133,23 +135,26 @@ export async function generateProjectInfoFromUrl(
   }
 
   // ─── Fetch the page (best-effort; tolerate slow / large responses) ──
+  //
+  // The URL comes straight from the submit form, so this goes through the
+  // SSRF-hardened fetcher rather than bare fetch(): a scheme check does not stop
+  // `http://169.254.169.254/…` (cloud metadata) or `http://127.0.0.1:6379`, and a
+  // public host can redirect to either. safeFetchText re-validates every hop and
+  // caps both time and bytes.
   let html = '';
   try {
-    const ac = new AbortController();
-    const timeout = setTimeout(() => ac.abort(), 8000);
-    const res = await fetch(parsed.toString(), {
+    const res = await safeFetchText(parsed.toString(), {
+      timeoutMs: 8000,
+      maxBytes: 200_000, // cap raw payload
       headers: {
-        'User-Agent': 'AILaunchSpace-AutoFill/1.0 (+https://www.ailaunch.space)',
+        'User-Agent': `${siteConfig.name.replace(/\s/g, '')}-AutoFill/1.0 (+${siteConfig.url})`,
         Accept: 'text/html,application/xhtml+xml',
       },
-      signal: ac.signal,
-      redirect: 'follow',
     });
-    clearTimeout(timeout);
     if (!res.ok) {
-      throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
+      throw new Error(`Fetch failed: ${res.status}`);
     }
-    html = (await res.text()).slice(0, 200_000); // cap raw payload
+    html = res.text;
   } catch (err) {
     throw new Error(
       `Failed to fetch ${parsed.hostname}: ${err instanceof Error ? err.message : 'unknown error'}`,

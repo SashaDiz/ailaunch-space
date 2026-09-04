@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import { getSupabasePublishableKey, getSupabaseUrl } from "@/lib/supabase/env";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from '@/lib/supabase/client';
 import { checkRateLimit, createRateLimitResponse } from '@/lib/rate-limit';
 import { v4 as uuidv4 } from "uuid";
@@ -31,8 +29,10 @@ async function validateFileContent(file, expectedType) {
   }
   
   if (expectedType === 'image/webp') {
-    // WebP files start with RIFF header
-    return bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46;
+    // "RIFF" at 0..3 AND "WEBP" at 8..11 — RIFF alone also matches WAV/AVI, so
+    // checking only the first four bytes lets a non-image through as an image.
+    return bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
+           bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50;
   }
   
   return false;
@@ -51,18 +51,7 @@ export async function POST(request) {
     }
 
     // Check authentication - file uploads require authentication
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      getSupabaseUrl(),
-      getSupabasePublishableKey(),
-      {
-        cookies: {
-          get(name) {
-            return cookieStore.get(name)?.value;
-          },
-        },
-      }
-    );
+    const supabase = await createSupabaseServerClient();
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
@@ -182,7 +171,7 @@ export async function POST(request) {
         {
           success: false,
           error: "Failed to upload file to storage",
-          details: error.message,
+          details: undefined,
         },
         { status: 500 }
       );
@@ -211,7 +200,7 @@ export async function POST(request) {
       {
         success: false,
         error: "Failed to upload file",
-        details: error.message,
+        details: undefined,
       },
       { status: 500 }
     );

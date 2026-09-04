@@ -5,6 +5,7 @@ import { Providers } from '@/components/shared/Providers';
 import { PixelBackground } from '@/components/shared/PixelBackground';
 import { BuildWithBadge } from '@/components/layout/BuildWithBadge';
 import { siteConfig } from '@/config/site.config';
+import { jsonLdSafe } from '@/lib/seo-client';
 import { analyticsConfig } from '@/config/analytics.config';
 import { getSupabaseAdmin } from '@/lib/supabase/client';
 import { buildThemeInlineCSS } from '@/lib/theme-utils';
@@ -155,13 +156,13 @@ export default async function RootLayout({ children }) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(organizationSchema),
+            __html: jsonLdSafe(organizationSchema),
           }}
         />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(websiteSchema),
+            __html: jsonLdSafe(websiteSchema),
           }}
         />
         {themeCSS && (

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/supabase/database";
 import { siteConfig } from "@/config/site.config";
 import { generateStructuredData, generateProjectKeywords } from "@/lib/seo";
+import { jsonLdSafe } from "@/lib/seo-client";
 import { ProjectDetailClient } from "./ProjectDetailClient";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 
@@ -142,13 +143,13 @@ export default async function ProjectDetailPage({ params }) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(structuredData),
+          __html: jsonLdSafe(structuredData),
         }}
       />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(breadcrumbData),
+          __html: jsonLdSafe(breadcrumbData),
         }}
       />
       <Suspense

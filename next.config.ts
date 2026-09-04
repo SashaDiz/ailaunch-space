@@ -74,13 +74,41 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: `default-src 'self'; script-src 'self' 'unsafe-inline' https://datafa.st${isDev ? " 'unsafe-eval'" : ''}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https: https://datafa.st; frame-src 'self' https://datafa.st https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com; frame-ancestors 'none';`,
+            // NOTE on `script-src 'unsafe-inline'`: Next.js injects inline
+            // bootstrap scripts, so removing it requires plumbing a per-request
+            // nonce through middleware (headers() here is static and cannot
+            // generate one). Until then, XSS containment relies on output
+            // encoding — see jsonLdSafe() and escapeXml() in lib/seo.ts, and
+            // sanitizeString() in lib/validations/schemas.ts.
+            //
+            // `connect-src` stays broad (`https:`) on purpose: the app talks to
+            // Supabase, DataFast, PostHog, Dodo and S3, and enumerating those
+            // hosts here fails silently in the browser the moment one is missed.
+            value: [
+              `default-src 'self'`,
+              `script-src 'self' 'unsafe-inline' https://datafa.st${isDev ? " 'unsafe-eval'" : ''}`,
+              `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
+              `img-src 'self' data: blob: https:`,
+              `font-src 'self' data: https://fonts.gstatic.com`,
+              `connect-src 'self' https: https://datafa.st`,
+              `worker-src 'self' blob:`,
+              `child-src 'self' blob:`,
+              `frame-src 'self' https://datafa.st https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com`,
+              `frame-ancestors 'none'`,
+              // Without base-uri an injected <base> tag re-points every relative
+              // script/style URL at an attacker's host.
+              `base-uri 'self'`,
+              // Without form-action an injected form can POST the page's fields
+              // (including anything the user has typed) straight off-site.
+              `form-action 'self'`,
+              `object-src 'none'`,
+            ].join('; ') + ';',
           },
         ],
       },
     ];
   },
-  serverExternalPackages: ["mongodb", "@supabase/supabase-js", "@supabase/ssr", "@react-email/render", "resend"],
+  serverExternalPackages: ["@supabase/supabase-js", "@supabase/ssr", "@react-email/render", "resend"],
   async redirects() {
     return [
       // Legacy listing path → new home (catalog lives on the index now)
@@ -137,47 +165,53 @@ const nextConfig: NextConfig = {
       ],
     };
 
-    // Configure filesystem cache to reduce large string warnings
-    if (config.cache && config.cache.type === "filesystem") {
-      config.cache.maxMemoryGenerations = 0;
-      config.cache.maxAge = 1000 * 60 * 60 * 24 * 7; // 1 week
-      config.cache.compression = 'gzip';
-    }
-    
-    // Disable problematic webpack optimizations that cause module loading issues
-    config.optimization = {
-      ...config.optimization,
-      moduleIds: 'deterministic',
-      chunkIds: 'deterministic',
-    };
+    // Production-only optimizations. Applying these in dev overrides Next.js's
+    // HMR-aware module/chunk ID strategy and runtime chunking, which causes
+    // stale lazily-loaded route chunks: "Cannot read properties of undefined
+    // (reading 'call')" at __webpack_require__, and links needing two clicks to
+    // navigate. Gate them so dev uses Next.js defaults.
+    if (!dev) {
+      // Configure filesystem cache to reduce large string warnings
+      if (config.cache && config.cache.type === "filesystem") {
+        config.cache.maxMemoryGenerations = 0;
+        config.cache.maxAge = 1000 * 60 * 60 * 24 * 7; // 1 week
+        config.cache.compression = 'gzip';
+      }
 
-    // Split GSAP and large dependencies to reduce bundle size
-    if (!isServer) {
       config.optimization = {
         ...config.optimization,
-        splitChunks: {
-          ...config.optimization.splitChunks,
-          chunks: "all",
-          maxSize: 80000, // Even smaller chunks
-          cacheGroups: {
-            ...config.optimization.splitChunks.cacheGroups,
-            gsap: {
-              test: /[\\/]node_modules[\\/]gsap[\\/]/,
-              name: "gsap-vendor",
-              chunks: "all",
-              enforce: true,
-              priority: 20,
-            },
-            vendors: {
-              test: /[\\/]node_modules[\\/]/,
-              name: "vendors",
-              chunks: "all",
-              priority: 10,
-              maxSize: 60000, // Very small vendor chunks
+        moduleIds: 'deterministic',
+        chunkIds: 'deterministic',
+      };
+
+      // Split GSAP and large dependencies to reduce bundle size
+      if (!isServer) {
+        config.optimization = {
+          ...config.optimization,
+          splitChunks: {
+            ...config.optimization.splitChunks,
+            chunks: "all",
+            maxSize: 80000, // Even smaller chunks
+            cacheGroups: {
+              ...config.optimization.splitChunks.cacheGroups,
+              gsap: {
+                test: /[\\/]node_modules[\\/]gsap[\\/]/,
+                name: "gsap-vendor",
+                chunks: "all",
+                enforce: true,
+                priority: 20,
+              },
+              vendors: {
+                test: /[\\/]node_modules[\\/]/,
+                name: "vendors",
+                chunks: "all",
+                priority: 10,
+                maxSize: 60000, // Very small vendor chunks
+              },
             },
           },
-        },
-      };
+        };
+      }
     }
 
     return config;

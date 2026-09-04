@@ -117,31 +117,43 @@ export const rateLimits = {
   },
 };
 
-// Get client identifier (IP + User Agent hash)
-export function getClientIdentifier(request) {
-  // Get client IP
-  const forwarded = request.headers.get("x-forwarded-for");
-  const ip = forwarded ? forwarded.split(/, /)[0] : 
-              request.headers.get("x-real-ip") || 
-              request.headers.get("cf-connecting-ip") ||
-              "unknown";
-  
-  // Get user agent hash for additional identification
-  const userAgent = request.headers.get("user-agent") || "";
-  const uaHash = hashString(userAgent);
-  
-  return `${ip}:${uaHash}`;
-}
+// Get client identifier.
+//
+// SECURITY — two rules this function exists to enforce:
+//
+//  1. The key must NOT contain anything the caller can freely rotate. The old
+//     version hashed the User-Agent into the key, so changing one header gave
+//     the caller a brand-new bucket and every limit in the app was one line of
+//     curl away from being bypassed.
+//  2. The IP must come from a hop the PLATFORM sets, not from a header the
+//     client can prepend. `x-vercel-forwarded-for` is written by Vercel's proxy
+//     and cannot be spoofed by the client; a raw `x-forwarded-for` can be, so we
+//     take its RIGHT-most entry (the hop closest to us) rather than the left.
+//
+// Returns null when no trustworthy client identity is available, so callers can
+// fail CLOSED instead of lumping every anonymous request into one shared bucket.
+export function getClientIdentifier(request): string | null {
+  // 1. Vercel's own header — trusted, set by the platform edge.
+  const vercelIp = request.headers.get("x-vercel-forwarded-for");
+  if (vercelIp) return vercelIp.trim();
 
-// Simple hash function
-function hashString(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
+  // 2. Cloudflare's equivalent, when fronted by Cloudflare.
+  const cfIp = request.headers.get("cf-connecting-ip");
+  if (cfIp) return cfIp.trim();
+
+  // 3. Right-most X-Forwarded-For hop: the value appended by the proxy directly
+  //    in front of us. Anything further left was supplied by the client.
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) {
+    const hops = forwarded.split(",").map((h) => h.trim()).filter(Boolean);
+    if (hops.length > 0) return hops[hops.length - 1];
   }
-  return Math.abs(hash).toString(16).substring(0, 8);
+
+  // 4. x-real-ip, when a known reverse proxy sets it.
+  const realIp = request.headers.get("x-real-ip");
+  if (realIp) return realIp.trim();
+
+  return null;
 }
 
 // Rate limit middleware function
@@ -149,17 +161,57 @@ export function rateLimit(limitType = 'general') {
   return async (request) => {
     const config = rateLimits[limitType];
     if (!config) {
-      console.warn(`Unknown rate limit type: ${limitType}`);
-      return { allowed: true };
+      // Fail CLOSED on a typo'd bucket name rather than silently disabling the limit.
+      console.error(`Unknown rate limit type: ${limitType} — refusing request`);
+      return {
+        allowed: false,
+        count: 0,
+        remaining: 0,
+        resetTime: Date.now() + 60000,
+        retryAfter: 60,
+        limitType,
+        identifier: 'unknown-bucket',
+      };
     }
 
     const identifier = getClientIdentifier(request);
-    const result = rateLimiter.check(identifier, config.maxRequests, config.windowMs);
+
+    // No trustworthy client identity.
+    //
+    // In development there is no proxy in front of the app, so fall back to a
+    // shared local bucket — failing closed here would make `pnpm dev` unusable.
+    //
+    // In production, every supported host (Vercel, Cloudflare, nginx) sets one
+    // of the headers above. Reaching this branch in production means the proxy
+    // is misconfigured, and we fail CLOSED rather than serve an unlimited
+    // endpoint — silently unlimited is the failure mode this whole function
+    // exists to prevent.
+    let key = identifier;
+    if (!key) {
+      if (process.env.NODE_ENV === 'production') {
+        console.error(
+          `Rate limit: no trusted client IP header on a production request (${limitType}). ` +
+          `Refusing. Ensure the reverse proxy sets x-forwarded-for / x-real-ip.`
+        );
+        return {
+          allowed: false,
+          count: config.maxRequests + 1,
+          remaining: 0,
+          resetTime: Date.now() + config.windowMs,
+          retryAfter: Math.ceil(config.windowMs / 1000),
+          limitType,
+          identifier: 'unidentified',
+        };
+      }
+      key = 'local-dev';
+    }
+
+    const result = rateLimiter.check(key, config.maxRequests, config.windowMs);
 
     return {
       ...result,
       limitType,
-      identifier: identifier.substring(0, 16) + '...' // Partial identifier for logging
+      identifier: key.substring(0, 16) + '...' // Partial identifier for logging
     };
   };
 }
