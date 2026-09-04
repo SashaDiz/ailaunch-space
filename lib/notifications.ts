@@ -2,6 +2,7 @@ import { getSupabaseAdmin } from '@/lib/supabase/client';
 import { notificationService } from '@/lib/email';
 import { db } from '@/lib/supabase/database';
 import { featuresConfig } from '@/config/features.config';
+import { MANDATORY_NOTIFICATIONS } from '@/lib/notification-types';
 
 /**
  * Comprehensive notification management service
@@ -63,14 +64,7 @@ class NotificationManager {
       // - Submission-related: received, approval, decline
       // - Launch-related: launch_week_reminder (users in active competition must be notified)
       // - Winner-related: competition_winners, winner_reminder, winner_backlink_reminder (winners must be notified)
-      const mandatoryNotifications = [
-        'account_creation',
-        'account_deletion', 
-        'submission_received',
-        'submission_approval',
-        'submission_decline',
-        'launch_week_reminder'       // Users in current launch week - cannot disable
-      ];
+      const mandatoryNotifications = MANDATORY_NOTIFICATIONS as readonly string[];
 
       // Check if user has this notification type enabled (skip check for mandatory notifications and newsletter-style notifications)
       if (!mandatoryNotifications.includes(emailType) && userId) {
@@ -272,14 +266,7 @@ class NotificationManager {
    * These notifications are critical and will always be sent regardless of user preferences
    */
   getMandatoryNotifications() {
-    return [
-      'account_creation',
-      'account_deletion',
-      'submission_received',
-      'submission_approval',
-      'submission_decline',
-      'launch_week_reminder'       // Users in current launch week - cannot disable
-    ];
+    return [...MANDATORY_NOTIFICATIONS];
   }
 
   /**

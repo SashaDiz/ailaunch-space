@@ -14,6 +14,7 @@ import {
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { siteConfig } from "@/config/site.config";
+import { MANDATORY_NOTIFICATIONS } from '@/lib/notification-types';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -89,30 +90,22 @@ export default function SettingsPage() {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('notification_preferences')
-        .eq('id', user.id)
-        .maybeSingle(); // Use maybeSingle() instead of single() to avoid errors when user doesn't exist
-
-      if (error) {
-        // Only log if it's a real error (not just "no rows found" which maybeSingle handles gracefully)
-        // PGRST116 is "no rows found" which is expected for new users
-        if (error.code !== 'PGRST116') {
-          console.warn("Could not fetch notification preferences, using defaults:", error.message || error);
-        }
-        // Keep default preferences that are already set in state
+      // Goes through the API rather than the browser client so the mandatory
+      // notifications are resolved by the same code that enforces them on save.
+      const res = await fetch('/api/user/notification-preferences');
+      if (!res.ok) {
+        // Keep the default preferences already set in state (a brand-new user
+        // has no row yet, which is expected).
         return;
       }
 
-      // If user exists and has preferences, merge with defaults to ensure all keys exist
-      if (data?.notification_preferences) {
+      const { preferences } = await res.json();
+      if (preferences) {
         setNotificationPreferences(prev => ({
           ...prev,
-          ...data.notification_preferences
+          ...preferences
         }));
       }
-      // If data is null (user doesn't exist in public.users yet), keep default preferences
     } catch (error) {
       // Handle unexpected errors silently - just use defaults
       console.warn("Failed to fetch notification preferences, using defaults");
@@ -124,34 +117,26 @@ export default function SettingsPage() {
 
     setIsUpdatingNotifications(true);
     try {
-      // Ensure mandatory notifications are always enabled
-      // These match the server-side mandatoryNotifications in notification-service.js
-      const mandatoryNotifications = [
-        'account_creation',
-        'account_deletion',
-        'submission_received',
-        'submission_approval',
-        'submission_decline',
-      ];
-
+      // The mandatory list is applied server-side; forcing it here too just
+      // keeps the optimistic UI honest until the response comes back.
       const updatedPreferences = { ...notificationPreferences };
-      
-      // Force mandatory notifications to be enabled
-      mandatoryNotifications.forEach(type => {
+      MANDATORY_NOTIFICATIONS.forEach(type => {
         updatedPreferences[type] = true;
       });
 
-      const { error } = await supabase
-        .from('users')
-        .update({ notification_preferences: updatedPreferences })
-        .eq('id', user.id);
+      const res = await fetch('/api/user/notification-preferences', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ preferences: updatedPreferences }),
+      });
 
-      if (error) {
-        throw error;
+      if (!res.ok) {
+        throw new Error('Failed to save notification preferences');
       }
 
       // Update local state to reflect the enforced preferences
-      setNotificationPreferences(updatedPreferences);
+      const { preferences: saved } = await res.json();
+      setNotificationPreferences(saved ?? updatedPreferences);
 
       toast.success("Notification preferences updated successfully");
     } catch (error) {
@@ -163,18 +148,8 @@ export default function SettingsPage() {
   };
 
   const toggleNotificationPreference = (key) => {
-    // Prevent toggling mandatory notifications
-    // These match the server-side mandatoryNotifications in notification-service.js
-    const mandatoryNotifications = [
-      'account_creation',
-      'account_deletion',
-      'submission_received',
-      'submission_approval',
-      'submission_decline',
-      'launch_week_reminder'       // Users in current launch week - cannot disable
-    ];
-
-    if (mandatoryNotifications.includes(key)) {
+    // Prevent toggling mandatory notifications. Same list the API enforces.
+    if ((MANDATORY_NOTIFICATIONS as readonly string[]).includes(key)) {
       toast.error("This notification cannot be disabled");
       return;
     }
