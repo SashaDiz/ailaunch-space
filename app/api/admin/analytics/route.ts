@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import { getSupabasePublishableKey, getSupabaseUrl } from '@/lib/supabase/env';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { checkIsAdmin } from '@/lib/supabase/auth';
 import { checkRateLimit, createRateLimitResponse } from '@/lib/rate-limit';
 import {
@@ -26,18 +24,7 @@ async function requireAdmin(request: Request): Promise<NextResponse | null> {
     return null;
   }
 
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    getSupabaseUrl(),
-    getSupabasePublishableKey(),
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-      },
-    }
-  );
+  const supabase = await createSupabaseServerClient();
 
   // getUser() validates the JWT server-side; getSession() only reads cookies.
   const { data: { user } } = await supabase.auth.getUser();

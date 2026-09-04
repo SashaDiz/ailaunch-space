@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import { getSupabasePublishableKey, getSupabaseUrl } from "@/lib/supabase/env";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { db } from "@/lib/supabase/database";
 import { featureGuard } from "@/lib/features";
 
@@ -21,12 +19,7 @@ export async function GET(request: Request) {
       });
     }
 
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      getSupabaseUrl()!,
-      getSupabasePublishableKey()!,
-      { cookies: { get(name: string) { return cookieStore.get(name)?.value; } } }
-    );
+    const supabase = await createSupabaseServerClient();
     const { data } = await supabase.auth.getUser();
     const user = data.user;
     if (!user) {
@@ -75,12 +68,7 @@ export async function POST(request: Request) {
       });
     }
 
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      getSupabaseUrl()!,
-      getSupabasePublishableKey()!,
-      { cookies: { get(name: string) { return cookieStore.get(name)?.value; } } }
-    );
+    const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -114,12 +102,7 @@ export async function DELETE(request: Request) {
     const guard = featureGuard("bookmarks");
     if (guard) return guard;
 
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      getSupabaseUrl()!,
-      getSupabasePublishableKey()!,
-      { cookies: { get(name: string) { return cookieStore.get(name)?.value; } } }
-    );
+    const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

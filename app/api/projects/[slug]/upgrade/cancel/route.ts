@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import { getSupabasePublishableKey, getSupabaseUrl } from "@/lib/supabase/env";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { db } from '@/lib/supabase/database';
 
 // POST /api/projects/[slug]/upgrade/cancel - Restore original schedule after payment cancellation
@@ -17,18 +15,7 @@ export async function POST(request, { params }) {
     }
 
     // Authenticate user via Supabase
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      getSupabaseUrl(),
-      getSupabasePublishableKey(),
-      {
-        cookies: {
-          get(name) {
-            return cookieStore.get(name)?.value;
-          },
-        },
-      }
-    );
+    const supabase = await createSupabaseServerClient();
 
     const {
       data: { user },

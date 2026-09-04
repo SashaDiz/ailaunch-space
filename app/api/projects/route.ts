@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { getSupabasePublishableKey, getSupabaseUrl } from "@/lib/supabase/env";
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getSupabaseAdmin } from '@/lib/supabase/client';
 import { db } from '@/lib/supabase/database';
 import { webhookEvents } from '@/lib/webhooks';
@@ -136,18 +135,7 @@ export async function GET(request) {
 
         // Attach user vote info if authenticated
         if (allProjects.length > 0) {
-          const cookieStore = await cookies();
-          const supabase = createServerClient(
-            getSupabaseUrl(),
-            getSupabasePublishableKey(),
-            {
-              cookies: {
-                get(name) {
-                  return cookieStore.get(name)?.value;
-                },
-              },
-            }
-          );
+          const supabase = await createSupabaseServerClient();
 
           const {
             data: { user },
@@ -354,18 +342,7 @@ export async function GET(request) {
     let userBookmarks: Record<string, boolean> = {};
 
     // Check user session properly with cookie-based auth
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      getSupabaseUrl(),
-      getSupabasePublishableKey(),
-      {
-        cookies: {
-          get(name) {
-            return cookieStore.get(name)?.value;
-          },
-        },
-      }
-    );
+    const supabase = await createSupabaseServerClient();
     // Use getUser() instead of getSession() for security
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -532,44 +509,13 @@ export async function POST(request) {
     }
 
     // Check authentication with proper cookie-based session
-    const cookieStore = await cookies();
-    
-    const supabase = createServerClient(
-      getSupabaseUrl(),
-      getSupabasePublishableKey(),
-      {
-        cookies: {
-          get(name) {
-            return cookieStore.get(name)?.value;
-          },
-          set(name, value, options) {
-            try {
-              cookieStore.set({ name, value, ...options });
-            } catch (error) {
-              // The `set` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
-          },
-          remove(name, options) {
-            try {
-              cookieStore.set({ name, value: '', ...options });
-            } catch (error) {
-              // The `delete` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
-          },
-        },
-      }
-    );
+    const supabase = await createSupabaseServerClient();
 
     // Use getUser() instead of getSession() for security
     const { data: { user }, error: sessionError } = await supabase.auth.getUser();
     
-    // Get all Supabase cookies for debugging
-    const allCookies = Array.from(cookieStore.getAll());
-    const sbCookies = allCookies.filter(c => c.name.includes('sb'));
+    // Count the Supabase cookies that arrived, for the auth-failure log below.
+    const sbCookies = (await cookies()).getAll().filter(c => c.name.includes('sb'));
     
     if (!user?.id) {
       console.error('Authentication failed - no user ID:', {
@@ -1223,19 +1169,7 @@ export async function POST(request) {
 export async function PUT(request) {
   try {
     // Check authentication with proper cookie-based session
-    const cookieStore = await cookies();
-    
-    const supabase = createServerClient(
-      getSupabaseUrl(),
-      getSupabasePublishableKey(),
-      {
-        cookies: {
-          get(name) {
-            return cookieStore.get(name)?.value;
-          },
-        },
-      }
-    );
+    const supabase = await createSupabaseServerClient();
 
     // Use getUser() instead of getSession() for security
     const { data: { user } } = await supabase.auth.getUser();
@@ -1382,19 +1316,7 @@ export async function PUT(request) {
 export async function DELETE(request) {
   try {
     // Check authentication with proper cookie-based session
-    const cookieStore = await cookies();
-    
-    const supabase = createServerClient(
-      getSupabaseUrl(),
-      getSupabasePublishableKey(),
-      {
-        cookies: {
-          get(name) {
-            return cookieStore.get(name)?.value;
-          },
-        },
-      }
-    );
+    const supabase = await createSupabaseServerClient();
 
     // Use getUser() instead of getSession() for security
     const { data: { user } } = await supabase.auth.getUser();

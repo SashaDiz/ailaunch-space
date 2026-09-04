@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import { getSupabasePublishableKey, getSupabaseUrl } from "@/lib/supabase/env";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/client";
 import { checkIsAdmin } from "@/lib/supabase/auth";
 import type { FullThemeConfig } from "@/config/themes.config";
@@ -48,18 +46,7 @@ export async function GET() {
 /** PUT /api/admin/theme — Save site theme (admin only) */
 export async function PUT(request: Request) {
   try {
-    const cookieStore = await cookies();
-    const supabaseAuth = createServerClient(
-      getSupabaseUrl()!,
-      getSupabasePublishableKey()!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value;
-          },
-        },
-      }
-    );
+    const supabaseAuth = await createSupabaseServerClient();
     const {
       data: { user },
     } = await supabaseAuth.auth.getUser();

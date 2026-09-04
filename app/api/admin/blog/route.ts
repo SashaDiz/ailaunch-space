@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import { getSupabasePublishableKey, getSupabaseUrl } from "@/lib/supabase/env";
 import { checkIsAdmin } from "@/lib/supabase/auth";
 import { db } from "@/lib/supabase/database";
 import { featureGuard } from "@/lib/features";
@@ -14,12 +12,7 @@ async function checkAdminAuth(request: Request) {
   const hasCronSecret = authHeader === `Bearer ${process.env.CRON_SECRET}`;
   if (hasCronSecret) return { session: { user: { id: "cron" } } };
 
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    getSupabaseUrl()!,
-    getSupabasePublishableKey()!,
-    { cookies: { get(name: string) { return cookieStore.get(name)?.value; } } }
-  );
+  const supabase = await createSupabaseServerClient();
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user?.id) return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };

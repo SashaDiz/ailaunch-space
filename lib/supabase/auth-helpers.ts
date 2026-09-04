@@ -1,8 +1,6 @@
 // Server-side auth helpers for Supabase
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { checkIsAdmin } from './auth';
-import { getSupabasePublishableKey, getSupabaseUrl } from './env';
 
 /**
  * Get the current user session from cookies (server-side)
@@ -13,19 +11,7 @@ import { getSupabasePublishableKey, getSupabaseUrl } from './env';
  */
 export async function getServerSession() {
   try {
-    const cookieStore = await cookies();
-
-    const supabase = createServerClient(
-      getSupabaseUrl()!,
-      getSupabasePublishableKey()!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-        },
-      }
-    );
+    const supabase = await createSupabaseServerClient();
 
     // getUser() validates the JWT server-side (unlike getSession which only reads cookies)
     const { data: { user }, error } = await supabase.auth.getUser();

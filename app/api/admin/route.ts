@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import { getSupabasePublishableKey, getSupabaseUrl } from "@/lib/supabase/env";
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getSupabaseAdmin } from '@/lib/supabase/client';
 import { checkIsAdmin } from '@/lib/supabase/auth';
 import { db } from '@/lib/supabase/database';
@@ -32,19 +30,7 @@ async function checkAdminAuth(request) {
   }
 
   // Fall back to Supabase session authentication (for browser access)
-  const cookieStore = await cookies();
-  
-  const supabase = createServerClient(
-    getSupabaseUrl(),
-    getSupabasePublishableKey(),
-    {
-      cookies: {
-        get(name) {
-          return cookieStore.get(name)?.value;
-        },
-      },
-    }
-  );
+  const supabase = await createSupabaseServerClient();
 
   // Use getUser() instead of getSession() for security
   const { data: { user } } = await supabase.auth.getUser();
