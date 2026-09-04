@@ -4,8 +4,12 @@ import { siteConfig } from "@/config/site.config";
  * Ahrefs Domain Rating (DR) — free public endpoint.
  *
  * `GET https://api.ahrefs.com/v3/public/domain-rating-free?target=<domain>`
- * requires no API key and costs 0 units. Ahrefs' license requires attribution,
- * so the badge that renders this value links back to Ahrefs.
+ * costs 0 API units but requires an APIv3 key (free to generate at
+ * Ahrefs → Account settings → API keys) sent as `Authorization: Bearer <key>`.
+ * Unauthenticated calls get a 403, which is why `AHREFS_API_KEY` must be set
+ * for the badge to show a live number instead of `FALLBACK_DR`.
+ * Ahrefs' license requires attribution, so the badge that renders this value
+ * links back to Ahrefs.
  *
  * Docs: https://docs.ahrefs.com/en/api/reference/public/get-domain-rating-free
  */
@@ -13,7 +17,7 @@ import { siteConfig } from "@/config/site.config";
 const AHREFS_DR_ENDPOINT = "https://api.ahrefs.com/v3/public/domain-rating-free";
 
 /** Last-known DR — shown if the live fetch fails so the badge always renders. */
-const FALLBACK_DR = 21;
+const FALLBACK_DR = 24;
 
 /** Cache the value for 24h — DR moves slowly and the endpoint is rate-shared. */
 const REVALIDATE_SECONDS = 60 * 60 * 24;
@@ -65,11 +69,19 @@ export function ahrefsCheckerUrl(target: string = SITE_DOMAIN): string {
 export async function getDomainRating(
   target: string = SITE_DOMAIN
 ): Promise<DomainRating> {
+  const apiKey = process.env.AHREFS_API_KEY;
+
+  // Without a key the endpoint always 403s — skip the round-trip entirely.
+  if (!apiKey) {
+    return { dr: FALLBACK_DR, target, live: false };
+  }
+
   try {
     const url = `${AHREFS_DR_ENDPOINT}?target=${encodeURIComponent(target)}`;
     const res = await fetch(url, {
       headers: {
         Accept: "application/json",
+        Authorization: `Bearer ${apiKey}`,
         "User-Agent": `${siteConfig.name} (+${siteConfig.url})`,
       },
       next: { revalidate: REVALIDATE_SECONDS, tags: ["domain-rating"] },
