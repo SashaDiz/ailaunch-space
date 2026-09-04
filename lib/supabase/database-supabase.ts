@@ -239,6 +239,33 @@ export class SupabaseDatabaseManager {
     return { insertedId: data.id };
   }
 
+  /**
+   * Insert, or update the row that collides on `conflictKeys`.
+   *
+   * Not a PostgREST convenience: every SQL engine has INSERT … ON CONFLICT or
+   * MERGE, and Mongo has updateOne({upsert:true}). Read-or-create on a settings
+   * row is one of the most common writes in the admin and had no expression
+   * here, so call sites reached past this layer to a raw Supabase client.
+   */
+  async upsert(collectionName, conflictKeys, document) {
+    const table = this.getTableName(collectionName);
+    const client = this.getClient();
+
+    const { _id, created_at, updated_at, createdAt, updatedAt, ...cleanDoc } = document;
+
+    const { data, error } = await client
+      .from(table)
+      .upsert(cleanDoc, { onConflict: conflictKeys.join(',') })
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Upsert failed: ${error.message}`);
+    }
+
+    return { upsertedId: data.id };
+  }
+
   // INSERT MANY
   async insertMany(collectionName, documents) {
     const table = this.getTableName(collectionName);
@@ -354,6 +381,20 @@ export class SupabaseDatabaseManager {
     return data || [];
   }
 
+  /**
+   * `$unset` clears a field. Mongo removes the key; a SQL column cannot be
+   * removed, so it is set to NULL — which is what every caller here means.
+   *
+   * It was accepted and silently dropped, so cancelling an upgrade, the user
+   * payment-reconciliation path and the link-type manager all believed they
+   * were clearing their pending/original columns and were not.
+   */
+  applyUnset(updateData, update) {
+    if (!update.$unset) return updateData;
+    for (const field of Object.keys(update.$unset)) updateData[field] = null;
+    return updateData;
+  }
+
   // UPDATE ONE
   async updateOne(collectionName, filter, update, options: Record<string, any> = {}) {
     const table = this.getTableName(collectionName);
@@ -383,6 +424,7 @@ export class SupabaseDatabaseManager {
       if (update.$set) {
         updateData = { ...updateData, ...update.$set };
       }
+      updateData = this.applyUnset(updateData, update);
 
       // Apply increments with GREATEST-like logic to prevent negative values
       for (const [field, incrementValue] of Object.entries(update.$inc)) {
@@ -417,6 +459,7 @@ export class SupabaseDatabaseManager {
     if (update.$set) {
       updateData = { ...updateData, ...update.$set };
     }
+    updateData = this.applyUnset(updateData, update);
 
     // Remove updated_at if it exists (trigger will handle it)
     delete updateData.updatedAt;
@@ -445,17 +488,44 @@ export class SupabaseDatabaseManager {
     return await this.updateOne(collectionName, filter, update, options);
   }
 
-  // DELETE ONE
+  /**
+   * Delete at most one row.
+   *
+   * It used to delete every match — the filter went straight into a DELETE, so
+   * the name was a suggestion. Every current call site filters on a unique key,
+   * so nothing was ever over-deleted, but "deleteOne" has to mean what it says
+   * before somebody writes the call site that does not.
+   *
+   * Two steps because PostgREST has no LIMIT on DELETE: find the row, delete it
+   * by id. The lookup goes through the client rather than findOne() so that a
+   * transport error throws instead of reading as "nothing to delete".
+   */
   async deleteOne(collectionName, filter) {
     const table = this.getTableName(collectionName);
     const client = this.getClient();
 
-    let supabaseQuery = client.from(table).delete();
+    let lookup = client.from(table).select('id').limit(2);
+    lookup = this.applyFilters(lookup, filter);
 
-    // Apply filters
-    supabaseQuery = this.applyFilters(supabaseQuery, filter);
+    const { data: matches, error: lookupError } = await lookup;
+    if (lookupError) {
+      throw new Error(`Delete failed: ${lookupError.message}`);
+    }
+    if (!matches || matches.length === 0) {
+      return { deletedCount: 0 };
+    }
+    if (matches.length > 1 && process.env.NODE_ENV !== 'production') {
+      console.warn(
+        `[deleteOne] "${collectionName}" filter matched more than one row; ` +
+        `deleting the first. Use deleteMany if that is what you meant.`,
+      );
+    }
 
-    const { data, error } = await supabaseQuery.select();
+    const { data, error } = await client
+      .from(table)
+      .delete()
+      .eq('id', matches[0].id)
+      .select();
 
     if (error) {
       throw new Error(`Delete failed: ${error.message}`);
@@ -464,9 +534,21 @@ export class SupabaseDatabaseManager {
     return { deletedCount: data ? data.length : 0 };
   }
 
-  // DELETE MANY
+  /** Delete every match. Unlike deleteOne, the filter goes straight through. */
   async deleteMany(collectionName, filter) {
-    return await this.deleteOne(collectionName, filter);
+    const table = this.getTableName(collectionName);
+    const client = this.getClient();
+
+    let supabaseQuery = client.from(table).delete();
+    supabaseQuery = this.applyFilters(supabaseQuery, filter);
+
+    const { data, error } = await supabaseQuery.select();
+
+    if (error) {
+      throw new Error(`Delete many failed: ${error.message}`);
+    }
+
+    return { deletedCount: data ? data.length : 0 };
   }
 
   // COUNT
