@@ -17,6 +17,8 @@ pnpm dev          # Dev server (webpack, 4GB heap)
 pnpm build        # Production build (webpack, 4GB heap)
 pnpm start        # Start production server
 pnpm lint         # ESLint on .js/.jsx/.ts/.tsx (typescript-eslint + react-hooks)
+pnpm typecheck    # next typegen && tsc --noEmit (typegen writes the route types tsc needs)
+pnpm test         # node --test on tests/*.test.mjs
 pnpm db:test      # Test Supabase connection
 pnpm db:migrate   # Run Supabase migration script
 pnpm migrate:csv  # Import data from CSV files
@@ -50,10 +52,14 @@ import type { User } from '@/types';
 ```
 config/           # Centralized config (site, features, plans, themes, analytics, email, payments, directory, advertising, marketing)
 lib/              # Business logic and utilities
-  supabase/       # client.ts, auth.ts, auth-helpers.ts, database.ts, database-supabase.ts
+  supabase/       # client.ts, server.ts, auth.ts, auth-helpers.ts, database.ts, database-supabase.ts
   payments/       # stripe.ts
   validations/    # schemas.ts (Zod — source of truth for types)
   email.ts, notifications.ts, webhooks.ts, rate-limit.ts, seo.ts, link-type-manager.ts
+  safe-fetch.ts   # SSRF-hardened fetch for user-supplied URLs — use instead of fetch()
+  safe-redirect.ts # Open-redirect guard for ?callbackUrl= / ?next= values
+  seo-client.ts   # jsonLdSafe() — client-safe half of seo.ts (which pulls node:fs)
+  notification-types.ts # MANDATORY_NOTIFICATIONS — importable from client and server
   ai.ts           # AI utilities (description generation, category suggestions) — requires `ai` flag
   analytics.ts    # Enhanced analytics helpers — requires `analytics` flag
   features.ts     # Feature flag guard for API routes
@@ -198,11 +204,27 @@ await requireAuth();       // Returns redirect object if not authenticated
 
 **Admin access note:** The schema has two admin mechanisms: `is_admin BOOLEAN` column (checked by `isAdmin()` helper) and `role TEXT` column (`'user' | 'admin' | 'moderator'`). RLS policies use `role = 'admin'` while the `isAdmin()` helper checks `is_admin = true`. Keep both in sync when granting admin access.
 
-**Supabase clients** (`lib/supabase/client.ts`):
+**Supabase clients** — three, and which one you want is decided by who the query runs as:
 ```ts
-import { getSupabaseClient } from '@/lib/supabase/client';  // Browser (publishable key, respects RLS)
-import { getSupabaseAdmin } from '@/lib/supabase/client';   // Server (secret key, bypasses RLS)
+import { getSupabaseClient } from '@/lib/supabase/client';           // Browser (publishable key, respects RLS)
+import { getSupabaseAdmin } from '@/lib/supabase/client';            // Server (secret key, bypasses RLS)
+import { createSupabaseServerClient } from '@/lib/supabase/server';  // Server, as the signed-in user (respects RLS)
 ```
+
+**Never hand-roll the cookie adapter.** In Server Components, Route Handlers and
+Server Actions, always `await createSupabaseServerClient()`. Writing
+`createServerClient(...)` inline is how ~30 call sites ended up on the shape
+`@supabase/ssr` dropped in 0.4.0:
+
+```ts
+cookies: { get(name) { return cookieStore.get(name)?.value } }   // ❌ unsupported
+cookies: { getAll() {...}, setAll(cookiesToSet) {...} }          // ✅ the only supported shape
+```
+
+A `get`-only adapter can read the access token but has nowhere to put a refreshed
+one, so any rotation inside a route handler is discarded. `middleware.ts` is the
+one legitimate exception — it needs request/response-scoped cookies and keeps its
+own adapter.
 
 Env vars are read via `lib/supabase/env.ts` — the helpers
 (`getSupabasePublishableKey`, `getSupabaseSecretKey`) prefer the new names
@@ -275,13 +297,25 @@ Endpoints under `app/api/cron/` are secured with `Authorization: Bearer ${CRON_S
 
 Input sanitization is handled by `sanitizeString()` in `lib/validations/schemas.ts` — it strips `<>`, `javascript:`, `on*=`, and `data:` URIs. URL validation blocks `javascript:` and `data:` protocols. Always sanitize user-provided strings before storing.
 
-`next.config.ts` applies security headers globally: `X-Frame-Options`, `X-Content-Type-Options`, `Content-Security-Policy`, `Strict-Transport-Security`, `X-XSS-Protection`, `Referrer-Policy`, `Permissions-Policy`.
+`next.config.ts` applies security headers globally: `X-Frame-Options`, `X-Content-Type-Options`, `Content-Security-Policy`, `Strict-Transport-Security`, `X-XSS-Protection`, `Referrer-Policy`, `Permissions-Policy`. The CSP sets `base-uri 'self'`, `form-action 'self'` and `object-src 'none'`; `connect-src` stays broad (`https:`) on purpose, because the app talks to Supabase, DataFast, PostHog, Dodo and S3 and an enumerated list fails silently in the browser the moment one host is missed. `script-src` still needs `'unsafe-inline'` for the Next.js bootstrap — removing it requires a per-request nonce from middleware, which forces every page to render dynamically (no static optimization, no ISR, no PPR).
+
+**Never `fetch()` a URL that came from a user.** Use `safeFetchText()` from `lib/safe-fetch.ts`: a scheme check does not stop `http://169.254.169.254/…` (cloud metadata) or `http://127.0.0.1:6379`, and a public host can redirect to either. It resolves DNS, refuses private/loopback/link-local/reserved ranges, follows redirects manually so every hop is re-checked, and caps time and bytes. Wired into `lib/badge-verifier.ts` and `lib/ai.ts`.
+
+**Never redirect to a raw query parameter.** `safeRedirectPath()` in `lib/safe-redirect.ts` allows only same-origin, path-relative targets — it rejects `//host`, `/\\host` and control characters. Used by `app/auth/callback` and the sign-in page.
+
+**Never `JSON.stringify()` into `dangerouslySetInnerHTML`.** Use `jsonLdSafe()` from `lib/seo-client.ts` for JSON-LD: a `</script>` sequence inside a user-supplied name or description closes the tag early and the rest is parsed as HTML. `escapeXml()` in `lib/seo.ts` is the equivalent for sitemap/feed output (null-safe, strips control characters illegal in XML 1.0).
+
+**Rate limiting keys must not be caller-rotatable.** `getClientIdentifier()` in `lib/rate-limit.ts` reads only headers the platform sets (`x-vercel-forwarded-for`, `cf-connecting-ip`, the right-most `x-forwarded-for` hop, `x-real-ip`) and returns null when none is trustworthy — in production that fails closed. Never fold the User-Agent or any other client-controlled value into the key.
+
+**Route handlers must not echo `error.message` to the client.** Log it server-side and return `details: undefined`; the message routinely leaks table names, column names and connection strings.
 
 ### Next.js config notes
 
 - Images are `unoptimized: true` with remote patterns for Google, SEObot, AWS, Unsplash, Logo.dev, localhost
 - `/projects` and `/projects/:path*` permanently redirect to `/`
-- `serverExternalPackages` includes `mongodb` (legacy artifact), `@supabase/supabase-js`, `@supabase/ssr`, `@react-email/render`, `resend`
+- `serverExternalPackages` includes `@supabase/supabase-js`, `@supabase/ssr`, `@react-email/render`, `resend`
+- Webpack `optimization` overrides (deterministic module/chunk ids, splitChunks) are gated behind `if (!dev)` — applying them in dev overrides Next.js's HMR-aware chunking and produces stale route chunks (`Cannot read properties of undefined (reading 'call')`, links needing two clicks)
+- `package.json` has a `pnpm.overrides` block pinning transitive dependencies to their patched versions. Every range is bounded to one major (`">=3.15.2 <4"`, not `">=3.15.2"`) — an open range lets pnpm resolve across majors, which is how gray-matter's `js-yaml@3` briefly became 4.1.0. Re-check with `pnpm audit` after changing dependencies.
 - Config is wrapped in `withNextIntl()` and `withBundleAnalyzer()` (enable with `ANALYZE=true`)
 
 ## Quickstart
@@ -299,7 +333,7 @@ Copy `.env.example` to `.env.local`. See `.env.example` for full list with descr
 
 **Required:** `NEXT_PUBLIC_APP_URL`, Supabase credentials (URL, publishable key, secret key — legacy anon / service-role keys are still accepted), S3 storage config, Stripe keys, Resend API key, `CRON_SECRET`.
 
-**Optional:** Google Analytics (`NEXT_PUBLIC_GA_MEASUREMENT_ID`), PostHog (`NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`), DataFast (`DATAFAST_API_KEY` — required for the `/admin/analytics` dashboard; `NEXT_PUBLIC_DATAFAST_WEBSITE_ID`, `NEXT_PUBLIC_DATAFAST_DOMAIN` override the tracking-script defaults), SEObot (`SEOBOT_API_KEY`), Discord webhook (`DISCORD_WEBHOOK_URL`), `SUPABASE_PROJECT_ID` (for `pnpm supabase:types`), promotion Stripe price IDs (`STRIPE_PRICE_ID_PROMO_BANNER`, `STRIPE_PRICE_ID_PROMO_CATALOG`, `STRIPE_PRICE_ID_PROMO_DETAIL`), ListingBott link (`NEXT_PUBLIC_LISTINGBOTT_URL`), Logo.dev (`NEXT_PUBLIC_LOGO_DEV_TOKEN`), AI config (`AI_PROVIDER`, `AI_MODEL`, `AI_API_KEY`), bundle analysis (`ANALYZE=true`).
+**Optional:** Google Analytics (`NEXT_PUBLIC_GA_MEASUREMENT_ID`), PostHog (`NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`), DataFast (`DATAFAST_API_KEY` — required for the `/admin/analytics` dashboard; `NEXT_PUBLIC_DATAFAST_WEBSITE_ID`, `NEXT_PUBLIC_DATAFAST_DOMAIN` override the tracking-script defaults), SEObot (`SEOBOT_API_KEY`), Ahrefs (`AHREFS_API_KEY` — free APIv3 key powering the live Domain Rating badge), Discord webhook (`DISCORD_WEBHOOK_URL`), `SUPABASE_PROJECT_ID` (for `pnpm supabase:types`), promotion Stripe price IDs (`STRIPE_PRICE_ID_PROMO_BANNER`, `STRIPE_PRICE_ID_PROMO_CATALOG`, `STRIPE_PRICE_ID_PROMO_DETAIL`), ListingBott link (`NEXT_PUBLIC_LISTINGBOTT_URL`), Logo.dev (`NEXT_PUBLIC_LOGO_DEV_TOKEN`), AI config (`AI_PROVIDER`, `AI_MODEL`, `AI_API_KEY`), bundle analysis (`ANALYZE=true`).
 
 ## Known Limitations
 
@@ -307,7 +341,7 @@ Known gaps AI sessions should be aware of — not active bugs, but technical deb
 
 - **`tsconfig.json` has `strict: false`.** Enabling strict mode cascades into hundreds of implicit-any / null errors across the codebase. Needs a dedicated per-error-triage session. `@typescript-eslint/no-explicit-any` is currently off for the same reason.
 - **`app/api/admin/route.ts` is a ~1600-line monolith.** Every admin action (projects, users, link types, Stripe recovery, promotions, sponsors, analytics) lives in one file. Splitting into `app/api/admin/{projects,users,payments,...}/route.ts` is a multi-hour refactor with real regression risk — ask before attempting.
-- **No test framework.** There is no `vitest`/`jest` config and no `*.test.*`/`*.spec.*` files. When making risky changes (payments, auth, webhooks), verify via `pnpm build` + manual end-to-end and flag to the user that test coverage is absent.
+- **Test coverage is minimal.** `pnpm test` runs `node --test` over `tests/*.test.mjs` — no vitest/jest, no transpiler. Tests import `.ts` sources directly; Node strips the type annotations natively (`process.features.typescript === 'strip'`), which only works for modules whose imports are node builtins or nothing at all. Today that covers `lib/safe-redirect.ts` and `isBlockedIp()` from `lib/safe-fetch.ts`. Everything else — payments, auth, webhooks, the db layer — has no tests; verify those via `pnpm typecheck` + `pnpm build` + manual end-to-end, and say so.
 - **Two admin mechanisms in the schema.** Both `is_admin BOOLEAN` and `role TEXT` exist in the `users` table. The canonical check is `checkIsAdmin` in `@/lib/supabase/auth` (matches either). When granting admin, keep both in sync so RLS policies (which use `role = 'admin'`) and the helper agree.
 
 ## AI tooling

@@ -8,9 +8,13 @@ export default [
   {
     ignores: [
       "dist",
-      ".next/**",
+      "**/.next/**",
       ".vercel/**",
-      "node_modules/**",
+      "**/node_modules/**",
+      // Claude Code / agent worktrees are full checkouts of this repo. Linting
+      // them lints the codebase N times over and reports errors that aren't
+      // ours to fix.
+      ".claude/worktrees/**",
       "temp-test-files/**/*",
       "**/*.test.tmp",
       "**/*.spec.tmp",
