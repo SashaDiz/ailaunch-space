@@ -10,14 +10,18 @@ export const directoryConfig: DirectoryConfig = {
   /** Default number of projects per page */
   pageSize: 40,
 
-  /** Sort options shown in the UI and used by the API */
+  /**
+   * Sort options shown in the UI and used by the API.
+   * `premium_badge` is always the leading key so paid listings sit at the top
+   * of every ordering (and every page — the sort is applied in the DB).
+   */
   sortOptions: [
-    { value: 'newest', label: 'Latest', sort: { created_at: -1, premium_badge: -1 } },
-    { value: 'popular', label: 'Most Popular', sort: { upvotes: -1, premium_badge: -1, created_at: -1 } },
-    { value: 'top_rated', label: 'Top Rated', sort: { average_rating: -1, ratings_count: -1, created_at: -1 } },
-    { value: 'views', label: 'Most Views', sort: { views: -1, premium_badge: -1, upvotes: -1 } },
-    { value: 'name_asc', label: 'Name (A to Z)', sort: { name: 1, created_at: -1 } },
-    { value: 'name_desc', label: 'Name (Z to A)', sort: { name: -1, created_at: -1 } },
+    { value: 'newest', label: 'Latest', sort: { premium_badge: -1, created_at: -1 } },
+    { value: 'popular', label: 'Most Popular', sort: { premium_badge: -1, upvotes: -1, created_at: -1 } },
+    { value: 'top_rated', label: 'Top Rated', sort: { premium_badge: -1, average_rating: -1, ratings_count: -1, created_at: -1 } },
+    { value: 'views', label: 'Most Views', sort: { premium_badge: -1, views: -1, upvotes: -1 } },
+    { value: 'name_asc', label: 'Name (A to Z)', sort: { premium_badge: -1, name: 1, created_at: -1 } },
+    { value: 'name_desc', label: 'Name (Z to A)', sort: { premium_badge: -1, name: -1, created_at: -1 } },
   ],
 
   /** Default sort key (must match a value in sortOptions) */
