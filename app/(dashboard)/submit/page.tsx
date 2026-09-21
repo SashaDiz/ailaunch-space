@@ -127,7 +127,7 @@ const PLANS = {
     description: "Free listing in exchange for our badge",
     icon: Globe,
     features: [
-      { text: "Free listing with a dofollow backlink — install our badge, we verify automatically", icon: LinkIcon },
+      { text: "Free listing with a dofollow backlink — keep our badge on your website to retain both", icon: LinkIcon },
       { text: "Dofollow link grows your Domain Rating once your badge is verified", icon: TrendingUp },
       { text: "Admin review (24–48h)", icon: Clock },
       { text: "Listed in the directory alongside paid projects", icon: Megaphone },
@@ -2212,6 +2212,11 @@ function SubmitPageContent() {
                   </h3>
                   <p className="text-sm text-muted-foreground">
                     Standard listings get a free listing with a link back to your site in exchange for displaying our badge on your website. Paste the code below on your homepage, then click Verify. Submit unlocks once verification passes.
+                  </p>
+                  <p className="mt-3 text-sm font-medium text-foreground">
+                    Keep the badge on the verified page of your website after submission to retain your listing and dofollow backlink.
+                    We check weekly. If the badge is removed, we will email you and give you 7 days to
+                    restore it or upgrade to Premium before your listing is removed and the dofollow link is revoked.
                   </p>
                 </div>
                 <FeaturedBadgeEmbed

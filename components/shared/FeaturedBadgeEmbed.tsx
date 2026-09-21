@@ -247,10 +247,16 @@ export default function FeaturedBadgeEmbed({
       <div className="mt-6 p-4 bg-foreground/5 border border-foreground/20 rounded-xl">
         <p className="text-sm text-foreground font-medium">
           <strong>Why is this required?</strong> Standard listings are free in exchange for
-          displaying our badge with a link back to {PUBLIC_SITE_NAME}. We verify the badge
-          automatically before your project goes live, and re-check periodically. For the badge to
-          verify, make sure the link does NOT have{" "}
+          keeping our badge on your website with a link back to {PUBLIC_SITE_NAME}.
+          The badge must remain on the verified page to keep your listing and dofollow backlink.
+          We re-check weekly. Make sure the link does NOT have{" "}
           <code className="bg-muted px-1 rounded">rel="nofollow"</code>.
+        </p>
+        <p className="mt-3 text-sm text-foreground">
+          If the badge is removed or its link becomes nofollow, we will email you and give you
+          7 days to restore it or upgrade to Premium. If it is still missing at the next weekly
+          check after the deadline, your listing will be removed and its dofollow link revoked.
+          Premium listings do not require a badge.
         </p>
       </div>
     </div>

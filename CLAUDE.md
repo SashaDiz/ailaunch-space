@@ -291,7 +291,9 @@ Traffic is tracked by [DataFast](https://datafa.st) — the client script is ren
 
 ### Cron jobs
 
-Endpoints under `app/api/cron/` are secured with `Authorization: Bearer ${CRON_SECRET}` header. Currently only `account-notifications` exists in the filesystem. Cron schedules for `competitions` and `winner-reminders` are defined in `vercel.json` but the route handlers are not yet implemented.
+Endpoints under `app/api/cron/` are secured with `Authorization: Bearer ${CRON_SECRET}` header. `vercel.json` schedules `account-notifications` hourly and `reverify-badges` every Monday at 04:00 UTC.
+
+Badge re-verification applies to live Standard listings with `dofollow_reason = 'verified_badge'`. `lib/badge-reverification.ts` sends one service email when a successfully fetched page no longer contains a qualifying link, leaves the listing active for at least seven days, then archives it and revokes dofollow on the next weekly check after the deadline if the link is still missing. A restored badge clears the warning; Premium/manual grants are exempt. Network, HTTP and URL errors are inconclusive and never trigger penalties. Email failures do not start the grace period. Database leases prevent overlapping checks, and conditional updates protect concurrent Premium upgrades. The cron paginates by ID, reports incomplete/error runs with HTTP 503, and spaces email sends. Apply `supabase/migrations/20260921_badge_warning_grace.sql` before deploying; the workflow requires `CRON_SECRET` and working Resend credentials. No production emails should be sent during local verification.
 
 ### Security patterns
 

@@ -98,6 +98,16 @@ export const rateLimits = {
     windowMs: 60 * 60 * 1000, // 1 hour
   },
 
+  // Badge checks have independent short-term and hourly limits.
+  badgeMinute: {
+    maxRequests: 5,
+    windowMs: 60 * 1000,
+  },
+  badgeHour: {
+    maxRequests: 30,
+    windowMs: 60 * 60 * 1000,
+  },
+
   // File uploads (logo + up to 5 screenshots per submission)
   upload: {
     maxRequests: 20,
@@ -206,7 +216,7 @@ export function rateLimit(limitType = 'general') {
       key = 'local-dev';
     }
 
-    const result = rateLimiter.check(key, config.maxRequests, config.windowMs);
+    const result = rateLimiter.check(`${limitType}:${key}`, config.maxRequests, config.windowMs);
 
     return {
       ...result,
@@ -224,6 +234,18 @@ export function checkRateLimit(request, limitType = 'general') {
 
 // Create rate limit response
 export function createRateLimitResponse(rateLimitResult) {
+  const seconds = Math.max(1, Math.ceil(rateLimitResult.retryAfter || 1));
+  const minutes = Math.ceil(seconds / 60);
+  const wait = seconds < 60
+    ? `${seconds} second${seconds === 1 ? '' : 's'}`
+    : `${minutes} minute${minutes === 1 ? '' : 's'}`;
+  const badgeLimit = rateLimitResult.limitType === 'badgeMinute'
+    ? '5 checks per minute'
+    : rateLimitResult.limitType === 'badgeHour' ? '30 checks per hour' : null;
+  const message = badgeLimit
+    ? `Badge verification limit reached (${badgeLimit}). Please try again in ${wait}.`
+    : `Rate limit exceeded. Try again in ${rateLimitResult.retryAfter} seconds.`;
+
   const headers = {
     'X-RateLimit-Limit': rateLimitResult.allowed ? '200' : '0',
     'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
@@ -240,7 +262,7 @@ export function createRateLimitResponse(rateLimitResult) {
     body: JSON.stringify({
       error: 'Too many requests',
       code: 'RATE_LIMIT_EXCEEDED',
-      message: `Rate limit exceeded. Try again in ${rateLimitResult.retryAfter} seconds.`,
+      message,
       details: {
         limit: rateLimitResult.limitType,
         retryAfter: rateLimitResult.retryAfter,

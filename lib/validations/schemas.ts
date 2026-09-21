@@ -83,6 +83,8 @@ export const AppSchema = z.object({
   plan_price: z.number().default(0), // $0 for standard, $15 for premium
   backlink_url: z.string().url().optional(),
   backlink_verified: z.boolean().default(false),
+  backlink_warning_sent_at: z.string().datetime().nullable().optional(),
+  backlink_check_claimed_at: z.string().datetime().nullable().optional(),
   
   // Approval system (as per CLAUDE.md spec)
   approved: z.boolean().default(false),
@@ -99,7 +101,7 @@ export const AppSchema = z.object({
   //   - both plans can earn badges for top 3 ranking
   dofollow_status: z.boolean().default(false),
   link_type: z.enum(["nofollow", "dofollow"]).default("nofollow"),
-  dofollow_reason: z.enum(["weekly_winner", "manual_upgrade", "premium_plan"]).optional(),
+  dofollow_reason: z.enum(["weekly_winner", "manual_upgrade", "premium_plan", "verified_badge"]).optional(),
   dofollow_awarded_at: z.date().optional(), // When dofollow was granted
   
   // Premium features

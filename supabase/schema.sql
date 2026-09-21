@@ -191,6 +191,8 @@ CREATE TABLE IF NOT EXISTS public.apps (
   backlink_verified BOOLEAN DEFAULT false,
   backlink_verified_at TIMESTAMP WITH TIME ZONE,
   backlink_last_checked_at TIMESTAMP WITH TIME ZONE,
+  backlink_warning_sent_at TIMESTAMP WITH TIME ZONE,
+  backlink_check_claimed_at TIMESTAMP WITH TIME ZONE,
 
   -- Approval system
   approved BOOLEAN DEFAULT false,

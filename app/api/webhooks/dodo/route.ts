@@ -186,6 +186,14 @@ async function processPremiumSubmissionOrder(data: DodoPaymentData): Promise<voi
         is_draft: false,
         status: project.status === "live" ? "live" : "pending",
         upgrade_pending: false,
+        ...(planType === "premium" ? {
+          link_type: "dofollow",
+          dofollow_status: true,
+          dofollow_reason: "premium_plan",
+          dofollow_awarded_at: new Date(),
+          premium_badge: true,
+          backlink_warning_sent_at: null,
+        } : {}),
         updated_at: new Date(),
       },
     }

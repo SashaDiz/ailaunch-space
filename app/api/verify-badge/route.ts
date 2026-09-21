@@ -17,8 +17,16 @@ export async function POST(request: Request) {
   const guard = featureGuard('badges');
   if (guard) return guard;
 
-  const rateLimit = await checkRateLimit(request, 'submission');
-  if (!rateLimit.allowed) return createRateLimitResponse(rateLimit);
+  for (const limitType of ['badgeMinute', 'badgeHour']) {
+    const rateLimit = await checkRateLimit(request, limitType);
+    if (!rateLimit.allowed) {
+      const limited = createRateLimitResponse(rateLimit);
+      return new Response(limited.body, {
+        status: limited.status,
+        headers: { ...limited.headers, 'Content-Type': 'application/json' },
+      });
+    }
+  }
 
   let body: { websiteUrl?: string; projectId?: string };
   try {

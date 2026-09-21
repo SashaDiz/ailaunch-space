@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 import { siteConfig } from '@/config/site.config';
 import { emailConfig, getFromAddress as getConfigFromAddress } from '@/config/email.config';
+import { badgeWarningHtml } from '@/lib/badge-warning-email';
 
 // Lazy initialization to avoid build-time errors
 let resend = null;
@@ -86,6 +87,10 @@ const getPromotionsHtml = (data: any) => {
 
 // Email templates
 export const emailTemplates = {
+  badgeRemoved: {
+    subject: (projectName: string) => `Action required: restore the badge for ${projectName}`,
+    html: (data: { projectName: string; deadline: string }) => badgeWarningHtml(data, siteConfig),
+  },
   // Account notifications
   accountCreation: {
     subject: () => `Welcome to ${siteConfig.name}! 🎉`,
@@ -1666,7 +1671,7 @@ export const sendEmail = async (to: string | string[], template: string, data: a
         },
         ...(options.tags || [])
       ]
-    });
+    }, options.idempotencyKey ? { idempotencyKey: options.idempotencyKey } : undefined);
 
     // Check for errors in response
     if (result.error) {

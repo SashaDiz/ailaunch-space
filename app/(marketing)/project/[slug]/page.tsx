@@ -62,7 +62,7 @@ export default async function ProjectDetailPage({ params }) {
   const { slug } = await params;
   const project = await db.findOne("apps", { slug });
 
-  if (!project) {
+  if (!project || (project.status !== "live" && project.status !== "past")) {
     notFound();
   }
 
