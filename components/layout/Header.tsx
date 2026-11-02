@@ -177,7 +177,8 @@ export function Header() {
 
   return (
     <header className={cn(
-      "sticky top-0 z-50 transition-all duration-300",
+      // Sticks below the mobile ad ticker when one is showing.
+      "sticky top-[var(--ad-ticker-offset,0px)] z-50 transition-all duration-300",
       isClient && isScrolled
         ? 'bg-background/80 backdrop-blur-md'
         : 'bg-transparent backdrop-blur-none'

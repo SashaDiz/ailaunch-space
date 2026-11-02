@@ -24,7 +24,8 @@ export function BuildWithBadge() {
 
   return (
     <div
-      className="fixed bottom-5 right-5 z-50 max-md:bottom-4 max-md:right-4"
+      // Below 2xl it clears the bottom ad ticker (2.5rem) with a 1rem gap.
+      className="fixed bottom-5 right-5 z-50 max-2xl:bottom-14 max-md:right-4"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >

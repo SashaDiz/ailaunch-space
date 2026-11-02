@@ -1,13 +1,21 @@
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { AdBanner } from '@/components/marketing/AdBanner';
+import { AdRails, AdTickers } from '@/components/marketing/AdRails';
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-transparent flex flex-col relative z-10">
+    <div className="ad-ticker-space min-h-screen bg-transparent flex flex-col relative z-10">
+      {/* Side ad rails on wide screens, top/bottom tickers below that — all
+          fixed, so kept outside the card: its backdrop-blur would capture
+          `fixed`. `ad-ticker-space` reserves room for the tickers. */}
+      <AdRails />
+      <AdTickers />
       {/* Outer wrapper adds breathing room around the card so the
-          animated shader is visible at the edges of the viewport. */}
-      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 flex-1 flex flex-col">
+          animated shader is visible at the edges of the viewport.
+          `main-frame` narrows it on wide screens so the side ad rails fit
+          in the gutters beside it. */}
+      <div className="main-frame mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 flex-1 flex flex-col">
         {/* Inner card — semi-transparent + blur so content stays
             readable on top of the shader. Header + main + Footer all
             live inside the card. */}
