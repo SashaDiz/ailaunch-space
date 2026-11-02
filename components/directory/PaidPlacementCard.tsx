@@ -6,7 +6,7 @@ import { ExternalLink } from "lucide-react";
 import { siteConfig } from "@/config/site.config";
 import { getLogoDevUrl } from "@/lib/utils";
 
-type ProjectLike = {
+export type ProjectLike = {
   id: string;
   name: string;
   slug: string;
@@ -20,7 +20,7 @@ type ProjectLike = {
   cta_text?: string | null;
 };
 
-function getVisitUrl(project: ProjectLike): { url: string; rel: string } {
+export function getVisitUrl(project: ProjectLike): { url: string; rel: string } {
   if (!project.website_url || typeof project.website_url !== "string") {
     return { url: "#", rel: "nofollow noopener noreferrer" };
   }
@@ -37,36 +37,46 @@ function getVisitUrl(project: ProjectLike): { url: string; rel: string } {
   }
 }
 
-export function PaidPlacementCard({ project }: { project: ProjectLike }) {
+/** Count a click on a paid placement (promotion or Premium project). */
+export async function trackPlacementClick(project: ProjectLike): Promise<void> {
+  try {
+    if (project.promotion_id) {
+      await fetch(`/api/promotions/${project.promotion_id}/click`, { method: "POST" });
+    } else {
+      await fetch(`/api/projects/${project.slug}/click`, { method: "POST" });
+    }
+  } catch {
+    // ignore
+  }
+}
+
+export function PaidPlacementCard({
+  project,
+  variant = "grid",
+}: {
+  project: ProjectLike;
+  /** `rail` is the narrow side-column form: no grid-row min height, CTA truncates. */
+  variant?: "grid" | "rail";
+}) {
+  const isRail = variant === "rail";
   const visitLink = getVisitUrl(project);
 
-  const handleVisit = async () => {
-    try {
-      if (project.promotion_id) {
-        await fetch(`/api/promotions/${project.promotion_id}/click`, { method: "POST" });
-      } else {
-        await fetch(`/api/projects/${project.slug}/click`, { method: "POST" });
-      }
-    } catch {
-      // ignore
-    }
-  };
+  const handleVisit = () => trackPlacementClick(project);
 
   const ctaLabel = project.cta_text || `Visit ${project.name}`;
 
   return (
     <div
-      className="relative z-0 w-full h-full transition-[transform] duration-300 ease-out hover:-translate-y-1 hover:z-10"
+      className={`relative z-0 w-full ${isRail ? "shrink-0" : "h-full"} transition-[transform] duration-300 ease-out hover:-translate-y-1 hover:z-10`}
     >
       <a
         href={visitLink.url}
         target="_blank"
         rel={visitLink.rel}
         onClick={handleVisit}
-        className="group relative w-full h-full flex flex-col rounded-[var(--radius)] border border-primary bg-card p-4 min-h-[200px] transition-[border-color] duration-300 ease-in-out focus-visible:outline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-        style={{
-          boxShadow: "var(--card-shadow)",
-        }}
+        className={`group relative w-full h-full flex flex-col rounded-[var(--radius)] border border-primary bg-card p-4 ${isRail ? "" : "min-h-[200px]"} transition-[border-color] duration-300 ease-in-out focus-visible:outline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
+        // Rail cards sit flat on the shader: no drop shadow under them.
+        style={isRail ? undefined : { boxShadow: "var(--card-shadow)" }}
         aria-label={`Visit ${project.name}`}
       >
       {/* Ad label — top-left pill */}
@@ -103,7 +113,7 @@ export function PaidPlacementCard({ project }: { project: ProjectLike }) {
       </div>
 
       {/* Description */}
-      <p className="text-sm text-muted-foreground line-clamp-2 mb-4 flex-1">
+      <p className={`text-sm text-muted-foreground ${isRail ? "line-clamp-3" : "line-clamp-2"} mb-4 flex-1`}>
         {project.short_description || "—"}
       </p>
 
@@ -114,7 +124,7 @@ export function PaidPlacementCard({ project }: { project: ProjectLike }) {
           boxShadow: "var(--card-shadow)",
         }}
       >
-        <span>{ctaLabel}</span>
+        <span className="truncate">{ctaLabel}</span>
         <ExternalLink className="w-4 h-4 shrink-0" aria-hidden />
       </span>
       </a>

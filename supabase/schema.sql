@@ -357,6 +357,20 @@ CREATE TABLE IF NOT EXISTS public.analytics (
 CREATE INDEX IF NOT EXISTS idx_analytics_target ON public.analytics(target_type, target_id, date);
 CREATE INDEX IF NOT EXISTS idx_analytics_date ON public.analytics(date DESC);
 
+-- Live presence for the catalog's "who's on the site right now" block.
+-- See supabase/migrations/20261101_site_presence.sql.
+CREATE TABLE IF NOT EXISTS public.site_presence (
+  session_id TEXT PRIMARY KEY,
+  country TEXT,
+  latitude SMALLINT,
+  longitude SMALLINT,
+  path TEXT,
+  path_since TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_site_presence_last_seen ON public.site_presence(last_seen DESC);
+
 -- ============================================================================
 -- 9. LINK TYPE CHANGES TABLE
 -- ============================================================================
@@ -662,6 +676,7 @@ ALTER TABLE public.apps ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.newsletter ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.analytics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.site_presence ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.link_type_changes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.external_webhooks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.changelog ENABLE ROW LEVEL SECURITY;

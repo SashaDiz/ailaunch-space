@@ -4,10 +4,10 @@ import React, { useState, useEffect, useRef, useTransition, Suspense } from "rea
 import Link from "next/link";
 import { gsap } from "gsap";
 import { ProductCard } from '@/components/directory/ProductCard';
-import { PaidPlacementCard } from '@/components/directory/PaidPlacementCard';
 import { PartnersSection } from '@/components/marketing/PartnersSection';
 import { SocialProof } from '@/components/marketing/SocialProof';
 import { DomainRatingBadge } from '@/components/marketing/DomainRatingBadge';
+import { LiveStats } from '@/components/marketing/LiveStats';
 import { PromoBlockModal } from '@/components/shared/PromoBlockModal';
 import { usePromoBlockConfig } from '@/hooks/use-promo-block-config';
 import { jsonLdSafe } from '@/lib/seo-client';
@@ -40,42 +40,8 @@ import Pagination from "@/components/shared/Pagination";
 
 const SORT_OPTIONS = directoryConfig.sortOptions;
 const PRICING_OPTIONS = directoryConfig.pricingOptions;
-
-/**
- * Merges projects with ad cards at fixed grid row positions on every page.
- */
-function mergeProjectsWithAds<T extends { id: string }>(
-  projects: T[],
-  ads: T[],
-  page: number,
-): ({ type: "project"; project: T } | { type: "ad"; project: T })[] {
-  if (ads.length === 0 || page > 2) {
-    return projects.map((p) => ({ type: "project" as const, project: p }));
-  }
-
-  const shuffledAds = [...ads].sort(() => Math.random() - 0.5);
-  const adSlots: T[] = [];
-  for (let i = 0; i < 4; i++) {
-    adSlots.push(shuffledAds[i % shuffledAds.length]);
-  }
-
-  const targetRows = [1, 4, 7, 11];
-  const insertIndices = targetRows.map((row) => {
-    const col = Math.floor(Math.random() * 3);
-    return row * 3 + col;
-  });
-
-  const merged: ({ type: "project"; project: T } | { type: "ad"; project: T })[] =
-    projects.map((p) => ({ type: "project" as const, project: p }));
-
-  for (let i = insertIndices.length - 1; i >= 0; i--) {
-    const idx = Math.min(insertIndices[i], merged.length);
-    merged.splice(idx, 0, { type: "ad" as const, project: adSlots[i] });
-  }
-
-  const fullRows = Math.floor(merged.length / 3) * 3;
-  return fullRows < merged.length ? merged.slice(0, fullRows) : merged;
-}
+/** Projects before the live visitors block (three full rows at lg). */
+const LIVE_STATS_AFTER = 9;
 
 interface HomePageClientProps {
   initialProjects: any[];
@@ -95,12 +61,10 @@ function HomePage({
   // The grid and pagination are driven entirely by server props (per-URL SSR).
   const projects = initialProjects;
   const pagination = initialPagination;
-  const page = pagination.page ?? 1;
   // Pagination is shown only for the unfiltered listing (filters render all items).
   const showPagination =
     !hasActiveFilter(initialState) && (pagination.totalPages ?? 0) > 1;
 
-  const [featuredPremium, setFeaturedPremium] = useState([]);
   const [isClient, setIsClient] = useState(false);
   const [isPromoModalOpen, setIsPromoModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -216,11 +180,6 @@ function HomePage({
       },
       "/"
     );
-
-  // Featured section (load once, client-only so ad randomization never runs on server)
-  useEffect(() => {
-    fetchFeatured();
-  }, []);
 
   // Set client-side flag
   useEffect(() => {
@@ -340,41 +299,6 @@ function HomePage({
       );
     }
   }, [isClient, projects, loading]);
-
-  const fetchFeatured = async () => {
-    try {
-      const [featuredRes, promoRes] = await Promise.all([
-        fetch("/api/projects?section=featured"),
-        fetch("/api/promotions?type=catalog").catch(() => null),
-      ]);
-
-      let premium = [];
-      if (featuredRes.ok) {
-        const data = await featuredRes.json();
-        premium = data.data?.premiumProjects || [];
-      }
-
-      let promoCards = [];
-      if (promoRes && promoRes.ok) {
-        const promoData = await promoRes.json();
-        promoCards = (promoData.data || []).map((p: any) => ({
-          id: p.id,
-          name: p.name,
-          slug: p.id,
-          logo_url: p.logo_url,
-          short_description: p.short_description,
-          website_url: p.website_url,
-          promotion_id: p.id,
-          cta_text: p.cta_text,
-        }));
-      }
-
-      setFeaturedPremium([...promoCards, ...premium]);
-    } catch (error) {
-      console.error("Homepage: Failed to fetch featured:", error);
-      setFeaturedPremium([]);
-    }
-  };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -637,17 +561,16 @@ function HomePage({
                   </p>
                 )}
                 <div ref={projectsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {mergeProjectsWithAds(projects, featuredPremium.slice(0, 2), page).map((item, idx) =>
-                    item.type === "ad" ? (
-                      <PaidPlacementCard key={`ad-${item.project.id}-${idx}`} project={item.project} />
-                    ) : (
-                      <ProductCard
-                        key={item.project.id}
-                        project={item.project}
-                        viewMode="grid"
-                      />
-                    )
-                  )}
+                  {projects.map((project, idx) => (
+                    <React.Fragment key={project.id}>
+                      <ProductCard project={project} viewMode="grid" />
+                      {/* Live visitors block: a full-width row after the
+                          third row, once there is a catalog below it. */}
+                      {idx === LIVE_STATS_AFTER - 1 && projects.length > LIVE_STATS_AFTER && (
+                        <LiveStats />
+                      )}
+                    </React.Fragment>
+                  ))}
                 </div>
                 {showPagination && (
                   <div className="mt-8">

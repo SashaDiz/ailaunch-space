@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { analyticsConfig } from "@/config/analytics.config";
 import { isEnabled } from "@/lib/features";
 
@@ -11,9 +12,58 @@ import { isEnabled } from "@/lib/features";
  * - Sends navigator.userAgent, document.referrer, and page path.
  * - Tracks time-on-page via the visibilitychange event.
  * - Optionally initialises PostHog when configured.
+ * - Sends a presence heartbeat (random per-tab id + current path) every 30s
+ *   while the tab is visible and on every route change, for the catalog's
+ *   "who's on the site right now" block.
  */
+
+/** Heartbeat period; a session counts as live for five minutes after one. */
+const PRESENCE_INTERVAL_MS = 30_000;
+const PRESENCE_KEY = "site-presence-id";
+
+/** One random id per tab (sessionStorage), never tied to the user or IP. */
+function presenceId(): string | null {
+  try {
+    let id = sessionStorage.getItem(PRESENCE_KEY);
+    if (!id && typeof crypto !== "undefined" && "randomUUID" in crypto) {
+      id = crypto.randomUUID();
+      sessionStorage.setItem(PRESENCE_KEY, id);
+    }
+    return id;
+  } catch {
+    return null;
+  }
+}
+
+function usePresenceHeartbeat() {
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (!isEnabled("analytics")) return;
+    const id = presenceId();
+    if (!id) return;
+
+    const beat = () => {
+      if (document.visibilityState !== "visible") return;
+      fetch("/api/analytics/presence", {
+        method: "POST",
+        keepalive: true,
+        body: JSON.stringify({ session_id: id, page_path: window.location.pathname }),
+      }).catch(() => {});
+    };
+
+    beat();
+    const timer = setInterval(beat, PRESENCE_INTERVAL_MS);
+    document.addEventListener("visibilitychange", beat);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", beat);
+    };
+  }, [pathname]);
+}
 export function SiteTracker() {
   const pageEnteredAt = useRef<number>(Date.now());
+  usePresenceHeartbeat();
 
   useEffect(() => {
     if (typeof window === "undefined") return;

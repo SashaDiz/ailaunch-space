@@ -1203,3 +1203,92 @@ button:disabled {
     max-width: 100%;
   }
 }
+
+/* ── Side ad rails ─────────────────────────────────────────────────────────
+   Two columns pinned to the viewport edges, level with the top of the page
+   card, on screens wide enough for them. The frame gives up exactly the
+   rails' width: 72rem at 1536px, back to its full max-w-7xl by 1920px,
+   where the rails reach their 20rem cap. Below 1536px the same cards
+   render as a strip above the footer (.ad-strip). */
+:root {
+  --ad-rail-width: clamp(12rem, calc((100vw - 72rem) / 2), 20rem);
+  --ad-rail-top: 2rem; /* the page card's top offset (sm:py-8) */
+}
+
+.ad-rail {
+  display: none;
+  position: fixed;
+  top: var(--ad-rail-top);
+  z-index: 30;
+  width: var(--ad-rail-width);
+  height: calc(100dvh - var(--ad-rail-top));
+  flex-direction: column;
+  gap: 1rem;
+  /* Top padding keeps the cards' "Ad" pill and hover lift inside the scroller. */
+  padding: 0.5rem 1rem 1rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.ad-rail::-webkit-scrollbar { display: none; }
+.ad-rail-left { left: 0; }
+.ad-rail-right { right: 0; }
+
+@media (min-width: 1536px) {
+  .ad-rail { display: flex; }
+  .main-frame { max-width: min(80rem, calc(100vw - 2 * var(--ad-rail-width))); }
+}
+@media (min-width: 1800px) {
+  .ad-rail { padding: 0.5rem 1.5rem 1.5rem; }
+}
+
+/* ── Mobile ad tickers ─────────────────────────────────────────────────────
+   The rails' narrow-screen form: a slow marquee pinned to the top and one to
+   the bottom of the viewport. MainLayout reserves their height
+   (.ad-ticker-space) and the sticky header parks under the top one
+   (--ad-ticker-offset). Hidden from 1536px, where the rails take over. */
+.ad-ticker-space {
+  --ad-ticker-height: 2.5rem;
+  --ad-ticker-offset: var(--ad-ticker-height);
+  padding-top: var(--ad-ticker-height);
+  padding-bottom: var(--ad-ticker-height);
+}
+
+.ad-ticker {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  height: var(--ad-ticker-height);
+  overflow: hidden;
+  /* Liquid glass, like the rails' open-slot card. */
+  background: hsl(var(--background) / 0.75);
+  backdrop-filter: blur(16px) saturate(1.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+}
+.ad-ticker-top { top: 0; border-bottom: 1px solid hsl(var(--border)); }
+.ad-ticker-bottom { bottom: 0; border-top: 1px solid hsl(var(--border)); }
+
+.ad-ticker-track {
+  display: flex;
+  width: max-content;
+  animation: ad-ticker-scroll linear infinite;
+}
+.ad-ticker:hover .ad-ticker-track,
+.ad-ticker:focus-within .ad-ticker-track {
+  animation-play-state: paused;
+}
+@keyframes ad-ticker-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ad-ticker { overflow-x: auto; scrollbar-width: none; }
+  .ad-ticker-track { animation: none; }
+}
+@media (min-width: 1536px) {
+  .ad-ticker { display: none; }
+  .ad-ticker-space { --ad-ticker-offset: 0px; padding-top: 0; padding-bottom: 0; }
+}
