@@ -19,17 +19,22 @@
 --
 -- Run in the Supabase SQL Editor BEFORE deploying the tracker change.
 
+-- The Supabase SQL Editor runs each statement in its own transaction and
+-- ignores BEGIN/COMMIT, so the whole merge + index build is ONE DO block:
+-- a single statement is a single transaction, the lock is held until the
+-- unique index exists, and a failure part-way rolls everything back (no
+-- half-applied UPDATE without the matching DELETE). BEGIN/COMMIT stay for
+-- psql, where they are harmless.
+
 BEGIN;
 
--- Block tracker writes while merging so no new duplicate slips in between
--- the merge and the index build. Reads are unaffected.
-LOCK TABLE public.analytics IN SHARE ROW EXCLUSIVE MODE;
-
--- Sum the numeric values of a set of flat {key: count} JSONB maps.
-CREATE OR REPLACE FUNCTION pg_temp.sum_count_maps(maps JSONB[])
+-- Sum the numeric values of a set of flat {key: count} JSONB maps. Only used
+-- by the merge below; dropped again at the end of this migration.
+CREATE OR REPLACE FUNCTION public.analytics_sum_count_maps(maps JSONB[])
 RETURNS JSONB
 LANGUAGE sql
 IMMUTABLE
+SET search_path = ''
 AS $$
   SELECT COALESCE(jsonb_object_agg(key, total), '{}'::jsonb)
   FROM (
@@ -43,83 +48,97 @@ AS $$
   ) s;
 $$;
 
-CREATE TEMP TABLE analytics_merged ON COMMIT DROP AS
-SELECT
-  a.target_type,
-  a.target_id,
-  a.date,
-  (array_agg(a.id ORDER BY a.created_at, a.id))[1] AS keep_id,
-  SUM(COALESCE(a.views, 0))::int AS views,
-  SUM(COALESCE(a.clicks, 0))::int AS clicks,
-  SUM(COALESCE(a.upvotes, 0))::int AS upvotes,
-  SUM(COALESCE(a.time_on_page, 0))::int AS time_on_page,
-  SUM(COALESCE(a.competition_votes, 0))::int AS competition_votes,
-  SUM(COALESCE(a.competition_participants, 0))::int AS competition_participants,
-  SUM(COALESCE(a.unique_visitors, 0))::int AS sum_unique_visitors,
-  MAX(COALESCE(a.unique_visitors, 0))::int AS max_unique_visitors,
-  pg_temp.sum_count_maps(array_agg(a.referrers -> 'sources')) AS referrer_sources,
-  pg_temp.sum_count_maps(array_agg(a.countries)) AS countries,
-  pg_temp.sum_count_maps(array_agg(a.devices)) AS devices,
-  pg_temp.sum_count_maps(array_agg(a.browsers)) AS browsers
-FROM public.analytics a
-GROUP BY a.target_type, a.target_id, a.date
-HAVING COUNT(*) > 1;
+DO $merge$
+BEGIN
+  -- Block tracker writes until the unique index exists so no new duplicate
+  -- slips in between the merge and the index build. Reads are unaffected.
+  LOCK TABLE public.analytics IN SHARE ROW EXCLUSIVE MODE;
 
--- Visitor hashes are sha256(ip:date), so the same hash in two rows of one day
--- is the same visitor. Each duplicate row was inserted with unique_visitors = 1
--- for its own hash; summing would count a returning visitor once per row.
-CREATE TEMP TABLE analytics_merged_hashes ON COMMIT DROP AS
-SELECT
-  m.keep_id,
-  COALESCE(jsonb_agg(DISTINCT h.hash), '[]'::jsonb) AS visitor_hashes,
-  COUNT(DISTINCT h.hash)::int AS distinct_hashes
-FROM analytics_merged m
-JOIN public.analytics a
-  ON a.target_type = m.target_type
- AND a.target_id IS NOT DISTINCT FROM m.target_id
- AND a.date = m.date
-CROSS JOIN LATERAL jsonb_array_elements(
-  CASE WHEN jsonb_typeof(a.referrers -> 'visitor_hashes') = 'array'
-       THEN a.referrers -> 'visitor_hashes' ELSE '[]'::jsonb END
-) AS h(hash)
-GROUP BY m.keep_id;
+  CREATE TEMP TABLE analytics_merged AS
+  SELECT
+    a.target_type,
+    a.target_id,
+    a.date,
+    (array_agg(a.id ORDER BY a.created_at, a.id))[1] AS keep_id,
+    SUM(COALESCE(a.views, 0))::int AS views,
+    SUM(COALESCE(a.clicks, 0))::int AS clicks,
+    SUM(COALESCE(a.upvotes, 0))::int AS upvotes,
+    SUM(COALESCE(a.time_on_page, 0))::int AS time_on_page,
+    SUM(COALESCE(a.competition_votes, 0))::int AS competition_votes,
+    SUM(COALESCE(a.competition_participants, 0))::int AS competition_participants,
+    SUM(COALESCE(a.unique_visitors, 0))::int AS sum_unique_visitors,
+    MAX(COALESCE(a.unique_visitors, 0))::int AS max_unique_visitors,
+    public.analytics_sum_count_maps(array_agg(a.referrers -> 'sources')) AS referrer_sources,
+    public.analytics_sum_count_maps(array_agg(a.countries)) AS countries,
+    public.analytics_sum_count_maps(array_agg(a.devices)) AS devices,
+    public.analytics_sum_count_maps(array_agg(a.browsers)) AS browsers
+  FROM public.analytics a
+  GROUP BY a.target_type, a.target_id, a.date
+  HAVING COUNT(*) > 1;
 
-UPDATE public.analytics a
-SET
-  views = m.views,
-  clicks = m.clicks,
-  upvotes = m.upvotes,
-  time_on_page = m.time_on_page,
-  competition_votes = m.competition_votes,
-  competition_participants = m.competition_participants,
-  unique_visitors = CASE
-    WHEN COALESCE(h.distinct_hashes, 0) > 0
-      THEN GREATEST(h.distinct_hashes, m.max_unique_visitors)
-    ELSE m.sum_unique_visitors
-  END,
-  referrers = jsonb_build_object(
-    'visitor_hashes', COALESCE(h.visitor_hashes, '[]'::jsonb),
-    'sources', m.referrer_sources
-  ),
-  countries = m.countries,
-  devices = m.devices,
-  browsers = m.browsers
-FROM analytics_merged m
-LEFT JOIN analytics_merged_hashes h ON h.keep_id = m.keep_id
-WHERE a.id = m.keep_id;
+  -- Visitor hashes are sha256(ip:date), so the same hash in two rows of one
+  -- day is the same visitor. Each duplicate row was inserted with
+  -- unique_visitors = 1 for its own hash; summing would count a returning
+  -- visitor once per row.
+  CREATE TEMP TABLE analytics_merged_hashes AS
+  SELECT
+    m.keep_id,
+    COALESCE(jsonb_agg(DISTINCT h.hash), '[]'::jsonb) AS visitor_hashes,
+    COUNT(DISTINCT h.hash)::int AS distinct_hashes
+  FROM analytics_merged m
+  JOIN public.analytics a
+    ON a.target_type = m.target_type
+   AND a.target_id IS NOT DISTINCT FROM m.target_id
+   AND a.date = m.date
+  CROSS JOIN LATERAL jsonb_array_elements(
+    CASE WHEN jsonb_typeof(a.referrers -> 'visitor_hashes') = 'array'
+         THEN a.referrers -> 'visitor_hashes' ELSE '[]'::jsonb END
+  ) AS h(hash)
+  GROUP BY m.keep_id;
 
-DELETE FROM public.analytics a
-USING analytics_merged m
-WHERE a.target_type = m.target_type
-  AND a.target_id IS NOT DISTINCT FROM m.target_id
-  AND a.date = m.date
-  AND a.id <> m.keep_id;
+  UPDATE public.analytics a
+  SET
+    views = m.views,
+    clicks = m.clicks,
+    upvotes = m.upvotes,
+    time_on_page = m.time_on_page,
+    competition_votes = m.competition_votes,
+    competition_participants = m.competition_participants,
+    unique_visitors = CASE
+      WHEN COALESCE(h.distinct_hashes, 0) > 0
+        THEN GREATEST(h.distinct_hashes, m.max_unique_visitors)
+      ELSE m.sum_unique_visitors
+    END,
+    referrers = jsonb_build_object(
+      'visitor_hashes', COALESCE(h.visitor_hashes, '[]'::jsonb),
+      'sources', m.referrer_sources
+    ),
+    countries = m.countries,
+    devices = m.devices,
+    browsers = m.browsers
+  FROM analytics_merged m
+  LEFT JOIN analytics_merged_hashes h ON h.keep_id = m.keep_id
+  WHERE a.id = m.keep_id;
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_analytics_target_date_unique
-  ON public.analytics(target_type, target_id, date);
+  DELETE FROM public.analytics a
+  USING analytics_merged m
+  WHERE a.target_type = m.target_type
+    AND a.target_id IS NOT DISTINCT FROM m.target_id
+    AND a.date = m.date
+    AND a.id <> m.keep_id;
 
--- The unique index serves every lookup the old one did.
-DROP INDEX IF EXISTS public.idx_analytics_target;
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_analytics_target_date_unique
+    ON public.analytics(target_type, target_id, date);
+
+  -- The unique index serves every lookup the old one did.
+  DROP INDEX IF EXISTS public.idx_analytics_target;
+
+  DROP TABLE analytics_merged;
+  DROP TABLE analytics_merged_hashes;
+END
+$merge$;
+
+DROP FUNCTION IF EXISTS public.analytics_sum_count_maps(JSONB[]);
 
 -- Count one pageview: create today's row or increment it, in one statement.
 -- ON CONFLICT DO UPDATE locks the row, so concurrent calls serialise and every
