@@ -354,7 +354,9 @@ CREATE TABLE IF NOT EXISTS public.analytics (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_analytics_target ON public.analytics(target_type, target_id, date);
+-- One row per target per day; /api/analytics/track upserts on this index
+-- through track_analytics_pageview() (see HELPER FUNCTIONS).
+CREATE UNIQUE INDEX IF NOT EXISTS idx_analytics_target_date_unique ON public.analytics(target_type, target_id, date);
 CREATE INDEX IF NOT EXISTS idx_analytics_date ON public.analytics(date DESC);
 
 -- Live presence for the catalog's "who's on the site right now" block.
@@ -1200,6 +1202,97 @@ BEGIN
   WHERE id = target_app_id;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Count one pageview: create today's row or increment it, in one statement.
+-- ON CONFLICT DO UPDATE locks the row, so concurrent calls serialise and every
+-- increment lands; the JSONB counters are computed from the locked row.
+CREATE OR REPLACE FUNCTION public.track_analytics_pageview(
+  p_target_type TEXT,
+  p_target_id UUID,
+  p_date DATE,
+  p_visitor_hash TEXT,
+  p_referrer_host TEXT,
+  p_device TEXT,
+  p_browser TEXT,
+  p_country TEXT
+)
+RETURNS VOID
+LANGUAGE sql
+SET search_path = ''
+AS $$
+  INSERT INTO public.analytics AS a (
+    target_type, target_id, date, hour, views, unique_visitors,
+    referrers, devices, browsers, countries
+  )
+  VALUES (
+    p_target_type,
+    p_target_id,
+    p_date,
+    EXTRACT(HOUR FROM NOW() AT TIME ZONE 'UTC')::int,
+    1,
+    1,
+    jsonb_build_object(
+      'visitor_hashes', jsonb_build_array(p_visitor_hash),
+      'sources', CASE WHEN p_referrer_host IS NULL THEN '{}'::jsonb
+                      ELSE jsonb_build_object(p_referrer_host, 1) END
+    ),
+    jsonb_build_object(p_device, 1),
+    jsonb_build_object(p_browser, 1),
+    jsonb_build_object(p_country, 1)
+  )
+  ON CONFLICT (target_type, target_id, date) DO UPDATE SET
+    views = COALESCE(a.views, 0) + 1,
+    unique_visitors = COALESCE(a.unique_visitors, 0)
+      + CASE WHEN COALESCE(a.referrers -> 'visitor_hashes', '[]'::jsonb) ? p_visitor_hash
+             THEN 0 ELSE 1 END,
+    referrers = jsonb_build_object(
+      'visitor_hashes',
+        CASE WHEN COALESCE(a.referrers -> 'visitor_hashes', '[]'::jsonb) ? p_visitor_hash
+             THEN a.referrers -> 'visitor_hashes'
+             ELSE COALESCE(a.referrers -> 'visitor_hashes', '[]'::jsonb)
+                  || jsonb_build_array(p_visitor_hash) END,
+      'sources',
+        CASE WHEN p_referrer_host IS NULL
+             THEN COALESCE(a.referrers -> 'sources', '{}'::jsonb)
+             ELSE COALESCE(a.referrers -> 'sources', '{}'::jsonb)
+                  || jsonb_build_object(
+                       p_referrer_host,
+                       COALESCE((a.referrers -> 'sources' ->> p_referrer_host)::int, 0) + 1
+                     ) END
+    ),
+    devices = COALESCE(a.devices, '{}'::jsonb)
+      || jsonb_build_object(p_device, COALESCE((a.devices ->> p_device)::int, 0) + 1),
+    browsers = COALESCE(a.browsers, '{}'::jsonb)
+      || jsonb_build_object(p_browser, COALESCE((a.browsers ->> p_browser)::int, 0) + 1),
+    countries = COALESCE(a.countries, '{}'::jsonb)
+      || jsonb_build_object(p_country, COALESCE((a.countries ->> p_country)::int, 0) + 1);
+$$;
+
+-- Add seconds to today's row. Like the old tracker, a time_on_page event with
+-- no pageview row for the day is dropped rather than creating an empty row.
+CREATE OR REPLACE FUNCTION public.add_analytics_time_on_page(
+  p_target_type TEXT,
+  p_target_id UUID,
+  p_date DATE,
+  p_seconds INTEGER
+)
+RETURNS VOID
+LANGUAGE sql
+SET search_path = ''
+AS $$
+  UPDATE public.analytics
+  SET time_on_page = COALESCE(time_on_page, 0) + p_seconds
+  WHERE target_type = p_target_type
+    AND target_id = p_target_id
+    AND date = p_date;
+$$;
+
+-- Service role only: the tracker calls these server-side. Without the revoke,
+-- anyone holding the publishable key could inflate counters via PostgREST.
+REVOKE ALL ON FUNCTION public.track_analytics_pageview(TEXT, UUID, DATE, TEXT, TEXT, TEXT, TEXT, TEXT) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.add_analytics_time_on_page(TEXT, UUID, DATE, INTEGER) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.track_analytics_pageview(TEXT, UUID, DATE, TEXT, TEXT, TEXT, TEXT, TEXT) TO service_role;
+GRANT EXECUTE ON FUNCTION public.add_analytics_time_on_page(TEXT, UUID, DATE, INTEGER) TO service_role;
 
 -- ============================================================================
 -- STORAGE BUCKET
