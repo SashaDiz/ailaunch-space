@@ -50,15 +50,13 @@ function getCountry(request: Request): string {
   );
 }
 
-// --- Increment a key inside a JSONB object (e.g. { "US": 5 } -> { "US": 6 }) ---
-
-function incrementJsonbKey(
-  existing: Record<string, number> | null | undefined,
-  key: string,
-): Record<string, number> {
-  const obj: Record<string, number> = { ...(existing || {}) };
-  obj[key] = (obj[key] || 0) + 1;
-  return obj;
+function getReferrerHost(referrer: unknown): string | null {
+  if (typeof referrer !== "string" || !referrer) return null;
+  try {
+    return new URL(referrer).hostname || "direct";
+  } catch {
+    return null; // Ignore invalid referrer URLs
+  }
 }
 
 export async function POST(request: Request) {
@@ -88,14 +86,7 @@ export async function POST(request: Request) {
       // Ignore parse errors — treat as empty body
     }
 
-    const {
-      page_path,
-      referrer,
-      project_id,
-      event_type = "pageview",
-      event_name,
-      duration,
-    } = body;
+    const { referrer, project_id, event_type = "pageview", duration } = body;
 
     const ip = getVisitorIp(request);
     const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
@@ -112,104 +103,37 @@ export async function POST(request: Request) {
     const targetType = project_id ? "app" : "general";
     const targetId = project_id || SITE_TARGET_ID;
 
-    // --- Handle time_on_page event: update the existing record's time_on_page ---
-    if (event_type === "time_on_page" && typeof duration === "number" && duration > 0) {
-      // Find the record for today and update time_on_page
-      const { data: existing } = await supabase
-        .from("analytics")
-        .select("id, time_on_page")
-        .eq("target_type", targetType)
-        .eq("target_id", targetId)
-        .eq("date", today)
-        .maybeSingle();
+    // Both writes are single-statement Postgres functions (see
+    // supabase/migrations/20261101_analytics_daily_unique.sql): an upsert on
+    // the unique (target_type, target_id, date) index, so concurrent requests
+    // can neither lose increments nor create a second row for the day.
 
-      if (existing) {
-        // Accumulate total time; the column is an integer (seconds)
-        const currentTime = existing.time_on_page || 0;
-        await supabase
-          .from("analytics")
-          .update({ time_on_page: currentTime + Math.round(duration) })
-          .eq("id", existing.id);
-      }
+    // --- Handle time_on_page event: add to today's record ---
+    if (event_type === "time_on_page" && typeof duration === "number" && duration > 0) {
+      // The column is an integer (seconds)
+      const { error } = await supabase.rpc("add_analytics_time_on_page", {
+        p_target_type: targetType,
+        p_target_id: targetId,
+        p_date: today,
+        p_seconds: Math.round(duration),
+      });
+      if (error) console.error("[analytics/track] time_on_page failed:", error.message);
 
       return NextResponse.json({ ok: true });
     }
 
     // --- Standard pageview / event tracking ---
-
-    // Check if a record exists for today for this target
-    const { data: existing } = await supabase
-      .from("analytics")
-      .select("id, views, unique_visitors, referrers, devices, browsers, countries")
-      .eq("target_type", targetType)
-      .eq("target_id", targetId)
-      .eq("date", today)
-      .maybeSingle();
-
-    if (existing) {
-      // Check if this visitor was already counted today
-      const knownHashes: string[] = (existing.referrers as any)?.visitor_hashes || [];
-      const isNewVisitor = !knownHashes.includes(visitorHash);
-
-      // Build referrer sources map (strip visitor_hashes before merging)
-      const referrerSources: Record<string, number> = {
-        ...((existing.referrers as any)?.sources || {}),
-      };
-      if (referrer) {
-        try {
-          const refHost = new URL(referrer).hostname || "direct";
-          referrerSources[refHost] = (referrerSources[refHost] || 0) + 1;
-        } catch {
-          // Ignore invalid referrer URLs
-        }
-      }
-
-      await supabase
-        .from("analytics")
-        .update({
-          views: (existing.views || 0) + 1,
-          unique_visitors: isNewVisitor
-            ? (existing.unique_visitors || 0) + 1
-            : existing.unique_visitors || 0,
-          referrers: {
-            visitor_hashes: isNewVisitor
-              ? [...knownHashes, visitorHash]
-              : knownHashes,
-            sources: referrerSources,
-          },
-          devices: incrementJsonbKey(existing.devices as Record<string, number>, deviceType),
-          browsers: incrementJsonbKey(existing.browsers as Record<string, number>, browserName),
-          countries: incrementJsonbKey(existing.countries as Record<string, number>, country),
-        })
-        .eq("id", existing.id);
-    } else {
-      // Create new daily record
-      const referrerSources: Record<string, number> = {};
-      if (referrer) {
-        try {
-          const refHost = new URL(referrer).hostname || "direct";
-          referrerSources[refHost] = 1;
-        } catch {
-          // Ignore invalid referrer URLs
-        }
-      }
-
-      await supabase.from("analytics").insert({
-        target_type: targetType,
-        target_id: targetId,
-        date: today,
-        hour: new Date().getHours(),
-        views: 1,
-        unique_visitors: 1,
-        referrers: {
-          visitor_hashes: [visitorHash],
-          sources: referrerSources,
-        },
-        devices: { [deviceType]: 1 },
-        browsers: { [browserName]: 1 },
-        countries: { [country]: 1 },
-      });
-    }
+    const { error } = await supabase.rpc("track_analytics_pageview", {
+      p_target_type: targetType,
+      p_target_id: targetId,
+      p_date: today,
+      p_visitor_hash: visitorHash,
+      p_referrer_host: getReferrerHost(referrer),
+      p_device: deviceType,
+      p_browser: browserName,
+      p_country: country,
+    });
+    if (error) console.error("[analytics/track] pageview failed:", error.message);
 
     return NextResponse.json({ ok: true });
   } catch (error) {
