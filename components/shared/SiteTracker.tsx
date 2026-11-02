@@ -40,6 +40,9 @@ function usePresenceHeartbeat() {
 
   useEffect(() => {
     if (!isEnabled("analytics")) return;
+    // A local dev server talks to the production database; its tabs must
+    // not show up as live visitors (they'd count, with no country).
+    if (process.env.NODE_ENV !== "production") return;
     const id = presenceId();
     if (!id) return;
 

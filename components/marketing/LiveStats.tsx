@@ -24,9 +24,9 @@ interface LiveStatsData {
   countries?: number;
   points?: [number, number][];
   feed?: { countryCode: string; path: string; since: string | null }[];
-  totalVisitors?: number | null;
-  /** First day with site analytics (YYYY-MM-DD). */
-  since?: string | null;
+  /** Browser sessions over the last `visitsDays` days. */
+  visits?: number;
+  visitsDays?: number;
   topCountries?: { countryCode: string; visitors: number }[];
   moreCountries?: number;
 }
@@ -59,7 +59,6 @@ function timeAgo(iso: string | null): string | null {
 }
 
 const numberFormat = new Intl.NumberFormat("en-US");
-const sinceFormat = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
 
 function toMarkers(points: [number, number][]) {
   return points.map(([lat, lng]) => ({ location: [lat, lng] as [number, number], size: 0.05 }));
@@ -167,6 +166,14 @@ export function LiveStats() {
   if (!data?.configured) return null;
 
   const feed = data.feed ?? [];
+  // "from 0 countries" only happens when no live session has a geo header
+  // (e.g. the platform didn't send one) — say nothing rather than that.
+  const summary = [
+    data.countries ? `from ${data.countries} ${data.countries === 1 ? "country" : "countries"}` : null,
+    data.visits != null
+      ? `${numberFormat.format(data.visits)} visits in the last ${data.visitsDays ?? 30} days`
+      : null,
+  ].filter(Boolean);
   const topCountries = data.topCountries ?? [];
 
   return (
@@ -199,15 +206,9 @@ export function LiveStats() {
               {data.now === 1 ? "person" : "people"} on the site right now
             </span>
           </p>
-          <p className="mt-3 text-sm text-muted-foreground">
-            from {data.countries ?? 0} {data.countries === 1 ? "country" : "countries"}
-            {data.totalVisitors != null && (
-              <>
-                {" "}· {numberFormat.format(data.totalVisitors)} visitors
-                {data.since ? ` since ${sinceFormat.format(new Date(data.since)).toLowerCase()}` : " all-time"}
-              </>
-            )}
-          </p>
+          {summary.length > 0 && (
+            <p className="mt-3 text-sm text-muted-foreground">{summary.join(" · ")}</p>
+          )}
 
           {feed.length > 0 && (
             <ul className="mt-5 space-y-2.5 border-t border-border pt-5 text-sm">
