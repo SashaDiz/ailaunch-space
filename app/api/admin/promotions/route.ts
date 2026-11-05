@@ -52,8 +52,8 @@ export async function PUT(request: Request) {
 
     const allowedFields = [
       'status', 'name', 'short_description', 'logo_url', 'website_url',
-      'cta_text', 'banner_text', 'catalog_detail_text',
-      'placement_banner', 'placement_catalog', 'placement_detail_page',
+      'wordmark_url', 'cta_text', 'banner_text', 'catalog_detail_text',
+      'placement_banner', 'placement_catalog', 'placement_logo', 'placement_detail_page',
       'position', 'admin_notes',
     ];
     const safeUpdates: Record<string, any> = {};
@@ -81,7 +81,7 @@ export async function PUT(request: Request) {
   }
 }
 
-// POST /api/admin/promotions - Create promotion directly (bypasses Dodo Payments)
+// POST /api/admin/promotions - Create a house ad (bypasses Dodo Payments)
 export async function POST(request: Request) {
   if (!(await checkAdmin())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
@@ -93,7 +93,8 @@ export async function POST(request: Request) {
 
     const { name, short_description, logo_url, website_url, cta_text,
             banner_text, catalog_detail_text,
-            placement_banner, placement_catalog, placement_detail_page } = body;
+            wordmark_url, placement_banner, placement_catalog, placement_logo,
+            placement_detail_page } = body;
 
     if (!name?.trim()) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -107,7 +108,7 @@ export async function POST(request: Request) {
     if (!website_url?.trim()) {
       return NextResponse.json({ error: "Website URL is required" }, { status: 400 });
     }
-    if (!placement_banner && !placement_catalog && !placement_detail_page) {
+    if (!placement_banner && !placement_catalog && !placement_logo && !placement_detail_page) {
       return NextResponse.json({ error: "At least one placement is required" }, { status: 400 });
     }
 
@@ -116,14 +117,17 @@ export async function POST(request: Request) {
       name: name.trim(),
       short_description: short_description.trim(),
       logo_url: logo_url.trim(),
+      wordmark_url: wordmark_url?.trim() || null,
       website_url: website_url.trim(),
       cta_text: cta_text?.trim() || null,
       banner_text: banner_text?.trim()?.slice(0, 50) || null,
       catalog_detail_text: catalog_detail_text?.trim()?.slice(0, 100) || null,
       placement_banner: !!placement_banner,
       placement_catalog: !!placement_catalog,
+      placement_logo: !!placement_logo,
       placement_detail_page: !!placement_detail_page,
-      monthly_price: 0,
+      // Fills empty spots until an advertiser buys them.
+      is_house: true,
       status: "active",
     });
 

@@ -113,6 +113,8 @@ const nextConfig: NextConfig = {
     return [
       // Legacy listing path → new home (catalog lives on the index now)
       { source: "/projects", destination: "/", permanent: true },
+      // Sponsorship is now the Homepage Logo placement.
+      { source: "/sponsor", destination: "/promote", permanent: true },
       { source: "/projects/:path*", destination: "/", permanent: true },
       // Removed weekly-competition surfaces — bounce SEO traffic to home
       { source: "/streaks", destination: "/", permanent: true },

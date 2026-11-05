@@ -2,14 +2,12 @@
 
 import React, { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Handshake, Megaphone, Sparkles } from "lucide-react";
+import { Megaphone, Sparkles } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { SponsorsPanel } from "@/components/admin/advertising/SponsorsPanel";
 import { PromotionsPanel } from "@/components/admin/advertising/PromotionsPanel";
 import { MarketingPanel } from "@/components/admin/advertising/MarketingPanel";
 
 const TABS = [
-  { value: "sponsors", label: "Sponsors", icon: Handshake },
   { value: "promotions", label: "Promotions", icon: Megaphone },
   { value: "promo-block", label: "Promo Block", icon: Sparkles },
 ] as const;
@@ -22,10 +20,10 @@ function AdvertisingTabs() {
   const initial = searchParams.get("tab");
 
   // Local state keeps tab switches instant; the URL is synced as a side effect
-  // so deep links (and the old /admin/sponsors|promotions|marketing redirects)
+  // so deep links (and the old /admin/promotions|marketing redirects)
   // land on the right tab.
   const [tab, setTab] = useState(
-    initial && VALID_TABS.has(initial as any) ? initial : "sponsors"
+    initial && VALID_TABS.has(initial as any) ? initial : "promotions"
   );
 
   const handleChange = (value: string) => {
@@ -44,9 +42,6 @@ function AdvertisingTabs() {
         ))}
       </TabsList>
 
-      <TabsContent value="sponsors">
-        <SponsorsPanel active={tab === "sponsors"} />
-      </TabsContent>
       <TabsContent value="promotions">
         <PromotionsPanel active={tab === "promotions"} />
       </TabsContent>

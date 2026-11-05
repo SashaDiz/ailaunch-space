@@ -8,7 +8,7 @@ import { staggerContainer, fadeInUpItem } from "@/lib/motion";
 
 /**
  * List-row placeholder shared across admin tables (Listings, Categories,
- * Users, Sponsors, Promotions). Replaces the old "Loading..." text and the
+ * Users, Promotions). Replaces the old "Loading..." text and the
  * one-off `animate-pulse` blocks with a single, consistent shape.
  */
 export function AdminRowsSkeleton({

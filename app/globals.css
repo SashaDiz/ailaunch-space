@@ -1280,6 +1280,16 @@ button:disabled {
 .ad-ticker:focus-within .ad-ticker-track {
   animation-play-state: paused;
 }
+.ad-progress-fill {
+  transform-origin: left;
+  animation-name: ad-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes ad-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
 @keyframes ad-ticker-scroll {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }

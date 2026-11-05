@@ -13,7 +13,7 @@ import type { FeaturesConfig } from '@/types/config';
  * - Exclude its DB tables from setup
  */
 export const featuresConfig: FeaturesConfig = {
-  /** Partner/sponsor program with sidebar placements */
+  /** Sponsors row on the homepage */
   partners: true,
 
   /** Featured badges with embeddable code */

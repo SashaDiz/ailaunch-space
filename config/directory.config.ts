@@ -7,8 +7,11 @@ import type { DirectoryConfig } from '@/types/config';
  * and seed categories. Change these to customize your directory.
  */
 export const directoryConfig: DirectoryConfig = {
-  /** Default number of projects per page */
-  pageSize: 40,
+  /**
+   * Default number of projects per page. Keep it divisible by 2 and 3, the
+   * catalog's column counts, or every page ends on an incomplete row.
+   */
+  pageSize: 42,
 
   /**
    * Sort options shown in the UI and used by the API.

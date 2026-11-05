@@ -1,52 +1,82 @@
 /**
- * Advertising & Sponsorship Configuration
+ * Advertising Configuration
  *
- * Centralized settings for sponsors and paid promotion placements.
- * Dodo product IDs must be created in the Dodo Payments Dashboard and set via env vars.
+ * One product: pay once, hold a fixed spot for `durationDays`, no renewal.
+ * Each placement is a one-time product in the Dodo Payments dashboard; a
+ * subscription product here would charge the customer but never activate
+ * the ad, because activation listens for `payment.succeeded`.
  */
 export const advertisingConfig = {
-  sponsors: {
-    /** Maximum number of active sponsors displayed */
-    maxSponsors: 8,
-    /** Dodo recurring product ID for sponsor subscription */
-    priceId: process.env.DODO_PRODUCT_ID_PARTNER_SUBSCRIPTION || null,
-  },
   promotions: {
+    /** Days a paid spot stays live */
+    durationDays: 30,
+    /** Days before the end to send the "your spot is ending" email */
+    reminderDaysBefore: 3,
+    /** Minutes an unpaid checkout holds its spot */
+    checkoutHoldMinutes: 30,
+    /** Seconds each ad shows on placements where ads take turns */
+    rotationSeconds: 30,
     /** Maximum characters for custom CTA button text */
     ctaMaxLength: 20,
     /** Default CTA text when none provided (use {name} as placeholder) */
     ctaDefault: 'Visit {name}',
-    /** Discount when all three placements are selected (0.3 = 30%) */
-    allThreeDiscountPercent: 0.3,
-    /** Dodo discount code to apply when all three placements are selected */
-    allThreeDiscountCouponId: process.env.DODO_DISCOUNT_CODE_PROMO_ALL_THREE || null,
-    /** Minimum placement price (used for "starts at" on pricing page) */
-    minPricePerMonth: 9,
+    /** Discount when every placement is selected (0.3 = 30%) */
+    bundleDiscountPercent: 0.3,
+    /** Dodo discount code applied when every placement is selected */
+    bundleDiscountCode: process.env.DODO_DISCOUNT_CODE_AD_BUNDLE || null,
     placements: {
       banner: {
         id: 'banner',
-        name: 'Top Banner Ad',
-        description: 'Horizontal banner below the site header on every page',
-        pricePerMonth: 69,
-        priceId: process.env.DODO_PRODUCT_ID_PROMO_BANNER || null,
-        maxActive: 1,
-      },
-      catalog: {
-        id: 'catalog',
-        name: 'Catalog Ad Card',
-        description: 'Promoted card mixed into the project catalog grid',
-        pricePerMonth: 39,
-        priceId: process.env.DODO_PRODUCT_ID_PROMO_CATALOG || null,
+        /** `promotions` column that marks this placement */
+        column: 'placement_banner',
+        name: 'Top Banner',
+        description: 'Banner below the header on every page. Two ads take turns, 30 seconds each',
+        price: 69,
+        priceId: process.env.DODO_PRODUCT_ID_AD_BANNER || null,
         maxActive: 2,
+      },
+      rail: {
+        id: 'rail',
+        // The column predates the rails: these ads used to sit in the catalog grid.
+        column: 'placement_catalog',
+        name: 'Side Rail Card',
+        description: 'Card in the side columns on desktop, scrolling bar on mobile',
+        price: 39,
+        priceId: process.env.DODO_PRODUCT_ID_AD_RAIL || null,
+        // Four on each side.
+        maxActive: 8,
+      },
+      logo: {
+        id: 'logo',
+        column: 'placement_logo',
+        name: 'Homepage Logo',
+        description: 'Your logo in the sponsors row on the homepage',
+        price: 29,
+        priceId: process.env.DODO_PRODUCT_ID_AD_LOGO || null,
+        maxActive: 8,
       },
       detailPage: {
         id: 'detail_page',
-        name: 'Project Page Ad Card',
-        description: 'Promoted card in the sidebar of project detail pages',
-        pricePerMonth: 9,
-        priceId: process.env.DODO_PRODUCT_ID_PROMO_DETAIL || null,
-        maxActive: 2,
+        column: 'placement_detail_page',
+        name: 'Project Page Card',
+        description: 'Card in the sidebar of project pages. Two show at a time, changing every 30 seconds',
+        price: 9,
+        priceId: process.env.DODO_PRODUCT_ID_AD_DETAIL || null,
+        maxActive: 4,
+        /** Cards on a project page at once; the rest take turns */
+        visibleAtOnce: 2,
       },
     },
   },
 };
+
+export type PlacementKey = keyof typeof advertisingConfig.promotions.placements;
+
+export const placementKeys = Object.keys(
+  advertisingConfig.promotions.placements
+) as PlacementKey[];
+
+/** Cheapest placement, for "from $X" labels. */
+export const minPlacementPrice = Math.min(
+  ...placementKeys.map((key) => advertisingConfig.promotions.placements[key].price)
+);

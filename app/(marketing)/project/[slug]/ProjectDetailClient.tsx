@@ -20,6 +20,10 @@ import toast from "react-hot-toast";
 import { SocialShare } from '@/components/shared/SocialShare';
 import { CategoryBadge, PricingBadge } from '@/components/directory/CategoryBadge';
 import { PaidPlacementCard } from '@/components/directory/PaidPlacementCard';
+import { advertisingConfig } from '@/config/advertising.config';
+import { useRotation } from '@/hooks/use-rotation';
+import { RotationBars } from '@/components/marketing/RotationBars';
+import { rotatedWindow } from '@/lib/ad-slots';
 import { ProductCard } from '@/components/directory/ProductCard';
 import { BookmarkButton } from '@/components/directory/BookmarkButton';
 import { StarRating } from '@/components/directory/StarRating';
@@ -40,6 +44,9 @@ import { PromoBlockModal } from '@/components/shared/PromoBlockModal';
 import { siteConfig } from "@/config/site.config";
 import { getLogoDevUrl } from "@/lib/utils";
 
+const { rotationSeconds, placements: adPlacements } = advertisingConfig.promotions;
+const AD_CARDS_VISIBLE = adPlacements.detailPage.visibleAtOnce;
+
 export function ProjectDetailClient({ initialProject }: { initialProject: any }) {
   const searchParams = useSearchParams();
   const submitted = searchParams.get("submitted") === "true";
@@ -56,6 +63,8 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
   const [upgradeError, setUpgradeError] = useState("");
   const [selectedWeekId, setSelectedWeekId] = useState("");
   const [featuredPremium, setFeaturedPremium] = useState([]);
+  const [adCards, setAdCards] = useState([]);
+  const adRotation = useRotation(adCards.length, AD_CARDS_VISIBLE);
   const [showPromoModal, setShowPromoModal] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [descriptionOverflows, setDescriptionOverflows] = useState(false);
@@ -126,7 +135,7 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
             name: p.name,
             slug: p.id,
             logo_url: p.logo_url,
-            short_description: p.short_description,
+            short_description: p.catalog_detail_text || p.short_description,
             website_url: p.website_url,
             promotion_id: p.id,
             cta_text: p.cta_text,
@@ -141,8 +150,10 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
           return true;
         });
 
-        setFeaturedPremium([...uniquePromoCards, ...premium]);
+        setAdCards(uniquePromoCards);
+        setFeaturedPremium(premium);
       } catch {
+        setAdCards([]);
         setFeaturedPremium([]);
       }
     }
@@ -242,6 +253,8 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
       day: "numeric",
     });
   };
+
+  const visibleAds = rotatedWindow(adCards, adRotation.start, AD_CARDS_VISIBLE);
 
   if (!project) {
     return (
@@ -741,13 +754,26 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
                 </div>
               </div>
 
-              {/* PaidPlacementCard - featured premium projects */}
-              {featuredPremium
-                .filter((p) => p.id !== project.id)
-                .slice(0, 2)
-                .map((adProject) => (
+              {/* Paid Project Page Cards first, then featured Premium projects */}
+              <div className="space-y-8" {...adRotation.pauseProps}>
+                {[
+                  ...visibleAds,
+                  ...featuredPremium
+                    .filter((p) => p.id !== project.id)
+                    .slice(0, Math.max(0, AD_CARDS_VISIBLE - visibleAds.length)),
+                ].map((adProject) => (
                   <PaidPlacementCard key={adProject.id} project={adProject} />
                 ))}
+                <RotationBars
+                  pages={adRotation.pages}
+                  page={adRotation.page}
+                  seconds={rotationSeconds}
+                  paused={adRotation.paused}
+                  onSelect={adRotation.goTo}
+                  onComplete={adRotation.next}
+                  className="!mt-2"
+                />
+              </div>
 
               {/* Maker Info */}
               {(project.maker_name || project.maker_twitter) && (

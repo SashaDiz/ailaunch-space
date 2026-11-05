@@ -79,12 +79,12 @@ export function PaidPlacementCard({
         style={isRail ? undefined : { boxShadow: "var(--card-shadow)" }}
         aria-label={`Visit ${project.name}`}
       >
-      {/* Ad label — top-left pill */}
+      {/* Top-right pill: Premium listings share this card but aren't adverts */}
       <span
         className="absolute -top-2 right-3 inline-flex items-center rounded-sm bg-muted border border-border px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
         aria-hidden
       >
-        Ad
+        {project.promotion_id ? "Ad" : "Premium"}
       </span>
 
       {/* Logo + name row */}

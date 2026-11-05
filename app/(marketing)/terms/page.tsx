@@ -40,7 +40,7 @@ export default function TermsPage() {
               <li>Project submission and listing services</li>
               <li>Curated directory listings and discovery</li>
               <li>Premium submission services with enhanced features</li>
-              <li>Sponsorship and promotional advertising placements (recurring)</li>
+              <li>Advertising placements (one-time payment for a fixed period)</li>
               <li>Community exposure and feedback systems</li>
               <li>Newsletter and communication services</li>
               <li>Analytics and performance tracking</li>
@@ -138,14 +138,15 @@ export default function TermsPage() {
               By making a payment, you authorize us to charge the specified amount to your chosen payment method. Payments are processed securely by Dodo Payments as our Merchant of Record. You are responsible for any applicable taxes.
             </p>
 
-            <h3 className="text-xl font-semibold mb-3">5.4 Sponsorship &amp; Promotional Subscriptions</h3>
-            <p className="text-muted-foreground mb-4">
-              In addition to project listings, we offer optional recurring services: sponsorship placements and promotional ad placements (banner, catalog, and project-page spots). These are billed on a monthly recurring basis until cancelled. Pricing for each placement is shown on the relevant page before checkout.
+            <h3 className="text-xl font-semibold mb-3">5.4 Advertising Placements</h3>
+            <p className="mb-4">
+              In addition to project listings, we offer advertising placements: a top banner, side rail cards, a homepage logo and project page cards. Each placement is a one-time payment for a fixed spot for 30 days. Spots are limited, and pricing for each placement is shown before checkout. On the top banner and project page cards, ads take turns on a timer, so your ad shares its position with the others booked there.
             </p>
-            <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-4">
-              <li><strong>Renewal:</strong> Subscriptions automatically renew each billing period at the then-current price unless cancelled before the renewal date.</li>
-              <li><strong>Cancellation:</strong> You may cancel at any time from your account or by contacting support. Cancellation stops future renewals; your placement remains active until the end of the current paid period.</li>
-              <li><strong>No partial-period refunds:</strong> Recurring fees already charged for the current period are non-refundable except where required by law or where we fail to deliver the placement (see 5.2).</li>
+            <ul className="list-disc pl-6 mb-4">
+              <li><strong>No renewal:</strong> Placements are not subscriptions. We do not charge you again; your ad comes down automatically at the end of the 30 days, and you may book another period if a spot is available.</li>
+              <li><strong>Start date:</strong> The 30 days begin when your payment is confirmed.</li>
+              <li><strong>Refunds:</strong> Fees for a placement that has started are non-refundable except where required by law or where we fail to deliver the placement (see 5.2).</li>
+              <li><strong>Earlier subscriptions:</strong> Subscriptions purchased before one-time placements were introduced continue under their existing terms until cancelled. You may cancel by contacting support; your placement remains active until the end of the current paid period.</li>
             </ul>
           </section>
 

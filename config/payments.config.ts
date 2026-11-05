@@ -8,9 +8,8 @@ import type { PaymentsConfig } from '@/types/config';
  *   DODO_PAYMENTS_API_KEY, DODO_PAYMENTS_WEBHOOK_KEY, DODO_PRODUCT_ID_PREMIUM
  * Optional:
  *   DODO_PAYMENTS_ENVIRONMENT  — 'test_mode' for sandbox (default 'live_mode')
- *   DODO_PRODUCT_ID_PARTNER_SUBSCRIPTION
- *   DODO_PRODUCT_ID_PROMO_BANNER / _CATALOG / _DETAIL
- *   DODO_DISCOUNT_CODE_PROMO_ALL_THREE
+ *   DODO_PRODUCT_ID_AD_BANNER / _RAIL / _LOGO / _DETAIL  (one-time products)
+ *   DODO_DISCOUNT_CODE_AD_BUNDLE
  */
 export const paymentsConfig: PaymentsConfig = {
   provider: 'dodo',

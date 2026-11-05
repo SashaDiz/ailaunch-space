@@ -5,12 +5,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   Megaphone,
   Monitor,
-  LayoutGrid,
+  PanelRight,
+  Image as ImageIcon,
   FileText,
   CheckCircle2,
   AlertCircle,
   Loader2,
   Info,
+  type LucideIcon,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useUser } from "@/hooks/use-user";
@@ -18,32 +20,44 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import ImageUpload from "@/components/forms/ImageUpload";
-import { advertisingConfig } from "@/config/advertising.config";
+import {
+  advertisingConfig,
+  placementKeys,
+  type PlacementKey,
+} from "@/config/advertising.config";
 import { siteConfig } from "@/config/site.config";
 
-const placementOptions = [
-  {
-    key: "banner" as const,
-    label: advertisingConfig.promotions.placements.banner.name,
-    description: advertisingConfig.promotions.placements.banner.description,
-    pricePerMonth: advertisingConfig.promotions.placements.banner.pricePerMonth,
-    icon: Monitor,
-  },
-  {
-    key: "catalog" as const,
-    label: advertisingConfig.promotions.placements.catalog.name,
-    description: advertisingConfig.promotions.placements.catalog.description,
-    pricePerMonth: advertisingConfig.promotions.placements.catalog.pricePerMonth,
-    icon: LayoutGrid,
-  },
-  {
-    key: "detailPage" as const,
-    label: advertisingConfig.promotions.placements.detailPage.name,
-    description: advertisingConfig.promotions.placements.detailPage.description,
-    pricePerMonth: advertisingConfig.promotions.placements.detailPage.pricePerMonth,
-    icon: FileText,
-  },
-];
+const { placements: placementConfig, durationDays, bundleDiscountPercent, ctaMaxLength } =
+  advertisingConfig.promotions;
+
+const PLACEMENT_ICONS: Record<PlacementKey, LucideIcon> = {
+  banner: Monitor,
+  rail: PanelRight,
+  logo: ImageIcon,
+  detailPage: FileText,
+};
+
+const placementOptions = placementKeys.map((key) => ({
+  key,
+  ...placementConfig[key],
+  icon: PLACEMENT_ICONS[key],
+}));
+
+const NOTHING_SELECTED = Object.fromEntries(
+  placementKeys.map((key) => [key, false])
+) as Record<PlacementKey, boolean>;
+
+type Availability = Partial<
+  Record<PlacementKey, { available: boolean; nextOpening: string | null }>
+>;
+
+const SIGN_IN_URL = "/auth/signin?callbackUrl=/promote";
+
+const formatMoney = (amount: number) =>
+  Number.isInteger(amount) ? String(amount) : amount.toFixed(2);
+
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
 export default function PromotePage() {
   return (
@@ -61,21 +75,14 @@ function PromotePageContent() {
   const [name, setName] = useState("");
   const [shortDescription, setShortDescription] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
+  const [wordmarkUrl, setWordmarkUrl] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [ctaText, setCtaText] = useState("");
   const [bannerText, setBannerText] = useState("");
   const [catalogDetailText, setCatalogDetailText] = useState("");
-  const [placements, setPlacements] = useState({
-    banner: false,
-    catalog: false,
-    detailPage: false,
-  });
+  const [placements, setPlacements] = useState(NOTHING_SELECTED);
   const [submitting, setSubmitting] = useState(false);
-  const [soldOut, setSoldOut] = useState<Record<string, boolean>>({
-    banner: false,
-    catalog: false,
-    detailPage: false,
-  });
+  const [availability, setAvailability] = useState<Availability>({});
 
   // Fetch placement availability on mount
   useEffect(() => {
@@ -83,18 +90,14 @@ function PromotePageContent() {
       .then((res) => res.ok ? res.json() : null)
       .then((json) => {
         if (json?.data) {
-          const so = {
-            banner: !json.data.banner?.available,
-            catalog: !json.data.catalog?.available,
-            detailPage: !json.data.detailPage?.available,
-          };
-          setSoldOut(so);
+          const next: Availability = json.data;
+          setAvailability(next);
           // Deselect any sold-out placements
-          setPlacements((prev) => ({
-            banner: so.banner ? false : prev.banner,
-            catalog: so.catalog ? false : prev.catalog,
-            detailPage: so.detailPage ? false : prev.detailPage,
-          }));
+          setPlacements((prev) =>
+            Object.fromEntries(
+              placementKeys.map((key) => [key, prev[key] && next[key]?.available !== false])
+            ) as Record<PlacementKey, boolean>
+          );
         }
       })
       .catch(() => {});
@@ -102,24 +105,21 @@ function PromotePageContent() {
 
   const isSuccess = searchParams.get("success") === "true";
   const isCanceled = searchParams.get("canceled") === "true";
-  const ctaMaxLength = advertisingConfig.promotions.ctaMaxLength;
 
-  const hasAnyPlacement = placements.banner || placements.catalog || placements.detailPage;
-  const allAvailableSelected =
-    (soldOut.banner || placements.banner) &&
-    (soldOut.catalog || placements.catalog) &&
-    (soldOut.detailPage || placements.detailPage);
-  const allThreeSelected = placements.banner && placements.catalog && placements.detailPage;
-  const discountPercent = advertisingConfig.promotions.allThreeDiscountPercent ?? 0;
+  const isSoldOut = (key: PlacementKey) => availability[key]?.available === false;
+  const hasAnyPlacement = placementKeys.some((key) => placements[key]);
+  const bundleBookable = !placementKeys.some(isSoldOut);
+  const allSelected = placementKeys.every((key) => placements[key]);
   const subtotal = placementOptions.reduce(
-    (sum, opt) => sum + (placements[opt.key] ? opt.pricePerMonth : 0),
+    (sum, opt) => sum + (placements[opt.key] ? opt.price : 0),
     0
   );
-  const discountAmount = allThreeSelected ? Math.round(subtotal * discountPercent) : 0;
-  const totalPerMonth = subtotal - discountAmount;
+  // To the cent, as Dodo charges it: rounding here would quote $102 for a $102.20 checkout.
+  const discountAmount = allSelected ? Math.round(subtotal * bundleDiscountPercent * 100) / 100 : 0;
+  const total = subtotal - discountAmount;
 
-  const togglePlacement = (key: keyof typeof placements) => {
-    if (soldOut[key]) return;
+  const togglePlacement = (key: PlacementKey) => {
+    if (isSoldOut(key)) return;
     setPlacements((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
@@ -127,7 +127,7 @@ function PromotePageContent() {
     e.preventDefault();
 
     if (!user) {
-      router.push("/signin");
+      router.push(SIGN_IN_URL);
       return;
     }
 
@@ -151,13 +151,14 @@ function PromotePageContent() {
           name,
           short_description: shortDescription,
           logo_url: logoUrl,
+          wordmark_url: placements.logo && wordmarkUrl ? wordmarkUrl : undefined,
           website_url: websiteUrl,
           cta_text: ctaText || undefined,
           banner_text: bannerText || undefined,
           catalog_detail_text: catalogDetailText || undefined,
-          placement_banner: placements.banner,
-          placement_catalog: placements.catalog,
-          placement_detail_page: placements.detailPage,
+          ...Object.fromEntries(
+            placementOptions.map((opt) => [opt.column, placements[opt.key]])
+          ),
         }),
       });
 
@@ -183,9 +184,10 @@ function PromotePageContent() {
         <Card className="max-w-md w-full mx-4">
           <CardContent className="p-8 text-center">
             <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2 text-foreground">Promotion active!</h2>
+            <h2 className="text-2xl font-bold mb-2 text-foreground">Your spot is booked</h2>
             <p className="text-muted-foreground mb-6">
-              Your promotion is now live on {siteConfig.name}. It may take a few minutes to appear.
+              Your ad runs on {siteConfig.name} for {durationDays} days and may take a few minutes
+              to appear. You won&apos;t be charged again.
             </p>
             <Button onClick={() => router.push("/")} className="w-full">
               Back to Homepage
@@ -205,7 +207,7 @@ function PromotePageContent() {
             <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2 text-foreground">Payment canceled</h2>
             <p className="text-muted-foreground mb-6">
-              Your promotion was not completed. You can try again anytime.
+              Your spot was not booked. You can try again anytime.
             </p>
             <Button onClick={() => router.push("/promote")} className="w-full">
               Try Again
@@ -224,30 +226,21 @@ function PromotePageContent() {
           <div className="mb-8">
             <div className="inline-flex items-center justify-center px-4 py-2 text-foreground rounded-full font-semibold text-sm bg-muted">
               <Megaphone className="w-4 h-4 mr-2" strokeWidth={2} />
-              Promote Your Project
+              Advertise
             </div>
           </div>
           <h1 className="text-4xl lg:text-5xl font-bold mb-6 text-foreground">
             Advertise on {siteConfig.name}
           </h1>
           <p className="text-lg font-normal text-muted-foreground max-w-xl mx-auto">
-            Choose where your ad appears. Select one or more placement types and pay only for what you need.
+            Pay once and keep your spot for {durationDays} days. No subscription, no auto-renewal.
           </p>
         </div>
       </div>
 
       <div className="container-classic py-8 pb-16 max-w-2xl">
-        {/* Auth check */}
-        {!userLoading && !user && (
-          <Card className="mb-8">
-            <CardContent className="p-6 text-center">
-              <p className="text-muted-foreground mb-4">Please sign in to promote your project.</p>
-              <Button onClick={() => router.push("/signin")}>Sign In</Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {user && (
+        {/* Prices are public; booking needs an account. */}
+        {!userLoading && (
           <Card>
             <CardContent className="p-6 sm:p-8">
               <form onSubmit={handleSubmit} className="space-y-8">
@@ -257,26 +250,30 @@ function PromotePageContent() {
                     <h3 className="text-lg font-semibold text-foreground">
                       Choose Placements
                     </h3>
-                    <Badge variant="secondary" className="font-normal text-xs bg-primary/10 text-primary border border-primary/20">
-                      Save {Math.round((advertisingConfig.promotions.allThreeDiscountPercent ?? 0) * 100)}% when you select all 3
-                    </Badge>
+                    {bundleBookable && (
+                      <Badge variant="secondary" className="font-normal text-xs bg-primary/10 text-primary border border-primary/20">
+                        Save {Math.round(bundleDiscountPercent * 100)}% when you book all {placementKeys.length}
+                      </Badge>
+                    )}
                   </div>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Select where your ad will appear. Each placement is billed separately as a monthly subscription.
+                    Select where your ad will appear. It goes live after payment and stays in place
+                    for {durationDays} days, then comes down automatically.
                   </p>
                   <div className="space-y-3">
                     {placementOptions.map((opt) => {
                       const selected = placements[opt.key];
-                      const isSoldOut = soldOut[opt.key];
+                      const soldOut = isSoldOut(opt.key);
+                      const nextOpening = availability[opt.key]?.nextOpening;
                       const Icon = opt.icon;
                       return (
                         <button
                           key={opt.key}
                           type="button"
                           onClick={() => togglePlacement(opt.key)}
-                          disabled={isSoldOut}
+                          disabled={soldOut}
                           className={`w-full flex items-start gap-4 p-4 rounded-[var(--radius)] border text-left transition-colors ${
-                            isSoldOut
+                            soldOut
                               ? "border-border bg-muted/50 opacity-60 cursor-not-allowed"
                               : selected
                                 ? "border-primary bg-primary/5"
@@ -285,7 +282,7 @@ function PromotePageContent() {
                         >
                           <div
                             className={`flex-shrink-0 w-10 h-10 rounded-[var(--radius)] flex items-center justify-center ${
-                              isSoldOut
+                              soldOut
                                 ? "bg-muted text-muted-foreground"
                                 : selected
                                   ? "bg-primary text-primary-foreground"
@@ -296,31 +293,33 @@ function PromotePageContent() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className={`font-medium text-sm ${isSoldOut ? "text-muted-foreground" : "text-foreground"}`}>{opt.label}</span>
-                              {isSoldOut && (
-                                <Badge variant="secondary" className="text-xs">Sold out</Badge>
+                              <span className={`font-medium text-sm ${soldOut ? "text-muted-foreground" : "text-foreground"}`}>{opt.name}</span>
+                              {soldOut && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {nextOpening ? `Next spot ${formatDate(nextOpening)}` : "Sold out"}
+                                </Badge>
                               )}
-                              {!isSoldOut && selected && (
+                              {!soldOut && selected && (
                                 <Badge className="bg-primary/20 text-primary text-xs">Selected</Badge>
                               )}
                             </div>
                             <p className="text-xs text-muted-foreground mt-0.5">{opt.description}</p>
                           </div>
                           <div className="flex-shrink-0 text-right">
-                            <span className={`font-semibold text-sm ${isSoldOut ? "text-muted-foreground line-through" : "text-foreground"}`}>${opt.pricePerMonth}</span>
-                            <span className="text-muted-foreground text-xs">/month</span>
+                            <span className={`font-semibold text-sm ${soldOut ? "text-muted-foreground" : "text-foreground"}`}>${opt.price}</span>
+                            <span className="text-muted-foreground text-xs"> / {durationDays} days</span>
                           </div>
                           <div className="flex-shrink-0">
                             <div
                               className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                isSoldOut
+                                soldOut
                                   ? "border-muted-foreground/30"
                                   : selected
                                     ? "border-primary bg-primary"
                                     : "border-border"
                               }`}
                             >
-                              {!isSoldOut && selected && (
+                              {!soldOut && selected && (
                                 <svg className="w-3 h-3 text-primary-foreground" viewBox="0 0 12 12" fill="none">
                                   <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
@@ -336,17 +335,17 @@ function PromotePageContent() {
                       <div className="flex flex-col gap-1 text-sm">
                         <div className="flex justify-between text-muted-foreground">
                           <span>Subtotal</span>
-                          <span>${subtotal}/month</span>
+                          <span>${subtotal}</span>
                         </div>
                         {discountAmount > 0 && (
                           <div className="flex justify-between text-primary">
                             <span>Discount</span>
-                            <span>-${discountAmount}/month</span>
+                            <span>-${formatMoney(discountAmount)}</span>
                           </div>
                         )}
                         <div className="flex justify-between font-semibold text-foreground pt-1 border-t border-border">
-                          <span>Total</span>
-                          <span>${totalPerMonth}/month</span>
+                          <span>Total for {durationDays} days</span>
+                          <span>${formatMoney(total)}</span>
                         </div>
                       </div>
                     </div>
@@ -356,7 +355,15 @@ function PromotePageContent() {
                 {/* Divider */}
                 <div className="border-t border-border" />
 
+                {!user && (
+                  <div className="text-center">
+                    <p className="text-muted-foreground mb-4">Sign in to add your ad and book a spot.</p>
+                    <Button type="button" onClick={() => router.push(SIGN_IN_URL)}>Sign In</Button>
+                  </div>
+                )}
+
                 {/* Ad creative form */}
+                {user && (
                 <div>
                   <h3 className="text-lg font-semibold text-foreground mb-4">
                     Ad Creative
@@ -377,6 +384,24 @@ function PromotePageContent() {
                         error={null}
                       />
                     </div>
+
+                    {/* Wordmark */}
+                    {placements.logo && (
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          Homepage Logo
+                        </label>
+                        <p className="text-xs text-muted-foreground mb-3">
+                          Optional. A transparent wordmark for the sponsors row. Without it we use your square logo.
+                        </p>
+                        <ImageUpload
+                          value={wordmarkUrl}
+                          onChange={setWordmarkUrl}
+                          error={null}
+                          formatHint="Transparent background. Any aspect ratio."
+                        />
+                      </div>
+                    )}
 
                     {/* Name */}
                     <div>
@@ -464,7 +489,7 @@ function PromotePageContent() {
                       <div className="flex items-center gap-2 mb-2">
                         <Info className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                         <p className="text-xs text-muted-foreground">
-                          Optional. Shown on the top banner placement. Max 50 characters.
+                          Optional. Replaces the description on the top banner. Max 50 characters.
                         </p>
                       </div>
                       <input
@@ -482,15 +507,15 @@ function PromotePageContent() {
                       </p>
                     </div>
 
-                    {/* Catalog & Detail Text */}
+                    {/* Card Text */}
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-2">
-                        Catalog &amp; Detail Text
+                        Card Text
                       </label>
                       <div className="flex items-center gap-2 mb-2">
                         <Info className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                         <p className="text-xs text-muted-foreground">
-                          Optional. Shown on catalog cards and detail pages. Max 100 characters.
+                          Optional. Replaces the description on side rail and project page cards. Max 100 characters.
                         </p>
                       </div>
                       <input
@@ -501,7 +526,7 @@ function PromotePageContent() {
                         }}
                         maxLength={100}
                         className="w-full px-4 py-2.5 text-sm border border-border rounded-[var(--radius)] focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/20 focus-visible:outline-none bg-background text-foreground"
-                        placeholder="Text for catalog cards and detail pages"
+                        placeholder="Text for side rail and project page cards"
                       />
                       <p className="text-xs text-muted-foreground mt-1 text-right">
                         {catalogDetailText.length}/100
@@ -509,7 +534,9 @@ function PromotePageContent() {
                     </div>
                   </div>
                 </div>
+                )}
 
+                {user && (
                 <Button
                   type="submit"
                   disabled={submitting || !name || !shortDescription || !logoUrl || !websiteUrl || !hasAnyPlacement}
@@ -527,12 +554,13 @@ function PromotePageContent() {
                       Continue to Payment
                       {hasAnyPlacement && (
                         <span className="ml-2 font-semibold opacity-90">
-                          — ${totalPerMonth}/month
+                          — ${formatMoney(total)}
                         </span>
                       )}
                     </>
                   )}
                 </Button>
+                )}
               </form>
             </CardContent>
           </Card>

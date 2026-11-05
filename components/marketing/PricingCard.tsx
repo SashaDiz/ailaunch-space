@@ -16,6 +16,7 @@ import {
   Handshake,
   Mail,
   Monitor,
+  PanelRight,
   LayoutGrid,
   FileText,
   Trophy,
@@ -36,6 +37,7 @@ export type PricingIconName =
   | "Handshake"
   | "Mail"
   | "Monitor"
+  | "PanelRight"
   | "LayoutGrid"
   | "FileText"
   | "Trophy"
@@ -54,6 +56,7 @@ const ICON_MAP: Record<PricingIconName, LucideIcon> = {
   Handshake,
   Mail,
   Monitor,
+  PanelRight,
   LayoutGrid,
   FileText,
   Trophy,
@@ -78,9 +81,9 @@ export interface PricingPlan {
   limitations: string[];
   popular: boolean;
   cta: string;
-  /** Custom price label (e.g. "/month") — overrides default logic */
+  /** Custom price label (e.g. "/ 30 days") — overrides default logic */
   priceLabel?: string;
-  /** Show "Starts at $X/month" (e.g. for promote plan) */
+  /** Show "From $X" with `priceLabel` (e.g. for the advertising plan) */
   priceStartsAt?: number;
   /** Internal link (uses Next router instead of submit flow) */
   href?: string;
@@ -129,9 +132,9 @@ export function PricingCard({
           <div className="mb-6">
             {plan.priceStartsAt != null ? (
               <>
-                <span className="text-muted-foreground text-base">Starts at </span>
+                <span className="text-muted-foreground text-base">From </span>
                 <span className="text-5xl font-bold text-foreground">${plan.priceStartsAt}</span>
-                <span className="text-muted-foreground ml-2 text-base">/month</span>
+                <span className="text-muted-foreground ml-2 text-base">{plan.priceLabel}</span>
               </>
             ) : (
               <>
