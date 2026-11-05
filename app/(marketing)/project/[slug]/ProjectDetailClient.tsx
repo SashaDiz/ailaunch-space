@@ -371,23 +371,6 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
           </div>
         )}
 
-        {/* Floating Social Share - Only on larger screens */}
-        <SocialShare
-          projectId={project.id}
-          slug={project.slug}
-          title={`Discover ${project.name} - Featured Project on ${siteConfig.name}`}
-          description={project.tagline || project.description}
-          url={project.website_url}
-          hashtags={[
-            project.category
-              ? project.category.replace(/[^a-zA-Z0-9]/g, "")
-              : "",
-            siteConfig.name.replace(/\s+/g, ''),
-          ]}
-          variant="floating"
-          className="hidden lg:block"
-        />
-
         <div className="flex flex-col gap-8">
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Main Content */}
