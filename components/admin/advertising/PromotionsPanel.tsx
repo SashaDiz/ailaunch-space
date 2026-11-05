@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion } from "motion/react";
-import { ExternalLink, Trash2, CheckCircle2, XCircle, Pause, Monitor, LayoutGrid, FileText, PlusCircle, Pencil } from "lucide-react";
+import { ExternalLink, Trash2, CheckCircle2, XCircle, Pause, Monitor, PanelRight, Image as ImageIcon, FileText, PlusCircle, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,12 +34,17 @@ function PlacementBadges({ promo }: { promo: any }) {
       )}
       {promo.placement_catalog && (
         <Badge variant="outline" className="text-xs gap-1">
-          <LayoutGrid className="w-3 h-3" /> Catalog
+          <PanelRight className="w-3 h-3" /> Side rail
+        </Badge>
+      )}
+      {promo.placement_logo && (
+        <Badge variant="outline" className="text-xs gap-1">
+          <ImageIcon className="w-3 h-3" /> Logo
         </Badge>
       )}
       {promo.placement_detail_page && (
         <Badge variant="outline" className="text-xs gap-1">
-          <FileText className="w-3 h-3" /> Detail
+          <FileText className="w-3 h-3" /> Project page
         </Badge>
       )}
     </div>
@@ -60,9 +65,9 @@ export function PromotionsPanel({ active }: { active: boolean }) {
   const [editing, setEditing] = useState<any>(null);
 
   // Summary stats
-  const activeCount = promotions.filter((p) => p.status === "active").length;
+  const paidCount = promotions.filter((p) => p.status === "active" && !p.is_house).length;
+  const houseCount = promotions.filter((p) => p.status === "active" && p.is_house).length;
   const totalClicks = promotions.reduce((sum, p) => sum + (p.clicks || 0), 0);
-  const totalImpressions = promotions.reduce((sum, p) => sum + (p.impressions || 0), 0);
 
   return (
     <>
@@ -70,7 +75,7 @@ export function PromotionsPanel({ active }: { active: boolean }) {
         <AdminPageActions>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={easeOverlay}>
             <Button onClick={() => setCreateDialogOpen(true)}>
-              <PlusCircle className="w-4 h-4 mr-2" /> Create Promotion
+              <PlusCircle className="w-4 h-4 mr-2" /> Create House Ad
             </Button>
           </motion.div>
         </AdminPageActions>
@@ -81,14 +86,14 @@ export function PromotionsPanel({ active }: { active: boolean }) {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">Active Promotions</p>
-              <p className="text-2xl font-bold text-foreground">{activeCount}</p>
+              <p className="text-sm text-muted-foreground">Paid Ads Running</p>
+              <p className="text-2xl font-bold text-foreground">{paidCount}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">Total Impressions</p>
-              <p className="text-2xl font-bold text-foreground">{totalImpressions.toLocaleString()}</p>
+              <p className="text-sm text-muted-foreground">House Ads</p>
+              <p className="text-2xl font-bold text-foreground">{houseCount}</p>
             </CardContent>
           </Card>
           <Card>
@@ -121,7 +126,7 @@ export function PromotionsPanel({ active }: { active: boolean }) {
                     <TableHead>CTA</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-center">Clicks</TableHead>
-                    <TableHead>Created</TableHead>
+                    <TableHead>Ends</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -142,10 +147,15 @@ export function PromotionsPanel({ active }: { active: boolean }) {
                       </TableCell>
                       <TableCell><PlacementBadges promo={p} /></TableCell>
                       <TableCell className="text-sm">{p.cta_text || <span className="text-muted-foreground">Default</span>}</TableCell>
-                      <TableCell>{getStatusBadge(p.status)}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {getStatusBadge(p.status)}
+                          {p.is_house && <Badge variant="outline">House</Badge>}
+                        </div>
+                      </TableCell>
                       <TableCell className="text-center text-sm">{p.clicks || 0}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {p.created_at ? new Date(p.created_at).toLocaleDateString() : "—"}
+                        {p.ends_at ? new Date(p.ends_at).toLocaleDateString() : "—"}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">

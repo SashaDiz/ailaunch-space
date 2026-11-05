@@ -1,23 +1,30 @@
 import { Rocket } from "lucide-react";
 import { PricingCard } from "@/components/marketing/PricingCard";
 import { DomainRatingBadge } from "@/components/marketing/DomainRatingBadge";
-import { advertisingConfig } from "@/config/advertising.config";
+import {
+  advertisingConfig,
+  minPlacementPrice,
+  placementKeys,
+} from "@/config/advertising.config";
 import { siteConfig } from "@/config/site.config";
 
 export async function generateMetadata() {
   return {
     title: `Pricing & Plans - ${siteConfig.name}`,
-    description: `List your project, sponsor the platform, or promote with targeted ad placements on ${siteConfig.name}.`,
+    description: `List your project or book a fixed ad spot for 30 days on ${siteConfig.name}.`,
     alternates: {
       canonical: `${siteConfig.url}/pricing`,
     },
     openGraph: {
       title: `Pricing & Plans - ${siteConfig.name}`,
-      description: `List your project, sponsor the platform, or promote with targeted ad placements on ${siteConfig.name}.`,
+      description: `List your project or book a fixed ad spot for 30 days on ${siteConfig.name}.`,
       type: "website",
     },
   };
 }
+
+const { durationDays, placements, bundleDiscountPercent } = advertisingConfig.promotions;
+const bundlePercent = Math.round(bundleDiscountPercent * 100);
 
 const plans = [
   {
@@ -57,44 +64,26 @@ const plans = [
     cta: "Premium Launch",
   },
   {
-    id: "sponsor",
-    name: "Become a Sponsor",
-    price: 29,
-    currency: "USD",
-    description: "Premium brand exposure across the platform",
-    icon: "Handshake" as const,
-    priceLabel: "/month",
-    href: "/sponsor",
-    features: [
-      { text: "Logo in partners section on every page", icon: "Home" as const },
-      { text: "Featured in email newsletters", icon: "Mail" as const },
-      { text: "Only 8 sponsor slots available", icon: "Crown" as const },
-      { text: "Direct link to your website", icon: "Link" as const },
-    ],
-    limitations: [],
-    popular: false,
-    cta: "Become a Sponsor",
-  },
-  {
-    id: "promote",
-    name: "Promote Your Project",
+    id: "advertise",
+    name: "Advertise",
     price: -1,
     currency: "USD",
-    description: "Targeted ad placements with flexible pricing",
+    description: "Pay once, keep your spot for 30 days",
     icon: "Megaphone" as const,
     href: "/promote",
-    priceStartsAt: advertisingConfig.promotions.minPricePerMonth,
+    priceLabel: `/ ${durationDays} days`,
+    priceStartsAt: minPlacementPrice,
     features: [
-      { text: "Top banner ad on every page", icon: "Monitor" as const },
-      { text: "Promoted card in catalog grid", icon: "LayoutGrid" as const },
-      { text: "Promoted card on project pages", icon: "FileText" as const },
-      { text: "Pick 1-3 placements, pay per type", icon: "Star" as const },
-      { text: "Custom CTA button text", icon: "Megaphone" as const },
-      { text: "Click tracking & impressions", icon: "Trophy" as const },
+      { text: `${placements.banner.name} on every page — $${placements.banner.price}`, icon: "Monitor" as const },
+      { text: `${placements.rail.name} on every page — $${placements.rail.price}`, icon: "PanelRight" as const },
+      { text: `${placements.logo.name} on the front page — $${placements.logo.price}`, icon: "Home" as const },
+      { text: `${placements.detailPage.name} on project pages — $${placements.detailPage.price}`, icon: "FileText" as const },
+      { text: `One payment, ${durationDays} days, no subscription or auto-renewal`, icon: "Clock" as const },
+      { text: `Limited spots — save ${bundlePercent}% when you book all ${placementKeys.length}`, icon: "Star" as const },
     ],
     limitations: [],
     popular: false,
-    cta: "Start Promoting",
+    cta: "Book a Spot",
   },
 ];
 
@@ -114,7 +103,7 @@ export default function PricingPage() {
             Pricing & Plans
           </h1>
           <p className="text-lg font-normal text-muted-foreground max-w-xl mx-auto">
-            List your project, sponsor the platform, or promote with targeted ad placements.
+            List your project for free, go Premium, or book a fixed ad spot for 30 days.
           </p>
           <div className="mt-6 flex justify-center">
             <DomainRatingBadge />

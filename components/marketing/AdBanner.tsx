@@ -83,8 +83,10 @@ export function AdBanner() {
                 )}
                 <span className="text-sm sm:text-base text-foreground truncate">
                   <strong>{paidBanner.name}</strong>
-                  {paidBanner.short_description && (
-                    <span className="text-muted-foreground ml-1.5">{paidBanner.short_description}</span>
+                  {(paidBanner.banner_text || paidBanner.short_description) && (
+                    <span className="text-muted-foreground ml-1.5">
+                      {paidBanner.banner_text || paidBanner.short_description}
+                    </span>
                   )}
                 </span>
               </div>

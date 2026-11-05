@@ -2,6 +2,7 @@ import { Resend } from 'resend';
 import { siteConfig } from '@/config/site.config';
 import { emailConfig, getFromAddress as getConfigFromAddress } from '@/config/email.config';
 import { badgeWarningHtml } from '@/lib/badge-warning-email';
+import { adEndingHtml } from '@/lib/ad-ending-email';
 
 // Lazy initialization to avoid build-time errors
 let resend = null;
@@ -87,6 +88,10 @@ const getPromotionsHtml = (data: any) => {
 
 // Email templates
 export const emailTemplates = {
+  adPlacementEnding: {
+    subject: (projectName: string) => `Your ad for ${projectName} ends soon`,
+    html: (data: { projectName: string; endsAt: string; clicks: number }) => adEndingHtml(data, siteConfig),
+  },
   badgeRemoved: {
     subject: (projectName: string) => `Action required: restore the badge for ${projectName}`,
     html: (data: { projectName: string; deadline: string }) => badgeWarningHtml(data, siteConfig),

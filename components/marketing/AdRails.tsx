@@ -14,9 +14,8 @@ import { siteConfig } from "@/config/site.config";
 /**
  * Side ad rails.
  *
- * The catalog's paid placements (active promotions with the `catalog`
- * placement), moved out of the project grid into two columns
- * pinned to the viewport edges on wide screens. Below the wide breakpoint
+ * The Side Rail Card placement: two columns pinned to the viewport edges on
+ * wide screens. Below the wide breakpoint
  * they become two slow tickers pinned to the top and bottom of the screen
  * (left rail on top, right rail below) — the catalog needs the whole width
  * there.
@@ -30,52 +29,60 @@ import { siteConfig } from "@/config/site.config";
  * card instead of the viewport.
  */
 
-/** Cards per rail; each ticker carries one rail's worth. */
-const PER_RAIL = 3;
-
 type RailItem = React.ComponentProps<typeof PaidPlacementCard>["project"];
 
+type RailData = {
+  items: RailItem[];
+  /** Whether a spot can be bought: the open-slot card only shows if so. */
+  hasOpenSlot: boolean;
+};
+
+const NO_RAIL_DATA: RailData = { items: [], hasOpenSlot: false };
+
 /**
- * Paid placements only: active promotions bought with the `catalog`
- * placement. Premium listings are not adverts and stay in the catalog.
+ * Promotions bought with the rail placement. Premium listings are not
+ * adverts and stay in the catalog.
  */
-async function fetchRailItems(): Promise<RailItem[]> {
-  const res = await fetch("/api/promotions?type=catalog").catch(() => null);
-  if (!res?.ok) return [];
+async function fetchRailData(): Promise<RailData> {
+  const res = await fetch("/api/promotions?type=rail").catch(() => null);
+  if (!res?.ok) return NO_RAIL_DATA;
   const data = await res.json();
-  return (data.data || []).slice(0, PER_RAIL * 2).map((p: any) => ({
-    id: p.id,
-    name: p.name,
-    slug: p.id,
-    logo_url: p.logo_url,
-    short_description: p.short_description,
-    website_url: p.website_url,
-    promotion_id: p.id,
-    cta_text: p.cta_text,
-  }));
+  return {
+    hasOpenSlot: data.available === true,
+    items: (data.data || []).map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      slug: p.id,
+      logo_url: p.logo_url,
+      short_description: p.catalog_detail_text || p.short_description,
+      website_url: p.website_url,
+      promotion_id: p.id,
+      cta_text: p.cta_text,
+    })),
+  };
 }
 
-let pending: Promise<RailItem[]> | null = null;
+let pending: Promise<RailData> | null = null;
 
-function useRailItems(): RailItem[] {
-  const [items, setItems] = useState<RailItem[]>([]);
+function useRailData(): RailData {
+  const [data, setData] = useState<RailData>(NO_RAIL_DATA);
 
   useEffect(() => {
     let cancelled = false;
-    pending ??= fetchRailItems().catch((error) => {
+    pending ??= fetchRailData().catch((error) => {
       console.error("AdRails: failed to load placements:", error);
       pending = null;
-      return [];
+      return NO_RAIL_DATA;
     });
     pending.then((next) => {
-      if (!cancelled) setItems(next);
+      if (!cancelled) setData(next);
     });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  return items;
+  return data;
 }
 
 function RailLabel() {
@@ -106,7 +113,7 @@ function OpenSlotCard({ compact = false }: { compact?: boolean }) {
 }
 
 export function AdRails() {
-  const items = useRailItems();
+  const { items, hasOpenSlot } = useRailData();
 
   // Alternate so both rails fill evenly as placements are sold.
   const left = items.filter((_, i) => i % 2 === 0);
@@ -119,7 +126,7 @@ export function AdRails() {
         {left.map((item) => (
           <PaidPlacementCard key={item.id} project={item} variant="rail" />
         ))}
-        <OpenSlotCard />
+        {hasOpenSlot && <OpenSlotCard />}
       </aside>
 
       <aside aria-label="Sponsored, right rail" className="ad-rail ad-rail-right">
@@ -127,7 +134,7 @@ export function AdRails() {
         {right.map((item) => (
           <PaidPlacementCard key={item.id} project={item} variant="rail" />
         ))}
-        <OpenSlotCard />
+        {hasOpenSlot && <OpenSlotCard />}
       </aside>
     </>
   );
@@ -169,10 +176,18 @@ function TickerSlot() {
  * the track slides by exactly one copy, so the loop has no seam; each copy
  * repeats the items enough to be wider than any screen the bar shows on.
  */
-function Ticker({ items, position }: { items: RailItem[]; position: "top" | "bottom" }) {
+function Ticker({
+  items,
+  position,
+  hasOpenSlot,
+}: {
+  items: RailItem[];
+  position: "top" | "bottom";
+  hasOpenSlot: boolean;
+}) {
   const sequence = [0, 1, 2].flatMap((round) => [
     ...items.map((item) => <TickerItem key={`${round}-${item.id}`} item={item} />),
-    <TickerSlot key={`${round}-slot`} />,
+    ...(hasOpenSlot ? [<TickerSlot key={`${round}-slot`} />] : []),
   ]);
   // ~6s per entry keeps the speed the same however many ads are sold.
   const duration = `${Math.max(20, sequence.length * 6)}s`;
@@ -200,14 +215,14 @@ function Ticker({ items, position }: { items: RailItem[]; position: "top" | "bot
 export function AdTickers() {
   // Always rendered, like the rails: with nothing sold the bars still carry
   // the open slot, and MainLayout has reserved their height regardless.
-  const items = useRailItems();
+  const { items, hasOpenSlot } = useRailData();
   const top = items.filter((_, i) => i % 2 === 0);
   const bottom = items.filter((_, i) => i % 2 === 1);
 
   return (
     <>
-      <Ticker items={top} position="top" />
-      <Ticker items={bottom.length > 0 ? bottom : top} position="bottom" />
+      <Ticker items={top} position="top" hasOpenSlot={hasOpenSlot} />
+      <Ticker items={bottom.length > 0 ? bottom : top} position="bottom" hasOpenSlot={hasOpenSlot} />
     </>
   );
 }

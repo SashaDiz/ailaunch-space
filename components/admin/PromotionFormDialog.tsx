@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import ImageUpload from "@/components/forms/ImageUpload";
 import toast from "react-hot-toast";
-import { Loader2, Monitor, LayoutGrid, FileText } from "lucide-react";
+import { Loader2, Monitor, PanelRight, Image as ImageIcon, FileText } from "lucide-react";
 import { advertisingConfig } from "@/config/advertising.config";
 
 interface PromotionFormDialogProps {
@@ -35,12 +35,17 @@ const placementOptions = [
   },
   {
     key: "placement_catalog" as const,
-    label: "Catalog",
-    icon: LayoutGrid,
+    label: "Side Rail",
+    icon: PanelRight,
+  },
+  {
+    key: "placement_logo" as const,
+    label: "Homepage Logo",
+    icon: ImageIcon,
   },
   {
     key: "placement_detail_page" as const,
-    label: "Detail Page",
+    label: "Project Page",
     icon: FileText,
   },
 ];
@@ -49,12 +54,14 @@ const EMPTY_FORM = {
   name: "",
   short_description: "",
   logo_url: "",
+  wordmark_url: "",
   website_url: "",
   cta_text: "",
   banner_text: "",
   catalog_detail_text: "",
   placement_banner: false,
   placement_catalog: false,
+  placement_logo: false,
   placement_detail_page: false,
 };
 
@@ -72,12 +79,14 @@ export function PromotionFormDialog({ open, onOpenChange, onSuccess, promotion }
         name: promotion.name || "",
         short_description: promotion.short_description || "",
         logo_url: promotion.logo_url || "",
+        wordmark_url: promotion.wordmark_url || "",
         website_url: promotion.website_url || "",
         cta_text: promotion.cta_text || "",
         banner_text: promotion.banner_text || "",
         catalog_detail_text: promotion.catalog_detail_text || "",
         placement_banner: !!promotion.placement_banner,
         placement_catalog: !!promotion.placement_catalog,
+        placement_logo: !!promotion.placement_logo,
         placement_detail_page: !!promotion.placement_detail_page,
       });
     } else {
@@ -89,7 +98,7 @@ export function PromotionFormDialog({ open, onOpenChange, onSuccess, promotion }
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const hasAnyPlacement = form.placement_banner || form.placement_catalog || form.placement_detail_page;
+  const hasAnyPlacement = form.placement_banner || form.placement_catalog || form.placement_logo || form.placement_detail_page;
 
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error("Name is required"); return; }
@@ -120,7 +129,7 @@ export function PromotionFormDialog({ open, onOpenChange, onSuccess, promotion }
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit Promotion" : "Create Promotion"}</DialogTitle>
+          <DialogTitle>{isEdit ? "Edit Promotion" : "Create House Ad"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
           <div className="grid grid-cols-2 gap-4">
@@ -167,6 +176,18 @@ export function PromotionFormDialog({ open, onOpenChange, onSuccess, promotion }
             />
           </div>
 
+          {form.placement_logo && (
+            <div className="space-y-2">
+              <Label>Homepage Wordmark</Label>
+              <ImageUpload
+                value={form.wordmark_url}
+                onChange={(url) => handleChange("wordmark_url", url)}
+                error={null}
+                formatHint="Transparent background. Any aspect ratio."
+              />
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label>CTA Button Text</Label>
             <Input
@@ -202,7 +223,7 @@ export function PromotionFormDialog({ open, onOpenChange, onSuccess, promotion }
           </div>
 
           <div className="space-y-2">
-            <Label>Catalog &amp; Detail Text</Label>
+            <Label>Card Text</Label>
             <Input
               value={form.catalog_detail_text}
               onChange={(e) => {
@@ -210,7 +231,7 @@ export function PromotionFormDialog({ open, onOpenChange, onSuccess, promotion }
                   handleChange("catalog_detail_text", e.target.value);
                 }
               }}
-              placeholder="Text shown on catalog cards and detail pages"
+              placeholder="Shown on side rail and project page cards"
               maxLength={CATALOG_DETAIL_TEXT_MAX}
             />
             <p className="text-xs text-muted-foreground text-right">

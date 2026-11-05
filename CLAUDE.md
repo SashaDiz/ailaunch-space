@@ -68,7 +68,7 @@ lib/              # Business logic and utilities
 hooks/            # React hooks (use-user, use-user-stats, use-features)
 components/
   ui/             # shadcn/ui primitives (Button, Card, Dialog, Select, etc.)
-  admin/          # Admin-specific components (CsvImportDialog, PromotionFormDialog, SponsorFormDialog, etc.)
+  admin/          # Admin-specific components (CsvImportDialog, PromotionFormDialog, etc.)
   directory/      # ProductCard, CategorySelector, CategoryBadge, PaidPlacementCard
   forms/          # ImageUpload, NewsletterSignup
   layout/         # Header, Footer
@@ -76,10 +76,10 @@ components/
   shared/         # Pagination, Providers, SiteThemeProvider, ErrorBoundary, LanguageSwitcher, LoadingSpinner, etc.
 types/            # TypeScript types (index.ts re-exports all; database.ts, config.ts, api.ts, payments.ts)
 app/
-  (admin)/admin/  # Route group: analytics, categories, changelog, projects, promotions, sponsors, theme, users
+  (admin)/admin/  # Route group: advertising, analytics, categories, changelog, projects, theme, users
   auth/           # Auth routes: signin, callback (NOT a route group)
   (dashboard)/    # Route group: dashboard, submit, edit, profile, settings
-  (marketing)/    # Route group: blog, pricing, faq, terms, privacy, contact, help, cookies, promote, sponsor, project/[slug], user/[id], categories
+  (marketing)/    # Route group: blog, pricing, faq, terms, privacy, contact, help, cookies, promote, project/[slug], user/[id], categories
   api/            # API routes
 scripts/          # Utility scripts (db:test, db:migrate, migrate:csv, webhook:simulate)
 i18n/             # next-intl request configuration
@@ -102,7 +102,7 @@ All customization lives in `config/`. To rebrand or toggle features, edit config
 | `payments.config.ts` | Payment provider configuration |
 | `email.config.ts` | Email provider (Resend) configuration |
 | `directory.config.ts` | Page size, sort options, pricing filters, seed categories |
-| `advertising.config.ts` | Sponsor/promotion pricing, Stripe price IDs, placement limits, discount rules |
+| `advertising.config.ts` | Ad placements: prices, Dodo product IDs, spot limits, duration, bundle discount |
 | `marketing.config.ts` | Ad banner content (text, button, link, icon) |
 | `ai.config.ts` | AI provider, model, temperature, max tokens |
 | `i18n.config.ts` | Supported locales, default locale, locale detection (disabled by default) |
@@ -277,7 +277,15 @@ import { notificationManager } from '@/lib/notifications';
 
 ### Payments
 
-Stripe integration in `lib/payments/stripe.ts`. One paid submission plan ("Premium", one-time $15) configured in `config/plans.config.ts`. Promotion/sponsor pricing is a separate system configured in `config/advertising.config.ts` with its own Stripe price IDs (`STRIPE_PRICE_ID_PROMO_BANNER`, `STRIPE_PRICE_ID_PROMO_CATALOG`, `STRIPE_PRICE_ID_PROMO_DETAIL`). Webhook handler at `app/api/webhooks/stripe/route.ts`. The `payments.config.ts` also supports Lemon Squeezy, Paddle, and a free-only ("none") mode.
+Stripe integration in `lib/payments/stripe.ts`. One paid submission plan ("Premium", one-time $15) configured in `config/plans.config.ts`. Advertising is a separate system; see below. Webhook handler at `app/api/webhooks/stripe/route.ts`. The `payments.config.ts` also supports Lemon Squeezy, Paddle, and a free-only ("none") mode.
+
+### Advertising
+
+One product, sold on `/promote`: pay once, hold a fixed spot for 30 days, no renewal. Four placements in `config/advertising.config.ts`: top banner (1 spot), side rails (6; a scrolling bar on mobile), homepage logo (8), project page card (2). All live in the `promotions` table; `partners` is unused and `/sponsor` redirects to `/promote`. The `placement_catalog` column means the side rails: the ads moved out of the catalog grid but the column kept its name.
+
+`lib/ad-slots.ts` holds the rules (pure, tested in `tests/ad-slots.test.mjs`). A spot is taken by a running paid ad or a checkout started in the last 30 minutes. House ads (`is_house`, everything created in the admin panel) fill empty spots and never make a placement sold out; a paid ad pushes them out. `POST /api/promotions` inserts the pending row and re-checks, so two checkouts for the last spot can't both pass.
+
+`payment.succeeded` with `metadata.type = 'ad_placement'` sets `starts_at` / `ends_at` in the Dodo webhook, and the public API stops serving an ad at `ends_at` on its own. `/api/cron/ad-placements` (daily 09:00 UTC) sends the ending-soon email and tidies statuses; a missed run delays those but never keeps an ad up. The products must be **one-time** in Dodo (`DODO_PRODUCT_ID_AD_BANNER`, `_RAIL`, `_LOGO`, `_DETAIL`, plus `DODO_DISCOUNT_CODE_AD_BUNDLE`): a subscription product takes the money without activating the ad. The webhook's `subscription.*` handlers exist only for subscriptions sold before this model. Apply `supabase/migrations/20261104_one_time_ad_placements.sql` before deploying.
 
 ### Site analytics (DataFast)
 
@@ -291,7 +299,7 @@ Traffic is tracked by [DataFast](https://datafa.st) — the client script is ren
 
 ### Cron jobs
 
-Endpoints under `app/api/cron/` are secured with `Authorization: Bearer ${CRON_SECRET}` header. `vercel.json` schedules `account-notifications` hourly and `reverify-badges` every Monday at 04:00 UTC.
+Endpoints under `app/api/cron/` are secured with `Authorization: Bearer ${CRON_SECRET}` header. `vercel.json` schedules `account-notifications` hourly, `ad-placements` daily at 09:00 UTC and `reverify-badges` every Monday at 04:00 UTC.
 
 Badge re-verification applies to live Standard listings with `dofollow_reason = 'verified_badge'`. `lib/badge-reverification.ts` sends one service email when a successfully fetched page no longer contains a qualifying link, leaves the listing active for at least seven days, then archives it and revokes dofollow on the next weekly check after the deadline if the link is still missing. A restored badge clears the warning; Premium/manual grants are exempt. Network, HTTP and URL errors are inconclusive and never trigger penalties. Email failures do not start the grace period. Database leases prevent overlapping checks, and conditional updates protect concurrent Premium upgrades. The cron paginates by ID, reports incomplete/error runs with HTTP 503, and spaces email sends. Apply `supabase/migrations/20260921_badge_warning_grace.sql` before deploying; the workflow requires `CRON_SECRET` and working Resend credentials. No production emails should be sent during local verification.
 
@@ -335,14 +343,14 @@ Copy `.env.example` to `.env.local`. See `.env.example` for full list with descr
 
 **Required:** `NEXT_PUBLIC_APP_URL`, Supabase credentials (URL, publishable key, secret key — legacy anon / service-role keys are still accepted), S3 storage config, Stripe keys, Resend API key, `CRON_SECRET`.
 
-**Optional:** Google Analytics (`NEXT_PUBLIC_GA_MEASUREMENT_ID`), PostHog (`NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`), DataFast (`DATAFAST_API_KEY` — required for the `/admin/analytics` dashboard; `NEXT_PUBLIC_DATAFAST_WEBSITE_ID`, `NEXT_PUBLIC_DATAFAST_DOMAIN` override the tracking-script defaults), SEObot (`SEOBOT_API_KEY`), Ahrefs (`AHREFS_API_KEY` — free APIv3 key powering the live Domain Rating badge), Discord webhook (`DISCORD_WEBHOOK_URL`), Resend webhook signing secret (`RESEND_WEBHOOK_SECRET` — `/api/webhooks/resend` marks permanent bounces and spam complaints in `newsletter` / `email_notifications`), `SUPABASE_PROJECT_ID` (for `pnpm supabase:types`), promotion Stripe price IDs (`STRIPE_PRICE_ID_PROMO_BANNER`, `STRIPE_PRICE_ID_PROMO_CATALOG`, `STRIPE_PRICE_ID_PROMO_DETAIL`), ListingBott link (`NEXT_PUBLIC_LISTINGBOTT_URL`), Logo.dev (`NEXT_PUBLIC_LOGO_DEV_TOKEN`), AI config (`AI_PROVIDER`, `AI_MODEL`, `AI_API_KEY`), bundle analysis (`ANALYZE=true`).
+**Optional:** Google Analytics (`NEXT_PUBLIC_GA_MEASUREMENT_ID`), PostHog (`NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`), DataFast (`DATAFAST_API_KEY` — required for the `/admin/analytics` dashboard; `NEXT_PUBLIC_DATAFAST_WEBSITE_ID`, `NEXT_PUBLIC_DATAFAST_DOMAIN` override the tracking-script defaults), SEObot (`SEOBOT_API_KEY`), Ahrefs (`AHREFS_API_KEY` — free APIv3 key powering the live Domain Rating badge), Discord webhook (`DISCORD_WEBHOOK_URL`), Resend webhook signing secret (`RESEND_WEBHOOK_SECRET` — `/api/webhooks/resend` marks permanent bounces and spam complaints in `newsletter` / `email_notifications`), `SUPABASE_PROJECT_ID` (for `pnpm supabase:types`), ad placement Dodo product IDs (`DODO_PRODUCT_ID_AD_BANNER`, `DODO_PRODUCT_ID_AD_RAIL`, `DODO_PRODUCT_ID_AD_LOGO`, `DODO_PRODUCT_ID_AD_DETAIL`, `DODO_DISCOUNT_CODE_AD_BUNDLE`), ListingBott link (`NEXT_PUBLIC_LISTINGBOTT_URL`), Logo.dev (`NEXT_PUBLIC_LOGO_DEV_TOKEN`), AI config (`AI_PROVIDER`, `AI_MODEL`, `AI_API_KEY`), bundle analysis (`ANALYZE=true`).
 
 ## Known Limitations
 
 Known gaps AI sessions should be aware of — not active bugs, but technical debt that hasn't been scoped into its own session yet. Flag them when relevant; don't try to fix inline unless the user asks.
 
 - **`tsconfig.json` has `strict: false`.** Enabling strict mode cascades into hundreds of implicit-any / null errors across the codebase. Needs a dedicated per-error-triage session. `@typescript-eslint/no-explicit-any` is currently off for the same reason.
-- **`app/api/admin/route.ts` is a ~1600-line monolith.** Every admin action (projects, users, link types, Stripe recovery, promotions, sponsors, analytics) lives in one file. Splitting into `app/api/admin/{projects,users,payments,...}/route.ts` is a multi-hour refactor with real regression risk — ask before attempting.
+- **`app/api/admin/route.ts` is a ~1600-line monolith.** Every admin action (projects, users, link types, Stripe recovery, promotions, analytics) lives in one file. Splitting into `app/api/admin/{projects,users,payments,...}/route.ts` is a multi-hour refactor with real regression risk — ask before attempting.
 - **Test coverage is minimal.** `pnpm test` runs `node --test` over `tests/*.test.mjs` — no vitest/jest, no transpiler. Tests import `.ts` sources directly; Node strips the type annotations natively (`process.features.typescript === 'strip'`), which only works for modules whose imports are node builtins or nothing at all. Today that covers `lib/safe-redirect.ts` and `isBlockedIp()` from `lib/safe-fetch.ts`. Everything else — payments, auth, webhooks, the db layer — has no tests; verify those via `pnpm typecheck` + `pnpm build` + manual end-to-end, and say so.
 - **Two admin mechanisms in the schema.** Both `is_admin BOOLEAN` and `role TEXT` exist in the `users` table. The canonical check is `checkIsAdmin` in `@/lib/supabase/auth` (matches either). When granting admin, keep both in sync so RLS policies (which use `role = 'admin'`) and the helper agree.
 

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/supabase/database";
+import { advertisingConfig } from "@/config/advertising.config";
 import {
   constructDodoEvent,
   isDodoConfigured,
@@ -10,9 +11,12 @@ import {
  * Dodo Payments webhook handler.
  *
  * Events we care about:
- *   payment.succeeded     — one-time premium submission captured
+ *   payment.succeeded     — premium submission or ad placement paid
  *   refund.succeeded      — refund issued
- *   subscription.active   — partner / promotion subscription started
+ *
+ * Ads are one-time now. The subscription events below only serve customers
+ * who subscribed before that change, until their subscriptions end:
+ *   subscription.active   — subscription started
  *   subscription.renewed  — recurring renewal (keep active, extend period)
  *   subscription.on_hold  — payment issue (mark past_due)
  *   subscription.cancelled / subscription.expired / subscription.failed
@@ -134,13 +138,58 @@ async function handlePaymentSucceeded(data: DodoPaymentData): Promise<void> {
   const metadata = data.metadata ?? {};
   const orderType = metadata.type ?? "premium_submission";
 
-  // Subscription payments (partner/promotion) are handled by subscription
-  // events; the first invoice's payment.succeeded needs no separate work.
+  if (orderType === "ad_placement") {
+    await processAdPlacementOrder(data);
+    return;
+  }
+
+  // Legacy subscription invoices are handled by the subscription events.
   if (orderType !== "premium_submission") {
     return;
   }
 
   await processPremiumSubmissionOrder(data);
+}
+
+async function processAdPlacementOrder(data: DodoPaymentData): Promise<void> {
+  const promotionId = data.metadata?.promotionId;
+  const promotion = promotionId
+    ? await db.findOne("promotions", { id: promotionId })
+    : null;
+
+  if (!promotion) {
+    // Money was taken for an ad we can't find: fail so Dodo retries and it shows up in logs.
+    throw new Error(`Ad placement payment ${data.payment_id} has no promotion ${promotionId}`);
+  }
+
+  // Retried delivery of the same payment.
+  if (promotion.payment_id === data.payment_id) {
+    return;
+  }
+
+  // The hold may have lapsed before the customer paid. They still get what
+  // they paid for, so activate anyway: being one over capacity beats that.
+  const startsAt = new Date();
+  const endsAt = new Date(
+    startsAt.getTime() + advertisingConfig.promotions.durationDays * 86_400_000
+  );
+
+  await db.updateOne(
+    "promotions",
+    { id: promotion.id },
+    {
+      $set: {
+        status: "active",
+        is_house: false,
+        payment_id: data.payment_id,
+        amount_paid: data.total_amount ?? 0,
+        customer_id: data.customer?.customer_id,
+        starts_at: startsAt,
+        ends_at: endsAt,
+        reminder_sent_at: null,
+      },
+    }
+  );
 }
 
 async function processPremiumSubmissionOrder(data: DodoPaymentData): Promise<void> {
@@ -220,6 +269,16 @@ async function processPremiumSubmissionOrder(data: DodoPaymentData): Promise<voi
 }
 
 async function handleRefundSucceeded(data: DodoPaymentData): Promise<void> {
+  const promotion = await db.findOne("promotions", { payment_id: data.payment_id });
+  if (promotion) {
+    await db.updateOne(
+      "promotions",
+      { id: promotion.id },
+      { $set: { status: "cancelled", ends_at: new Date() } }
+    );
+    return;
+  }
+
   const project = await db.findOne("apps", { order_id: data.payment_id });
   if (project) {
     await db.updateOne(
@@ -247,40 +306,32 @@ async function handleRefundSucceeded(data: DodoPaymentData): Promise<void> {
   );
 }
 
-async function findSubscriptionEntity(data: DodoSubscriptionData) {
+/** The promotion behind a legacy subscription, including migrated sponsors. */
+async function findSubscribedPromotion(data: DodoSubscriptionData) {
   const metadata = data.metadata ?? {};
 
-  // Prefer the entity id carried in checkout metadata.
-  if (metadata.partnerId) {
-    const partner = await db.findOne("partners", { id: metadata.partnerId });
-    if (partner) return { type: "partner" as const, entity: partner };
-  }
   if (metadata.promotionId) {
     const promotion = await db.findOne("promotions", { id: metadata.promotionId });
-    if (promotion) return { type: "promotion" as const, entity: promotion };
+    if (promotion) return promotion;
   }
-
-  // Fallback: resolve by the subscription id we may have already stored.
-  const partner = await db.findOne("partners", { subscription_id: data.subscription_id });
-  if (partner) return { type: "partner" as const, entity: partner };
-  const promotion = await db.findOne("promotions", { subscription_id: data.subscription_id });
-  if (promotion) return { type: "promotion" as const, entity: promotion };
-
-  return null;
+  if (metadata.partnerId) {
+    const promotion = await db.findOne("promotions", { legacy_partner_id: metadata.partnerId });
+    if (promotion) return promotion;
+  }
+  return db.findOne("promotions", { subscription_id: data.subscription_id });
 }
 
 async function handleSubscriptionStarted(data: DodoSubscriptionData): Promise<void> {
-  const found = await findSubscriptionEntity(data);
-  if (!found) {
-    console.warn("Dodo subscription active but no partner/promotion entity found", {
+  const promotion = await findSubscribedPromotion(data);
+  if (!promotion) {
+    console.warn("Dodo subscription active but no promotion found", {
       id: data.subscription_id,
     });
     return;
   }
-  const table = found.type === "partner" ? "partners" : "promotions";
   await db.updateOne(
-    table,
-    { id: found.entity.id },
+    "promotions",
+    { id: promotion.id },
     {
       $set: {
         status: "active",
@@ -303,13 +354,12 @@ async function handleSubscriptionUpdated(
   data: DodoSubscriptionData,
   status: string
 ): Promise<void> {
-  const found = await findSubscriptionEntity(data);
-  if (!found) return;
-  const table = found.type === "partner" ? "partners" : "promotions";
+  const promotion = await findSubscribedPromotion(data);
+  if (!promotion) return;
 
   await db.updateOne(
-    table,
-    { id: found.entity.id },
+    "promotions",
+    { id: promotion.id },
     {
       $set: {
         status,
@@ -323,12 +373,11 @@ async function handleSubscriptionUpdated(
 }
 
 async function handleSubscriptionCanceled(data: DodoSubscriptionData): Promise<void> {
-  const found = await findSubscriptionEntity(data);
-  if (!found) return;
-  const table = found.type === "partner" ? "partners" : "promotions";
+  const promotion = await findSubscribedPromotion(data);
+  if (!promotion) return;
   await db.updateOne(
-    table,
-    { id: found.entity.id },
+    "promotions",
+    { id: promotion.id },
     {
       $set: {
         status: "cancelled",

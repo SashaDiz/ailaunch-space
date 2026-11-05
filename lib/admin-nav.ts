@@ -76,7 +76,7 @@ export const adminNavItems: AdminNavItem[] = [
     icon: Megaphone,
     exact: false,
     title: "Advertising",
-    subtitle: "Manage sponsors, paid promotions, and the site banner.",
+    subtitle: "Manage ad placements and the promo block.",
   },
   {
     name: "Users",

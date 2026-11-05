@@ -13,9 +13,9 @@ export const marketingConfig: MarketingConfig = {
     /** Main descriptive text */
     text: 'Promote your AI tool to thousands of indie founders and builders.',
     /** CTA button text */
-    buttonText: 'Become a sponsor',
+    buttonText: 'Advertise',
     /** CTA button URL (internal links don't get rel="noopener noreferrer") */
-    buttonLink: '/sponsor',
+    buttonLink: '/promote',
     /** Brand icon path */
     iconSrc: '/assets/logo.svg',
     /** Alt text for the icon */

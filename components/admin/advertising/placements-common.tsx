@@ -14,11 +14,12 @@ import {
 } from "@/components/ui/select";
 import { easeOverlay } from "@/lib/motion";
 
-/** Status values shared by sponsors and promotions (both back onto status filtering). */
+/** Promotion status filter values. */
 export const PLACEMENT_STATUS_OPTIONS = [
   "all",
   "pending",
   "active",
+  "expired",
   "cancelled",
   "past_due",
   "paused",
@@ -28,6 +29,7 @@ export const PLACEMENT_STATUS_OPTIONS = [
 const STATUS_BADGE: Record<string, { className: string; label: string }> = {
   active: { className: "bg-green-500/20 text-green-600", label: "Active" },
   pending: { className: "bg-yellow-500/20 text-yellow-600", label: "Pending" },
+  expired: { className: "bg-muted text-muted-foreground", label: "Expired" },
   cancelled: { className: "bg-muted text-muted-foreground", label: "Cancelled" },
   past_due: { className: "bg-red-500/20 text-red-600", label: "Past Due" },
   paused: { className: "bg-blue-500/20 text-blue-600", label: "Paused" },
@@ -48,7 +50,7 @@ function formatStatusLabel(s: string) {
     : s.charAt(0).toUpperCase() + s.slice(1).replace("_", " ");
 }
 
-/** Status dropdown + item count, shared by the sponsors and promotions panels. */
+/** Status dropdown + item count. */
 export function StatusFilterCard({
   value,
   onChange,
@@ -99,9 +101,8 @@ export function PanelFade({ children }: { children: ReactNode }) {
 }
 
 /**
- * Shared list logic for status-filtered placement collections (sponsors,
- * promotions). Both endpoints return `{ data: [...] }`, accept `PUT { id, status }`,
- * and `DELETE ?id=`. Columns/badges stay per-panel.
+ * List logic for a status-filtered placement collection. The endpoint returns
+ * `{ data: [...] }`, accepts `PUT { id, status }`, and `DELETE ?id=`.
  */
 export function usePlacementList(endpoint: string, label: string) {
   const [items, setItems] = useState<any[]>([]);

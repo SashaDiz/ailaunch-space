@@ -3,8 +3,7 @@
  *
  * Single payment provider for the platform. Handles:
  *   - one-time premium project submissions
- *   - recurring sponsor (partner) subscriptions
- *   - recurring promotion placement subscriptions
+ *   - one-time ad placements (a fixed spot for 30 days)
  *
  * Checkout is created via Dodo Checkout Sessions; entitlements are granted by
  * the webhook at `app/api/webhooks/dodo/route.ts`. Metadata set at checkout
@@ -128,55 +127,9 @@ export async function createPremiumCheckoutSession(args: {
 }
 
 /**
- * Create a subscription checkout for a sponsor (partner) placement.
- * The `partnerId` is carried in metadata so the subscription webhook can
- * resolve the partner row without relying on the checkout session id.
- */
-export async function createPartnerCheckoutSession(args: {
-  priceId: string;
-  customerEmail: string;
-  partnerData?: { id?: string; name?: string; logo?: string; description?: string };
-  successUrl: string;
-  cancelUrl: string;
-  userId?: string;
-}): Promise<CheckoutSessionResult> {
-  const client = getDodoClient();
-
-  if (!args.priceId) {
-    throw new Error("Dodo product ID is required for the sponsor subscription");
-  }
-
-  const metadata = toDodoMetadata({
-    type: "partner_subscription",
-    userId: args.userId ?? "",
-    partnerId: args.partnerData?.id ?? "",
-    ...(args.partnerData?.name && { partnerName: args.partnerData.name }),
-    ...(args.partnerData?.logo && { partnerLogo: args.partnerData.logo }),
-  });
-
-  const session = await client.checkoutSessions.create({
-    product_cart: [{ product_id: args.priceId, quantity: 1 }],
-    customer: { email: args.customerEmail },
-    return_url: args.successUrl,
-    metadata,
-  });
-
-  if (!session?.checkout_url) {
-    throw new Error("No checkout URL returned from Dodo Payments");
-  }
-
-  return {
-    sessionId: session.session_id,
-    url: session.checkout_url,
-    currency: "usd",
-  };
-}
-
-/**
- * Create a subscription checkout for one or more promotion placements
- * (banner / catalog / detail). `lineItems` keeps the historical
- * `{ price, quantity? }[]` shape but maps to Dodo's product cart. When the
- * all-three bundle is selected, a `discount_code` is applied.
+ * Create a one-time checkout for one or more ad placements. `lineItems` keeps
+ * the historical `{ price, quantity? }[]` shape but maps to Dodo's product
+ * cart. When every placement is selected, a `discount_code` is applied.
  */
 export async function createPromotionCheckoutSession(args: {
   lineItems: Array<{ price: string; quantity?: number }>;
@@ -184,9 +137,7 @@ export async function createPromotionCheckoutSession(args: {
   promotionData?: {
     id?: string;
     name?: string;
-    placementBanner?: boolean;
-    placementCatalog?: boolean;
-    placementDetailPage?: boolean;
+    placements?: string[];
   };
   successUrl: string;
   cancelUrl: string;
@@ -206,13 +157,11 @@ export async function createPromotionCheckoutSession(args: {
   }));
 
   const metadata = toDodoMetadata({
-    type: "promotion_subscription",
+    type: "ad_placement",
     userId: args.userId ?? "",
     promotionId: args.promotionData?.id ?? "",
     promotionName: args.promotionData?.name ?? "",
-    placementBanner: args.promotionData?.placementBanner ? "true" : "false",
-    placementCatalog: args.promotionData?.placementCatalog ? "true" : "false",
-    placementDetailPage: args.promotionData?.placementDetailPage ? "true" : "false",
+    placements: (args.promotionData?.placements ?? []).join(","),
   });
 
   const session = await client.checkoutSessions.create({
@@ -342,7 +291,6 @@ export const dodoUtils = {
 const dodoApi = {
   paymentPlans,
   createPremiumCheckoutSession,
-  createPartnerCheckoutSession,
   createPromotionCheckoutSession,
   verifyDodoSession,
   constructDodoEvent,

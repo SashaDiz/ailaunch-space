@@ -126,7 +126,7 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
             name: p.name,
             slug: p.id,
             logo_url: p.logo_url,
-            short_description: p.short_description,
+            short_description: p.catalog_detail_text || p.short_description,
             website_url: p.website_url,
             promotion_id: p.id,
             cta_text: p.cta_text,
@@ -741,7 +741,7 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
                 </div>
               </div>
 
-              {/* PaidPlacementCard - featured premium projects */}
+              {/* Paid Project Page Cards first, then featured Premium projects */}
               {featuredPremium
                 .filter((p) => p.id !== project.id)
                 .slice(0, 2)
