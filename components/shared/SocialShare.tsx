@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import {
   Share2,
-  X,
   Linkedin,
   Link,
   Check,
