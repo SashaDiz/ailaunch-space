@@ -7,6 +7,7 @@ import { marketingConfig } from "@/config/marketing.config";
 import { featuresConfig } from "@/config/features.config";
 import { advertisingConfig } from "@/config/advertising.config";
 import { useRotation } from "@/hooks/use-rotation";
+import { RotationBars } from "@/components/marketing/RotationBars";
 import { cn } from "@/lib/utils";
 
 /**
@@ -23,11 +24,8 @@ import { cn } from "@/lib/utils";
 export function AdBanner() {
   const [banners, setBanners] = useState<any[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const { index, pauseProps } = useRotation(
-    banners.length,
-    advertisingConfig.promotions.rotationSeconds
-  );
-  const paidBanner = banners[index % banners.length];
+  const rotation = useRotation(banners.length);
+  const paidBanner = banners[rotation.start];
 
   useEffect(() => {
     if (!featuresConfig.adBanner) {
@@ -63,7 +61,7 @@ export function AdBanner() {
     };
 
     return (
-      <aside className="print:hidden" aria-label="Advertisement" {...pauseProps}>
+      <aside className="print:hidden" aria-label="Advertisement" {...rotation.pauseProps}>
         <div className="border-b border-t border-muted dark:border-muted">
           <div className="container-classic py-3 px-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -112,6 +110,15 @@ export function AdBanner() {
                 </a>
               </div>
             </div>
+            <RotationBars
+              pages={rotation.pages}
+              page={rotation.page}
+              seconds={advertisingConfig.promotions.rotationSeconds}
+              paused={rotation.paused}
+              onSelect={rotation.goTo}
+              onComplete={rotation.next}
+              className="mt-1 -mb-2"
+            />
           </div>
         </div>
       </aside>

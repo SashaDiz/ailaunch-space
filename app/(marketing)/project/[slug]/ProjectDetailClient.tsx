@@ -22,6 +22,7 @@ import { CategoryBadge, PricingBadge } from '@/components/directory/CategoryBadg
 import { PaidPlacementCard } from '@/components/directory/PaidPlacementCard';
 import { advertisingConfig } from '@/config/advertising.config';
 import { useRotation } from '@/hooks/use-rotation';
+import { RotationBars } from '@/components/marketing/RotationBars';
 import { rotatedWindow } from '@/lib/ad-slots';
 import { ProductCard } from '@/components/directory/ProductCard';
 import { BookmarkButton } from '@/components/directory/BookmarkButton';
@@ -63,11 +64,7 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
   const [selectedWeekId, setSelectedWeekId] = useState("");
   const [featuredPremium, setFeaturedPremium] = useState([]);
   const [adCards, setAdCards] = useState([]);
-  const { index: adRotation, pauseProps: adPauseProps } = useRotation(
-    adCards.length,
-    rotationSeconds,
-    AD_CARDS_VISIBLE
-  );
+  const adRotation = useRotation(adCards.length, AD_CARDS_VISIBLE);
   const [showPromoModal, setShowPromoModal] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [descriptionOverflows, setDescriptionOverflows] = useState(false);
@@ -257,7 +254,7 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
     });
   };
 
-  const visibleAds = rotatedWindow(adCards, adRotation, AD_CARDS_VISIBLE);
+  const visibleAds = rotatedWindow(adCards, adRotation.start, AD_CARDS_VISIBLE);
 
   if (!project) {
     return (
@@ -758,7 +755,7 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
               </div>
 
               {/* Paid Project Page Cards first, then featured Premium projects */}
-              <div className="contents" {...adPauseProps}>
+              <div className="space-y-8" {...adRotation.pauseProps}>
                 {[
                   ...visibleAds,
                   ...featuredPremium
@@ -767,6 +764,15 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
                 ].map((adProject) => (
                   <PaidPlacementCard key={adProject.id} project={adProject} />
                 ))}
+                <RotationBars
+                  pages={adRotation.pages}
+                  page={adRotation.page}
+                  seconds={rotationSeconds}
+                  paused={adRotation.paused}
+                  onSelect={adRotation.goTo}
+                  onComplete={adRotation.next}
+                  className="!mt-2"
+                />
               </div>
 
               {/* Maker Info */}
