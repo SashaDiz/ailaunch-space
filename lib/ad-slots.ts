@@ -98,3 +98,9 @@ export function holdsWithinCapacity(
   const index = holders(rows, column, holdMs, now).findIndex((row) => row.id === id);
   return index >= 0 && index < capacity;
 }
+
+/** The `size` items showing at rotation position `start`, wrapping round the list. */
+export function rotatedWindow<T>(items: T[], start: number, size: number): T[] {
+  if (items.length <= size) return items;
+  return Array.from({ length: size }, (_, offset) => items[(start + offset) % items.length]);
+}

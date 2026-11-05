@@ -5,6 +5,7 @@ import {
   availability,
   holdsWithinCapacity,
   isLive,
+  rotatedWindow,
 } from '../lib/ad-slots.ts';
 import { adEndingHtml } from '../lib/ad-ending-email.ts';
 
@@ -124,4 +125,14 @@ test('the ending email escapes the advertiser name and counts clicks', () => {
   assert.match(html, /&lt;b&gt;x&lt;\/b&gt;/);
   assert.match(html, /1 click</);
   assert.match(html, /https:\/\/example\.com\/promote/);
+});
+
+test('a rotation window wraps round the list', () => {
+  assert.deepEqual(rotatedWindow(['a', 'b', 'c', 'd'], 2, 2), ['c', 'd']);
+  assert.deepEqual(rotatedWindow(['a', 'b', 'c'], 2, 2), ['c', 'a']);
+});
+
+test('a rotation window keeps every ad when they all fit', () => {
+  assert.deepEqual(rotatedWindow(['a', 'b'], 5, 2), ['a', 'b']);
+  assert.deepEqual(rotatedWindow([], 0, 2), []);
 });

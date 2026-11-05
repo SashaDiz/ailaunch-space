@@ -5,13 +5,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { marketingConfig } from "@/config/marketing.config";
 import { featuresConfig } from "@/config/features.config";
+import { advertisingConfig } from "@/config/advertising.config";
+import { useRotation } from "@/hooks/use-rotation";
 import { cn } from "@/lib/utils";
 
 /**
  * AdBanner — horizontal promo banner below header.
  *
  * Priority:
- * 1. If promotions feature is enabled, fetch active paid banner promotions
+ * 1. If promotions feature is enabled, fetch the banner ads; they take turns
  * 2. If no paid banner found, fall back to static marketingConfig.adBanner
  *
  * Easily add/remove:
@@ -19,8 +21,13 @@ import { cn } from "@/lib/utils";
  * - Set marketingConfig.adBanner.enabled = false to hide static fallback
  */
 export function AdBanner() {
-  const [paidBanner, setPaidBanner] = useState<any>(null);
+  const [banners, setBanners] = useState<any[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const { index, pauseProps } = useRotation(
+    banners.length,
+    advertisingConfig.promotions.rotationSeconds
+  );
+  const paidBanner = banners[index % banners.length];
 
   useEffect(() => {
     if (!featuresConfig.adBanner) {
@@ -32,10 +39,7 @@ export function AdBanner() {
       fetch("/api/promotions?type=banner")
         .then((res) => (res.ok ? res.json() : null))
         .then((json) => {
-          const banners = json?.data || [];
-          if (banners.length > 0) {
-            setPaidBanner(banners[0]);
-          }
+          setBanners(json?.data || []);
         })
         .catch(() => {})
         .finally(() => setLoaded(true));
@@ -59,7 +63,7 @@ export function AdBanner() {
     };
 
     return (
-      <aside className="print:hidden" aria-label="Advertisement">
+      <aside className="print:hidden" aria-label="Advertisement" {...pauseProps}>
         <div className="border-b border-t border-muted dark:border-muted">
           <div className="container-classic py-3 px-4">
             <div className="flex flex-wrap items-center justify-between gap-3">

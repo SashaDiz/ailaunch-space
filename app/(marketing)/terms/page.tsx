@@ -140,7 +140,7 @@ export default function TermsPage() {
 
             <h3 className="text-xl font-semibold mb-3">5.4 Advertising Placements</h3>
             <p className="mb-4">
-              In addition to project listings, we offer advertising placements: a top banner, side rail cards, a homepage logo and project page cards. Each placement is a one-time payment for a fixed spot for 30 days. Spots are limited, and pricing for each placement is shown before checkout.
+              In addition to project listings, we offer advertising placements: a top banner, side rail cards, a homepage logo and project page cards. Each placement is a one-time payment for a fixed spot for 30 days. Spots are limited, and pricing for each placement is shown before checkout. On the top banner and project page cards, ads take turns on a timer, so your ad shares its position with the others booked there.
             </p>
             <ul className="list-disc pl-6 mb-4">
               <li><strong>No renewal:</strong> Placements are not subscriptions. We do not charge you again; your ad comes down automatically at the end of the 30 days, and you may book another period if a spot is available.</li>

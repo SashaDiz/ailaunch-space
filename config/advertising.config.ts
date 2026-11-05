@@ -14,6 +14,8 @@ export const advertisingConfig = {
     reminderDaysBefore: 3,
     /** Minutes an unpaid checkout holds its spot */
     checkoutHoldMinutes: 30,
+    /** Seconds each ad shows on placements where ads take turns */
+    rotationSeconds: 30,
     /** Maximum characters for custom CTA button text */
     ctaMaxLength: 20,
     /** Default CTA text when none provided (use {name} as placeholder) */
@@ -28,10 +30,10 @@ export const advertisingConfig = {
         /** `promotions` column that marks this placement */
         column: 'placement_banner',
         name: 'Top Banner',
-        description: 'Full-width banner below the site header on every page',
+        description: 'Banner below the header on every page. Two ads take turns, 30 seconds each',
         price: 69,
         priceId: process.env.DODO_PRODUCT_ID_AD_BANNER || null,
-        maxActive: 1,
+        maxActive: 2,
       },
       rail: {
         id: 'rail',
@@ -41,7 +43,8 @@ export const advertisingConfig = {
         description: 'Card in the side columns on desktop, scrolling bar on mobile',
         price: 39,
         priceId: process.env.DODO_PRODUCT_ID_AD_RAIL || null,
-        maxActive: 6,
+        // Four on each side.
+        maxActive: 8,
       },
       logo: {
         id: 'logo',
@@ -56,10 +59,12 @@ export const advertisingConfig = {
         id: 'detail_page',
         column: 'placement_detail_page',
         name: 'Project Page Card',
-        description: 'Card in the sidebar of project pages',
+        description: 'Card in the sidebar of project pages. Two show at a time, changing every 30 seconds',
         price: 9,
         priceId: process.env.DODO_PRODUCT_ID_AD_DETAIL || null,
-        maxActive: 2,
+        maxActive: 4,
+        /** Cards on a project page at once; the rest take turns */
+        visibleAtOnce: 2,
       },
     },
   },
