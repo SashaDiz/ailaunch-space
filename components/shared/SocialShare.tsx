@@ -38,7 +38,7 @@ export function SocialShare({
   url,
   hashtags = [],
   className = "",
-  variant = "default", // default, minimal, floating
+  variant = "default", // default, minimal
   size = "md", // sm, md, lg
 }) {
   const [copied, setCopied] = useState(false);
@@ -208,56 +208,6 @@ export function SocialShare({
             <Copy className={iconSize} />
           )}
         </Button>
-      </div>
-    );
-  }
-
-  if (variant === "floating") {
-    return (
-      <div
-        className={cn("fixed right-6 top-1/2 transform -translate-y-1/2 z-40", className)}
-      >
-        <div className="flex flex-col space-y-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleShare("twitter")}
-            className="rounded-[var(--radius)] bg-foreground text-background hover:bg-foreground/80"
-            style={{ boxShadow: "var(--button-shadow)" }}
-            title="Share on X"
-          >
-            <XIcon className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleShare("linkedin")}
-            className="rounded-[var(--radius)] bg-[#0077B5] text-background hover:bg-[#0077B5]/80"
-            style={{ boxShadow: "var(--button-shadow)" }}
-            title="Share on LinkedIn"
-          >
-            <Linkedin className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleCopyLink}
-            className={cn(
-              "rounded-[var(--radius)]",
-              copied
-                ? "bg-success text-success-foreground"
-                : "bg-primary hover:bg-primary/80 text-primary-foreground"
-            )}
-            style={{ boxShadow: "var(--button-shadow)" }}
-            title="Copy link"
-          >
-            {copied ? (
-              <Check className="w-4 h-4" />
-            ) : (
-              <Link className="w-4 h-4" />
-            )}
-          </Button>
-        </div>
       </div>
     );
   }

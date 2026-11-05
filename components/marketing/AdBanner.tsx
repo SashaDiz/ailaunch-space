@@ -10,6 +10,20 @@ import { useRotation } from "@/hooks/use-rotation";
 import { RotationBars } from "@/components/marketing/RotationBars";
 import { cn } from "@/lib/utils";
 
+function AdLabel({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "flex-shrink-0 px-1.5 py-0.5 text-[9px] font-medium rounded bg-muted text-muted-foreground",
+        className
+      )}
+      aria-hidden
+    >
+      Ad
+    </span>
+  );
+}
+
 /**
  * AdBanner — horizontal promo banner below header.
  *
@@ -64,33 +78,35 @@ export function AdBanner() {
       <aside className="print:hidden" aria-label="Advertisement" {...rotation.pauseProps}>
         <div className="border-b border-t border-muted dark:border-muted">
           <div className="container-classic py-3 px-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                <span
-                  className="flex-shrink-0 px-1.5 py-0.5 text-[9px] font-medium rounded bg-muted text-muted-foreground"
-                  aria-hidden
-                >
-                  Ad
-                </span>
+            {/* Phone: logo beside a two-line text block, full-width button below.
+                From `sm`: everything on one line. */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3 min-w-0">
+                <AdLabel className="hidden sm:inline-block" />
                 {paidBanner.logo_url && (
-                  <span className="flex-shrink-0 w-6 h-6 relative rounded-[var(--radius)]">
+                  <span className="flex-shrink-0 relative w-10 h-10 sm:w-6 sm:h-6 rounded-[var(--radius)] overflow-hidden">
                     <Image
                       src={paidBanner.logo_url}
-                      alt={paidBanner.name}
-                      width={24}
-                      height={24}
-                      className="object-contain"
+                      alt=""
+                      width={40}
+                      height={40}
+                      className="w-full h-full object-contain"
                     />
                   </span>
                 )}
-                <span className="text-sm sm:text-base text-foreground truncate">
-                  <strong>{paidBanner.name}</strong>
+                <div className="min-w-0 sm:flex sm:items-baseline sm:gap-1.5">
+                  <div className="flex items-center gap-1.5 min-w-0 sm:flex-shrink-0">
+                    <strong className="text-sm sm:text-base text-foreground truncate">
+                      {paidBanner.name}
+                    </strong>
+                    <AdLabel className="sm:hidden" />
+                  </div>
                   {(paidBanner.banner_text || paidBanner.short_description) && (
-                    <span className="text-muted-foreground ml-1.5">
+                    <p className="text-sm sm:text-base text-muted-foreground line-clamp-2 sm:line-clamp-1">
                       {paidBanner.banner_text || paidBanner.short_description}
-                    </span>
+                    </p>
                   )}
-                </span>
+                </div>
               </div>
               <div className="flex-shrink-0">
                 <a
@@ -99,7 +115,7 @@ export function AdBanner() {
                   rel="nofollow noopener noreferrer"
                   onClick={handleClick}
                   className={cn(
-                    "inline-flex items-center justify-center px-4 py-2",
+                    "flex w-full sm:inline-flex sm:w-auto items-center justify-center px-4 py-2",
                     "text-sm font-medium text-foreground",
                     "bg-background border border-border rounded-lg",
                     "hover:bg-muted transition-colors",

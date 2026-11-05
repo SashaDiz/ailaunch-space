@@ -113,9 +113,13 @@ export function PaidPlacementCard({
       </div>
 
       {/* Description */}
-      <p className={`text-sm text-muted-foreground ${isRail ? "line-clamp-3" : "line-clamp-2"} mb-4 flex-1`}>
-        {project.short_description || "—"}
-      </p>
+      {/* flex-1 sits on a wrapper: on the clamped text it stretches the box and
+          reveals the line the clamp is hiding. */}
+      <div className="mb-4 flex-1">
+        <p className={`text-sm text-muted-foreground ${isRail ? "line-clamp-3" : "line-clamp-2"}`}>
+          {project.short_description || "—"}
+        </p>
+      </div>
 
       {/* CTA — styled as button, part of the card link */}
       <span
