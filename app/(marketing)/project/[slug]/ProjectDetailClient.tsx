@@ -374,71 +374,51 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
         <div className="flex flex-col gap-8">
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Main Content */}
-            <div className="lg:col-span-2 space-y-8">
+            <div className="lg:col-span-2 min-w-0 space-y-8">
               {/* Header Section */}
-              <div className="rounded-[var(--radius)] border border-border bg-card mb-8" style={{
-                boxShadow: "var(--card-shadow)",
-              }}>
-                <div className="p-6">
-                  <div className="flex gap-6">
-                    {/* Logo on top */}
-                    <div className="flex justify-start">
-                      <div className="avatar">
-                        <div className="w-32 h-32 rounded-[var(--radius)] border border-border">
-                          {(project.logo_url || getLogoDevUrl(project.website_url)) ? (
-                            <Image
-                              src={project.logo_url || getLogoDevUrl(project.website_url)}
-                              alt={`${project.name} logo`}
-                              width={128}
-                              height={128}
-                              className="rounded-[var(--radius)] object-cover w-full h-full"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-foreground bg-muted rounded-[var(--radius)]">
-                              {project.name?.[0] ?? "?"}
-                            </div>
-                          )}
+              <div
+                className="relative rounded-[var(--radius)] border border-border bg-card"
+                style={{ boxShadow: "var(--card-shadow)" }}
+              >
+                {/* Status tags hang off the top edge, out of the title's way */}
+                {(project.premium_badge || project.status === "pending") && (
+                  <div className="absolute -top-3 right-4 flex items-center gap-1.5 sm:right-6">
+                    {project.status === "pending" && (
+                      <span className="inline-flex items-center rounded-sm border border-warning/40 bg-card px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-warning">
+                        Under review
+                      </span>
+                    )}
+                    {project.premium_badge && (
+                      <span className="inline-flex items-center gap-1.5 rounded-sm bg-foreground px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-background shadow-[0_2px_0_hsl(var(--foreground)/0.25)]">
+                        <Crown className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden />
+                        Premium
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                <div className="p-5 sm:p-7">
+                  <div className="flex items-start gap-4 sm:gap-6">
+                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-[var(--radius)] border border-border bg-muted sm:h-24 sm:w-24">
+                      {(project.logo_url || getLogoDevUrl(project.website_url)) ? (
+                        <Image
+                          src={project.logo_url || getLogoDevUrl(project.website_url)}
+                          alt={`${project.name} logo`}
+                          width={96}
+                          height={96}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-foreground">
+                          {project.name?.[0] ?? "?"}
                         </div>
-                      </div>
+                      )}
                     </div>
 
-                    {/* Project Name and Description below logo */}
-                    <div className="flex-1">
-                      <div className="flex items-center flex-wrap gap-2 mb-2">
-                        <h1 className="text-2xl lg:text-3xl font-bold">
-                          {project.name}
-                        </h1>
-
-                        {project.premium_badge && (
-                          <span className="inline-flex leading-none items-center gap-1 px-1 py-0.5 text-[11px] font-medium text-background rounded-sm" style={{ backgroundColor: 'hsl(var(--foreground))' }}>
-                            <Crown className="w-4 h-4" strokeWidth={1.5} />
-                            <span className="mt-0.5">Premium</span>
-                          </span>
-                        )}
-                        {project.status === "pending" && (
-                          <span className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-warning/20 text-warning ring-1 ring-inset ring-warning/30">Under Review</span>
-                        )}
-                      </div>
-
-                      <p className="text-muted-foreground text-md mb-4">
-                        {project.short_description}
-                      </p>
-
-                      {/* Categories and Pricing */}
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {project.categories?.map((category) => (
-                          <CategoryBadge
-                            key={category}
-                            category={category}
-                            size="sm"
-                          />
-                        ))}
-                        {project.pricing && (
-                          <PricingBadge pricing={project.pricing} size="sm" />
-                        )}
-                      </div>
-
-                      {/* Average rating (display only; user rates in comment section) */}
+                    <div className="min-w-0 flex-1 pt-0.5">
+                      <h1 className="break-words text-2xl font-bold leading-tight tracking-tight sm:text-3xl">
+                        {project.name}
+                      </h1>
                       {isEnabled("ratings") && (
                         <div className="mt-2">
                           <StarRating
@@ -447,78 +427,90 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
                             ratingsCount={project.ratings_count ?? 0}
                             userRating={null}
                             readonly
-                            size="md"
+                            size="sm"
                           />
                         </div>
                       )}
                     </div>
                   </div>
-                  <div className="flex flex-row items-center justify-between gap-2 flex-wrap">
-                    {/* User Information */}
-                    {project.user && (
-                      <div className="mt-4 pt-4 border-t border-border">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span>Created by</span>
-                          <UserProfileLink
-                            userId={project.user.id}
-                            userName={project.user.name}
-                            userAvatar={project.user.avatar}
-                            size="sm"
-                            className="text-foreground hover:text-foreground"
-                          />
-                        </div>
-                      </div>
-                    )}
-                    {/* Action Buttons */}
-                    <div className="flex items-center gap-2">
-                      <SocialShare
-                        projectId={project.id}
-                        slug={project.slug}
-                        title={project.name}
-                        description={project.tagline || project.description}
-                        url={project.website_url}
-                        hashtags={[
-                          project.category
-                            ? project.category.replace(/[^a-zA-Z0-9]/g, "")
-                            : "",
-                          siteConfig.name.replace(/\s+/g, ''),
-                        ]}
-                        className="inline"
-                      />
 
-                      {isEnabled("bookmarks") && (
-                        <BookmarkButton appId={project.id} initialBookmarked={project.userBookmarked ?? false} size="md" />
-                      )}
+                  {project.short_description && (
+                    <p className="mt-5 text-base leading-relaxed text-foreground/75">
+                      {project.short_description}
+                    </p>
+                  )}
 
-                      <a
-                        href={websiteLink.url}
-                        target="_blank"
-                        rel={websiteLink.rel}
-                        onClick={handleVisitWebsite}
-                        className="cursor-pointer h-10 w-10 flex items-center justify-center rounded-md border border-border bg-muted px-2.5 py-1.5 text-muted-foreground hover:bg-foreground hover:text-background transition"
-                      >
-                        <ExternalLink className="w-5 h-5" />
-                      </a>
-                    </div>
-
-                    {/* Owner-only upgrade CTA */}
-                    {canUpgradeToPremium && (
-                      <div className="w-full rounded-xl border border-border bg-muted p-3 text-right">
-                        <p className="text-xs text-muted-foreground">
-                          Launch sooner with featured placement and a link back to your site.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={openUpgradeModal}
-                          className="mt-2 inline-flex items-center gap-1.5 rounded-lg border-2 border-foreground bg-card px-3 py-1.5 text-xs font-semibold text-foreground transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_2px_0_rgba(0,0,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        >
-                          Upgrade to Premium
-                          <Crown className="h-3.5 w-3.5" strokeWidth={1.5} />
-                        </button>
-                      </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {project.categories?.map((category) => (
+                      <CategoryBadge key={category} category={category} size="sm" />
+                    ))}
+                    {project.pricing && (
+                      <PricingBadge pricing={project.pricing} size="sm" />
                     )}
                   </div>
                 </div>
+
+                <div className="flex flex-col gap-4 border-t border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+                  {project.user ? (
+                    <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
+                      <span className="shrink-0">Created by</span>
+                      <UserProfileLink
+                        userId={project.user.id}
+                        userName={project.user.name}
+                        userAvatar={project.user.avatar}
+                        size="sm"
+                        className="min-w-0 truncate text-foreground hover:text-foreground"
+                      />
+                    </div>
+                  ) : <span className="hidden sm:block" />}
+
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={websiteLink.url}
+                      target="_blank"
+                      rel={websiteLink.rel}
+                      onClick={handleVisitWebsite}
+                      className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-lg border-2 border-foreground bg-foreground px-4 text-sm font-semibold text-background transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_3px_0_hsl(var(--foreground)/0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:flex-none"
+                    >
+                      Visit website
+                      <ExternalLink className="h-4 w-4" aria-hidden />
+                    </a>
+                    {isEnabled("bookmarks") && (
+                      <BookmarkButton appId={project.id} initialBookmarked={project.userBookmarked ?? false} size="md" />
+                    )}
+                    <SocialShare
+                      projectId={project.id}
+                      slug={project.slug}
+                      title={project.name}
+                      description={project.tagline || project.description}
+                      url={project.website_url}
+                      hashtags={[
+                        project.category
+                          ? project.category.replace(/[^a-zA-Z0-9]/g, "")
+                          : "",
+                        siteConfig.name.replace(/\s+/g, ''),
+                      ]}
+                      className="inline"
+                    />
+                  </div>
+                </div>
+
+                {/* Owner-only upgrade CTA */}
+                {canUpgradeToPremium && (
+                  <div className="flex flex-col gap-3 rounded-b-[var(--radius)] border-t border-border bg-muted/60 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+                    <p className="text-xs text-muted-foreground">
+                      Launch sooner with featured placement and a link back to your site.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={openUpgradeModal}
+                      className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border-2 border-foreground bg-card px-3 py-1.5 text-xs font-semibold text-foreground transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_2px_0_rgba(0,0,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                      Upgrade to Premium
+                      <Crown className="h-3.5 w-3.5" strokeWidth={1.5} />
+                    </button>
+                  </div>
+                )}
               </div>
               {/* Screenshots */}
               {project.screenshots && project.screenshots.length > 0 && (
@@ -678,7 +670,7 @@ export function ProjectDetailClient({ initialProject }: { initialProject: any })
             </div>
 
             {/* Sidebar */}
-            <div className="space-y-8 lg:sticky lg:top-32 lg:self-start">
+            <div className="min-w-0 space-y-8 lg:sticky lg:top-32 lg:self-start">
               {/* Project Info */}
               <div className="rounded-[var(--radius)] border border-border bg-card" style={{
                 boxShadow: "var(--card-shadow)",

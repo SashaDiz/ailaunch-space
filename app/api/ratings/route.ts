@@ -45,20 +45,33 @@ export async function POST(request: Request) {
     }
 
     // One rating per user per project — no updates allowed
+    const alreadyRated = NextResponse.json(
+      { error: "You have already rated this project", code: "already_rated" },
+      { status: 409 }
+    );
     const existing = await db.findOne("ratings", { user_id: user.id, app_id });
-    if (existing) {
-      return NextResponse.json(
-        { error: "You have already rated this project" },
-        { status: 403 }
-      );
-    }
-    await db.insertOne("ratings", { user_id: user.id, app_id, rating });
+    if (existing) return alreadyRated;
 
-    // Recalculate average rating atomically via PostgreSQL function
-    await db.rpc("recalculate_app_rating", { target_app_id: app_id });
+    try {
+      await db.insertOne("ratings", { user_id: user.id, app_id, rating });
+    } catch (insertError: any) {
+      // UNIQUE(user_id, app_id): a double tap raced past the check above
+      if (/duplicate key|23505/i.test(String(insertError?.message))) return alreadyRated;
+      throw insertError;
+    }
+
+    // The rating is saved; from here on nothing may turn this into an error,
+    // or the client shows "failed" for a rating that exists and the retry
+    // gets "already rated". Databases built from the migrations keep the
+    // aggregates in sync with a trigger (refresh_app_rating_aggregates) and
+    // have no recalculate_app_rating; schema.sql installs have the function.
+    await db
+      .rpc("recalculate_app_rating", { target_app_id: app_id })
+      .catch(() => db.rpc("refresh_app_rating_aggregates", { p_app_id: app_id }))
+      .catch((aggError) => console.error("Rating saved, aggregate refresh failed:", aggError));
 
     // Fetch updated stats
-    const updatedApp = await db.findOne("apps", { id: app_id });
+    const updatedApp = await db.findOne("apps", { id: app_id }).catch(() => null);
 
     return NextResponse.json({
       success: true,

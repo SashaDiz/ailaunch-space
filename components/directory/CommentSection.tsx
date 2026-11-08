@@ -91,7 +91,11 @@ function StarsDisplay({ rating, size = "sm" }: { rating: number; size?: "sm" | "
   );
 }
 
-export function CommentSection({ appId, projectOwnerId, userHasRated = false, onRatingUpdate }: CommentSectionProps) {
+export function CommentSection({ appId, projectOwnerId, userHasRated: userHasRatedProp = false, onRatingUpdate }: CommentSectionProps) {
+  // Set as soon as the rating is stored, so a failed comment or a slow parent
+  // refetch can't leave the stars up and send the rating a second time.
+  const [ratedLocally, setRatedLocally] = useState(false);
+  const userHasRated = userHasRatedProp || ratedLocally;
   const { user } = useUser();
   const [comments, setComments] = useState<CommentData[]>([]);
   const [total, setTotal] = useState(0);
@@ -158,9 +162,14 @@ export function CommentSection({ appId, projectOwnerId, userHasRated = false, on
           body: JSON.stringify({ app_id: appId, rating: selectedRating }),
         });
         if (!ratingRes.ok) {
-          const data = await ratingRes.json();
-          throw new Error(data.error || "Failed to submit rating");
+          const data = await ratingRes.json().catch(() => ({}));
+          // Already stored (earlier attempt or another tab): not an error
+          if (ratingRes.status !== 409) {
+            throw new Error(data.error || "Failed to submit rating");
+          }
         }
+        setRatedLocally(true);
+        setSelectedRating(null);
         onRatingUpdate?.();
       }
 
