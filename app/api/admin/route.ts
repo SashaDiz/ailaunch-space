@@ -803,10 +803,10 @@ async function approveProject(request, session) {
           project: {
             id: project.id,
             name: project.name,
-            slug: project.slug
+            slug: project.slug,
+            plan: project.plan,
+            link_type: project.link_type,
           },
-          competition: null,
-          projectStatus
         });
         emailSent = true;
       } else if (userEmail) {
@@ -814,6 +814,8 @@ async function approveProject(request, session) {
         await emailNotifications.projectApproved(userEmail, {
           projectName: project.name,
           slug: project.slug,
+          plan: project.plan,
+          dofollow: project.link_type === 'dofollow',
         });
         emailSent = true;
       }
@@ -826,6 +828,8 @@ async function approveProject(request, session) {
           await emailNotifications.projectApproved(userEmail, {
             projectName: project.name,
             slug: project.slug,
+            plan: project.plan,
+            dofollow: project.link_type === 'dofollow',
           });
           emailSent = true;
         }
@@ -995,10 +999,10 @@ async function approveProject(request, session) {
           project: {
             id: project.id,
             name: project.name,
-            slug: project.slug
+            slug: project.slug,
+            plan: project.plan,
+            link_type: updateData.link_type ?? project.link_type,
           },
-          competition: null,
-          projectStatus
         });
       }
     } catch (notificationError) {
@@ -1010,6 +1014,8 @@ async function approveProject(request, session) {
           await emailNotifications.projectApproved(userEmail, {
             projectName: project.name,
             slug: project.slug,
+            plan: project.plan,
+            dofollow: project.link_type === 'dofollow',
           });
         }
       } catch (emailError) {
@@ -1271,148 +1277,12 @@ async function updateLinkType(request, session) {
   }
 }
 
-// Resend emails to users with projects in current launch
-async function resendEmails(request) {
-  try {
-    const body = await request.json();
-    const { type, competitionId } = body;
-
-    if (!type || type !== 'current-launch') {
-      return NextResponse.json(
-        { error: "type is required and must be 'current-launch'" },
-        { status: 400 }
-      );
-    }
-
-    const supabaseAdmin = getSupabaseAdmin();
-    const results = {
-      timestamp: new Date().toISOString(),
-      type,
-      emailsSent: 0,
-      errors: [],
-    };
-
-    if (type === 'current-launch') {
-      // Resend launch reminders to users with projects in current active competition
-      const now = new Date();
-      
-      let activeCompetition;
-      if (competitionId) {
-        activeCompetition = await db.findOne('competitions', { id: competitionId });
-        if (!activeCompetition) {
-          return NextResponse.json(
-            { error: "Competition not found" },
-            { status: 404 }
-          );
-        }
-      } else {
-        // Find the active competition
-        activeCompetition = await db.findOne('competitions', {
-          status: 'active',
-          start_date: { $lte: now },
-          end_date: { $gt: now },
-        });
-      }
-
-      if (!activeCompetition) {
-        return NextResponse.json(
-          { error: "No active competition found" },
-          { status: 404 }
-        );
-      }
-
-      // Get all projects in this competition
-      const projects = await db.find(
-        'apps',
-        {
-          weekly_competition_id: activeCompetition.id,
-          status: 'live',
-        }
-      );
-
-      // Group projects by user
-      const projectsByUser = new Map();
-      for (const project of projects) {
-        if (project.submitted_by) {
-          if (!projectsByUser.has(project.submitted_by)) {
-            projectsByUser.set(project.submitted_by, []);
-          }
-          projectsByUser.get(project.submitted_by).push(project);
-        }
-      }
-
-      // Send launch reminders to each user
-      for (const [userId, userProjects] of projectsByUser.entries()) {
-        try {
-          // Get user email from Supabase auth (source of truth for emails)
-          const { data: authUserResult, error: authError } =
-            await supabaseAdmin.auth.admin.getUserById(userId);
-
-          if (authError) {
-            console.error(
-              `Failed to load auth user for ${userId}:`,
-              authError
-            );
-            results.errors.push({
-              userId: userId,
-              error: `Failed to load user: ${authError.message}`,
-            });
-            continue;
-          }
-
-          const authUser = authUserResult?.user;
-          const userEmail = authUser?.email;
-
-          if (!userEmail) {
-            results.errors.push({
-              userId: userId,
-              error: "User not found or has no email address",
-            });
-            continue;
-          }
-
-          // Send launch week reminder for each project
-          for (const project of userProjects) {
-            try {
-              await notificationManager.sendLaunchWeekReminderNotification({
-                userId: userId,
-                userEmail: userEmail,
-                project: project,
-                competition: activeCompetition,
-              });
-              results.emailsSent++;
-            } catch (reminderError) {
-              console.error(`Failed to resend launch reminder for project ${project.name}:`, reminderError);
-              results.errors.push({
-                project: project.name,
-                email: userEmail,
-                error: reminderError.message,
-              });
-            }
-          }
-        } catch (userError) {
-          console.error(`Error processing user ${userId} for launch reminders:`, userError);
-          results.errors.push({
-            userId: userId,
-            error: userError.message,
-          });
-        }
-      }
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: `Resent ${results.emailsSent} launch reminder email(s)`,
-      results,
-    });
-
-  } catch (error) {
-    console.error("Resend emails error:", error);
-    return NextResponse.json(
-      { error: "Failed to resend emails", details: error.message },
-      { status: 500 }
-    );
-  }
+// Launch weeks and competitions were removed, so there is no launch to remind anyone about.
+async function resendEmails(_request) {
+  return NextResponse.json(
+    { error: "Launch-week reminders were retired along with launch weeks.", code: "GONE" },
+    { status: 410 }
+  );
 }
 
 // Fix premium projects in current launch - retroactively apply premium badges and dofollow links

@@ -2,6 +2,23 @@ import { isEnabled } from '@/lib/features';
 import { aiConfig } from '@/config/ai.config';
 import { siteConfig } from '@/config/site.config';
 import { safeFetchText } from '@/lib/safe-fetch';
+import { LISTING_LIMITS, clampText, pickCategories } from '@/lib/listing-limits';
+
+const L = LISTING_LIMITS;
+
+/**
+ * Shared brief for the long description. It is shown as plain text on the
+ * project page (paragraphs kept, no markdown) and is the main body text
+ * search engines and AI answers read for the listing.
+ */
+const FULL_DESCRIPTION_RULES = `"full_description" rules (this is the listing's main SEO text):
+- 300-450 words and at most ${L.fullDescriptionMax - 200} characters.
+- Plain text only: 4-6 short paragraphs separated by a blank line. No markdown, headings, bullet characters, emoji or links.
+- Paragraph 1 opens with a clear definition: "<Name> is a <type of product> that <main job> for <who>." Use the words people would actually search for (e.g. "AI video editor", "invoice generator for freelancers").
+- Then cover: the problem it solves and who it is for; the key features and what each one lets the user do; concrete use cases; how it works or how to get started; pricing or platform details only if the page states them.
+- Work in 2-4 related search phrases naturally, each at most twice. No keyword stuffing.
+- Use only facts supported by the page. Never invent numbers, customers, integrations, awards or reviews.
+- Write in the third person, specific and factual. Avoid hype words such as "revolutionary", "game-changing", "cutting-edge", "seamless", "unleash", "elevate".`;
 
 class AIDisabledError extends Error {
   constructor() {
@@ -56,20 +73,20 @@ export async function generateDescription(
 
   const { text } = await generateText({
     model,
-    maxOutputTokens: aiConfig.maxTokens,
+    maxOutputTokens: Math.max(aiConfig.maxTokens, 1500),
     temperature: aiConfig.temperature,
-    prompt: `Write a compelling, professional product description for a project called "${name}".
-Short description: "${shortDesc}"
+    prompt: `Write the long description for a product listed on ${siteConfig.name}, a directory of AI tools.
+
+Product name: "${name}"
+One-line pitch: "${shortDesc}"
 Category: "${category}"
 
-Requirements:
-- 150-300 words
-- Professional but engaging tone
-- Highlight key benefits and use cases
-- Do not use marketing buzzwords excessively
-- Return only the description text, no headers or formatting`,
+${FULL_DESCRIPTION_RULES.replace('"full_description" rules', 'Rules')}
+
+Only the pitch above is known about the product, so stay close to it and do not make up features.
+Return only the description text.`,
   });
-  return text;
+  return clampText(text, L.fullDescriptionMax);
 }
 
 export async function suggestCategories(
@@ -90,14 +107,12 @@ export async function suggestCategories(
 
 Available categories: ${availableCategories.join(', ')}
 
-Select the 3-5 most relevant categories from the available list. Return ONLY a JSON array of category names, nothing else. Example: ["Category1", "Category2", "Category3"]`,
+Select the 1-${L.categoriesMax} most relevant categories from the available list, most relevant first. Never more than ${L.categoriesMax}. Prefer a specific category over a generic one such as "Other". Return ONLY a JSON array of category names, nothing else. Example: ["Category1", "Category2"]`,
   });
 
   try {
-    const parsed = JSON.parse(text.trim());
-    return Array.isArray(parsed)
-      ? parsed.filter((c: string) => availableCategories.includes(c))
-      : [];
+    const match = text.match(/\[[\s\S]*\]/);
+    return pickCategories(JSON.parse(match ? match[0] : text.trim()), availableCategories);
   } catch {
     return [];
   }
@@ -162,9 +177,9 @@ export async function generateProjectInfoFromUrl(
   }
 
   const meta = extractPageSummary(html, parsed);
-  const truncatedBody = stripHtmlBody(html).slice(0, 4000);
+  const truncatedBody = stripHtmlBody(html).slice(0, 8000);
 
-  const schemaPrompt = `Categories the user can choose from (pick 1-4 most relevant by exact name): ${availableCategories.join(', ')}`;
+  const schemaPrompt = `Categories the user can choose from (pick 1-${L.categoriesMax}, most relevant first, exact names): ${availableCategories.join(', ')}`;
 
   const prompt = `You are helping a founder submit their AI project to a directory. Fill in the listing fields based on the website content below.
 
@@ -182,23 +197,26 @@ ${truncatedBody}
 ${schemaPrompt}
 
 Rules:
-- "name" is the product name (typically what's in <title> before any "—" or "|"). 1–60 chars.
-- "short_description" is a single-sentence pitch, max 100 chars, no marketing fluff.
-- "full_description" is 120–280 words, professional tone, no headers, plain prose.
-- "suggested_categories" must contain values from the provided list, exact matching, 1–4 items.
-- "tags" are 3–8 short lowercase tags (single words or hyphenated), no leading "#".
-- If you cannot determine a field with confidence, use a sensible best guess derived from the page content.`;
+- "name" is the product name only (typically what's in <title> before any "—" or "|"), without taglines. At most ${L.nameMax} characters.
+- "short_description" is a one-sentence pitch of ${L.shortDescriptionMin + 30}-${L.shortDescriptionMax - 5} characters (hard limit ${L.shortDescriptionMax}), saying what the product does and for whom. No trailing period, no hype.
+- "suggested_categories": 1-${L.categoriesMax} values copied exactly from the provided list, most relevant first. Never more than ${L.categoriesMax}. Prefer a specific category over "Other".
+- "tags": 3-${L.tagsMax} short lowercase search keywords (single words or hyphenated), no leading "#".
+- If you cannot determine a field with confidence, use a sensible best guess derived from the page content.
+
+${FULL_DESCRIPTION_RULES}`;
 
   const { generateObject } = await import('ai');
   const { z } = await import('zod');
   const model = await getModel();
 
+  // No length limits in the schema itself: a model that overshoots by a few
+  // characters would fail the whole request. Lengths are enforced below.
   const ProjectInfoSchema = z.object({
-    name: z.string().min(1).max(80),
-    short_description: z.string().min(1).max(100),
-    full_description: z.string().min(50),
-    suggested_categories: z.array(z.string()).min(1).max(4),
-    tags: z.array(z.string()).min(0).max(8),
+    name: z.string().min(1),
+    short_description: z.string().min(1),
+    full_description: z.string().min(1),
+    suggested_categories: z.array(z.string()),
+    tags: z.array(z.string()),
   });
 
   const { object } = await generateObject({
@@ -206,14 +224,16 @@ Rules:
     schema: ProjectInfoSchema,
     prompt,
     temperature: 0.3,
+    maxOutputTokens: 2500,
   });
 
+  const tags = [...new Set(object.tags.map((t) => t.toLowerCase().replace(/^#/, '').trim()).filter(Boolean))];
   return {
-    name: object.name.trim(),
-    short_description: object.short_description.trim(),
-    full_description: object.full_description.trim(),
-    suggested_categories: object.suggested_categories.filter((c) => availableCategories.includes(c)),
-    tags: object.tags.map((t) => t.toLowerCase().replace(/^#/, '').trim()).filter(Boolean),
+    name: clampText(object.name, L.nameMax),
+    short_description: clampText(object.short_description.replace(/\.$/, ''), L.shortDescriptionMax),
+    full_description: clampText(object.full_description, L.fullDescriptionMax),
+    suggested_categories: pickCategories(object.suggested_categories, availableCategories),
+    tags: tags.slice(0, L.tagsMax),
     logo_url: meta.ogImage ?? null,
   };
 }

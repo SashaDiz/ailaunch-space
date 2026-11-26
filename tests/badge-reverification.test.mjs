@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { reverifyBadge, badgeEligibility } from '../lib/badge-reverification.ts';
-import { badgeRevokedHtml, badgeWarningHtml } from '../lib/badge-warning-email.ts';
+import { badgeRevokedEmail, badgeWarningEmail } from '../lib/email-templates.ts';
 
 function matches(row, filter) {
   return Object.entries(filter).every(([key, value]) => {
@@ -165,10 +165,10 @@ test('nofollow badge link triggers a warning', async () => {
 });
 
 test('emails escape listing names and offer the Premium alternative', () => {
-  const site = { name: 'AI Launch Space', url: 'https://ailaunchspace.com' };
+  const site = { name: 'AI Launch Space', url: 'https://ailaunchspace.com', contactEmail: 'hi@ailaunchspace.com' };
   for (const html of [
-    badgeWarningHtml({ projectName: '<script>unsafe</script>', deadline: '2026-09-28T04:00:00Z' }, site),
-    badgeRevokedHtml({ projectName: '<script>unsafe</script>' }, site),
+    badgeWarningEmail({ projectName: '<script>unsafe</script>', deadline: '2026-09-28T04:00:00Z' }, { site }),
+    badgeRevokedEmail({ projectName: '<script>unsafe</script>' }, { site }),
   ]) {
     assert.ok(!html.includes('<script>'));
     assert.ok(html.includes('&lt;script&gt;'));

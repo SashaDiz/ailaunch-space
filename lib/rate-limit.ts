@@ -343,6 +343,22 @@ export const validation = {
       .replace(/'/g, '&#x27;');
   },
 
+  /**
+   * Plain text that React renders as text (listing name and descriptions).
+   * Same stripping as sanitizeString, but quotes stay quotes: React escapes on
+   * output, and entity-encoding here made pages show "creator&#x27;s".
+   */
+  sanitizeText(str, maxLength = 1000) {
+    if (typeof str !== 'string') return '';
+    return str
+      .trim()
+      .substring(0, maxLength)
+      .replace(/[<>]/g, '')
+      .replace(/javascript:/gi, '')
+      .replace(/on\w+=/gi, '')
+      .replace(/data:/gi, '');
+  },
+
   // Validate MongoDB ObjectId
   isValidObjectId(id) {
     return /^[0-9a-fA-F]{24}$/.test(id);
@@ -351,9 +367,9 @@ export const validation = {
   // Validate and sanitize project submission data
   sanitizeProjectData(data) {
     return {
-      name: this.sanitizeString(data.name, 100),
-      short_description: this.sanitizeString(data.short_description, 160),
-      full_description: this.sanitizeString(data.full_description, 2000),
+      name: this.sanitizeText(data.name, 100),
+      short_description: this.sanitizeText(data.short_description, 160),
+      full_description: this.sanitizeText(data.full_description, 3000),
       website_url: this.isValidURL(data.website_url) ? data.website_url : '',
       // contact_email will be populated from user account
       // contact_email: this.isValidEmail(data.contact_email) ? data.contact_email : '',

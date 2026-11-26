@@ -287,6 +287,12 @@ One product, sold on `/promote`: pay once, hold a fixed spot for 30 days, no ren
 
 `payment.succeeded` with `metadata.type = 'ad_placement'` sets `starts_at` / `ends_at` in the Dodo webhook, and the public API stops serving an ad at `ends_at` on its own. `/api/cron/ad-placements` (daily 09:00 UTC) sends the ending-soon email and tidies statuses; a missed run delays those but never keeps an ad up. The products must be **one-time** in Dodo (`DODO_PRODUCT_ID_AD_BANNER`, `_RAIL`, `_LOGO`, `_DETAIL`, plus `DODO_DISCOUNT_CODE_AD_BUNDLE`): a subscription product takes the money without activating the ad. The webhook's `subscription.*` handlers exist only for subscriptions sold before this model. Apply `supabase/migrations/20261104_one_time_ad_placements.sql` before deploying.
 
+### Emails
+
+All email HTML lives in `lib/email-templates.ts`: pure functions (tested in `tests/email-templates.test.mjs`) that render the site's look in email-safe tables and inline styles. `lib/email.ts` maps template names to them and, in `sendEmail`, adds the Sponsored / Featured block from `lib/email-promo.ts` (rail ads by the same rules as the site, newest live Premium listings; 10-minute cache). Keep copy true to how the site works: free listings wait ~2 weeks and need the badge, paid Premium goes live at once, approval publishes immediately, there are no launch weeks or competitions. The newsletter's unsubscribe link is signed by `lib/unsubscribe-token.ts` (`UNSUBSCRIBE_SECRET`, falling back to `CRON_SECRET`) and handled by `/api/newsletter/unsubscribe`. The sender must be on `resend.ailaunch.space`, the only domain verified in Resend.
+
+Listing field limits (name, descriptions, max 3 categories) live in `lib/listing-limits.ts`, shared by the submit form, the API sanitizer and the AI auto-fill.
+
 ### Site analytics (DataFast)
 
 Traffic is tracked by [DataFast](https://datafa.st) — the client script is rendered in `app/layout.tsx` from `analyticsConfig.datafast`, and AI-crawler hits are tracked server-side in `middleware.ts` via `@datafast/ai-crawl`.
