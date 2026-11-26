@@ -15,7 +15,9 @@ export const emailConfig: EmailConfig = {
 
   from: {
     name: siteConfig.name,
-    email: process.env.RESEND_PRODUCTION_FROM || `hello@${siteConfig.url.replace(/https?:\/\//, '')}`,
+    // Must be on a domain verified in Resend. Only `resend.ailaunch.space` is;
+    // the bare `ailaunch.space` is not, and every send from it fails.
+    email: 'noreply@resend.ailaunch.space',
   },
 
   replyTo: siteConfig.contact.email,

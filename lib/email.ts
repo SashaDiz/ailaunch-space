@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 import { siteConfig } from '@/config/site.config';
 import { emailConfig, getFromAddress as getConfigFromAddress } from '@/config/email.config';
-import { badgeWarningHtml } from '@/lib/badge-warning-email';
+import { badgeRevokedHtml, badgeWarningHtml } from '@/lib/badge-warning-email';
 import { adEndingHtml } from '@/lib/ad-ending-email';
 
 // Lazy initialization to avoid build-time errors
@@ -95,6 +95,10 @@ export const emailTemplates = {
   badgeRemoved: {
     subject: (projectName: string) => `Action required: restore the badge for ${projectName}`,
     html: (data: { projectName: string; deadline: string }) => badgeWarningHtml(data, siteConfig),
+  },
+  badgeRevoked: {
+    subject: (projectName: string) => `Your dofollow link for ${projectName} is now nofollow`,
+    html: (data: { projectName: string }) => badgeRevokedHtml(data, siteConfig),
   },
   // Account notifications
   accountCreation: {
@@ -1466,9 +1470,9 @@ const getFromAddress = () => {
     return process.env.RESEND_FROM_EMAIL;
   }
   
-  // Production: use production FROM or default to verified domain
+  // Production: use production FROM or the address on the domain verified in Resend
   if (!isDevelopment) {
-    return process.env.RESEND_PRODUCTION_FROM || `${siteConfig.name} <${siteConfig.contact.email}>`;
+    return process.env.RESEND_PRODUCTION_FROM || `${emailConfig.from.name} <${emailConfig.from.email}>`;
   }
   
   // Development: use dev FROM or default to sandbox
@@ -1663,6 +1667,7 @@ export const sendEmail = async (to: string | string[], template: string, data: a
     const result = await resendClient.emails.send({
       from: fromAddress,
       to: finalTo,
+      replyTo: emailConfig.replyTo,
       subject,
       html,
       tags: [

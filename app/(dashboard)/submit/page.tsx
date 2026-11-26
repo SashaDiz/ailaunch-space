@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { isEnabled } from '@/lib/features';
+import { PremiumUpsellCard, SubmittedUpsellDialog } from "@/components/marketing/PremiumUpsell";
 // Import Zod for validation
 import { z } from "zod";
 import dynamic from "next/dynamic";
@@ -129,7 +130,8 @@ const PLANS = {
     features: [
       { text: "Free listing with a dofollow backlink — keep our badge on your website to retain both", icon: LinkIcon },
       { text: "Dofollow link grows your Domain Rating once your badge is verified", icon: TrendingUp },
-      { text: "Admin review (24–48h)", icon: Clock },
+      { text: "Admin review takes about 2 weeks — we are getting a high volume of submissions", icon: Clock },
+      { text: "Keep the badge on your site the whole time — while under review and after", icon: LinkIcon },
       { text: "Listed in the directory alongside paid projects", icon: Megaphone },
     ],
     limitations: [],
@@ -140,13 +142,13 @@ const PLANS = {
     name: "Premium Launch",
     price: 4.99,
     currency: "USD",
-    description: "Pay once — guaranteed dofollow backlink, featured at the top",
+    description: "Pay once — live instantly, lifetime dofollow backlink, featured at the top",
     icon: Medal,
     features: [
-      { text: "Featured listing with a guaranteed dofollow backlink — no badge required", icon: LinkIcon },
+      { text: "Lifetime dofollow backlink — no badge required", icon: LinkIcon },
       { text: "High-authority dofollow link that grows your Domain Rating", icon: TrendingUp },
-      { text: "Featured placement above free listings", icon: Crown },
-      { text: "Priority review (skip the standard queue)", icon: Clock },
+      { text: "Shown at the top of the directory, above free listings", icon: Crown },
+      { text: "No review wait — published the moment your payment goes through", icon: Clock },
       { text: "Premium badge for credibility", icon: Star },
       { text: "Featured in newsletter to subscribers", icon: Rocket },
     ],
@@ -943,6 +945,8 @@ function SubmitPageContent() {
   const [checkingDuplicate, setCheckingDuplicate] = useState(false);
   const [checkingName, setCheckingName] = useState(false);
   const [badgeVerified, setBadgeVerified] = useState(false);
+  // Free submission just went through: offer to skip the review queue.
+  const [submittedProject, setSubmittedProject] = useState<{ slug: string; name: string } | null>(null);
 
   // Reset badge verification when plan changes
   useEffect(() => {
@@ -1609,7 +1613,7 @@ function SubmitPageContent() {
         localStorage.removeItem("payment_polling");
 
         toast.success(
-          "🎉 Payment successful! Your premium project has been submitted and is under review."
+          "🎉 Payment successful! Your Premium listing is live with a dofollow link."
         );
 
         // Redirect to dashboard after a short delay
@@ -1995,11 +1999,7 @@ function SubmitPageContent() {
         const result = await response.json();
 
         if (response.ok) {
-          const slug = result.data.slug;
-          toast.success(
-            result.data.message || "🎉 Project submitted successfully! Your submission is now under review by our admin team and you'll be notified via email once approved."
-          );
-          router.push(`/project/${slug}?submitted=true&pending_approval=true`);
+          setSubmittedProject({ slug: result.data.slug, name: formData.name });
         } else {
           // Handle specific error types with better messaging
           if (result.code === "WEBSITE_EXISTS") {
@@ -2214,9 +2214,9 @@ function SubmitPageContent() {
                     Standard listings get a free listing with a link back to your site in exchange for displaying our badge on your website. Paste the code below on your homepage, then click Verify. Submit unlocks once verification passes.
                   </p>
                   <p className="mt-3 text-sm font-medium text-foreground">
-                    Keep the badge on the verified page of your website after submission to retain your listing and dofollow backlink.
-                    We check weekly. If the badge is removed, we will email you and give you 7 days to
-                    restore it or upgrade to Premium before your listing is removed and the dofollow link is revoked.
+                    Free listings are reviewed by hand, and with the current volume of submissions review takes about 2 weeks.
+                    Keep the badge on the verified page the whole time, while under review and after you go live: we check daily,
+                    and if the badge is gone for 7 days your link switches to nofollow until you put it back.
                   </p>
                 </div>
                 <FeaturedBadgeEmbed
@@ -2224,6 +2224,15 @@ function SubmitPageContent() {
                   onVerificationComplete={(ok: boolean) => setBadgeVerified(ok)}
                 />
               </div>
+            )}
+
+            {currentStep === STEPS.length && formData.plan === "standard" && !isEditMode && !isDraftMode && (
+              <PremiumUpsellCard
+                onSwitch={() => {
+                  setFormData((prev) => ({ ...prev, plan: "premium" }));
+                  toast.success("Premium selected — your listing goes live right after payment.");
+                }}
+              />
             )}
 
             {/* Navigation Buttons */}
@@ -2324,6 +2333,14 @@ function SubmitPageContent() {
 
 
       </div>
+      <SubmittedUpsellDialog
+        project={submittedProject}
+        onClose={() => {
+          const slug = submittedProject?.slug;
+          setSubmittedProject(null);
+          if (slug) router.push(`/project/${slug}?submitted=true&pending_approval=true`);
+        }}
+      />
     </div>
   );
 }

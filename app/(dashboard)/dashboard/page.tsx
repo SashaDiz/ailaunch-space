@@ -589,7 +589,7 @@ function DashboardContent() {
 
     if (payment === "success") {
       toast.success(
-        "🎉 Payment successful! Your launch has been upgraded to Premium."
+        "🎉 Payment successful! Your listing is now Premium and goes live as soon as the payment is confirmed."
       );
       // Refresh dashboard data to show updated project
       fetchDashboardData();

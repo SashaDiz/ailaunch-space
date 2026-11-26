@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getSupabaseAdmin } from '@/lib/supabase/client';
 import { db } from '@/lib/supabase/database';
+import { paidListingGoLiveFields } from '@/lib/premium-publish';
 import { webhookEvents } from '@/lib/webhooks';
 import { notificationManager } from '@/lib/notifications';
 // import { ProjectSubmissionSchema } from '@/lib/validations/schemas';
@@ -979,7 +980,7 @@ export async function POST(request) {
             payment_status: true,
             is_draft: false,
             scheduled_launch: true,
-            status: "pending",
+            ...paidListingGoLiveFields("pending"),
             premium_badge: true,
             skip_queue: true,
             social_promotion: true,
@@ -1042,7 +1043,7 @@ export async function POST(request) {
               payment_status: true,
               is_draft: false,
               scheduled_launch: true,
-              status: "pending",
+              ...paidListingGoLiveFields("pending"),
               premium_badge: true,
               skip_queue: true,
               social_promotion: true,

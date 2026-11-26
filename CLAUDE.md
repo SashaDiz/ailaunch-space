@@ -277,7 +277,7 @@ import { notificationManager } from '@/lib/notifications';
 
 ### Payments
 
-Stripe integration in `lib/payments/stripe.ts`. One paid submission plan ("Premium", one-time $15) configured in `config/plans.config.ts`. Advertising is a separate system; see below. Webhook handler at `app/api/webhooks/stripe/route.ts`. The `payments.config.ts` also supports Lemon Squeezy, Paddle, and a free-only ("none") mode.
+Stripe integration in `lib/payments/stripe.ts`. One paid submission plan ("Premium", one-time $4.99) configured in `config/plans.config.ts`. A paid Premium listing skips admin review: `paidListingGoLiveFields()` in `lib/premium-publish.ts` publishes it as soon as the payment is confirmed (draft/pending only — rejected or archived listings stay put). Free listings are told review takes about 2 weeks, and `components/marketing/PremiumUpsell.tsx` offers the upgrade above Submit and right after a free submission. Advertising is a separate system; see below. Webhook handler at `app/api/webhooks/stripe/route.ts`. The `payments.config.ts` also supports Lemon Squeezy, Paddle, and a free-only ("none") mode.
 
 ### Advertising
 
@@ -299,9 +299,9 @@ Traffic is tracked by [DataFast](https://datafa.st) — the client script is ren
 
 ### Cron jobs
 
-Endpoints under `app/api/cron/` are secured with `Authorization: Bearer ${CRON_SECRET}` header. `vercel.json` schedules `account-notifications` hourly, `ad-placements` daily at 09:00 UTC and `reverify-badges` every Monday at 04:00 UTC.
+Endpoints under `app/api/cron/` are secured with `Authorization: Bearer ${CRON_SECRET}` header. `vercel.json` schedules `account-notifications` hourly, `ad-placements` daily at 09:00 UTC and `reverify-badges` daily at 04:00 UTC.
 
-Badge re-verification applies to live Standard listings with `dofollow_reason = 'verified_badge'`. `lib/badge-reverification.ts` sends one service email when a successfully fetched page no longer contains a qualifying link, leaves the listing active for at least seven days, then archives it and revokes dofollow on the next weekly check after the deadline if the link is still missing. A restored badge clears the warning; Premium/manual grants are exempt. Network, HTTP and URL errors are inconclusive and never trigger penalties. Email failures do not start the grace period. Database leases prevent overlapping checks, and conditional updates protect concurrent Premium upgrades. The cron paginates by ID, reports incomplete/error runs with HTTP 503, and spaces email sends. Apply `supabase/migrations/20260921_badge_warning_grace.sql` before deploying; the workflow requires `CRON_SECRET` and working Resend credentials. No production emails should be sent during local verification.
+Badge re-verification applies to live Standard listings with `dofollow_reason = 'verified_badge'`, plus listings whose dofollow was revoked for a missing badge (`badge_revoked_at` set). `lib/badge-reverification.ts`: the first check that finds no qualifying link sets `backlink_missing_since`; seven days later, if the link is still missing, dofollow is revoked (`link_type = 'nofollow'`, `badge_revoked_at`) and the listing **stays live**. A badge found again clears the clock, and on a revoked listing restores dofollow automatically. Warning and revoke emails are best effort: delivery never gates enforcement (a broken Resend domain once froze it for months). Premium/manual grants are exempt. Network, HTTP and URL errors are inconclusive and never move the clock. Database leases prevent overlapping checks, and conditional updates protect concurrent Premium upgrades. `scripts/badge-audit.cjs` (read-only, `node --env-file=.env.local scripts/badge-audit.cjs`) shows the state in production. Apply `supabase/migrations/20260921_badge_warning_grace.sql` and `20261126_badge_enforcement_without_email.sql` before deploying; the workflow requires `CRON_SECRET`. No production emails should be sent during local verification.
 
 ### Security patterns
 
