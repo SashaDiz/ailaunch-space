@@ -14,6 +14,7 @@ import {
   getLinkTypeHistory,
   bulkUpdateLinkTypes,
 } from '@/lib/link-type-manager';
+import { describeOutcome, verifyBadgeOnUrl } from '@/lib/badge-verifier';
 import { verifyDodoSession, isDodoConfigured, getDodoRevenue } from '@/lib/payments/dodo';
 import { paymentPlans } from '@/config/plans.config';
 
@@ -742,7 +743,8 @@ async function deleteProject(id) {
 // Approve or reject a project submission
 async function approveProject(request, session) {
   const body = await request.json();
-  const { projectId, action, rejectionReason } = body;
+  const { projectId, rejectionReason, force } = body;
+  let action = body.action;
 
   // Validate input
   if (!projectId || !action) {
@@ -752,9 +754,9 @@ async function approveProject(request, session) {
     );
   }
 
-  if (!['approve', 'reject', 'resend-approval-email'].includes(action)) {
+  if (!['approve', 'reject', 'restore', 'resend-approval-email'].includes(action)) {
     return NextResponse.json(
-      { error: "Action must be 'approve', 'reject', or 'resend-approval-email'", code: "INVALID_ACTION" },
+      { error: "Action must be 'approve', 'reject', 'restore', or 'resend-approval-email'", code: "INVALID_ACTION" },
       { status: 400 }
     );
   }
@@ -861,6 +863,69 @@ async function approveProject(request, session) {
         emailSent: true,
       },
     });
+  }
+
+  // Restore a rejected listing (typically rejected for a missing badge, which
+  // the owner has since added). Standard listings get their badge re-checked
+  // first: found → stamped verified, so the approval below grants dofollow;
+  // not found → refused unless the admin forces it (published as nofollow).
+  // Then it goes through the normal approval path.
+  let restoredBadge: { verified: boolean; message: string } | null = null;
+  if (action === 'restore') {
+    if (project.status !== 'rejected') {
+      return NextResponse.json(
+        { error: "Only rejected projects can be restored", code: "NOT_REJECTED" },
+        { status: 400 }
+      );
+    }
+
+    const restoreFields: Record<string, any> = { rejection_reason: null };
+
+    if (project.plan === 'standard') {
+      if (!project.website_url) {
+        if (!force) {
+          return NextResponse.json(
+            { error: "Project has no website URL to check for the badge", code: "BADGE_NOT_FOUND", badgeMessage: "No website URL" },
+            { status: 409 }
+          );
+        }
+        restoredBadge = { verified: false, message: 'No website URL' };
+      } else {
+        let summary: { verified: boolean; message: string };
+        let checkedUrl = project.website_url;
+        try {
+          const result = await verifyBadgeOnUrl(project.website_url);
+          checkedUrl = result.checkedUrl;
+          summary = describeOutcome(result);
+        } catch (error) {
+          console.error("Badge check during restore failed:", error);
+          summary = { verified: false, message: 'Badge check failed. Try again.' };
+        }
+        restoredBadge = { verified: summary.verified, message: summary.message };
+
+        const now = new Date();
+        restoreFields.backlink_last_checked_at = now;
+        if (summary.verified) {
+          Object.assign(restoreFields, {
+            backlink_verified: true,
+            backlink_verified_at: now,
+            backlink_url: checkedUrl,
+            backlink_missing_since: null,
+            badge_revoked_at: null,
+          });
+          project.backlink_verified = true;
+        } else if (!force) {
+          await db.updateOne("apps", { id: projectId }, { $set: { backlink_last_checked_at: now } });
+          return NextResponse.json(
+            { error: `Badge not found: ${summary.message}`, code: "BADGE_NOT_FOUND", badgeMessage: summary.message },
+            { status: 409 }
+          );
+        }
+      }
+    }
+
+    await db.updateOne("apps", { id: projectId }, { $set: restoreFields });
+    action = 'approve';
   }
 
   if (action === 'approve') {
@@ -1040,6 +1105,8 @@ async function approveProject(request, session) {
         status: projectStatus,
         emailSent: !!userEmail,
         scheduledForLaunch: projectStatus === 'scheduled',
+        linkType: updateData.link_type ?? project.link_type ?? 'nofollow',
+        badge: restoredBadge,
       },
     });
 

@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   FileSpreadsheet,
   Pencil,
+  RotateCcw,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import Pagination from '@/components/shared/Pagination';
@@ -184,6 +185,53 @@ function ProjectRow({ project, onStatusUpdate, onDelete, onEdit }) {
     } catch (error) {
       console.error("Status update error:", error);
       toast.error(error.message || "Failed to update project status");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  // Bring back a rejected listing (e.g. the owner added the badge after a
+  // "no badge" rejection). The server re-checks the badge for Standard
+  // listings; if it's still missing, offer to publish as nofollow anyway.
+  const handleRestore = async () => {
+    if (!confirm(`Restore "${project.name}" and publish it now?${project.plan === "standard" ? " The badge will be re-checked on the website first." : ""}`)) {
+      return;
+    }
+    setUpdating(true);
+    try {
+      const send = (force) =>
+        fetch("/api/admin?action=approve-project", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ projectId: project.id, action: "restore", force }),
+        });
+
+      let response = await send(false);
+      let data = await response.json();
+
+      if (response.status === 409 && data.code === "BADGE_NOT_FOUND") {
+        const publishAnyway = confirm(
+          `Badge still not found on ${project.website_url || "the website"}:\n${data.badgeMessage || ""}\n\nPublish anyway as nofollow?`
+        );
+        if (!publishAnyway) return;
+        response = await send(true);
+        data = await response.json();
+      }
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to restore project");
+      }
+
+      if (data.data?.linkType) setCurrentLinkType(data.data.linkType);
+      toast.success(
+        `Project restored and live${data.data?.linkType === "dofollow" ? " (dofollow)" : ""}. ${
+          data.data?.emailSent ? "Email notification sent." : ""
+        }`
+      );
+      onStatusUpdate(project.id, "live");
+    } catch (error) {
+      console.error("Restore error:", error);
+      toast.error(error.message || "Failed to restore project");
     } finally {
       setUpdating(false);
     }
@@ -417,6 +465,21 @@ function ProjectRow({ project, onStatusUpdate, onDelete, onEdit }) {
             </>
           )}
 
+          {project.status === "rejected" && (
+            <button
+              onClick={handleRestore}
+              disabled={updating}
+              className="inline-flex items-center px-2 py-1 rounded-[var(--radius)] text-xs font-medium bg-success/20 text-success hover:bg-success/30 transition-colors"
+              title="Restore & publish (re-checks the badge)"
+            >
+              {updating ? (
+                <span className="inline-block h-3 w-3 animate-spin rounded-[var(--radius)] border-2 border-current border-t-transparent"></span>
+              ) : (
+                <RotateCcw className="w-3 h-3" />
+              )}
+            </button>
+          )}
+
           {/* Resend Approval Email - Show for approved projects */}
           {(project.status === "live" || project.status === "scheduled" || project.approved) && (
             <button
@@ -592,6 +655,53 @@ function ProjectMobileCard({ project, onStatusUpdate, onDelete, onEdit }) {
     } catch (error) {
       console.error("Status update error:", error);
       toast.error(error.message || "Failed to update project status");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  // Bring back a rejected listing (e.g. the owner added the badge after a
+  // "no badge" rejection). The server re-checks the badge for Standard
+  // listings; if it's still missing, offer to publish as nofollow anyway.
+  const handleRestore = async () => {
+    if (!confirm(`Restore "${project.name}" and publish it now?${project.plan === "standard" ? " The badge will be re-checked on the website first." : ""}`)) {
+      return;
+    }
+    setUpdating(true);
+    try {
+      const send = (force) =>
+        fetch("/api/admin?action=approve-project", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ projectId: project.id, action: "restore", force }),
+        });
+
+      let response = await send(false);
+      let data = await response.json();
+
+      if (response.status === 409 && data.code === "BADGE_NOT_FOUND") {
+        const publishAnyway = confirm(
+          `Badge still not found on ${project.website_url || "the website"}:\n${data.badgeMessage || ""}\n\nPublish anyway as nofollow?`
+        );
+        if (!publishAnyway) return;
+        response = await send(true);
+        data = await response.json();
+      }
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to restore project");
+      }
+
+      if (data.data?.linkType) setCurrentLinkType(data.data.linkType);
+      toast.success(
+        `Project restored and live${data.data?.linkType === "dofollow" ? " (dofollow)" : ""}. ${
+          data.data?.emailSent ? "Email notification sent." : ""
+        }`
+      );
+      onStatusUpdate(project.id, "live");
+    } catch (error) {
+      console.error("Restore error:", error);
+      toast.error(error.message || "Failed to restore project");
     } finally {
       setUpdating(false);
     }
@@ -820,6 +930,21 @@ function ProjectMobileCard({ project, onStatusUpdate, onDelete, onEdit }) {
               Reject
             </button>
           </>
+        )}
+
+        {project.status === "rejected" && (
+          <button
+            onClick={handleRestore}
+            disabled={updating}
+            className="inline-flex items-center px-3 py-2 rounded-[var(--radius)] text-sm font-medium bg-success/20 text-success hover:bg-success/30 transition-colors"
+          >
+            {updating ? (
+              <span className="inline-block h-3 w-3 animate-spin rounded-[var(--radius)] border-2 border-current border-t-transparent mr-2"></span>
+            ) : (
+              <RotateCcw className="w-4 h-4 mr-2" />
+            )}
+            Restore & publish
+          </button>
         )}
 
         {/* Resend Approval Email - Show for approved projects */}
