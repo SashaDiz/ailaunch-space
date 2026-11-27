@@ -15,6 +15,8 @@ import {
 import { Search, Home } from "lucide-react";
 import { directoryConfig } from "@/config/directory.config";
 import { serializeCatalog, type CatalogState } from "@/lib/catalog-url";
+import { jsonLdSafe } from "@/lib/seo-client";
+import { siteConfig } from "@/config/site.config";
 
 const SORT_OPTIONS = directoryConfig.sortOptions;
 
@@ -29,6 +31,13 @@ interface CategoryDetailClientProps {
   initialProjects: any[];
   initialTotalCount: number;
   initialState: CatalogState;
+  /** Title, live-number summary and FAQ built server-side from the whole category. */
+  seo?: {
+    title: string;
+    summary: string;
+    faq: Array<{ question: string; answer: string }>;
+    itemList: Array<{ name: string; slug: string }>;
+  };
 }
 
 export function CategoryDetailClient({
@@ -37,6 +46,7 @@ export function CategoryDetailClient({
   initialProjects,
   initialTotalCount,
   initialState,
+  seo,
 }: CategoryDetailClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -117,7 +127,10 @@ export function CategoryDetailClient({
 
         {/* Hero */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-3">{category.name}</h1>
+          <h1 className="text-4xl font-bold mb-3">{seo?.title || category.name}</h1>
+          {seo?.summary && (
+            <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{seo.summary}</p>
+          )}
           {category.description && (
             <p className="text-lg text-muted-foreground max-w-3xl">
               {category.description}
@@ -187,6 +200,54 @@ export function CategoryDetailClient({
               <ProductCard key={project.id} project={project} viewMode="grid" />
             ))}
           </div>
+        )}
+
+        {seo && seo.faq.length > 0 && (
+          <section aria-labelledby="category-faq" className="mt-16 border-t border-border pt-10">
+            <h2 id="category-faq" className="text-2xl font-bold text-foreground">
+              {category.name}: frequently asked questions
+            </h2>
+            <div className="mt-6 divide-y divide-border rounded-[var(--radius)] border border-border bg-card" style={{ boxShadow: "var(--card-shadow)" }}>
+              {seo.faq.map((item, index) => (
+                <details key={item.question} className="group p-5" open={index === 0}>
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-foreground">
+                    <h3 className="text-base">{item.question}</h3>
+                    <span aria-hidden className="text-muted-foreground transition-transform group-open:rotate-45">+</span>
+                  </summary>
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.answer}</p>
+                </details>
+              ))}
+            </div>
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                __html: jsonLdSafe([
+                  {
+                    "@context": "https://schema.org",
+                    "@type": "FAQPage",
+                    mainEntity: seo.faq.map((item) => ({
+                      "@type": "Question",
+                      name: item.question,
+                      acceptedAnswer: { "@type": "Answer", text: item.answer },
+                    })),
+                  },
+                  ...(seo.itemList.length
+                    ? [{
+                      "@context": "https://schema.org",
+                      "@type": "ItemList",
+                      name: seo.title,
+                      itemListElement: seo.itemList.map((item, position) => ({
+                        "@type": "ListItem",
+                        position: position + 1,
+                        name: item.name,
+                        url: `${siteConfig.url}/project/${item.slug}`,
+                      })),
+                    }]
+                    : []),
+                ]),
+              }}
+            />
+          </section>
         )}
       </div>
     </main>

@@ -901,31 +901,21 @@ function PlanStep({ formData, setFormData, errors = {}, isEditingDraft = false }
         </div>
       </div>
 
-      <div className="flex items-center gap-3 rounded-lg border p-4" style={{ backgroundColor: 'rgba(255, 148, 42, 0.1)', color: 'black', boxShadow: 'none', border: 'none' }}>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="stroke-current shrink-0 h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-        <div>
-          <h3 className="font-bold">All plans include:</h3>
-          <div className="text-sm">
-            • Permanent listing on our platform
-            <br />
-            • SEO benefits from our DR36+ domain
-            <br />
-            • Access to our engaged community
-            <br />• Community listing and exposure
-          </div>
-        </div>
+      <div className="rounded-[var(--radius)] border border-border bg-muted/40 px-5 py-4">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Both plans include</p>
+        <ul className="mt-3 grid gap-x-8 gap-y-1.5 text-[13px] text-foreground/80 sm:grid-cols-2">
+          {[
+            "A permanent listing in the directory",
+            "Your own project page that links to your site",
+            "A spot in every matching category page",
+            "Upvotes, comments and bookmarks from visitors",
+          ].map((item) => (
+            <li key={item} className="flex gap-2">
+              <span aria-hidden className="text-primary">+</span>
+              {item}
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

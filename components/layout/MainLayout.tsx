@@ -1,5 +1,6 @@
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { CategoryDirectory } from '@/components/layout/CategoryDirectory';
 import { AdBanner } from '@/components/marketing/AdBanner';
 import { AdRails, AdTickers } from '@/components/marketing/AdRails';
 
@@ -26,6 +27,9 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           <Header />
           <AdBanner />
           <main className="flex-1">{children}</main>
+          <div className="border-t border-border">
+            <CategoryDirectory />
+          </div>
           <Footer />
         </div>
       </div>

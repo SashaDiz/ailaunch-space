@@ -604,7 +604,7 @@ export default function ProfilePage() {
             <div className="text-center py-8">
               <p className="text-muted-foreground text-sm">No projects submitted yet</p>
                 <Link 
-                href="/submit" 
+                href="/pricing" 
                 className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-background text-foreground border-2 border-foreground text-sm font-semibold rounded-[var(--radius)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_4px_0_rgba(0,0,0,1)]"
               >
                 <Pencil className="w-4 h-4" />
