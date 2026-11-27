@@ -7,7 +7,7 @@ import {
   isLive,
   rotatedWindow,
 } from '../lib/ad-slots.ts';
-import { adEndingHtml } from '../lib/ad-ending-email.ts';
+import { adEndingEmail } from '../lib/email-templates.ts';
 
 const NOW = Date.parse('2026-11-04T12:00:00Z');
 const HOUR = 3_600_000;
@@ -121,9 +121,10 @@ test('a checkout created in the same instant is still decided one way', () => {
 
 test('the ending email escapes the advertiser name and counts clicks', () => {
   const site = { name: 'Site', url: 'https://example.com' };
-  const html = adEndingHtml({ projectName: '<b>x</b>', endsAt: at(0), clicks: 1 }, site);
+  const html = adEndingEmail({ projectName: '<b>x</b>', endsAt: at(0), clicks: 1 }, { site: { ...site, contactEmail: 'hi@example.com' } });
   assert.match(html, /&lt;b&gt;x&lt;\/b&gt;/);
-  assert.match(html, /1 click</);
+  assert.match(html, /1 click\b/);
+  assert.doesNotMatch(html, /1 clicks/);
   assert.match(html, /https:\/\/example\.com\/promote/);
 });
 

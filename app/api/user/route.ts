@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from '@/lib/supabase/client';
 import { db } from '@/lib/supabase/database';
+import { paidListingGoLiveFields } from '@/lib/premium-publish';
 import { getSession } from '@/lib/supabase/auth';
 import { notificationManager } from '@/lib/notifications';
 
@@ -287,8 +288,10 @@ async function getUserProjects(session, searchParams) {
           
           // Ensure status is not "draft" for paid premium projects
           if (updateData.status === "draft" || project.status === "draft") {
-            updateData.status = "pending"; // Will be set to "scheduled" or "live" by admin/competition logic
+            updateData.status = "pending";
           }
+          // Paid Premium listings skip review and go live right away.
+          Object.assign(updateData, paidListingGoLiveFields(updateData.status));
         } else if (project.plan === "premium" && !hasPayment) {
           // Premium project without payment - ensure it remains a draft
           // Do NOT apply premium perks or schedule launch

@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getSupabaseAdmin } from '@/lib/supabase/client';
 import { db } from '@/lib/supabase/database';
+import { paidListingGoLiveFields } from '@/lib/premium-publish';
+import { LISTING_LIMITS } from '@/lib/listing-limits';
 import { webhookEvents } from '@/lib/webhooks';
 import { notificationManager } from '@/lib/notifications';
 // import { ProjectSubmissionSchema } from '@/lib/validations/schemas';
@@ -675,13 +677,13 @@ export async function POST(request) {
     
     // Sanitize string inputs
     if (body.name) {
-      body.name = validation.sanitizeString(body.name, 100);
+      body.name = validation.sanitizeText(body.name, 100);
     }
     if (body.short_description) {
-      body.short_description = validation.sanitizeString(body.short_description, 160);
+      body.short_description = validation.sanitizeText(body.short_description, 160);
     }
     if (body.full_description) {
-      body.full_description = validation.sanitizeString(body.full_description, 2000);
+      body.full_description = validation.sanitizeText(body.full_description, LISTING_LIMITS.fullDescriptionMax);
     }
 
     // Generate slug from name
@@ -979,7 +981,7 @@ export async function POST(request) {
             payment_status: true,
             is_draft: false,
             scheduled_launch: true,
-            status: "pending",
+            ...paidListingGoLiveFields("pending"),
             premium_badge: true,
             skip_queue: true,
             social_promotion: true,
@@ -1042,7 +1044,7 @@ export async function POST(request) {
               payment_status: true,
               is_draft: false,
               scheduled_launch: true,
-              status: "pending",
+              ...paidListingGoLiveFields("pending"),
               premium_badge: true,
               skip_queue: true,
               social_promotion: true,
@@ -1128,7 +1130,10 @@ export async function POST(request) {
           project: {
             id: result.insertedId,
             name: projectData.name,
-            slug: projectData.slug
+            slug: projectData.slug,
+            plan: projectData.plan,
+            // A premium payment may already be linked above and published it.
+            status: (await db.findOne("apps", { id: result.insertedId }))?.status ?? projectData.status,
           }
         });
       }

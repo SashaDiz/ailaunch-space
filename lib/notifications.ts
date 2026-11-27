@@ -218,16 +218,9 @@ class NotificationManager {
     const serviceMap = {
       'account_creation': 'accountCreation',
       'account_deletion': 'accountDeletion',
-      'weekly_competition_entry': 'weeklyCompetitionEntry',
       'submission_received': 'submissionReceived',
       'submission_approval': 'submissionApproval',
       'submission_decline': 'submissionDecline',
-      'launch_week_reminder': 'launchWeekReminder',
-      'competition_week_start': 'competitionWeekStart',
-      'competition_week_end': 'competitionWeekEnd',
-      'competition_winners': 'competitionWinners',
-      'winner_reminder': 'winnerReminder',
-      'winner_backlink_reminder': 'winnerBacklinkReminder'
     };
 
     const serviceMethod = serviceMap[emailType];
@@ -301,45 +294,6 @@ class NotificationManager {
   }
 
   /**
-   * Send weekly competition entry notification
-   * @param {Object} params - Parameters
-   */
-  async sendWeeklyCompetitionEntryNotification({ userId, userEmail, project, competition }) {
-    return await this.sendNotification({
-      userId,
-      emailType: 'weekly_competition_entry',
-      userEmail,
-      appId: project.id,
-      competitionId: competition.id,
-      data: {
-        projectName: project.name,
-        slug: project.slug,
-        competitionWeek: competition.competition_id,
-        endDate: new Date(competition.end_date).toLocaleDateString()
-      }
-    });
-  }
-
-  /**
-   * Send weekly competition entry notification for multiple projects (grouped per user)
-   * Uses the same preference key 'weekly_competition_entry'
-   */
-  async sendWeeklyCompetitionEntryBatch({ userId, userEmail, projects, competition }) {
-    return await this.sendNotification({
-      userId,
-      emailType: 'weekly_competition_entry',
-      userEmail,
-      competitionId: competition.id,
-      data: {
-        projects: projects.map(p => ({ id: p.id, name: p.name, slug: p.slug })),
-        competitionWeek: competition.competition_id,
-        endDate: new Date(competition.end_date).toLocaleDateString()
-      },
-      metadata: { batched: true, projectCount: projects.length }
-    });
-  }
-
-  /**
    * Send submission received notification
    * @param {Object} params - Parameters
    */
@@ -351,7 +305,9 @@ class NotificationManager {
       appId: project.id,
       data: {
         projectName: project.name,
-        slug: project.slug
+        slug: project.slug,
+        plan: project.plan,
+        status: project.status,
       }
     });
   }
@@ -360,12 +316,7 @@ class NotificationManager {
    * Send submission approval notification
    * @param {Object} params - Parameters
    */
-  async sendSubmissionApprovalNotification({ userId, userEmail, project, competition, projectStatus }) {
-    const normalizedStatus = projectStatus || project.status || 'live';
-    const competitionStartDate = competition?.start_date
-      ? new Date(competition.start_date).toLocaleDateString()
-      : undefined;
-
+  async sendSubmissionApprovalNotification({ userId, userEmail, project }) {
     return await this.sendNotification({
       userId,
       emailType: 'submission_approval',
@@ -374,10 +325,8 @@ class NotificationManager {
       data: {
         projectName: project.name,
         slug: project.slug,
-        projectStatus: normalizedStatus,
-        competitionWeek: competition?.competition_id,
-        competitionStartDate,
-        competitionStatus: competition?.status
+        plan: project.plan,
+        dofollow: project.link_type === 'dofollow',
       }
     });
   }
@@ -396,130 +345,6 @@ class NotificationManager {
         projectName: project.name,
         slug: project.slug,
         rejectionReason
-      }
-    });
-  }
-
-  /**
-   * Send competition winner notification
-   * @param {Object} params - Parameters
-   */
-  async sendCompetitionWinnerNotification({ userId, userEmail, project, competition, position }) {
-    return await this.sendNotification({
-      userId,
-      emailType: 'competition_winners',
-      userEmail,
-      appId: project.id,
-      competitionId: competition.id,
-      data: {
-        projectName: project.name,
-        slug: project.slug,
-        position,
-        competitionType: competition.type,
-        totalVotes: project.upvotes,
-        totalViews: project.views,
-        planType: project.plan_type || 'standard'
-      }
-    });
-  }
-
-  /**
-   * Send launch week reminder notification
-   * @param {Object} params - Parameters
-   */
-  async sendLaunchWeekReminderNotification({ userId, userEmail, project, competition }) {
-    return await this.sendNotification({
-      userId,
-      emailType: 'launch_week_reminder',
-      userEmail,
-      appId: project.id,
-      competitionId: competition.id,
-      data: {
-        projectName: project.name,
-        slug: project.slug,
-        competitionWeek: competition.competition_id,
-        endDate: new Date(competition.end_date).toLocaleDateString()
-      }
-    });
-  }
-
-  /**
-   * Send competition week start notification
-   * @param {Object} params - Parameters
-   */
-  async sendCompetitionWeekStartNotification({ userEmail, competition, featuredProjects }) {
-    const promotions = await this.getBannerPromotions();
-    return await this.sendNotification({
-      userId: null, // This is a newsletter-style notification
-      emailType: 'competition_week_start',
-      userEmail,
-      competitionId: competition.id,
-      data: {
-        competitionWeek: competition.competition_id,
-        premiumCount: featuredProjects.filter(p => p.premium_badge).length,
-        totalCount: featuredProjects.length,
-        featuredProjects: featuredProjects.slice(0, 5), // Show top 5 projects
-        promotions,
-      }
-    });
-  }
-
-  /**
-   * Send competition week end notification
-   * @param {Object} params - Parameters
-   */
-  async sendCompetitionWeekEndNotification({ userEmail, competition, winners, totalVotes, totalProjects }) {
-    const promotions = await this.getBannerPromotions();
-    return await this.sendNotification({
-      userId: null, // This is a newsletter-style notification
-      emailType: 'competition_week_end',
-      userEmail,
-      competitionId: competition.id,
-      data: {
-        competitionWeek: competition.competition_id,
-        winners,
-        totalVotes,
-        totalProjects,
-        promotions,
-      }
-    });
-  }
-
-  /**
-   * Send winner reminder notification
-   * @param {Object} params - Parameters
-   */
-  async sendWinnerReminderNotification({ userId, userEmail, project, position }) {
-    return await this.sendNotification({
-      userId,
-      emailType: 'winner_reminder',
-      userEmail,
-      appId: project.id,
-      data: {
-        projectName: project.name,
-        slug: project.slug,
-        position,
-        planType: project.plan_type || 'standard'
-      }
-    });
-  }
-
-  /**
-   * Send winner backlink reminder notification
-   * @param {Object} params - Parameters
-   */
-  async sendWinnerBacklinkReminderNotification({ userId, userEmail, project, position, daysLeft }) {
-    return await this.sendNotification({
-      userId,
-      emailType: 'winner_backlink_reminder',
-      userEmail,
-      appId: project.id,
-      data: {
-        projectName: project.name,
-        slug: project.slug,
-        position,
-        daysLeft,
-        planType: project.plan_type || 'standard'
       }
     });
   }

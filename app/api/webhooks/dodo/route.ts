@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/supabase/database";
+import { paidListingGoLiveFields } from "@/lib/premium-publish";
 import { advertisingConfig } from "@/config/advertising.config";
 import {
   constructDodoEvent,
@@ -223,6 +224,9 @@ async function processPremiumSubmissionOrder(data: DodoPaymentData): Promise<voi
     return;
   }
 
+  // Paid Premium listings skip review and go live right away.
+  const publish = planType === "premium" ? paidListingGoLiveFields(project.status) : {};
+
   await db.updateOne(
     "apps",
     { id: project.id },
@@ -234,6 +238,7 @@ async function processPremiumSubmissionOrder(data: DodoPaymentData): Promise<voi
         order_id: data.payment_id,
         is_draft: false,
         status: project.status === "live" ? "live" : "pending",
+        ...publish,
         upgrade_pending: false,
         ...(planType === "premium" ? {
           link_type: "dofollow",

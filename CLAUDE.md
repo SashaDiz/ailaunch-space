@@ -277,7 +277,7 @@ import { notificationManager } from '@/lib/notifications';
 
 ### Payments
 
-Stripe integration in `lib/payments/stripe.ts`. One paid submission plan ("Premium", one-time $15) configured in `config/plans.config.ts`. Advertising is a separate system; see below. Webhook handler at `app/api/webhooks/stripe/route.ts`. The `payments.config.ts` also supports Lemon Squeezy, Paddle, and a free-only ("none") mode.
+Stripe integration in `lib/payments/stripe.ts`. One paid submission plan ("Premium", one-time $4.99) configured in `config/plans.config.ts`. A paid Premium listing skips admin review: `paidListingGoLiveFields()` in `lib/premium-publish.ts` publishes it as soon as the payment is confirmed (draft/pending only — rejected or archived listings stay put). Free listings are told review takes about 2 weeks, and `components/marketing/PremiumUpsell.tsx` offers the upgrade above Submit and right after a free submission. Advertising is a separate system; see below. Webhook handler at `app/api/webhooks/stripe/route.ts`. The `payments.config.ts` also supports Lemon Squeezy, Paddle, and a free-only ("none") mode.
 
 ### Advertising
 
@@ -286,6 +286,12 @@ One product, sold on `/promote`: pay once, hold a fixed spot for 30 days, no ren
 `lib/ad-slots.ts` holds the rules (pure, tested in `tests/ad-slots.test.mjs`). A spot is taken by a running paid ad or a checkout started in the last 30 minutes. House ads (`is_house`, everything created in the admin panel) fill empty spots and never make a placement sold out; a paid ad pushes them out. `POST /api/promotions` inserts the pending row and re-checks, so two checkouts for the last spot can't both pass.
 
 `payment.succeeded` with `metadata.type = 'ad_placement'` sets `starts_at` / `ends_at` in the Dodo webhook, and the public API stops serving an ad at `ends_at` on its own. `/api/cron/ad-placements` (daily 09:00 UTC) sends the ending-soon email and tidies statuses; a missed run delays those but never keeps an ad up. The products must be **one-time** in Dodo (`DODO_PRODUCT_ID_AD_BANNER`, `_RAIL`, `_LOGO`, `_DETAIL`, plus `DODO_DISCOUNT_CODE_AD_BUNDLE`): a subscription product takes the money without activating the ad. The webhook's `subscription.*` handlers exist only for subscriptions sold before this model. Apply `supabase/migrations/20261104_one_time_ad_placements.sql` before deploying.
+
+### Emails
+
+All email HTML lives in `lib/email-templates.ts`: pure functions (tested in `tests/email-templates.test.mjs`) that render the site's look in email-safe tables and inline styles. `lib/email.ts` maps template names to them and, in `sendEmail`, adds the Sponsored / Featured block from `lib/email-promo.ts` (rail ads by the same rules as the site, newest live Premium listings; 10-minute cache). Keep copy true to how the site works: free listings wait ~2 weeks and need the badge, paid Premium goes live at once, approval publishes immediately, there are no launch weeks or competitions. The newsletter's unsubscribe link is signed by `lib/unsubscribe-token.ts` (`UNSUBSCRIBE_SECRET`, falling back to `CRON_SECRET`) and handled by `/api/newsletter/unsubscribe`. The sender must be on `resend.ailaunch.space`, the only domain verified in Resend.
+
+Listing field limits (name, descriptions, max 3 categories) live in `lib/listing-limits.ts`, shared by the submit form, the API sanitizer and the AI auto-fill.
 
 ### Site analytics (DataFast)
 
@@ -299,9 +305,9 @@ Traffic is tracked by [DataFast](https://datafa.st) — the client script is ren
 
 ### Cron jobs
 
-Endpoints under `app/api/cron/` are secured with `Authorization: Bearer ${CRON_SECRET}` header. `vercel.json` schedules `account-notifications` hourly, `ad-placements` daily at 09:00 UTC and `reverify-badges` every Monday at 04:00 UTC.
+Endpoints under `app/api/cron/` are secured with `Authorization: Bearer ${CRON_SECRET}` header. `vercel.json` schedules `account-notifications` hourly, `ad-placements` daily at 09:00 UTC and `reverify-badges` daily at 04:00 UTC.
 
-Badge re-verification applies to live Standard listings with `dofollow_reason = 'verified_badge'`. `lib/badge-reverification.ts` sends one service email when a successfully fetched page no longer contains a qualifying link, leaves the listing active for at least seven days, then archives it and revokes dofollow on the next weekly check after the deadline if the link is still missing. A restored badge clears the warning; Premium/manual grants are exempt. Network, HTTP and URL errors are inconclusive and never trigger penalties. Email failures do not start the grace period. Database leases prevent overlapping checks, and conditional updates protect concurrent Premium upgrades. The cron paginates by ID, reports incomplete/error runs with HTTP 503, and spaces email sends. Apply `supabase/migrations/20260921_badge_warning_grace.sql` before deploying; the workflow requires `CRON_SECRET` and working Resend credentials. No production emails should be sent during local verification.
+Badge re-verification applies to live Standard listings with `dofollow_reason = 'verified_badge'`, plus listings whose dofollow was revoked for a missing badge (`badge_revoked_at` set). `lib/badge-reverification.ts`: the first check that finds no qualifying link sets `backlink_missing_since`; seven days later, if the link is still missing, dofollow is revoked (`link_type = 'nofollow'`, `badge_revoked_at`) and the listing **stays live**. A badge found again clears the clock, and on a revoked listing restores dofollow automatically. Warning and revoke emails are best effort: delivery never gates enforcement (a broken Resend domain once froze it for months). Premium/manual grants are exempt. Network, HTTP and URL errors are inconclusive and never move the clock. Database leases prevent overlapping checks, and conditional updates protect concurrent Premium upgrades. `scripts/badge-audit.cjs` (read-only, `node --env-file=.env.local scripts/badge-audit.cjs`) shows the state in production. Apply `supabase/migrations/20260921_badge_warning_grace.sql` and `20261126_badge_enforcement_without_email.sql` before deploying; the workflow requires `CRON_SECRET`. No production emails should be sent during local verification.
 
 ### Security patterns
 

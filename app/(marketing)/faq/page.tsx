@@ -36,7 +36,7 @@ const faqSections = [
       {
         question: "What information do you need for my submission?",
         schemaAnswer:
-          "We need: project name and website URL, short description (10-200 chars) and full description (50-3000 chars), category selection and logo URL, and contact email. Optional: screenshots, video URL, maker details, and Twitter handle. All submissions go through admin review before going live.",
+          "We need: project name and website URL, short description (10-200 chars) and full description (50-3000 chars), category selection and logo URL, and contact email. Optional: screenshots, video URL, maker details, and Twitter handle. Free submissions go through admin review before going live; paid Premium listings are published right after payment.",
         answer: (
           <div className="space-y-3">
             <p className="text-muted-foreground">We need the following information:</p>
@@ -62,7 +62,7 @@ const faqSections = [
                 <span className="text-muted-foreground">Optional: screenshots, video URL, maker details, and Twitter handle</span>
               </li>
             </ul>
-            <p className="text-muted-foreground pt-2">All submissions go through a review process before going live.</p>
+            <p className="text-muted-foreground pt-2">Free submissions go through a review process before going live. Premium listings are published right after payment.</p>
           </div>
         ),
       },
@@ -75,7 +75,7 @@ const faqSections = [
       {
         question: "What are the different launch plans available?",
         schemaAnswer:
-          "Standard Launch (FREE): 15 shared slots, 7 days on the homepage, and a free listing with a dofollow backlink in exchange for installing our badge (we verify, admin approves) — the dofollow link passes SEO value and helps grow your Domain Rating. Premium Launch ($4.99, one-time): featured placement with a guaranteed dofollow backlink that boosts your Domain Rating, extended 14-day homepage exposure, priority review that skips the queue, a premium badge, and 10 dedicated slots. Standard projects must keep our badge embedded to retain their listing and dofollow link.",
+          "Standard Launch (FREE): a free listing with a dofollow backlink in exchange for installing our badge (we verify, admin approves; review currently takes about 2 weeks) — the dofollow link passes SEO value and helps grow your Domain Rating. Premium Launch ($4.99, one-time): published the moment you pay with no review wait, a lifetime dofollow backlink with no badge required, placement at the top of the directory, and a premium badge. Standard projects must keep our badge embedded to keep their dofollow link.",
         answer: (
           <div className="space-y-4">
             <div className="bg-muted rounded-xl p-4 border border-border">
@@ -100,7 +100,7 @@ const faqSections = [
                 <li>• Featured placement with a guaranteed dofollow backlink — no badge required</li>
                 <li>• High-authority dofollow link that grows your Domain Rating</li>
                 <li>• Extended 14-day homepage exposure</li>
-                <li>• Priority review that skips the queue</li>
+                <li>• Published instantly, no review wait</li>
                 <li>• Premium badge and priority placement</li>
                 <li>• 10 dedicated slots beyond shared ones</li>
               </ul>
@@ -143,21 +143,21 @@ const faqSections = [
       {
         question: "How long does the submission review process take?",
         schemaAnswer:
-          "Standard submissions are typically reviewed within 24-48 hours and enter the standard queue. Premium submissions get priority review and skip the queue. All submissions must be approved by our team before going live.",
+          "Because of the high volume of submissions, free Standard submissions currently take about 2 weeks to review. Keep our badge on your site during that time. Premium submissions skip review entirely and go live as soon as the payment goes through.",
         answer: (
           <div className="space-y-3">
             <div className="flex items-start gap-3 bg-muted rounded-xl p-4 border border-border">
               <Clock className="w-5 h-5 text-foreground mt-0.5 flex-shrink-0" />
               <div>
                 <p className="font-semibold text-foreground mb-1">Standard Submissions</p>
-                <p className="text-muted-foreground text-sm">Typically reviewed within 24-48 hours and enter the standard queue.</p>
+                <p className="text-muted-foreground text-sm">Currently about 2 weeks because of the high volume of submissions.</p>
               </div>
             </div>
             <div className="flex items-start gap-3 bg-foreground rounded-xl p-4 border-2 border-foreground">
               <Crown className="w-5 h-5 text-background mt-0.5 flex-shrink-0" />
               <div>
                 <p className="font-semibold text-background mb-1">Premium Submissions</p>
-                <p className="text-background text-sm">Get priority review and skip the queue entirely.</p>
+                <p className="text-background text-sm">No review: published as soon as you pay.</p>
               </div>
             </div>
             <p className="text-muted-foreground text-sm pt-2">

@@ -37,7 +37,7 @@ export const plansConfig: PlansConfig = {
       name: 'Premium',
       price: 4.99,
       type: 'one-time',
-      description: 'Featured placement, priority review, and a guaranteed dofollow backlink that grows your Domain Rating',
+      description: 'Published instantly with no review wait, a lifetime dofollow backlink and featured placement at the top',
       priceId: process.env.DODO_PRODUCT_ID_PREMIUM || null,
       cta: 'Go Premium',
       highlighted: true,
