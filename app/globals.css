@@ -208,6 +208,9 @@
 html {
   font-family: var(--font-sans);
   scroll-behavior: smooth;
+  /* JetBrains Mono runs wide: a 15px root (of the browser's 16px default)
+     scales every rem-based size down a notch, so the whole UI reads denser. */
+  font-size: 93.75%;
 }
 
 body {
@@ -1301,4 +1304,27 @@ button:disabled {
 @media (min-width: 1536px) {
   .ad-ticker { display: none; }
   .ad-ticker-space { --ad-ticker-offset: 0px; padding-top: 0; padding-bottom: 0; }
+}
+
+/* Text fields: browsers treat any focus of a text input as :focus-visible,
+   mouse clicks included, so the keyboard ring above would show on every
+   click. The caret and each field's own border mark focus instead. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="button"]):not([type="submit"]):focus-visible,
+textarea:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Footer wordmark marquee: drifts right to left; the track holds two copies,
+   so shifting by half its width loops without a seam. */
+@keyframes footer-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.footer-marquee {
+  animation: footer-marquee 60s linear infinite;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .footer-marquee { animation: none; }
 }

@@ -1,30 +1,23 @@
 import { Rocket } from "lucide-react";
 import { PricingCard } from "@/components/marketing/PricingCard";
 import { DomainRatingBadge } from "@/components/marketing/DomainRatingBadge";
-import {
-  advertisingConfig,
-  minPlacementPrice,
-  placementKeys,
-} from "@/config/advertising.config";
+import { LiveStats } from "@/components/marketing/LiveStats";
 import { siteConfig } from "@/config/site.config";
 
 export async function generateMetadata() {
   return {
-    title: `Pricing & Plans - ${siteConfig.name}`,
-    description: `List your project or book a fixed ad spot for 30 days on ${siteConfig.name}.`,
+    title: `Submit your AI tool - ${siteConfig.name}`,
+    description: `List your AI tool on ${siteConfig.name}: free with our badge, or Premium for a lifetime dofollow link and instant publishing.`,
     alternates: {
       canonical: `${siteConfig.url}/pricing`,
     },
     openGraph: {
-      title: `Pricing & Plans - ${siteConfig.name}`,
-      description: `List your project or book a fixed ad spot for 30 days on ${siteConfig.name}.`,
+      title: `Submit your AI tool - ${siteConfig.name}`,
+      description: `List your AI tool on ${siteConfig.name}: free with our badge, or Premium for a lifetime dofollow link and instant publishing.`,
       type: "website",
     },
   };
 }
-
-const { durationDays, placements, bundleDiscountPercent } = advertisingConfig.promotions;
-const bundlePercent = Math.round(bundleDiscountPercent * 100);
 
 const plans = [
   {
@@ -64,28 +57,6 @@ const plans = [
     popular: true,
     cta: "Premium Launch",
   },
-  {
-    id: "advertise",
-    name: "Advertise",
-    price: -1,
-    currency: "USD",
-    description: "Pay once, keep your spot for 30 days",
-    icon: "Megaphone" as const,
-    href: "/promote",
-    priceLabel: `/ ${durationDays} days`,
-    priceStartsAt: minPlacementPrice,
-    features: [
-      { text: `${placements.banner.name} on every page — $${placements.banner.price}`, icon: "Monitor" as const },
-      { text: `${placements.rail.name} on every page — $${placements.rail.price}`, icon: "PanelRight" as const },
-      { text: `${placements.logo.name} on the front page — $${placements.logo.price}`, icon: "Home" as const },
-      { text: `${placements.detailPage.name} on project pages — $${placements.detailPage.price}`, icon: "FileText" as const },
-      { text: `One payment, ${durationDays} days, no subscription or auto-renewal`, icon: "Clock" as const },
-      { text: `Limited spots — save ${bundlePercent}% when you book all ${placementKeys.length}`, icon: "Star" as const },
-    ],
-    limitations: [],
-    popular: false,
-    cta: "Book a Spot",
-  },
 ];
 
 export default function PricingPage() {
@@ -97,14 +68,14 @@ export default function PricingPage() {
           <div className="mb-8">
             <div className="inline-flex items-center justify-center px-4 py-2 text-foreground rounded-full font-semibold text-sm bg-muted">
               <Rocket className="w-4 h-4 mr-2" strokeWidth={2} />
-              List your project
+              Submit your AI tool
             </div>
           </div>
           <h1 className="text-4xl lg:text-5xl font-bold mb-6 text-foreground">
-            Pricing & Plans
+            Launch on {siteConfig.name}
           </h1>
           <p className="text-lg font-normal text-muted-foreground max-w-xl mx-auto">
-            List your project for free, go Premium, or book a fixed ad spot for 30 days.
+            Pick how to list it: free with our badge and a ~2 week review, or Premium to go live today with a lifetime dofollow link.
           </p>
           <div className="mt-6 flex justify-center">
             <DomainRatingBadge />
@@ -114,7 +85,7 @@ export default function PricingPage() {
 
       {/* Pricing Cards */}
       <div className="container-classic py-4 pb-16">
-        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
           {plans.map((plan, index) => (
             <PricingCard
               key={plan.id}
@@ -122,6 +93,20 @@ export default function PricingPage() {
               index={index}
             />
           ))}
+        </div>
+
+        {/* Real traffic, so the audience a listing or an ad reaches is visible. */}
+        <div className="mt-12">
+          <LiveStats
+            heading={
+              <div className="mb-2">
+                <h2 className="text-2xl font-bold text-foreground">Who will see your project</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Live numbers from the site: people browsing right now, visits over the last 30 days and where they come from.
+                </p>
+              </div>
+            }
+          />
         </div>
       </div>
     </div>

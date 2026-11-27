@@ -24,7 +24,7 @@ export default function HelpPage() {
                 Learn how to submit your AI project and get listed in our directory.
               </p>
               <div className="mt-4 flex justify-end">
-                <Link href="/submit" className="inline-flex items-center justify-center rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_0_rgba(0,0,0,1)]">
+                <Link href="/pricing" className="inline-flex items-center justify-center rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_0_rgba(0,0,0,1)]">
                   Submit Project
                 </Link>
               </div>

@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUser } from '@/hooks/use-user';
 import { useSupabase } from "@/components/shared/SupabaseProvider";
-import { Menu, ChevronDown, Megaphone, PlusCircle, X } from "lucide-react";
+import { Menu, Megaphone, PlusCircle, X, Search, BarChart3 } from "lucide-react";
+import { SearchPalette, useSearchShortcut, useShortcutLabel } from "@/components/layout/SearchPalette";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -14,6 +16,13 @@ import { siteConfig } from '@/config/site.config';
 import { ThemeSwitcher } from "@/components/shared/ThemeSwitcher";
 import { ThemeAwareLogo } from "@/components/shared/ThemeAwareLogo";
 import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
+
+/** Items inside the navigation capsule. */
+const navItem =
+  "flex h-7 items-center gap-1.5 rounded-full px-3 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
+/** Round icon buttons outside the capsule. */
+const iconButton =
+  "flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
 
 export function Header() {
   const { user, loading } = useUser();
@@ -30,7 +39,25 @@ export function Header() {
   const [isBrowseOpen, setIsBrowseOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const browseRef = useRef(null);
+  const browsePanelRef = useRef<HTMLDivElement | null>(null);
+  const headerBoxRef = useRef<HTMLDivElement | null>(null);
   const userMenuRef = useRef(null);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  // Hover intent for the browse menu: open at once, close after a short delay
+  // so the pointer can travel from the icon down into the panel.
+  const browseCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const openBrowse = React.useCallback(() => {
+    if (browseCloseTimer.current) clearTimeout(browseCloseTimer.current);
+    setIsBrowseOpen(true);
+  }, []);
+  const closeBrowseSoon = React.useCallback(() => {
+    if (browseCloseTimer.current) clearTimeout(browseCloseTimer.current);
+    browseCloseTimer.current = setTimeout(() => setIsBrowseOpen(false), 180);
+  }, []);
+  const openSearch = React.useCallback(() => setIsSearchOpen(true), []);
+  const closeSearch = React.useCallback(() => setIsSearchOpen(false), []);
+  useSearchShortcut(openSearch);
+  const shortcut = useShortcutLabel();
 
   useEffect(() => {
     fetchCategories();
@@ -74,7 +101,10 @@ export function Header() {
   // Close dropdowns when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
-      if (browseRef.current && !browseRef.current.contains(event.target)) {
+      if (
+        browseRef.current && !browseRef.current.contains(event.target) &&
+        !browsePanelRef.current?.contains(event.target)
+      ) {
         setIsBrowseOpen(false);
       }
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
@@ -157,22 +187,13 @@ export function Header() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("/api/categories");
+      const response = await fetch("/api/categories?includeCount=true");
       if (response.ok) {
         const data = await response.json();
         setCategories(data.data.categories || []);
         setGroupedCategories(data.data.groupedCategories || {});
       }
     } catch (error) {}
-  };
-
-  const getCategoryDotColor = (category) => {
-    let hash = 0;
-    for (let i = 0; i < category.length; i++) {
-      hash = category.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const colors = ["bg-chart-1", "bg-chart-2", "bg-chart-3", "bg-chart-4", "bg-chart-5"];
-    return colors[Math.abs(hash) % colors.length];
   };
 
   return (
@@ -183,114 +204,103 @@ export function Header() {
         ? 'bg-background/80 backdrop-blur-md'
         : 'bg-transparent backdrop-blur-none'
     )}>
-      <div className="container-classic py-4">
-        <div className="flex items-center justify-between h-16">
+      <div ref={headerBoxRef} className="container-classic relative py-4">
+        <div className="flex h-14 items-center justify-between gap-6">
           {/* Logo and Brand */}
-            <Link href="/">
-              <ThemeAwareLogo
-                height={44}
-                width={140}
-                priority
-                className="h-11 w-auto"
-              />
-            </Link>
+          <Link href="/" aria-label={siteConfig.name} className="shrink-0">
+            <ThemeAwareLogo height={40} width={128} priority className="h-9 w-auto" />
+          </Link>
 
-          {/* Right side - Navigation, CTA and Auth */}
-          <div className="flex items-center space-x-3">
-            {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center space-x-1">
-              <Link
-                href="/pricing"
-                className="px-3 py-2 text-sm font-medium text-foreground hover:text-foreground transition-colors"
+          {/* Right side: one navigation capsule, then the primary action and account */}
+          <div className="flex items-center gap-2">
+            {/* Navigation capsule (desktop) */}
+            <nav
+              aria-label="Main"
+              className="hidden h-9 items-center gap-0.5 lg:flex"
+            >
+              {/* Search: ⌘K / Ctrl+K anywhere */}
+              <button
+                type="button"
+                onClick={openSearch}
+                aria-label={`Search AI tools (${shortcut})`}
+                className="group flex h-7 items-center gap-2 rounded-full pl-2.5 pr-1 text-left text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
-                Pricing
-              </Link>
+                <Search className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+                <span>Search</span>
+                <kbd className="shrink-0 rounded-full border border-border px-1.5 py-[3px] font-sans text-[9px] leading-none text-muted-foreground">
+                  {shortcut}
+                </kbd>
+              </button>
 
-              {/* Browse Dropdown */}
-              <div className="relative" ref={browseRef}>
-                <div
-                  className="flex items-center px-3 py-2 text-sm font-medium text-foreground hover:text-primary transition-colors cursor-pointer"
+              <span aria-hidden className="mx-1 h-4 w-px bg-border" />
+
+              {/* Browse: full-width mega menu on hover (click and Esc work too) */}
+              <div
+                ref={browseRef}
+                onMouseEnter={openBrowse}
+                onMouseLeave={closeBrowseSoon}
+                onKeyDown={(e) => { if (e.key === "Escape") setIsBrowseOpen(false); }}
+              >
+                <button
+                  type="button"
+                  aria-expanded={isBrowseOpen}
+                  aria-haspopup="true"
+                  className={cn(navItem, isBrowseOpen && "bg-muted text-foreground")}
                   onClick={() => setIsBrowseOpen(!isBrowseOpen)}
-                  onMouseEnter={() => setIsBrowseOpen(true)}
                 >
+                  <Menu className="h-3.5 w-3.5" strokeWidth={2} />
                   Browse
-                  <ChevronDown className="ml-1 h-3 w-3" />
-                </div>
-                {isBrowseOpen && (
-                  <div
-                    className="absolute left-0 z-50 bg-background rounded-[var(--radius)] w-80 border border-border max-h-96 overflow-hidden mt-1"
-                    style={{ boxShadow: "var(--card-shadow)" }}
-                    onMouseLeave={() => setIsBrowseOpen(false)}
-                  >
-                    {/* Header */}
-                    <div className="p-3 border-b border-border">
-                      <Link
-                        href="/categories"
-                        className="flex items-center font-medium text-sm text-foreground hover:text-foreground/80"
-                        onClick={() => setIsBrowseOpen(false)}
-                      >
-                        <span className="w-2 h-2 bg-foreground rounded-full mr-2"></span>
-                        All categories
-                      </Link>
-                    </div>
-
-                    {/* Scrollable Categories */}
-                    <div className="max-h-80 overflow-y-auto">
-                      {(Object.entries(groupedCategories) as [string, any[]][]).map(([sphere, sphereCategories]) => (
-                        <div key={sphere} className="border-b border-border last:border-b-0">
-                          {/* Sphere Header */}
-                          <div className="px-3 py-2 bg-muted text-sm font-medium text-foreground/80 sticky top-0">
-                            {sphere}
-                          </div>
-
-                          {/* Categories in Sphere */}
-                          <div className="py-1">
-                            {sphereCategories.map((category) => (
-                              <Link
-                                key={category.id || category.name}
-                                href={`/categories/${category.slug || category.name}`}
-                                className="flex items-center px-6 py-2 text-sm text-foreground hover:bg-muted hover:text-foreground transition-colors"
-                                onClick={() => setIsBrowseOpen(false)}
-                              >
-                                <span
-                                  className={`w-2 h-2 ${getCategoryDotColor(
-                                    category.name
-                                  )} rounded-full mr-3 flex-shrink-0`}
-                                ></span>
-                                <span className="truncate">{category.name}</span>
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                </button>
+                <BrowseMenu
+                  open={isBrowseOpen}
+                  anchorRef={headerBoxRef}
+                  panelRef={browsePanelRef}
+                  groupedCategories={groupedCategories}
+                  total={categories.length}
+                  onEnter={openBrowse}
+                  onLeave={closeBrowseSoon}
+                  onNavigate={() => setIsBrowseOpen(false)}
+                />
               </div>
 
+              <Link href="/stats" className={navItem}>
+                <BarChart3 className="h-3.5 w-3.5" strokeWidth={2} />
+                Stats
+              </Link>
+              <Link href="/promote" className={navItem}>
+                Advertise
+              </Link>
               {isAdmin && (
-                <Link
-                  href="/admin"
-                  className="px-3 py-2 text-sm font-medium text-foreground hover:text-foreground transition-colors"
-                >
+                <Link href="/admin" className={navItem}>
                   Admin
                 </Link>
               )}
             </nav>
 
-            <Button variant="default" size="sm" asChild className="hidden lg:inline-flex">
-              <Link href="/promote" className="gap-2">
-                <Megaphone className="h-4 w-4" aria-hidden />
-                Advertise
-              </Link>
-            </Button>
+            {/* Search icon (mobile) */}
+            <button
+              type="button"
+              onClick={openSearch}
+              aria-label="Search AI tools"
+              className={cn(iconButton, "lg:hidden")}
+            >
+              <Search className="h-4 w-4" strokeWidth={1.75} />
+            </button>
+
+            {/* The one solid action */}
+            <Link
+              href="/pricing"
+              className="hidden h-9 items-center rounded-full bg-foreground px-4 text-[13px] font-semibold text-background transition-opacity hover:opacity-90 lg:inline-flex"
+            >
+              Submit
+            </Link>
 
             <ThemeSwitcher />
             <LanguageSwitcher />
 
             {/* Authentication */}
             {!isClient || loading ? (
-              <div className="w-8 h-8 rounded-full bg-muted animate-pulse"></div>
+              <div className="h-9 w-9 rounded-full bg-muted animate-pulse"></div>
             ) : user ? (
               <div className="relative" ref={userMenuRef}>
                 <div
@@ -298,7 +308,7 @@ export function Header() {
                   className="cursor-pointer"
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 >
-                  <div className="w-12 h-12 rounded-full border-2 border-border transition-all duration-200 hover:border-foreground hover:scale-105 overflow-hidden">
+                  <div className="h-9 w-9 overflow-hidden rounded-full border border-border transition-colors duration-200 hover:border-foreground/40">
                     {avatarUrl && !avatarError ? (
                       <Image
                         src={avatarUrl}
@@ -371,15 +381,12 @@ export function Header() {
                 )}
               </div>
             ) : (
-              <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href="/auth/signin" className="font-medium">
-                    Sign in
-                  </Link>
-                </Button>
-                <div className="w-px h-4 bg-border"></div>
-                <span className="text-muted-foreground text-sm">✕</span>
-              </div>
+              <Link
+                href="/auth/signin"
+                className="inline-flex h-9 items-center rounded-full px-3 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                Sign in
+              </Link>
             )}
 
             {/* Mobile Menu Button */}
@@ -388,7 +395,7 @@ export function Header() {
                 variant="ghost"
                 size="sm"
                 onClick={toggleMobileMenu}
-                className="p-2"
+                className="h-9 w-9 rounded-full p-0"
                 aria-label="Open mobile menu"
               >
                 {isMobileMenuOpen ? (
@@ -402,8 +409,12 @@ export function Header() {
         </div>
       </div>
 
-      {/* Full-Screen Mobile Menu Overlay */}
-      {isMobileMenuOpen && (
+      <SearchPalette open={isSearchOpen} onClose={closeSearch} />
+
+      {/* Full-Screen Mobile Menu Overlay. Portalled to <body>: the header and the
+          page card use backdrop-filter, which would otherwise make this
+          `fixed` overlay position against them instead of the viewport. */}
+      {isMobileMenuOpen && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[100] lg:hidden">
           {/* Backdrop */}
           <div
@@ -438,13 +449,6 @@ export function Header() {
               {/* Navigation Links */}
               <div className="space-y-4 mb-8">
                 <Link
-                  href="/pricing"
-                  onClick={closeMobileMenu}
-                  className="block text-lg font-medium text-foreground hover:text-foreground transition-colors"
-                >
-                  Pricing
-                </Link>
-                <Link
                   href="/promote"
                   onClick={closeMobileMenu}
                   className="flex items-center gap-2 text-lg font-medium text-foreground hover:text-foreground transition-colors"
@@ -467,6 +471,21 @@ export function Header() {
                 >
                   Categories
                 </Link>
+                <Link
+                  href="/stats"
+                  onClick={closeMobileMenu}
+                  className="block text-lg font-medium text-foreground hover:text-foreground transition-colors"
+                >
+                  Stats
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => { closeMobileMenu(); openSearch(); }}
+                  className="flex items-center gap-2 text-lg font-medium text-foreground"
+                >
+                  <Search className="h-5 w-5" aria-hidden />
+                  Search
+                </button>
                 {isAdmin && (
                   <Link
                     href="/admin"
@@ -484,7 +503,7 @@ export function Header() {
               {/* Submit Button */}
               <div className="mb-8">
                 <Link
-                  href="/submit"
+                  href="/pricing"
                   onClick={closeMobileMenu}
                   className="flex items-center justify-center w-full bg-background text-foreground border-2 border-foreground rounded-lg px-6 py-4 font-semibold text-sm no-underline transition duration-300 hover:-translate-y-1 hover:shadow-[0_4px_0_rgba(0,0,0,1)]"
                 >
@@ -572,8 +591,118 @@ export function Header() {
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </header>
+  );
+}
+
+const numberFormat = new Intl.NumberFormat("en-US");
+
+/**
+ * Full-width category menu. Portalled to <body> and positioned against the
+ * header container: an ancestor with backdrop-filter would otherwise trap both
+ * its `fixed` positioning and its own backdrop blur.
+ */
+function BrowseMenu({
+  open, anchorRef, panelRef, groupedCategories, total, onEnter, onLeave, onNavigate,
+}: {
+  open: boolean;
+  anchorRef: React.RefObject<HTMLDivElement | null>;
+  panelRef: React.MutableRefObject<HTMLDivElement | null>;
+  groupedCategories: Record<string, any[]>;
+  total: number;
+  onEnter: () => void;
+  onLeave: () => void;
+  onNavigate: () => void;
+}) {
+  const [box, setBox] = useState<{ top: number; left: number; width: number } | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const measure = () => {
+      const rect = anchorRef.current?.getBoundingClientRect();
+      if (rect) setBox({ top: rect.bottom - 14, left: rect.left, width: rect.width });
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", measure, { passive: true });
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", measure);
+    };
+  }, [open, anchorRef]);
+
+  if (!open || !box || typeof document === "undefined") return null;
+  const spheres = Object.entries(groupedCategories) as [string, any[]][];
+
+  return createPortal(
+    <div
+      ref={panelRef}
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+      onKeyDown={(e) => { if (e.key === "Escape") onNavigate(); }}
+      className="fixed z-[60] pt-2 animate-in fade-in-0 slide-in-from-top-1 duration-150"
+      style={{ top: box.top, left: box.left, width: box.width }}
+    >
+      <div
+        className="relative overflow-hidden rounded-[calc(var(--radius)*3)] bg-background/70 px-6 pb-6 pt-5 backdrop-blur-2xl backdrop-saturate-150"
+        style={{ boxShadow: "0 24px 60px -24px rgb(0 0 0 / 0.45)" }}
+      >
+        {/* Pixel grain: a faint dot grid that ties the glass to the site's dithered backdrop. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage: "radial-gradient(hsl(var(--foreground)) 0.6px, transparent 0.6px)",
+            backgroundSize: "6px 6px",
+          }}
+        />
+
+        <div className="relative flex items-center gap-4">
+          <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+            Browse AI tools
+          </span>
+          <span aria-hidden className="h-px flex-1 bg-foreground/10" />
+          <Link href="/stats" onClick={onNavigate} className="shrink-0 text-[11px] text-muted-foreground transition-colors hover:text-foreground">
+            Stats
+          </Link>
+          <Link href="/categories" onClick={onNavigate} className="shrink-0 text-[11px] font-semibold text-primary hover:underline">
+            All {total} categories →
+          </Link>
+        </div>
+
+        <div className="relative mt-5 grid grid-cols-4 gap-x-8 gap-y-6 xl:grid-cols-5">
+          {spheres.map(([sphere, items]) => (
+            <section key={sphere} className="min-w-0">
+              <h3 className="mb-2 truncate text-[10px] font-semibold uppercase tracking-[0.16em] text-primary/90">
+                {sphere}
+              </h3>
+              <ul className="space-y-px">
+                {items.map((category) => (
+                  <li key={category.id || category.name}>
+                    <Link
+                      href={`/categories/${category.slug || category.name}`}
+                      onClick={onNavigate}
+                      className="group -mx-1.5 flex items-baseline gap-2 rounded-[var(--radius)] px-1.5 py-[3px] text-[12.5px] transition-colors hover:bg-foreground/[0.06]"
+                    >
+                      <span className="min-w-0 truncate text-foreground/75 transition-colors group-hover:text-foreground">
+                        {category.name}
+                      </span>
+                      <span aria-hidden className="mb-[3px] min-w-2 flex-1 border-b border-dotted border-foreground/15" />
+                      <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground transition-colors group-hover:text-primary">
+                        {numberFormat.format(category.app_count || 0)}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }

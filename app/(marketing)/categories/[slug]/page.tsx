@@ -8,6 +8,17 @@ import {
 } from "@/lib/catalog-url";
 import { getCatalogProjects } from "@/lib/projects-query";
 import { CategoryDetailClient } from "./CategoryDetailClient";
+import { categoryFacts, categoryFaq, categorySummary, categoryTitle } from "@/lib/category-seo";
+import { getPlan } from "@/config/plans.config";
+
+const dateLabel = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
+
+/** Every live listing in the category, ignoring the visitor's filters: the SEO copy describes the whole category. */
+async function categoryListings(slug: string) {
+  const { projects } = await getCatalogProjects({ categories: [slug], status: "live", all: true });
+  return projects;
+}
 
 export const revalidate = 1800; // ISR: revalidate every 30 minutes
 
@@ -27,10 +38,13 @@ export async function generateMetadata({ params, searchParams }) {
   const state = parseCatalogParams(await searchParams);
   const basePath = `/categories/${slug}`;
 
-  const title = `${category.name} - ${siteConfig.name}`;
-  const description =
-    category.description ||
-    `Browse ${category.name} projects on ${siteConfig.name}.`;
+  const year = new Date().getUTCFullYear();
+  const facts = categoryFacts(await categoryListings(slug));
+  const title = `${categoryTitle(category.name, year)} (${facts.total}) - ${siteConfig.name}`;
+  const free = facts.free + facts.freemium;
+  const description = facts.total
+    ? `Compare ${facts.total} ${category.name} AI tools${free ? `, ${free} of them free or freemium` : ""}${facts.top.length ? `: ${facts.top.map((t) => t.name).join(", ")} and more` : ""}. ${category.description || `Updated as new tools launch on ${siteConfig.name}.`}`.slice(0, 300)
+    : category.description || `Browse ${category.name} AI tools on ${siteConfig.name}.`;
 
   return {
     title,
@@ -69,6 +83,21 @@ export default async function CategoryPage({ params, searchParams }) {
   const { projects, totalCount } = result;
   const serializedProjects = JSON.parse(JSON.stringify(projects));
 
+  const filtered = Boolean((state.pricing && state.pricing !== "all") || state.q);
+  const facts = categoryFacts(filtered ? await categoryListings(slug) : projects);
+  const year = new Date().getUTCFullYear();
+  const seo = {
+    title: categoryTitle(category.name, year),
+    summary: facts.total ? categorySummary(facts, dateLabel) : "",
+    faq: categoryFaq(category.name, facts, {
+      siteName: siteConfig.name,
+      year,
+      premiumPrice: getPlan("premium")?.price ?? 4.99,
+      dateLabel,
+    }),
+    itemList: (filtered ? [] : projects).slice(0, 20).map((p: any) => ({ name: p.name, slug: p.slug })),
+  };
+
   return (
     <CategoryDetailClient
       slug={slug}
@@ -81,6 +110,7 @@ export default async function CategoryPage({ params, searchParams }) {
       initialProjects={serializedProjects}
       initialTotalCount={totalCount}
       initialState={state}
+      seo={seo}
     />
   );
 }

@@ -215,6 +215,8 @@ export async function generateSitemapData(db) {
     { url: "/", priority: 1.0, changefreq: "daily" },
     { url: "/submit", priority: 0.8, changefreq: "weekly" },
     { url: "/pricing", priority: 0.7, changefreq: "monthly" },
+    { url: "/stats", priority: 0.6, changefreq: "daily" },
+    { url: "/launch-platforms", priority: 0.6, changefreq: "weekly" },
     { url: "/blog", priority: 0.7, changefreq: "weekly" },
     { url: "/faq", priority: 0.6, changefreq: "monthly" },
     { url: "/help", priority: 0.6, changefreq: "monthly" },

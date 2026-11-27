@@ -590,7 +590,7 @@ function HomePage({
                   No projects found yet.
                 </p>
                 <Link
-                  href="/submit"
+                  href="/pricing"
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-background text-foreground border-2 border-foreground rounded-lg font-semibold text-sm no-underline transition duration-300 hover:-translate-y-1 hover:shadow-[0_4px_0_rgba(0,0,0,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground min-h-[48px] min-w-[200px]"
                   aria-label="Start the submit process for your directory or project"
                   title="Start submitting your directory or project"
