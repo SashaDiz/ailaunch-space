@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import createGlobe from "cobe";
 import { useTheme } from "next-themes";
+import { countryName, flagEmoji } from "@/lib/country";
 
 /**
  * "Who's on the site right now" — a rotating dotted globe with a dot per
@@ -29,24 +30,6 @@ interface LiveStatsData {
   visitsDays?: number;
   topCountries?: { countryCode: string; visitors: number }[];
   moreCountries?: number;
-}
-
-const regionNames =
-  typeof Intl !== "undefined" && "DisplayNames" in Intl
-    ? new Intl.DisplayNames(["en"], { type: "region" })
-    : null;
-
-function countryName(code: string): string {
-  try {
-    return regionNames?.of(code) ?? code;
-  } catch {
-    return code;
-  }
-}
-
-/** Regional-indicator pair, e.g. "BR" → 🇧🇷. */
-function flagEmoji(code: string): string {
-  return String.fromCodePoint(...[...code].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
 }
 
 function timeAgo(iso: string | null): string | null {
@@ -134,7 +117,8 @@ function Globe({ points }: { points: [number, number][] }) {
   );
 }
 
-export function LiveStats() {
+/** `heading` renders above the block, only when there are numbers to show. */
+export function LiveStats({ heading }: { heading?: React.ReactNode } = {}) {
   const [data, setData] = useState<LiveStatsData | null>(null);
 
   useEffect(() => {
@@ -177,6 +161,8 @@ export function LiveStats() {
   const topCountries = data.topCountries ?? [];
 
   return (
+    <>
+    {heading}
     <section
       aria-label="Who's on the site right now"
       className="col-span-full my-4 border-y border-border py-6"
@@ -254,5 +240,6 @@ export function LiveStats() {
         </div>
       </div>
     </section>
+    </>
   );
 }

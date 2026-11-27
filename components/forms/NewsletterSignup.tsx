@@ -128,6 +128,40 @@ export function NewsletterSignup({
     );
   }
 
+  // Inline variant: one bordered row, input and button side by side.
+  if (variant === "inline") {
+    return (
+      <form onSubmit={handleSubmit} className={cn("w-full", className)}>
+        <div className="flex items-center gap-2 rounded-[var(--radius)] border border-border bg-background/50 p-1.5 focus-within:border-ring">
+          <input
+            type="email"
+            required
+            aria-label="Email address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder={placeholder}
+            disabled={status === "loading" || status === "success"}
+            className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground"
+          />
+          <Button
+            type="submit"
+            size="sm"
+            disabled={status === "loading" || status === "success"}
+            className={cn(
+              "shrink-0 font-semibold",
+              status === "success" && "bg-success hover:bg-success text-success-foreground"
+            )}
+          >
+            {status === "loading" && <RefreshCw className="w-4 h-4 animate-spin" />}
+            {status === "success" && <Check className="w-4 h-4" />}
+            {status === "success" ? "Subscribed!" : buttonText}
+          </Button>
+        </div>
+        {error && <p className="mt-2 text-destructive text-sm">{error}</p>}
+      </form>
+    );
+  }
+
   // Footer variant
   if (variant === "footer") {
     return (

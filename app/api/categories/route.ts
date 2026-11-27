@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from '@/lib/supabase/database';
 import { directoryConfig } from '@/config/directory.config';
+import { getCategoriesWithCounts } from '@/lib/categories-with-counts';
 
 // Seed categories from config — auto-created if missing from the database
 const REQUIRED_CATEGORIES = directoryConfig.seedCategories.map((cat) => ({
@@ -100,20 +101,15 @@ async function getCategories(includeCount) {
 
     // If includeCount is requested, add app count for each category
     if (includeCount) {
-      categoriesWithCount = await Promise.all(
-        categories.map(async (category) => {
-          // Count apps that have this category (name or slug) in their categories array
-          const identifiers = [category.name, category.slug].filter(Boolean);
-          const appCount = await db.count("apps", {
-            status: "live",
-            categories: { $overlaps: identifiers }
-          });
-          return {
-            ...category,
-            app_count: appCount,
-          };
-        })
+      // Same cached live counts as the footer and the category directory
+      // (one query per category every 5 minutes, not per request).
+      const counts = new Map(
+        (await getCategoriesWithCounts()).map((c) => [c.slug, c.app_count])
       );
+      categoriesWithCount = categories.map((category) => ({
+        ...category,
+        app_count: counts.get(category.slug) ?? 0,
+      }));
     }
 
     // Group categories by sphere
