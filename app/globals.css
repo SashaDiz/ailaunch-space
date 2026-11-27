@@ -1314,3 +1314,17 @@ textarea:focus-visible {
   outline: none;
   box-shadow: none;
 }
+
+/* Footer wordmark marquee: drifts right to left; the track holds two copies,
+   so shifting by half its width loops without a seam. */
+@keyframes footer-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.footer-marquee {
+  animation: footer-marquee 60s linear infinite;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .footer-marquee { animation: none; }
+}
