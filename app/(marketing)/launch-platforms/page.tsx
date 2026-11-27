@@ -11,7 +11,7 @@ const year = () => new Date().getUTCFullYear();
 
 export async function generateMetadata() {
   const title = `Where to launch your AI tool in ${year()}: ${launchPlatforms.length} directories ranked by Domain Rating`;
-  const description = `AI tool directories, launch platforms and communities where makers can list an AI product, ranked by their live Ahrefs Domain Rating.`;
+  const description = `${launchPlatforms.length} AI tool directories, launch platforms, software directories and communities where makers can list an AI product, ranked by live Ahrefs Domain Rating.`;
   return {
     title,
     description,
@@ -23,8 +23,8 @@ export async function generateMetadata() {
 /** Live DR for every platform, a few requests at a time. A failed lookup stays null. */
 async function withDomainRatings(): Promise<PlatformRow[]> {
   const rows: PlatformRow[] = [];
-  for (let i = 0; i < launchPlatforms.length; i += 6) {
-    const batch = await Promise.all(launchPlatforms.slice(i, i + 6).map(async (p) => {
+  for (let i = 0; i < launchPlatforms.length; i += 10) {
+    const batch = await Promise.all(launchPlatforms.slice(i, i + 10).map(async (p) => {
       const rating = await getDomainRating(p.domain);
       return { ...p, typeLabel: LAUNCH_PLATFORM_TYPES[p.type], dr: rating.live ? rating.dr : null };
     }));
@@ -43,7 +43,7 @@ export default async function LaunchPlatformsPage() {
         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">For makers</p>
         <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">Where to launch your AI tool</h1>
         <p className="mt-4 max-w-2xl text-[14px] leading-relaxed text-muted-foreground">
-          {rows.length} AI directories, launch platforms and communities that take submissions, ranked by their Domain
+          {rows.length} AI directories, launch platforms, software directories and communities that take submissions, ranked by their Domain
           Rating from Ahrefs. A higher DR means a backlink from that site carries more weight. Ratings refresh daily.
         </p>
 

@@ -19,6 +19,7 @@ const FILTERS: Array<{ key: "all" | LaunchPlatformType; label: string }> = [
   { key: "all", label: "All" },
   { key: "ai-directory", label: "AI directories" },
   { key: "launch-platform", label: "Launch platforms" },
+  { key: "software-directory", label: "Software directories" },
   { key: "community", label: "Communities" },
 ];
 

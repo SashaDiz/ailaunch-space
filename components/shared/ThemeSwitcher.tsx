@@ -27,7 +27,7 @@ export function ThemeSwitcher() {
   }, []);
 
   if (!mounted) {
-    return <div className="h-9 w-9 rounded-[var(--radius)] border border-border bg-background" />;
+    return <div className="h-9 w-9 rounded-full" />;
   }
 
   const CurrentIcon = resolvedTheme === "dark" ? Moon : Sun;
@@ -36,7 +36,7 @@ export function ThemeSwitcher() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="inline-flex items-center justify-center h-9 w-9 rounded-[var(--radius)] border border-border bg-background text-foreground hover:bg-muted transition-colors"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         aria-label="Toggle theme mode"
       >
         <CurrentIcon className="h-4 w-4" />

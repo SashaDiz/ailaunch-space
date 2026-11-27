@@ -17,6 +17,13 @@ import { ThemeSwitcher } from "@/components/shared/ThemeSwitcher";
 import { ThemeAwareLogo } from "@/components/shared/ThemeAwareLogo";
 import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
 
+/** Items inside the navigation capsule. */
+const navItem =
+  "flex h-7 items-center gap-1.5 rounded-full px-3 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
+/** Round icon buttons outside the capsule. */
+const iconButton =
+  "flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
+
 export function Header() {
   const { user, loading } = useUser();
   const { supabase } = useSupabase();
@@ -198,43 +205,35 @@ export function Header() {
         : 'bg-transparent backdrop-blur-none'
     )}>
       <div ref={headerBoxRef} className="container-classic relative py-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex h-14 items-center justify-between gap-6">
           {/* Logo and Brand */}
-            <Link href="/">
-              <ThemeAwareLogo
-                height={44}
-                width={140}
-                priority
-                className="h-11 w-auto"
-              />
-            </Link>
+          <Link href="/" aria-label={siteConfig.name} className="shrink-0">
+            <ThemeAwareLogo height={40} width={128} priority className="h-9 w-auto" />
+          </Link>
 
-          {/* Right side - Navigation, CTA and Auth */}
-          <div className="flex items-center space-x-3">
-            {/* Search: a field-like trigger on desktop, an icon on mobile; ⌘K / Ctrl+K anywhere */}
-            <button
-              type="button"
-              onClick={openSearch}
-              aria-label={`Search AI tools (${shortcut})`}
-              className="group hidden h-9 w-40 items-center gap-2 rounded-[var(--radius)] border border-border bg-background/40 pl-3 pr-1.5 text-left text-[13px] text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground lg:flex xl:w-52"
+          {/* Right side: one navigation capsule, then the primary action and account */}
+          <div className="flex items-center gap-2">
+            {/* Navigation capsule (desktop) */}
+            <nav
+              aria-label="Main"
+              className="hidden h-9 items-center gap-0.5 lg:flex"
             >
-              <Search className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
-              <span className="flex-1 truncate">Search</span>
-              <kbd className="shrink-0 rounded-[calc(var(--radius)*0.75)] border border-border bg-muted/60 px-1.5 py-0.5 font-sans text-[10px] leading-none text-muted-foreground transition-colors group-hover:text-foreground">
-                {shortcut}
-              </kbd>
-            </button>
-            <button
-              type="button"
-              onClick={openSearch}
-              aria-label="Search AI tools"
-              className="flex h-9 w-9 items-center justify-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden"
-            >
-              <Search className="h-[18px] w-[18px]" strokeWidth={1.75} />
-            </button>
+              {/* Search: ⌘K / Ctrl+K anywhere */}
+              <button
+                type="button"
+                onClick={openSearch}
+                aria-label={`Search AI tools (${shortcut})`}
+                className="group flex h-7 items-center gap-2 rounded-full pl-2.5 pr-1 text-left text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <Search className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+                <span>Search</span>
+                <kbd className="shrink-0 rounded-full border border-border px-1.5 py-[3px] font-sans text-[9px] leading-none text-muted-foreground">
+                  {shortcut}
+                </kbd>
+              </button>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center space-x-1">
+              <span aria-hidden className="mx-1 h-4 w-px bg-border" />
+
               {/* Browse: full-width mega menu on hover (click and Esc work too) */}
               <div
                 ref={browseRef}
@@ -244,17 +243,13 @@ export function Header() {
               >
                 <button
                   type="button"
-                  aria-label="Browse categories"
                   aria-expanded={isBrowseOpen}
                   aria-haspopup="true"
-                  title="Browse categories"
-                  className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-[var(--radius)] transition-colors hover:bg-muted hover:text-foreground",
-                    isBrowseOpen ? "bg-muted text-foreground" : "text-muted-foreground"
-                  )}
+                  className={cn(navItem, isBrowseOpen && "bg-muted text-foreground")}
                   onClick={() => setIsBrowseOpen(!isBrowseOpen)}
                 >
-                  <Menu className="h-[18px] w-[18px]" strokeWidth={1.75} />
+                  <Menu className="h-3.5 w-3.5" strokeWidth={2} />
+                  Browse
                 </button>
                 <BrowseMenu
                   open={isBrowseOpen}
@@ -268,30 +263,34 @@ export function Header() {
                 />
               </div>
 
-              <Link href="/stats" aria-label="Stats" title="Stats" className="flex h-9 w-9 items-center justify-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                <BarChart3 className="h-[18px] w-[18px]" strokeWidth={1.75} />
+              <Link href="/stats" className={navItem}>
+                <BarChart3 className="h-3.5 w-3.5" strokeWidth={2} />
+                Stats
               </Link>
-
+              <Link href="/promote" className={navItem}>
+                Advertise
+              </Link>
               {isAdmin && (
-                <Link
-                  href="/admin"
-                  className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                >
+                <Link href="/admin" className={navItem}>
                   Admin
                 </Link>
               )}
-
-              <Link
-                href="/promote"
-                className="px-3 py-2 text-sm font-semibold text-primary transition-colors hover:text-primary/80"
-              >
-                Advertise
-              </Link>
             </nav>
 
+            {/* Search icon (mobile) */}
+            <button
+              type="button"
+              onClick={openSearch}
+              aria-label="Search AI tools"
+              className={cn(iconButton, "lg:hidden")}
+            >
+              <Search className="h-4 w-4" strokeWidth={1.75} />
+            </button>
+
+            {/* The one solid action */}
             <Link
               href="/pricing"
-              className="hidden lg:inline-flex items-center rounded-full bg-foreground px-4 py-1.5 text-sm font-semibold text-background transition-opacity hover:opacity-90"
+              className="hidden h-9 items-center rounded-full bg-foreground px-4 text-[13px] font-semibold text-background transition-opacity hover:opacity-90 lg:inline-flex"
             >
               Submit
             </Link>
@@ -301,7 +300,7 @@ export function Header() {
 
             {/* Authentication */}
             {!isClient || loading ? (
-              <div className="w-8 h-8 rounded-full bg-muted animate-pulse"></div>
+              <div className="h-9 w-9 rounded-full bg-muted animate-pulse"></div>
             ) : user ? (
               <div className="relative" ref={userMenuRef}>
                 <div
@@ -309,7 +308,7 @@ export function Header() {
                   className="cursor-pointer"
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 >
-                  <div className="w-12 h-12 rounded-full border-2 border-border transition-all duration-200 hover:border-foreground hover:scale-105 overflow-hidden">
+                  <div className="h-9 w-9 overflow-hidden rounded-full border border-border transition-colors duration-200 hover:border-foreground/40">
                     {avatarUrl && !avatarError ? (
                       <Image
                         src={avatarUrl}
@@ -382,15 +381,12 @@ export function Header() {
                 )}
               </div>
             ) : (
-              <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href="/auth/signin" className="font-medium">
-                    Sign in
-                  </Link>
-                </Button>
-                <div className="w-px h-4 bg-border"></div>
-                <span className="text-muted-foreground text-sm">✕</span>
-              </div>
+              <Link
+                href="/auth/signin"
+                className="inline-flex h-9 items-center rounded-full px-3 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                Sign in
+              </Link>
             )}
 
             {/* Mobile Menu Button */}
@@ -399,7 +395,7 @@ export function Header() {
                 variant="ghost"
                 size="sm"
                 onClick={toggleMobileMenu}
-                className="p-2"
+                className="h-9 w-9 rounded-full p-0"
                 aria-label="Open mobile menu"
               >
                 {isMobileMenuOpen ? (
